@@ -1,5 +1,83 @@
 ---
 title: "DNS & Domains"
+description: "DNS übersetzt Namen wie cloud.example.com in IP-Adressen. Mit einer eigenen Domain bekommen deine Dienste lesbare Adressen und gültige Zertifikate, und du kannst beliebig viele Subdomains anlegen."
 level: 1
-status: stub
+related: [ip-ports-nat, reverse-proxy-explained, tls-certificates, cgnat-ds-lite]
+practice: domain-dns
 ---
+
+## Warum eine eigene Domain?
+
+IP-Adressen kann sich niemand merken, und bei vielen Heimanschlüssen ändern sie sich auch noch. Eine Domain löst beides: Du tippst `fotos.__DOMAIN__` statt `192.168.1.20:2283`. Außerdem brauchst du eine Domain, um von Let's Encrypt gültige Zertifikate zu bekommen (siehe [TLS & Zertifikate](/de/nachschlagen/tls-zertifikate/)).
+
+Eine Domain mietest du bei einem Registrar, meist für einen kleinen Betrag pro Jahr. Die Preise hängen stark von der Endung ab. Achte auf den Verlängerungspreis, nicht nur auf das Angebot im ersten Jahr, und darauf, ob der Anbieter eine API für DNS-Einträge hat. Die brauchst du später für DNS-01-Zertifikate und DynDNS.
+
+## Wie DNS funktioniert
+
+Das **Domain Name System** ist das Telefonbuch des Internets. Wenn du eine Adresse aufrufst, fragt dein Gerät einen DNS-Resolver, meist deinen Router oder den deines Anbieters. Der Resolver fragt sich bis zum zuständigen Nameserver deiner Domain durch und liefert die Antwort zurück. Zuständig ist der Nameserver, den du beim Registrar eingetragen hast, oft der des Registrars selbst.
+
+Die Antworten stehen in **DNS-Einträgen** (Records). Du pflegst sie in der Weboberfläche deines DNS-Anbieters.
+
+## Die wichtigsten Eintragstypen
+
+| Typ | Zeigt auf | Beispiel |
+| --- | --- | --- |
+| **A** | eine IPv4-Adresse | `__DOMAIN__` → `203.0.113.10` |
+| **AAAA** | eine IPv6-Adresse | `__DOMAIN__` → `2001:db8::10` |
+| **CNAME** | einen anderen Namen | `www.__DOMAIN__` → `__DOMAIN__` |
+| **TXT** | beliebigen Text | Nachweise für Zertifikate, Mail-Einstellungen |
+
+Ein paar Hinweise dazu:
+
+- **A und AAAA** sind die eigentlichen Wegweiser zu deinem Server. Hast du eine öffentliche IPv6, lohnt sich ein AAAA-Eintrag zusätzlich zum A-Eintrag.
+- **CNAME** ist ein Alias. Er spart Arbeit: Ändert sich die IP, passt du nur den einen A-Eintrag an. Auf die Domain selbst (ohne Subdomain) darf laut Standard kein CNAME zeigen.
+- **TXT** siehst du selten im Browser, aber oft im Hintergrund. Let's Encrypt prüft bei der DNS-01-Challenge zum Beispiel einen TXT-Eintrag unter `_acme-challenge.__DOMAIN__`.
+
+Die Adressen `203.0.113.10` und `2001:db8::10` sind reine Beispieladressen. Dort setzt du deine eigene öffentliche IP ein.
+
+## Wildcard-Einträge
+
+Ein **Wildcard-Eintrag** `*.__DOMAIN__` gilt für jede Subdomain, die nicht eigens eingetragen ist. Zusammen mit einem [Reverse Proxy](/de/nachschlagen/reverse-proxy-erklaert/) ist das praktisch: Du legst einmal `*.__DOMAIN__` als A-Eintrag auf deine IP an. Für jeden neuen Dienst musst du dann nur noch den Proxy konfigurieren, nicht mehr das DNS.
+
+Ein Wildcard-Eintrag gilt nur eine Ebene tief. `app.__DOMAIN__` passt, `test.app.__DOMAIN__` nicht.
+
+## TTL: wie lange Antworten gelten
+
+Jeder Eintrag hat eine **TTL** (Time to Live) in Sekunden. So lange dürfen Resolver die Antwort zwischenspeichern. Eine TTL von 3600 heißt: Eine Änderung kann bis zu einer Stunde brauchen, bis sie überall ankommt.
+
+Für Einträge, die sich oft ändern, etwa bei wechselnder IP, ist eine kurze TTL von wenigen Minuten sinnvoll. Planst du einen Umzug, senke die TTL ein paar Stunden vorher.
+
+Ob ein Eintrag stimmt, prüfst du auf der Kommandozeile. `dig` steckt unter Debian und Ubuntu im Paket `dnsutils` bzw. `bind9-dnsutils`:
+
+```bash
+dig +short A __DOMAIN__
+dig +short AAAA __DOMAIN__
+```
+
+## DynDNS bei wechselnder IP
+
+Die meisten Privatanschlüsse bekommen regelmäßig eine neue öffentliche IPv4. **DynDNS** (dynamisches DNS) hält den A-Eintrag trotzdem aktuell: Ein kleines Programm merkt, dass sich die IP geändert hat, und schreibt die neue über die API des DNS-Anbieters in den Eintrag.
+
+Das übernimmt oft schon der Router, viele haben eine DynDNS-Funktion eingebaut. Alternativ läuft ein kleiner Container auf dem Server, der das regelmäßig prüft. Wichtig: DynDNS hilft nur, wenn du überhaupt eine eigene öffentliche IPv4 hast. Bei CGNAT oder DS-Lite ist das nicht der Fall (siehe [CGNAT & DS-Lite](/de/nachschlagen/cgnat-ds-lite/)).
+
+## Lokales DNS und Split-DNS
+
+Auch im Heimnetz kannst du Namen statt IPs verwenden. Ein **lokaler DNS-Server** wie Pi-hole, AdGuard Home oder der Router selbst kann Namen auflösen, die das Internet nicht kennt.
+
+**Split-DNS** heißt: Derselbe Name liefert je nach Standort eine andere Antwort. Von außen zeigt `cloud.__DOMAIN__` auf deine öffentliche IP, im Heimnetz direkt auf `192.168.1.20`. Vorteile:
+
+- Der Verkehr bleibt im Heimnetz und geht nicht über den Router nach außen und wieder zurück.
+- Dienste, die nur intern erreichbar sein sollen, bekommen trotzdem schöne Namen und gültige Zertifikate.
+
+Manche Router kommen mit Anfragen von innen an die eigene öffentliche IP nicht zurecht (fehlendes "NAT Loopback" oder "Hairpinning"). Auch dann hilft Split-DNS.
+
+<Callout title="Split-DNS ist optional">
+Für den Anfang reicht ein Eintrag beim DNS-Anbieter. Lokales DNS kannst du später ergänzen, wenn du es brauchst.
+</Callout>
+
+## Kurz zusammengefasst
+
+- Eine Domain macht deine Dienste merkbar und ist Voraussetzung für Let's-Encrypt-Zertifikate.
+- **A**/**AAAA** zeigen auf IPs, **CNAME** auf andere Namen, **TXT** trägt Text wie Zertifikatsnachweise.
+- Ein Wildcard-Eintrag plus Reverse Proxy spart dir DNS-Arbeit für jeden neuen Dienst.
+- Wechselt deine IP, hält **DynDNS** den Eintrag aktuell.

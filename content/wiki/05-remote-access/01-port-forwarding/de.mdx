@@ -1,6 +1,67 @@
 ---
 slug: portfreigabe
 title: "Portfreigabe"
+description: "Mit einer Portfreigabe leitet dein Router Anfragen aus dem Internet an einen Rechner in deinem Heimnetz weiter. Das ist der direkteste Weg nach draußen – und deshalb gilt: so wenig wie möglich freigeben, am besten nur 80 und 443 an den Reverse Proxy."
 level: 1
-status: stub
+related: [ip-ports-nat, reverse-proxy-explained, attack-surface, access-methods-compared]
+practice: reverse-proxy-traefik
 ---
+
+## Warum du eine Portfreigabe brauchst
+
+Dein Router trennt dein Heimnetz vom Internet. Von innen nach außen kommt alles durch, von außen nach innen erst einmal nichts. Kommt eine Anfrage aus dem Internet an, weiß der Router nicht, welches Gerät gemeint ist, und verwirft sie.
+
+Eine **Portfreigabe** (englisch *port forwarding*) ändert das für einen bestimmten Port. Du sagst dem Router: "Alles, was auf Port 443 ankommt, schickst du an meinen Server 192.168.1.10." Damit ist dein Server für die ganze Welt auf diesem Port erreichbar. Nicht nur für dich, sondern auch für jeden Scanner, der das Internet nach offenen Ports absucht.
+
+Ein **Port** ist dabei eine Nummer, über die ein Rechner mehrere Dienste gleichzeitig anbieten kann. Mehr dazu steht in [IP, Ports & NAT](/de/nachschlagen/ip-ports-nat/).
+
+## Nur 80 und 443, und nur an den Reverse Proxy
+
+Die wichtigste Regel: Gib genau zwei Ports frei, **80 (HTTP) und 443 (HTTPS)**, und leite beide an deinen [Reverse Proxy](/de/nachschlagen/reverse-proxy-erklaert/) weiter. Der Proxy nimmt alle Anfragen entgegen, prüft den Hostnamen und reicht sie an den passenden Container weiter. Er kümmert sich um die TLS-Zertifikate und kann Login-Schutz wie Tinyauth oder Pocket ID davorschalten.
+
+So hast du genau einen Eingang, den du im Blick behalten musst. Jeder weitere Dienst bekommt nur eine Subdomain, aber keinen eigenen offenen Port.
+
+Port 80 brauchst du vor allem für die Weiterleitung von HTTP auf HTTPS und, je nach Einstellung, für die Zertifikatsprüfung von Let's Encrypt. Wenn dein Proxy Zertifikate über die DNS-Challenge holt und du auf die Weiterleitung verzichten kannst, reicht auch 443 allein.
+
+<Callout type="warning" title="Niemals direkt freigeben">
+Admin-Oberflächen (Portainer, Router-, NAS- oder Proxmox-Weboberflächen), SSH (Port 22), Datenbanken (etwa 3306 oder 5432) und Dashboards gehören nie direkt ins Internet. Diese Dienste werden gezielt angegriffen, und ein einziges schwaches Passwort oder eine alte Version reicht. Für solche Zugriffe von unterwegs nimmst du ein [VPN](/de/nachschlagen/vpn/).
+</Callout>
+
+## So richtest du sie ein
+
+Die Menüs heißen bei jedem Router anders, der Ablauf ist aber immer ähnlich:
+
+1. **Feste IP für den Server:** Der Router muss wissen, wohin er weiterleiten soll. Gib deinem Server eine feste Adresse im Heimnetz (siehe [Feste IP & Hostname](/de/einrichten/feste-ip-hostname/)).
+2. **Freigabe anlegen:** Im Router den Server auswählen und die Ports 80 und 443 (TCP) freigeben. Bei einer FRITZ!Box findest du das unter "Internet → Freigaben".
+3. **Firewall auf dem Server:** Auch dort müssen 80 und 443 offen sein, etwa mit UFW (siehe [Firewall mit UFW](/de/einrichten/firewall-ufw/)).
+4. **Von außen testen:** Rufe deine Domain über das Mobilnetz auf, nicht aus dem WLAN. Aus dem eigenen Netz klappt der Aufruf über die öffentliche Adresse bei manchen Routern nicht, obwohl von außen alles funktioniert.
+
+Damit deine Domain immer auf die richtige Adresse zeigt, brauchst du bei wechselnder IPv4-Adresse außerdem **DynDNS**. Dabei meldet der Router oder ein kleines Programm die neue Adresse automatisch an deinen DNS-Anbieter. Mehr dazu in [DNS & Domains](/de/nachschlagen/dns-domains/).
+
+<Callout title="Docker und UFW">
+Ports, die du in einer `compose.yaml` mit `ports:` veröffentlichst, öffnet Docker an UFW vorbei direkt in der Firewall. Veröffentliche deshalb nur die Ports des Reverse Proxys. Alle anderen Dienste hängen ohne `ports:` im Proxy-Netzwerk `__NETWORK__`.
+</Callout>
+
+## IPv6: Freigabe heißt hier Firewall-Regel
+
+Bei IPv4 teilen sich alle Geräte im Heimnetz eine öffentliche Adresse, der Router übersetzt per NAT. Bei **IPv6** hat jedes Gerät eine eigene, weltweit gültige Adresse. Es gibt nichts umzuleiten. Stattdessen blockiert die Firewall des Routers eingehende Verbindungen, und die "Freigabe" ist eine Ausnahme in dieser Firewall.
+
+Das hat zwei Folgen:
+
+- Du musst die IPv6-Freigabe **zusätzlich** anlegen. Bei vielen Routern ist das ein eigener Haken oder ein eigener Abschnitt neben der IPv4-Freigabe.
+- Die Freigabe gilt für eine bestimmte Adresse des Servers. Ändert sich das Präfix, das dir dein Provider zuteilt, muss der Router die Regel nachführen. Gute Router machen das automatisch, wenn du die Freigabe für das Gerät statt für eine feste Adresse anlegst.
+
+Prüfe nach dem Einrichten, ob dein Server per IPv6 wirklich nur auf 80 und 443 erreichbar ist. Ein häufiger Fehler ist eine IPv6-Freigabe für "alle Ports" des Geräts.
+
+## Wann eine Portfreigabe nicht geht
+
+Eine Portfreigabe setzt voraus, dass dein Anschluss eine **eigene öffentliche IPv4-Adresse** hat. Bei vielen Kabel- und Glasfaseranschlüssen ist das nicht der Fall: Mit DS-Lite oder CGNAT teilst du dir die IPv4-Adresse mit anderen Kunden, und Anfragen von außen erreichen deinen Router gar nicht erst. Was das bedeutet, erklärt [CGNAT & DS-Lite](/de/nachschlagen/cgnat-ds-lite/).
+
+Dann bleiben dir IPv6 (nur für Besucher, die selbst IPv6 haben), ein [Tunnel](/de/nachschlagen/tunnel/) oder ein kleiner VPS als Eingang. Einen Überblick gibt [Zugriffswege im Vergleich](/de/nachschlagen/zugriffswege-vergleich/).
+
+## Kurz zusammengefasst
+
+- Nur 80 und 443 freigeben, beide an den Reverse Proxy.
+- Admin-Oberflächen, SSH und Datenbanken nie freigeben, dafür gibt es VPN.
+- IPv6 separat freigeben und genau prüfen.
+- Ohne öffentliche IPv4 funktioniert eine klassische Portfreigabe nicht.

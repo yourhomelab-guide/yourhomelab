@@ -1,6 +1,117 @@
 ---
 slug: env-dateien
 title: ".env-Dateien"
+description: "Passwörter und Einstellungen gehören nicht fest in die compose.yaml. Hier erfährst du, wie .env, env_file und environment zusammenspielen und wo die typischen Stolperfallen liegen."
 level: 1
-status: stub
+related: [docker-compose, managing-secrets, directory-structure]
+practice: env-secrets
 ---
+
+## Warum eine .env-Datei?
+
+Eine `compose.yaml` beschreibt, *wie* ein Dienst läuft. Passwörter, Tokens und Werte, die sich von Server zu Server
+unterscheiden, gehören nicht hinein. Sonst kannst du die Datei nicht teilen, nicht in Git legen und nicht einfach auf
+einen anderen Rechner kopieren.
+
+Die Lösung: Die `compose.yaml` enthält nur Verweise wie `${DB_PASSWORD}`. Die echten Werte stehen in einer Datei
+namens `.env` im selben Ordner. Docker Compose liest sie beim Start automatisch.
+
+## Drei Wege, drei Zwecke
+
+Die Begriffe klingen ähnlich, machen aber verschiedene Dinge.
+
+| Weg              | Wo                        | Was passiert                                                   |
+| ---------------- | ------------------------- | -------------------------------------------------------------- |
+| `.env`           | Datei im Stack-Ordner     | Liefert Werte für `${…}` in der `compose.yaml` (Interpolation) |
+| `environment:`   | In der `compose.yaml`     | Setzt Umgebungsvariablen **im Container**                      |
+| `env_file:`      | In der `compose.yaml`     | Lädt alle Zeilen einer Datei als Umgebungsvariablen in den Container |
+
+Der wichtigste Punkt: Die `.env` landet **nicht** automatisch im Container. Sie dient nur dazu, die `compose.yaml`
+auszufüllen. Erst über `environment:` (oder `env_file:`) kommt ein Wert im Container an.
+
+Die Vorlagen dieser Seite nutzen deshalb dieses Muster:
+
+```yaml
+services:
+  nextcloud:
+    environment:
+      - TZ=${TZ}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+```
+
+```bash
+# .env
+TZ=__TZ__
+DB_PASSWORD=ein-langes-zufaelliges-passwort
+```
+
+So siehst du in der `compose.yaml` genau, welche Variablen ein Container bekommt. `env_file:` ist praktisch, wenn ein
+Dienst sehr viele Variablen braucht. Es reicht dann aber alles aus der Datei weiter, auch Werte, die der Container gar
+nicht braucht. Setzt du dieselbe Variable in `environment:` und über `env_file:`, gewinnt `environment:`.
+
+## Interpolation und Standardwerte
+
+Interpolation heißt: Compose ersetzt `${VAR}` durch den Wert aus der `.env` (oder aus deiner Shell), bevor es die
+Container startet. Dabei gibt es ein paar nützliche Varianten:
+
+| Schreibweise       | Bedeutung                                                  |
+| ------------------ | ---------------------------------------------------------- |
+| `${VAR}`           | Wert von `VAR`, leer, wenn nicht gesetzt                   |
+| `${VAR:-standard}` | `standard`, wenn `VAR` nicht gesetzt oder leer ist         |
+| `${VAR-standard}`  | `standard` nur, wenn `VAR` gar nicht gesetzt ist           |
+| `${VAR:?Fehler}`   | Abbruch mit Fehlermeldung, wenn `VAR` fehlt oder leer ist  |
+
+`${VAR:?…}` lohnt sich für Pflichtwerte wie Passwörter. Dann startet der Stack nicht mit leerem Passwort, sondern
+sagt dir, was fehlt. Alle Details stehen in der
+[offiziellen Doku zur Interpolation](https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/).
+
+Ist eine Variable sowohl in deiner Shell als auch in der `.env` gesetzt, gewinnt die Shell. Das überrascht manchmal,
+wenn du vorher zum Testen etwas mit `export` gesetzt hast.
+
+## Stolperfallen beim Quoting
+
+Die meisten Probleme mit `.env`-Dateien entstehen durch Anführungszeichen und Sonderzeichen.
+
+- **Das Dollarzeichen.** Compose ersetzt `$` auch in Werten der `.env`. Ein Passwort wie `abc$def` wird dann zu `abc`.
+  Setze solche Werte in einfache Anführungszeichen, dann bleiben sie wörtlich: `PASSWORD='abc$def'`. In der
+  `compose.yaml` selbst schreibst du ein wörtliches Dollarzeichen als `$$`.
+- **Anführungszeichen in `environment:`.** In der Listenform `- KEY="wert"` gehören die Anführungszeichen zum Wert.
+  Der Container bekommt also `"wert"` mitsamt Anführungszeichen. Schreib einfach `- KEY=wert`.
+- **Kommentare.** Zeilen, die mit `#` beginnen, sind Kommentare. Ein `#` mitten in einem Wert ohne Anführungszeichen
+  kann als Kommentar gelten, wenn davor ein Leerzeichen steht. Im Zweifel den Wert in Anführungszeichen setzen.
+- **Leerzeichen um das `=`.** Schreib `KEY=wert` ohne Leerzeichen. Das ist in allen Tools eindeutig.
+
+Am einfachsten umgehst du das alles mit Passwörtern aus Buchstaben und Ziffern, zum Beispiel aus
+`openssl rand -hex 32`. Lang genug sind sie trotzdem.
+
+## Prüfen mit docker compose config
+
+Bevor du rätst, lass dir anzeigen, was Compose wirklich daraus macht:
+
+```bash
+cd __ROOT__/nextcloud
+docker compose config
+```
+
+Der Befehl gibt die fertige Konfiguration aus, mit allen eingesetzten Werten. Fehlt eine Variable, siehst du eine
+Warnung. Achtung: Die Ausgabe enthält deine Passwörter im Klartext. Kopier sie nicht ungeprüft in ein Forum.
+
+## .env.example für Git
+
+Die `.env` enthält Secrets und gehört nie in ein öffentliches Repository. Trotzdem soll jemand, der deine
+`compose.yaml` nutzt, wissen, welche Variablen nötig sind. Dafür gibt es die `.env.example`: dieselben Schlüssel,
+aber mit Platzhaltern statt echten Werten.
+
+```bash
+# .env.example
+TZ=Europe/Berlin
+DB_PASSWORD=change-me
+```
+
+Die `.env.example` kommt ins Git, die `.env` in die `.gitignore`. Die Dienst-Vorlagen dieser Seite sind genauso
+aufgebaut. Wie du Secrets darüber hinaus schützt, steht unter [Secrets verwalten](/de/nachschlagen/secrets-verwalten/).
+
+<Callout type="warning" title="Rechte setzen">
+  Die `.env` sollte nur für dich lesbar sein. Mit `chmod 600 .env` stellst du das sicher. Und denk daran: Wer die
+  Datei im Backup findet, hat deine Passwörter. Verschlüssele Backups deshalb immer.
+</Callout>

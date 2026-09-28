@@ -1,6 +1,97 @@
 ---
 slug: reverse-proxy-erklaert
 title: "Reverse Proxy erklärt"
+description: "Ein Reverse Proxy ist der eine Eingang zu all deinen Diensten. Er nimmt Anfragen auf Port 80 und 443 entgegen, kümmert sich um HTTPS und leitet jede Anfrage anhand des Namens an den richtigen Container weiter."
 level: 1
-status: stub
+related: [dns-domains, tls-certificates, single-sign-on, docker-networks]
+practice: reverse-proxy-traefik
 ---
+
+## Das Problem
+
+Stell dir vor, auf deinem Server laufen Vaultwarden, Immich und Uptime Kuma. Jeder Dienst bringt seinen eigenen Webserver mit und lauscht auf einem eigenen Port. Ohne Proxy müsstest du jeden davon einzeln nach außen freigeben und dir Adressen wie `__DOMAIN__:8081` oder `__DOMAIN__:2283` merken. Außerdem bräuchte jeder Dienst ein eigenes Zertifikat für HTTPS, und jeder offene Port ist eine zusätzliche Angriffsfläche.
+
+Ein **Reverse Proxy** löst das. Er steht vor allen Diensten und ist der einzige, der von außen erreichbar ist.
+
+## Was ein Reverse Proxy tut
+
+**Ein Eingang.** Der Proxy belegt Port 80 (HTTP) und 443 (HTTPS). Nur diese beiden Ports gibst du frei. Alle anderen Container veröffentlichen keine Ports, sondern hängen mit dem Proxy in einem gemeinsamen [Docker-Netzwerk](/de/nachschlagen/docker-netzwerke/), auf dieser Seite `__NETWORK__`.
+
+**Routing nach Hostname.** Der Browser schickt bei jeder Anfrage mit, welchen Namen er aufgerufen hat. Der Proxy schaut sich diesen Namen an und entscheidet, wohin die Anfrage geht:
+
+| Anfrage an | geht weiter an |
+| --- | --- |
+| `vault.__DOMAIN__` | Container `vaultwarden`, Port 80 |
+| `fotos.__DOMAIN__` | Container `immich`, Port 2283 |
+| `status.__DOMAIN__` | Container `uptime-kuma`, Port 3001 |
+
+Alle Namen zeigen im DNS auf dieselbe IP, am einfachsten per Wildcard-Eintrag (siehe [DNS & Domains](/de/nachschlagen/dns-domains/)). Zusätzlich kann ein Proxy auch nach Pfaden routen, etwa `__DOMAIN__/api`.
+
+**TLS-Terminierung.** Der Proxy übernimmt HTTPS. Er holt die Zertifikate bei Let's Encrypt, erneuert sie rechtzeitig und entschlüsselt die Anfragen. Zum Container geht die Anfrage dann unverschlüsselt über das interne Docker-Netzwerk. Deine Dienste müssen sich um Zertifikate also nicht kümmern. Mehr dazu in [TLS & Zertifikate](/de/nachschlagen/tls-zertifikate/).
+
+**Header.** Weil der Proxy dazwischensitzt, sieht der Dienst zunächst nur die Adresse des Proxys. Der Proxy ergänzt deshalb Header wie `X-Forwarded-For` (echte IP des Besuchers), `X-Forwarded-Proto` (war es HTTPS?) und `X-Forwarded-Host`. Viele Dienste brauchen diese Angaben, zum Beispiel für korrekte Links oder um Anmeldeversuche der richtigen IP zuzuordnen. Manche Dienste musst du ausdrücklich so einstellen, dass sie dem Proxy vertrauen. Das steht dann in ihrer Doku unter Stichworten wie "trusted proxies".
+
+**Middlewares.** Zwischen Eingang und Dienst kann der Proxy weitere Schritte einschieben: Weiterleitung von HTTP auf HTTPS, Sicherheits-Header, Begrenzung der Anfragen pro Minute oder ein vorgeschalteter Login. Mit einem Login-Dienst wie [Tinyauth](/de/dienste/tinyauth/) oder [Pocket ID](/de/dienste/pocket-id/) schützt du so auch Dienste, die selbst keine gute Anmeldung haben (siehe [Single Sign-On](/de/nachschlagen/single-sign-on/)).
+
+## Drei Proxys, die diese Seite unterstützt
+
+<Cards>
+  <Card title="Traefik">
+    Am Anfang etwas komplizierter, dafür am meisten Möglichkeiten. Die Konfiguration steht als Labels direkt in der compose.yaml jedes Dienstes. Traefik erkennt neue Container von selbst. Standard dieser Seite.
+  </Card>
+  <Card title="Nginx Proxy Manager">
+    Der Einsteiger-Weg. Du legst Proxy-Hosts in einer Weboberfläche per Klick an, das Zertifikat gibt es per Häkchen.
+  </Card>
+  <Card title="Caddy">
+    Der Mittelweg. Eine kurze, gut lesbare Textdatei, das Caddyfile. HTTPS ist automatisch eingeschaltet.
+  </Card>
+</Cards>
+
+|                        | Traefik                                   | Nginx Proxy Manager                    | Caddy                                 |
+| ---------------------- | ----------------------------------------- | -------------------------------------- | ------------------------------------- |
+| **Konfiguration**      | Labels in der `compose.yaml` jedes Dienstes | Weboberfläche, gespeichert in einer Datenbank | Eine Textdatei (`Caddyfile`)        |
+| **Neuer Dienst**       | Labels ergänzen, Container starten        | Proxy-Host in der Oberfläche anlegen   | Block im Caddyfile ergänzen, neu laden |
+| **Zertifikate**        | Automatisch                               | Per Häkchen je Proxy-Host              | Automatisch                           |
+| **Einstieg**           | Etwas steiler                             | Am leichtesten                         | Leicht                                |
+| **Middlewares, Login-Schutz** | Sehr flexibel, gut dokumentiert    | Grundfunktionen, Rest über eigene Nginx-Konfiguration | Möglich, direkt im Caddyfile |
+| **Automatisierung, Git** | Sehr gut, alles steht in Dateien        | Schwierig, Klicks lassen sich nicht versionieren | Gut, eine Datei                |
+
+Ein kurzer Eindruck, wie ein Dienst jeweils angebunden wird. Bei Traefik stehen ein paar Labels in der `compose.yaml` des Dienstes:
+
+```yaml
+labels:
+  - traefik.enable=true
+  - traefik.http.routers.vaultwarden.rule=Host(`vault.__DOMAIN__`)
+  - traefik.http.routers.vaultwarden.tls.certresolver=le
+```
+
+Bei Caddy ist es ein Block im Caddyfile:
+
+```
+vault.__DOMAIN__ {
+  reverse_proxy vaultwarden:80
+}
+```
+
+Beim Nginx Proxy Manager trägst du dieselben Angaben in ein Formular ein: Domain, Ziel-Container, Port.
+
+## Welchen nehme ich?
+
+- **Du willst lernen und später automatisieren?** Nimm **Traefik**. Die ersten Labels wirken ungewohnt, aber danach gehört die Proxy-Konfiguration zu jedem Dienst dazu, liegt in Dateien und lässt sich mit Git versionieren. Login-Schutz mit Tinyauth oder Pocket ID und CrowdSec binden sich sauber ein. Alle Guides dieser Seite bauen auf Traefik auf: [Reverse Proxy mit Traefik](/de/einrichten/reverse-proxy-traefik/).
+- **Du willst schnell ein Ergebnis?** Nimm den **Nginx Proxy Manager**. Nach ein paar Minuten läuft dein erster Dienst mit HTTPS, ohne dass du eine Zeile Konfiguration schreibst: [Reverse Proxy mit Nginx Proxy Manager](/de/einrichten/reverse-proxy-npm/).
+- **Du magst Textdateien, aber keine Labels?** Dann ist **Caddy** ein guter Mittelweg.
+
+Die Wahl ist nicht endgültig. Deine Dienste merken kaum, welcher Proxy vor ihnen steht. Ein späterer Umstieg bedeutet vor allem, die Routen neu einzutragen. Viele fangen mit dem Nginx Proxy Manager an und wechseln zu Traefik, sobald sie mehr Dienste haben.
+
+Mehr zu den einzelnen Proxys findest du auf den Dienstseiten: [Traefik](/de/dienste/traefik/), [Nginx Proxy Manager](/de/dienste/nginx-proxy-manager/) und [Caddy](/de/dienste/caddy/).
+
+<Callout type="warning" title="Nur ein Proxy pro Server">
+Port 80 und 443 kann immer nur ein Programm belegen. Betreibe also nicht zwei Proxys gleichzeitig auf demselben Server. Wenn du umsteigst, stoppe den alten Proxy zuerst.
+</Callout>
+
+## Kurz zusammengefasst
+
+- Ein Reverse Proxy ist der einzige Eingang auf Port 80 und 443.
+- Er leitet Anfragen anhand des Hostnamens an den richtigen Container weiter.
+- Er übernimmt HTTPS, setzt Header für die Dienste und kann Middlewares wie einen Login davorschalten.
+- Traefik für Automatik und Möglichkeiten, Nginx Proxy Manager für den schnellen Start, Caddy als Mittelweg.

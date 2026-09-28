@@ -1,0 +1,11 @@
+---
+import HomelabPage from '../../../views/HomelabPage.astro';
+import { getHomelabs } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  return (await getHomelabs()).map((lab) => ({ params: { id: lab.id }, props: { lab } }));
+}
+const { lab } = Astro.props;
+---
+
+<HomelabPage lang="de" lab={lab} />

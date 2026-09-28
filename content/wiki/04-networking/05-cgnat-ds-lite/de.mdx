@@ -1,5 +1,92 @@
 ---
 title: "CGNAT & DS-Lite"
+description: "Viele Internetanschlüsse haben keine eigene öffentliche IPv4-Adresse mehr. Dann funktioniert eine klassische Portfreigabe nicht. Hier erfährst du, wie du das erkennst und welche Auswege es gibt."
 level: 2
-status: stub
+related: [ip-ports-nat, port-forwarding, tunnels, access-methods-compared]
+practice: cloudflare-tunnel
 ---
+
+## Warum es das gibt
+
+IPv4-Adressen sind knapp. Es gibt nur rund 4,3 Milliarden, und die sind längst verteilt. Internetanbieter sparen deshalb, indem sich mehrere Kunden eine öffentliche IPv4 teilen. Für normales Surfen merkst du davon nichts. Willst du aber einen Dienst zuhause **von außen erreichbar** machen, stehst du vor einem Problem: Anfragen aus dem Internet kommen gar nicht bis zu deinem Router.
+
+Das betrifft besonders Kabel- und Glasfaseranschlüsse, Mobilfunk- und LTE/5G-Router sowie manche neuere DSL-Verträge.
+
+## CGNAT
+
+Normalerweise übersetzt dein Router einmal per NAT zwischen Heimnetz und Internet (siehe [IP, Ports & NAT](/de/nachschlagen/ip-ports-nat/)). Bei **CGNAT** (Carrier-Grade NAT) gibt es eine zweite Übersetzung beim Anbieter. Dein Router bekommt dann keine öffentliche Adresse, sondern eine aus einem Bereich, den Anbieter dafür nutzen, meist `100.64.0.0/10` (also `100.64.x.x` bis `100.127.x.x`). Erst das große NAT des Anbieters setzt deine Verbindungen auf eine öffentliche IPv4 um, die du mit vielen anderen teilst.
+
+Eine Portfreigabe in deinem Router bringt dann nichts. Die Anfrage bleibt schon beim Anbieter hängen, weil der nicht weiß, welcher seiner Kunden gemeint ist.
+
+## DS-Lite
+
+**DS-Lite** (Dual-Stack Lite) ist eine verbreitete Variante davon. Dein Anschluss bekommt eine vollwertige, öffentliche **IPv6**, aber keine eigene IPv4. IPv4-Verkehr wird in IPv6 verpackt, zum Anbieter getunnelt und dort per CGNAT ins IPv4-Internet übersetzt.
+
+Die gute Nachricht: Über IPv6 ist dein Anschluss direkt erreichbar. Die schlechte: Über IPv4 nicht. Und manche Netze, etwa in Hotels, bei manchen Mobilfunktarifen oder in Firmen, können noch kein IPv6.
+
+## So erkennst du es
+
+Vergleiche zwei Adressen:
+
+1. **Die WAN-Adresse im Router.** Das ist die IPv4, die der Router vom Anbieter bekommt. Du findest sie in der Oberfläche des Routers, meist unter Übersicht, Internet oder Online-Monitor.
+2. **Deine öffentliche IPv4**, wie das Internet sie sieht. Die zeigt dir zum Beispiel dieser Befehl:
+
+```bash
+curl -4 https://ifconfig.me
+```
+
+Dann gilt:
+
+| Was du siehst | Bedeutung |
+| --- | --- |
+| Beide Adressen sind gleich | Du hast eine eigene öffentliche IPv4. Portfreigaben funktionieren. |
+| Router zeigt `100.64.x.x` bis `100.127.x.x` | CGNAT |
+| Router zeigt eine private Adresse wie `10.x.x.x` oder `192.168.x.x` | Dein Router hängt hinter einem weiteren Router oder hinter CGNAT |
+| Router zeigt keine IPv4, sondern "DS-Lite" oder nur IPv6 | DS-Lite |
+
+Hinweise auf DS-Lite findest du oft auch direkt in der Router-Oberfläche. Im Zweifel fragst du beim Anbieter nach, ob dein Anschluss eine eigene öffentliche IPv4 hat.
+
+<Callout title="Private Adresse im Router muss nicht CGNAT sein">
+Hängt dein Router hinter einem Modem oder einem zweiten Router des Anbieters, siehst du ebenfalls eine private WAN-Adresse. Dann kannst du oft im vorderen Gerät den Bridge-Modus einschalten oder dort eine Portfreigabe einrichten.
+</Callout>
+
+## Auswege
+
+Es gibt mehrere Wege, trotzdem an deine Dienste zu kommen. Welcher passt, hängt davon ab, wer zugreifen soll.
+
+<Cards>
+  <Card title="Öffentliche IPv4 anfragen">
+    Viele Anbieter stellen auf Nachfrage auf eine eigene IPv4 oder echtes Dual-Stack um. Manchmal kostenlos, manchmal gegen Aufpreis oder nur in Business-Tarifen. Ein Anruf lohnt sich.
+  </Card>
+  <Card title="Nur IPv6 nutzen">
+    Bei DS-Lite ist dein Server per IPv6 direkt erreichbar. Du brauchst einen AAAA-Eintrag und eine Freigabe in der IPv6-Firewall des Routers. Funktioniert nur für Geräte, die selbst IPv6 haben.
+  </Card>
+  <Card title="VPN mit NAT-Traversal">
+    Tailscale oder ähnliche Dienste bauen Verbindungen von innen nach außen auf und kommen so durch CGNAT. Ideal, wenn nur du und deine Familie zugreifen.
+  </Card>
+  <Card title="Tunnel">
+    Ein Dienst wie Cloudflare Tunnel baut von deinem Server eine ausgehende Verbindung auf und nimmt öffentliche Anfragen für dich entgegen. Kein offener Port nötig.
+  </Card>
+  <Card title="Eigener VPS als Eingang">
+    Ein kleiner gemieteter Server mit fester IPv4 nimmt Anfragen entgegen und leitet sie über einen WireGuard-Tunnel zu dir nach Hause. Mehr Aufwand, dafür volle Kontrolle.
+  </Card>
+</Cards>
+
+Ein paar Faustregeln zur Wahl:
+
+- **Nur du greifst zu?** Ein VPN ist der einfachste und sicherste Weg. Es müssen gar keine Dienste öffentlich sein. Siehe [VPN](/de/nachschlagen/vpn/).
+- **Andere sollen ohne App zugreifen**, etwa auf geteilte Fotos? Dann ein Tunnel oder ein VPS. Siehe [Tunnel](/de/nachschlagen/tunnel/) und [Cloudflare Tunnel](/de/einrichten/cloudflare-tunnel/).
+- **Du willst es möglichst klassisch?** Frag beim Anbieter nach einer öffentlichen IPv4.
+
+Einen ausführlichen Vergleich der Wege findest du in [Zugriffswege im Vergleich](/de/nachschlagen/zugriffswege-vergleich/).
+
+<Callout title="Zertifikate trotz CGNAT">
+Auch ohne erreichbaren Server bekommst du gültige Zertifikate: Die DNS-01-Challenge prüft nur einen DNS-Eintrag, nicht deinen Server. Siehe [TLS & Zertifikate](/de/nachschlagen/tls-zertifikate/).
+</Callout>
+
+## Kurz zusammengefasst
+
+- Bei **CGNAT** teilst du dir eine öffentliche IPv4 mit anderen, Portfreigaben funktionieren nicht.
+- **DS-Lite** gibt dir echtes IPv6, aber keine eigene IPv4.
+- Erkennen: WAN-Adresse im Router mit der öffentlichen IPv4 vergleichen.
+- Auswege: IPv4 beim Anbieter anfragen, IPv6, VPN, Tunnel oder ein VPS als Eingang.

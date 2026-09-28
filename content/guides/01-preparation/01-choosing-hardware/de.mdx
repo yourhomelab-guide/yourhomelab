@@ -1,7 +1,99 @@
 ---
 slug: hardware-auswaehlen
 title: "Hardware auswählen"
+description: "Am Ende weißt du, auf welchem Gerät dein Homelab laufen soll: Mini-PC, altes Notebook, NAS oder gemieteter VPS, mit passender Menge RAM und Speicher und einer realistischen Vorstellung vom Stromverbrauch."
 level: 1
 minutes: 15
-status: stub
 ---
+
+Für den Einstieg brauchst du keinen Server aus dem Rechenzentrum. Die meisten Dienste auf dieser Seite laufen auf einem kleinen, sparsamen Rechner problemlos. Wichtiger als viel Leistung sind ein niedriger Stromverbrauch, genug RAM und eine SSD. Dieser Guide führt dich in wenigen Schritten zu einer Entscheidung. Hintergründe findest du in der [Hardware-Übersicht](/de/nachschlagen/hardware-uebersicht/) und unter [Kosten & Stromverbrauch](/de/nachschlagen/kosten-strom/).
+
+<OneWay />
+
+<Steps>
+
+<Step title="Klären, was laufen soll">
+Schreib auf, welche Dienste du in den ersten Monaten betreiben willst. Das bestimmt die Hardware mehr als alles andere.
+
+- **Leichte Dienste** wie Vaultwarden, Uptime Kuma, Pocket ID oder ein Reverse Proxy brauchen jeweils nur wenig RAM und kaum CPU.
+- **Mittelschwere Dienste** wie Nextcloud oder Forgejo brauchen eine Datenbank und etwas mehr RAM.
+- **Schwere Dienste** wie Immich (Fotos mit Gesichtserkennung) oder Medienserver mit Transcoding (Umwandeln von Videos in Echtzeit) wollen mehr RAM, eine flotte CPU und oft eine integrierte Grafikeinheit.
+
+Überleg dir auch, wie viele Daten du speichern willst. Ein paar Passwörter sind winzig, eine Fotosammlung schnell mehrere hundert Gigabyte.
+</Step>
+
+<Step title="Zuhause oder in der Cloud entscheiden">
+Bevor du Hardware kaufst, lohnt die Frage, ob der Server überhaupt bei dir stehen soll. Ein gemieteter virtueller Server (VPS) hat eine feste öffentliche IP und kein Gerät im Wohnzimmer, kostet aber monatlich und bietet meist wenig Speicherplatz. Große Datenmengen wie Fotos sind zuhause besser aufgehoben.
+
+Wenn du unsicher bist, hilft der Artikel [Cloud, Hybrid oder Lokal?](/de/nachschlagen/cloud-hybrid-lokal/) mit einer kurzen Entscheidungshilfe.
+</Step>
+
+<Step title="Gerätetyp wählen">
+Für ein Homelab zuhause kommen vor allem diese Geräte in Frage:
+
+| Gerät | Stärken | Schwächen |
+| --- | --- | --- |
+| **Mini-PC** | Sparsam, leise, klein, x86-kompatibel, SSD und RAM oft aufrüstbar | Wenig Platz für zusätzliche Festplatten |
+| **Altes Notebook** | Kostet nichts, Akku überbrückt kurze Stromausfälle, Bildschirm und Tastatur eingebaut | Oft nur ein Laufwerk, Akku altert im Dauerbetrieb, WLAN statt LAN bei manchen Modellen |
+| **NAS** (Synology, QNAP u. a.) | Viel Platz für Festplatten, RAID, fertige Oberfläche | Eigenes Betriebssystem, Docker nur eingeschränkt, oft schwache CPU und wenig RAM |
+| **Eigenbau / alter Desktop-PC** | Viel Leistung und Platz für Platten | Verbraucht meist deutlich mehr Strom, größer und lauter |
+| **VPS** | Feste IP, kein eigenes Gerät, schnell eingerichtet | Laufende Kosten, wenig Speicher, Daten beim Anbieter |
+
+Für die meisten Einsteiger ist ein **gebrauchter oder neuer Mini-PC** der beste Kompromiss. Geräte mit aktuellen sparsamen Intel-Prozessoren (etwa der N-Serie) oder vergleichbaren AMD-Chips reichen für viele Dienste gleichzeitig. Ein altes Notebook ist ideal, um erst einmal kostenlos auszuprobieren.
+
+<Callout title="Und der Raspberry Pi?">
+Ein Raspberry Pi funktioniert, hat aber eine ARM-CPU. Nicht jedes Docker-Image gibt es für ARM, und SD-Karten gehen im Dauerbetrieb gern kaputt. Wenn du einen Pi nutzt, dann einen aktuellen mit SSD statt SD-Karte. Die Guides dieser Seite gehen von einem x86-Rechner aus.
+</Callout>
+</Step>
+
+<Step title="RAM festlegen">
+Arbeitsspeicher (RAM) ist bei Docker meist der erste Engpass, lange vor der CPU. Jeder Container braucht seinen eigenen Anteil, Datenbanken besonders.
+
+- **8 GB**: gut für den Start mit einer Handvoll leichter bis mittlerer Dienste.
+- **16 GB**: komfortabel, auch mit Nextcloud oder Immich und etwas Reserve.
+- **32 GB und mehr**: sinnvoll, wenn du zusätzlich virtuelle Maschinen betreiben willst, etwa mit [Proxmox VE](/de/nachschlagen/proxmox-ve/).
+
+Achte beim Kauf darauf, ob sich der RAM später aufrüsten lässt. Bei manchen Mini-PCs ist er fest verlötet.
+</Step>
+
+<Step title="Speicher planen">
+Das System und deine Container gehören auf eine **SSD**. Sie ist schnell, leise und sparsam. Eine SSD mit 500 GB bis 1 TB reicht für System, Container und viele Anwendungsdaten.
+
+Für große Datenmengen wie Fotos, Videos oder Backups kannst du zusätzlich eine größere Festplatte (HDD) oder eine zweite SSD einplanen. Prüf, wie viele Laufwerke dein Gerät aufnehmen kann: Viele Mini-PCs haben einen M.2-Steckplatz und manchmal einen zusätzlichen 2,5-Zoll-Schacht.
+
+<Callout type="warning" title="Zwei Platten ersetzen kein Backup">
+Ein RAID oder eine zweite Platte schützt vor dem Ausfall einer Festplatte, nicht vor versehentlichem Löschen, Ransomware oder Wasserschaden. Backups richtest du später im Guide [Backups mit borgmatic](/de/einrichten/backups-borgmatic/) ein.
+</Callout>
+</Step>
+
+<Step title="Stromverbrauch abschätzen">
+Dein Server läuft rund um die Uhr. Deshalb zählt vor allem der Verbrauch im Leerlauf, denn in diesem Zustand verbringt ein Homelab die meiste Zeit.
+
+Faustregel: **Watt × 8,76 = kWh pro Jahr**. Ein Gerät mit 10 W Dauerverbrauch braucht also etwa 88 kWh im Jahr. Multipliziere das mit deinem Strompreis pro kWh, dann kennst du die jährlichen Kosten.
+
+Grobe Größenordnungen im Leerlauf:
+
+| Gerät | Leerlauf (etwa) |
+| --- | --- |
+| Sparsamer Mini-PC | 5–15 W |
+| Notebook mit geschlossenem Deckel | 5–15 W |
+| NAS mit zwei Festplatten | 15–30 W |
+| Älterer Desktop-PC | 30–60 W und mehr |
+
+Die tatsächlichen Werte hängen stark vom Modell, von den Laufwerken und den BIOS-Einstellungen ab. Am genauesten misst du mit einem Zwischenstecker-Strommessgerät. Mehr dazu steht unter [Kosten & Stromverbrauch](/de/nachschlagen/kosten-strom/).
+</Step>
+
+<Step title="Vor dem Kauf prüfen">
+Geh diese kurze Liste durch, bevor du ein Gerät kaufst oder einsetzt:
+
+- **LAN-Anschluss** vorhanden? Ein Server gehört per Kabel ans Netzwerk, nicht ins WLAN.
+- **x86-CPU** (Intel oder AMD), damit alle Images laufen?
+- **Mindestens 8 GB RAM**, besser aufrüstbar?
+- **SSD** als Systemlaufwerk?
+- Kann das BIOS nach einem Stromausfall **automatisch wieder einschalten**? Die Option heißt je nach Hersteller etwa „Restore on AC Power Loss“ oder „Power On after Power Failure“.
+- Ist das Gerät **leise** genug für den Ort, an dem es stehen soll?
+
+Wenn alles passt, geht es weiter mit [Betriebssystem installieren](/de/einrichten/betriebssystem-installieren/).
+</Step>
+
+</Steps>

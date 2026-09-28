@@ -1,6 +1,101 @@
 ---
 title: "Uptime Kuma"
+description: "Uptime Kuma prüft im Minutentakt, ob deine Dienste erreichbar sind, und meldet sich per Push, Telegram oder E-Mail, sobald etwas ausfällt. Dazu bekommst du eine Statusseite, auf der du und deine Mitnutzer den Zustand aller Dienste sehen."
 level: 1
-minutes: 10
-status: stub
+minutes: 15
+requires: [Docker Compose, Reverse Proxy]
+services: [uptime-kuma]
 ---
+
+[Beszel](/de/einrichten/monitoring-beszel/) schaut in den Server hinein: CPU, RAM, Festplatte. [Uptime Kuma](https://uptime.kuma.pet) schaut von außen drauf und stellt die Frage, die am Ende zählt: Kommt die Seite im Browser an? Dafür ruft es deine Dienste regelmäßig auf, genau wie ein Besucher. Fällt DNS aus, läuft ein Zertifikat ab oder hängt der Reverse Proxy, merkt Uptime Kuma das, auch wenn alle Container scheinbar laufen.
+
+<Callout type="warning" title="Wer überwacht den Wächter?">
+Läuft Uptime Kuma auf demselben Server wie deine Dienste, fällt es mit ihm zusammen aus und kann dich nicht mehr warnen. Ideal ist ein **anderes Gerät**: ein Raspberry Pi zuhause, der deinen Cloud-Server prüft, oder ein kleiner VPS, der dein Homelab von außen prüft. Für den Anfang ist derselbe Server in Ordnung. Dann ergänzt du aber einen externen Check (letzter Schritt), der Uptime Kuma selbst überwacht.
+</Callout>
+
+<Steps>
+
+<Step title="Uptime Kuma starten">
+Uptime Kuma bekommt einen eigenen Ordner unter `__ROOT__`. Monitore, Einstellungen und Messwerte landen in `data/`.
+
+```bash
+mkdir -p __ROOT__/uptime-kuma
+cd __ROOT__/uptime-kuma
+```
+
+Lege dort `compose.yaml` und `.env` an:
+
+<ServiceFiles id="uptime-kuma" />
+
+```bash
+docker compose up -d
+docker compose logs -f uptime-kuma
+```
+
+Mit `Strg+C` beendest du die Log-Anzeige. Nutzt du Nginx Proxy Manager, schalte beim Proxy-Host „Websockets Support“ ein. Die Oberfläche von Uptime Kuma braucht WebSockets für ihre Live-Anzeige. Traefik und Caddy leiten sie automatisch weiter.
+</Step>
+
+<Step title="Datenbank wählen und Konto anlegen">
+Öffne `https://status.__DOMAIN__`. Uptime Kuma 2 fragt beim ersten Start: „Welche Datenbank möchtest du verwenden?“ Wähle **SQLite**. Das ist eine einzelne Datei im `data`-Ordner, ideal für ein Homelab und einfach zu sichern. Die eingebaute MariaDB lohnt sich erst bei sehr vielen Monitoren.
+
+Danach legst du dein Administrator-Konto an. Nimm ein langes, zufälliges Passwort aus deinem Passwortmanager. Später kannst du unter „Einstellungen → Sicherheit“ zusätzlich die Zwei-Faktor-Anmeldung einschalten.
+</Step>
+
+<Step title="Benachrichtigung einrichten">
+Richte zuerst den Kanal ein, über den Uptime Kuma dich erreicht. Dann kannst du ihn jedem neuen Monitor direkt zuweisen. Öffne „Einstellungen → Benachrichtigungen → Benachrichtigung einrichten“ und wähle einen Typ. Drei beliebte Wege:
+
+| Typ | Was du brauchst |
+| --- | --- |
+| ntfy | Die ntfy-App auf dem Handy und ein Topic-Name. Server-URL `https://ntfy.sh` oder dein eigener ntfy-Server. |
+| Telegram | Einen Bot, den du beim BotFather anlegst, und deine Chat-ID. Uptime Kuma hilft im Dialog beim Auslesen der ID. |
+| E-Mail (SMTP) | Die SMTP-Daten deines Mailanbieters: Server, Port, Benutzer, Passwort. |
+
+Beim öffentlichen ntfy-Server kann jeder mitlesen, der den Topic-Namen kennt. Wähle ihn deshalb lang und zufällig.
+
+Setze die Häkchen „Standardmäßig aktiviert“ und „Auf alle bestehenden Monitore anwenden“. Klicke auf „Testen“: Kommt die Nachricht an, speicherst du. Viele weitere Dienste stehen in der [Liste der Benachrichtigungen](https://github.com/louislam/uptime-kuma/wiki/Notification-Methods).
+</Step>
+
+<Step title="Ersten HTTP-Monitor anlegen">
+Klicke auf „Neuen Monitor hinzufügen“ und fülle aus:
+
+| Feld | Wert |
+| --- | --- |
+| Monitortyp | HTTP(s) |
+| Anzeigename | Vaultwarden |
+| URL | `https://vault.__DOMAIN__` |
+| Heartbeat-Intervall | 60 Sekunden |
+| Wiederholungen | 2 |
+
+Mit der öffentlichen Adresse prüfst du die ganze Kette: DNS, Reverse Proxy, Zertifikat und Dienst. Die **Wiederholungen** verhindern Fehlalarme: Erst wenn mehrere Prüfungen hintereinander scheitern, gilt der Dienst als down und du bekommst eine Nachricht.
+
+Schalte in den erweiterten Optionen die „Benachrichtigung bei Zertifikatsablauf“ ein. Dann warnt dich Uptime Kuma, falls die automatische Verlängerung einmal hängt, bevor Besucher eine Fehlermeldung sehen.
+
+Lege auf die gleiche Weise für jeden wichtigen Dienst einen Monitor an. Neben HTTP gibt es weitere Typen, etwa **Schlüsselwort** (die Seite muss einen bestimmten Text enthalten), **TCP-Port** und **Ping** für Geräte ohne Weboberfläche.
+
+Weil Uptime Kuma im Netzwerk `__NETWORK__` hängt, kannst du Dienste auch intern über ihren Containernamen prüfen, etwa `http://vaultwarden:80`. Das zeigt dir, ob der Container selbst läuft, unabhängig vom Proxy.
+</Step>
+
+<Step title="Backups überwachen">
+Manche Dinge kann Uptime Kuma nicht abfragen, sie melden sich selbst. Dafür gibt es den Monitortyp **Push**: Uptime Kuma zeigt dir eine Push-URL und wartet darauf, dass sie regelmäßig aufgerufen wird. Bleibt der Aufruf aus, schlägt es Alarm.
+
+Ideal für dein nächtliches Backup: Lege einen Push-Monitor „Backup“ mit einem Heartbeat-Intervall von `90000` Sekunden an (25 Stunden, etwas Puffer für einen Tag). Die Push-URL trägst du in deine borgmatic-Konfiguration ein, wie in [Backups mit borgmatic](/de/einrichten/backups-borgmatic/) beschrieben.
+</Step>
+
+<Step title="Statusseite erstellen">
+Eine **Statusseite** zeigt auf einen Blick, welche Dienste laufen, ohne dass sich jemand anmelden muss. Praktisch, wenn Familie oder Freunde deine Dienste mitnutzen: Statt „Geht Nextcloud bei dir?“ schauen sie selbst nach.
+
+Öffne „Statusseiten → Neue Statusseite“, gib einen Namen und eine Kurzbezeichnung (Slug) ein, zum Beispiel `homelab`. Im Editor fügst du Gruppen und Monitore hinzu und speicherst. Die Seite ist danach unter `https://status.__DOMAIN__/status/homelab` erreichbar.
+
+Die Statusseite ist öffentlich. Nimm nur Monitore auf, deren Namen du zeigen willst, und keine internen Adressen.
+</Step>
+
+<Step title="Uptime Kuma selbst überwachen">
+Zum Schluss die Frage aus dem Anfang: Wer merkt, wenn der ganze Server ausfällt? Dafür brauchst du einen Check, der **nicht** auf diesem Server läuft. Zwei einfache Wege:
+
+- **Zweite Uptime-Kuma-Instanz** auf einem anderen Gerät oder einem kleinen VPS. Sie prüft nur `https://status.__DOMAIN__` und ein, zwei wichtige Dienste. Am besten an einem anderen Standort, damit auch ein Ausfall deiner Internetleitung auffällt.
+- **Externer Überwachungsdienst**: Viele Anbieter prüfen einige Adressen kostenlos von außen. Du trägst dort `https://status.__DOMAIN__` als HTTP-Check ein und bekommst eine Mail, wenn er nicht mehr antwortet.
+
+Damit hast du zwei Ebenen: Uptime Kuma kennt alle Details, der externe Check sagt dir, wenn Uptime Kuma selbst schweigt.
+</Step>
+
+</Steps>

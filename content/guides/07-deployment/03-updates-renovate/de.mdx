@@ -1,6 +1,184 @@
 ---
 title: "Updates mit Renovate"
+description: "Am Ende prüft Renovate jede Nacht die Image-Versionen in deinen Compose-Dateien und öffnet in Forgejo einen Pull Request, sobald es ein Update gibt. Kleine Patch-Updates werden automatisch übernommen, alles andere gibst du selbst frei."
 level: 3
 minutes: 30
-status: stub
+requires: [Compose-Dateien in Forgejo, Deploy-Skript aus dem Forgejo-Guide]
+services: [forgejo]
 ---
+
+Container aktualisieren sich nicht von selbst. Wer `latest` benutzt und ab und zu `docker compose pull` ausführt, bekommt zwar neue Versionen, weiß aber nicht, welche. Kommt mit einem Update ein Fehler, gibt es keinen einfachen Weg zurück.
+
+**Renovate** löst das anders: Es liest die Image-Tags in deinen `compose.yaml`-Dateien im Git-Repository, prüft in der Registry, ob es neuere Versionen gibt, und öffnet für jedes Update einen **Pull Request** (PR). Ein PR ist ein Änderungsvorschlag, den du ansehen, annehmen oder ablehnen kannst. So siehst du jedes Update, bevor es live geht, und jede Version steht in der Git-Historie.
+
+Dieser Guide baut auf [Git-Deployments mit Forgejo](/de/einrichten/git-deployments-forgejo/) auf. Du brauchst also das Repository `homelab` in Forgejo und das Deploy-Skript auf dem Server.
+
+<OneWay />
+
+## Der Ablauf
+
+1. Renovate läuft einmal pro Nacht als kurzlebiger Container.
+2. Es findet zum Beispiel `vaultwarden/server:1.34.1` in deinem Repository und sieht, dass es `1.34.2` gibt.
+3. Es öffnet in Forgejo einen PR, der genau diese Zeile ändert, meist mit Link zu den Release Notes.
+4. Du mergst den PR, oder Renovate macht es bei Patch-Updates selbst.
+5. Dein Deploy-Skript holt die Änderung per `git pull`, und `docker compose up -d` startet den Container mit der neuen Version.
+
+## Einrichten
+
+<Steps>
+
+<Step title="Feste Tags statt latest">
+Renovate kann nur Versionen vergleichen. Aus `latest`, `stable` oder `lts` kann es nicht ablesen, welche Version läuft. Stell deine Images deshalb auf feste Versions-Tags um.
+
+```yaml
+# vorher
+image: vaultwarden/server:latest
+# nachher
+image: vaultwarden/server:1.34.1
+```
+
+Welche Tags es gibt, siehst du auf der Seite des Images bei Docker Hub oder in der GitHub Container Registry. Nimm die Version, die gerade bei dir läuft. So ändert sich beim Umstellen nichts. Die aktuell laufende Version zeigt oft das Log des Containers oder die Weboberfläche des Dienstes.
+
+Manche Projekte bieten Tags nur für die Hauptversion an, etwa `forgejo:12`. Das ist in Ordnung: Innerhalb der Hauptversion kommen Updates dann über `docker compose pull`, und Renovate meldet dir den Sprung auf die nächste Hauptversion.
+
+Committe und pushe die Umstellung wie gewohnt.
+</Step>
+
+<Step title="Bot-Benutzer in Forgejo anlegen">
+Renovate bekommt einen eigenen Benutzer. So siehst du in Forgejo sofort, welche Änderungen vom Bot kommen, und kannst ihm den Zugriff jederzeit entziehen.
+
+1. Als Admin in Forgejo: **Website-Administration** → **Benutzerkonten** → **Benutzerkonto erstellen**. Name zum Beispiel `renovate`.
+2. Melde dich als `renovate` an und trag in den Profileinstellungen einen vollständigen Namen und eine E-Mail-Adresse ein. Renovate braucht beides für seine Commits.
+3. Wieder als du selbst: Repository `homelab` → **Einstellungen** → **Mitarbeiter** → `renovate` mit **Schreibrechten** hinzufügen.
+</Step>
+
+<Step title="Access-Token erzeugen">
+Als `renovate` angemeldet: **Einstellungen** → **Anwendungen** → **Neuen Token erzeugen**. Gib ihm diese Berechtigungen:
+
+| Bereich        | Berechtigung       |
+| -------------- | ------------------ |
+| `repository`   | Lesen und Schreiben |
+| `user`         | Lesen              |
+| `issue`        | Lesen und Schreiben |
+| `organization` | Lesen              |
+
+Kopiere den Token sofort, Forgejo zeigt ihn nur einmal an. Die aktuelle Liste der Berechtigungen steht in der [Renovate-Doku zu Forgejo](https://docs.renovatebot.com/modules/platform/forgejo/).
+</Step>
+
+<Step title="renovate.json ins Repository legen">
+Die Konfiguration für dein Repository liegt als `renovate.json` direkt in `__ROOT__` bzw. in deinem geklonten Repository auf dem Rechner. Liegt sie schon beim ersten Lauf dort, überspringt Renovate seinen Einrichtungs-PR („Onboarding“) und legt direkt los.
+
+```json
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "enabledManagers": ["docker-compose"],
+  "ignoreTests": true,
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["patch"],
+      "automerge": true
+    }
+  ]
+}
+```
+
+Was die Zeilen bedeuten:
+
+- `config:recommended` ist die empfohlene Grundeinstellung von Renovate. Sie legt unter anderem ein Issue „Dependency Dashboard“ an, in dem alle offenen und geplanten Updates stehen.
+- `enabledManagers` beschränkt Renovate auf Compose-Dateien. Der Manager `docker-compose` findet `compose.yaml` und `docker-compose.yml` in allen Unterordnern von selbst.
+- Die `packageRules` erlauben **automatisches Mergen nur für Patch-Updates**, also etwa von `1.34.1` auf `1.34.2`. Minor- und Major-Updates bleiben als PR offen, bis du sie freigibst.
+- `ignoreTests` ist nötig, weil dein Repository keine automatischen Tests hat. Ohne diese Zeile wartet Renovate vor dem Automerge auf erfolgreiche Tests, die nie kommen.
+
+Committe die Datei und pushe sie.
+</Step>
+
+<Step title="Renovate als Container einrichten">
+Renovate ist kein Dienst, der dauerhaft läuft. Es startet, prüft alle Repositories, öffnet PRs und beendet sich. Leg dafür einen eigenen Ordner an:
+
+```bash
+mkdir -p __ROOT__/renovate
+touch __ROOT__/renovate/.skip
+```
+
+Die leere Datei `.skip` sorgt dafür, dass das Deploy-Skript aus dem Forgejo-Guide diesen Stack auslässt. Renovate soll nur per Zeitplan laufen, nicht bei jedem Deploy.
+
+`__ROOT__/renovate/compose.yaml`:
+
+```yaml
+services:
+  renovate:
+    # Check https://github.com/renovatebot/renovate/releases for the current major version
+    image: ghcr.io/renovatebot/renovate:44
+    env_file: .env
+```
+
+`__ROOT__/renovate/.env`:
+
+```bash
+RENOVATE_PLATFORM=forgejo
+RENOVATE_ENDPOINT=https://git.__DOMAIN__/api/v1
+RENOVATE_TOKEN=dein-token-aus-forgejo
+# Work on every repository the renovate user has access to
+RENOVATE_AUTODISCOVER=true
+```
+
+Mit `RENOVATE_AUTODISCOVER=true` bearbeitet Renovate alle Repositories, auf die der Bot-Benutzer Zugriff hat. Weil er nur Mitarbeiter in `homelab` ist, ist das genau dieses eine.
+
+Optional: Viele Images stammen aus Projekten auf GitHub. Damit Renovate deren Release Notes abrufen kann, ohne an Abfragelimits zu stoßen, kannst du zusätzlich `RENOVATE_GITHUB_COM_TOKEN` mit einem GitHub-Token ohne besondere Berechtigungen setzen. Ohne diesen Token zeigt Renovate eine Warnung im Log, funktioniert aber.
+
+Die `.env` enthält den Token und landet dank `.gitignore` nicht im Repository. Die `compose.yaml` darf ins Repository. Renovate aktualisiert dann sogar sein eigenes Image.
+
+Renovate muss `https://git.__DOMAIN__` vom Server aus erreichen können. Das ist der Fall, wenn die Domain auf deinen Reverse Proxy zeigt.
+</Step>
+
+<Step title="Ersten Lauf testen">
+Starte Renovate einmal von Hand und schau zu:
+
+```bash
+cd __ROOT__/renovate
+docker compose run --rm renovate
+```
+
+Der erste Lauf dauert etwas länger, weil das Image geladen wird. Danach findest du in Forgejo unter **Pull Requests** die ersten Vorschläge und unter **Issues** das Dependency Dashboard. Gibt es gerade keine Updates, ist auch das in Ordnung: Das Dashboard listet dann alle gefundenen Images.
+
+Wenn nichts passiert, lies die Ausgabe von oben nach unten. Typische Ursachen sind ein falscher Token, fehlende Rechte des Bot-Benutzers oder eine falsche `RENOVATE_ENDPOINT`-Adresse.
+</Step>
+
+<Step title="Nachts automatisch ausführen">
+Ein Lauf pro Nacht reicht für ein Homelab. Öffne deine Crontab:
+
+```bash
+crontab -e
+```
+
+und füge diese Zeile hinzu. Renovate läuft dann jeden Tag um 4:17 Uhr:
+
+```bash
+17 4 * * * cd __ROOT__/renovate && docker compose run --rm renovate >> $HOME/renovate.log 2>&1
+```
+
+Patch-Updates werden danach spätestens beim nächsten Lauf gemergt. Dein Deploy-Skript holt sie beim nächsten `git pull`, und `docker compose up -d` lädt das neue Image, weil es lokal noch nicht existiert.
+</Step>
+
+<Step title="Updates prüfen und freigeben">
+Für Minor- und Major-Updates schaust du in den PR:
+
+- Renovate verlinkt die Release Notes, wenn es sie findet. Lies sie, bevor du mergst, besonders bei **Major-Updates** (erste Zahl ändert sich). Die bringen oft Änderungen, die Handarbeit erfordern.
+- **Datenbanken** wie PostgreSQL oder MariaDB kannst du bei einem Major-Update meist nicht einfach austauschen. Die Daten müssen migriert werden. Mach vorher ein Backup und folge der Anleitung des Projekts.
+- Passt alles, merge den PR in Forgejo. Den Rest erledigt das Deploy-Skript.
+
+Geht etwas schief, machst du den Merge-Commit per `git revert` rückgängig und pushst. Danach läuft wieder die alte Version.
+</Step>
+
+</Steps>
+
+<Callout title="Automerge mit Augenmaß">
+Patch-Updates sind in der Regel reine Fehlerbehebungen, aber nicht jedes Projekt hält sich streng an diese Regel. Wenn ein Dienst für dich besonders wichtig ist, etwa dein Passwortmanager, kannst du ihn vom Automerge ausnehmen. Wie das geht, steht in der [Renovate-Doku zu Automerge](https://docs.renovatebot.com/key-concepts/automerge/). Und vergiss nicht: Automatische Updates ersetzen keine [Backups](/de/einrichten/backups-borgmatic/).
+</Callout>
+
+## Weiterlesen
+
+- [Renovate-Dokumentation](https://docs.renovatebot.com)
+- [Renovate: Docker-Compose-Manager](https://docs.renovatebot.com/modules/manager/docker-compose/)
+- [Updates](/de/nachschlagen/updates/) und [Images & Tags](/de/nachschlagen/images-tags/)

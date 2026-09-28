@@ -1,6 +1,80 @@
 ---
 slug: tls-zertifikate
 title: "TLS & Zertifikate"
+description: "HTTPS verschlüsselt die Verbindung zu deinen Diensten und beweist, dass du wirklich mit deinem Server sprichst. Dafür braucht jeder Name ein gültiges Zertifikat, das dein Reverse Proxy kostenlos und automatisch von Let's Encrypt holt."
 level: 2
-status: stub
+related: [reverse-proxy-explained, dns-domains, cgnat-ds-lite, attack-surface]
+practice: reverse-proxy-traefik
 ---
+
+## Warum HTTPS auch zuhause
+
+Ohne HTTPS gehen Passwörter, Cookies und Inhalte im Klartext durchs Netz. Jeder, der mitlesen kann, sieht sie: im öffentlichen WLAN, beim Anbieter, manchmal auch im eigenen Netz. Außerdem verlangen viele Dienste und Apps HTTPS inzwischen zwingend, etwa Passwortmanager wie Vaultwarden oder Anmeldungen per Passkey.
+
+**TLS** (Transport Layer Security) ist das Verfahren hinter HTTPS. Es erfüllt zwei Aufgaben:
+
+- **Verschlüsselung**: Niemand dazwischen kann mitlesen oder etwas verändern.
+- **Echtheit**: Das Zertifikat belegt, dass der Server wirklich zu `vault.__DOMAIN__` gehört und nicht ein Angreifer ist.
+
+## Was ein Zertifikat ist
+
+Ein Zertifikat ist ein digitaler Ausweis für einen oder mehrere Namen. Ausgestellt wird es von einer **Zertifizierungsstelle** (CA, Certificate Authority). Browser und Betriebssysteme bringen eine Liste von CAs mit, denen sie vertrauen. Ist dein Zertifikat von einer dieser CAs unterschrieben, zeigt der Browser das Schloss ohne Warnung.
+
+Ein **selbstsigniertes Zertifikat** stellst du dir selbst aus. Verschlüsseln kann es genauso gut, aber kein Browser vertraut ihm. Du bekommst eine Warnung, die du jedes Mal wegklicken oder auf jedem Gerät einzeln abschalten musst. Für ein Homelab mit eigener Domain gibt es dafür keinen Grund mehr.
+
+## Let's Encrypt und ACME
+
+[Let's Encrypt](https://letsencrypt.org/) ist eine gemeinnützige CA, die Zertifikate kostenlos ausstellt. Das Ganze läuft vollautomatisch über das Protokoll **ACME**. Traefik, Caddy und Nginx Proxy Manager sprechen ACME von Haus aus. Du trägst nur deine E-Mail-Adresse ein, den Rest erledigt der Proxy.
+
+Bevor Let's Encrypt ein Zertifikat ausstellt, musst du beweisen, dass dir der Name gehört. Das nennt sich **Challenge**. Es gibt drei Arten.
+
+## Die drei Challenges
+
+| Challenge | Wie geprüft wird | Voraussetzung | Wildcard |
+| --- | --- | --- | --- |
+| **HTTP-01** | Let's Encrypt ruft eine Datei über Port 80 ab | Port 80 von außen erreichbar | Nein |
+| **TLS-ALPN-01** | Let's Encrypt baut eine spezielle TLS-Verbindung auf Port 443 auf | Port 443 von außen erreichbar | Nein |
+| **DNS-01** | Let's Encrypt prüft einen TXT-Eintrag `_acme-challenge` in deinem DNS | API-Zugang zu deinem DNS-Anbieter | Ja |
+
+**HTTP-01** ist der Klassiker und funktioniert fast überall, wo Port 80 offen ist.
+
+**TLS-ALPN-01** kommt mit Port 443 allein aus. Diese Seite nutzt sie in der Traefik-Vorlage (`tlschallenge=true` beim Resolver `le`), weil 443 ohnehin offen ist.
+
+**DNS-01** braucht gar keinen offenen Port. Der Proxy legt über die API deines DNS-Anbieters kurz einen TXT-Eintrag an, Let's Encrypt prüft ihn, danach wird er wieder gelöscht. Das hat zwei große Vorteile:
+
+- Du bekommst **Wildcard-Zertifikate** wie `*.__DOMAIN__`. Ein Zertifikat deckt dann alle Subdomains ab.
+- Es funktioniert auch für Dienste, die **nur im Heimnetz oder per VPN** erreichbar sind. Der Server muss für Let's Encrypt nicht erreichbar sein, nur dein DNS-Anbieter.
+
+Der Preis: Du brauchst einen DNS-Anbieter mit API und legst einen API-Token beim Proxy ab. Gib diesem Token nur die Rechte, die er braucht, also DNS-Einträge dieser einen Zone bearbeiten. Welche Anbieter unterstützt werden, steht in der Doku deines Proxys, etwa bei [Traefik](https://doc.traefik.io/traefik/https/acme/#providers) oder den [Caddy-DNS-Modulen](https://caddyserver.com/docs/modules/).
+
+<Callout title="Welche Challenge für mich?">
+Ist dein Server von außen auf Port 443 erreichbar, reicht TLS-ALPN-01 wie in der Vorlage. Hast du keine öffentliche IPv4, willst nur intern oder per VPN zugreifen, oder möchtest ein Wildcard-Zertifikat, nimm DNS-01.
+</Callout>
+
+## Laufzeit und Erneuerung
+
+Zertifikate von Let's Encrypt gelten bisher 90 Tage. Let's Encrypt hat angekündigt, die Laufzeit in den kommenden Jahren schrittweise auf 45 Tage zu verkürzen. Die kurze Laufzeit ist gewollt: Ein gestohlenes Zertifikat ist nur kurz nutzbar, und Automatisierung wird Pflicht.
+
+Für dich heißt das: Nichts von Hand erneuern. Dein Proxy prüft regelmäßig und erneuert rechtzeitig vor Ablauf. Wichtig ist nur, dass er seine Zertifikate dauerhaft speichert. Bei Traefik liegt dafür die Datei `acme.json` unter `__DATA(traefik)__/letsencrypt/`. Geht sie verloren, holt Traefik beim Start neue Zertifikate. Das klappt, solange du nicht zu oft neu anfragst: Let's Encrypt hat [Rate Limits](https://letsencrypt.org/docs/rate-limits/), die bei vielen Neustarts mit leerem Speicher greifen können.
+
+<Callout title="Zum Testen: Staging">
+Wenn du viel ausprobierst, nutze zuerst die Staging-Umgebung von Let's Encrypt. Deren Zertifikate sind nicht vertrauenswürdig, aber die Rate Limits sind viel großzügiger. Wie du sie einschaltest, steht in der Doku deines Proxys.
+</Callout>
+
+## Certificate Transparency: Deine Subdomains sind öffentlich
+
+Jedes öffentlich vertrauenswürdige Zertifikat landet in **Certificate-Transparency-Logs**. Das sind öffentliche, durchsuchbare Verzeichnisse aller ausgestellten Zertifikate. Sie sollen verhindern, dass eine CA heimlich falsche Zertifikate ausstellt.
+
+Die Kehrseite: Jeder kann dort nachsehen, welche Namen du verwendest. Holst du ein Zertifikat für `nextcloud.__DOMAIN__`, weiß die Welt kurz danach, dass es diese Subdomain gibt. Automatische Scanner werten diese Logs aus und probieren neue Namen oft schon wenige Minuten später aus.
+
+Was daraus folgt:
+
+- Ein unbekannter Subdomain-Name ist **kein Schutz**. Sichere Dienste mit Login, Updates und bei Bedarf einem vorgeschalteten Login wie Tinyauth oder Pocket ID ab (siehe [Angriffsfläche klein halten](/de/nachschlagen/angriffsflaeche/)).
+- Mit einem **Wildcard-Zertifikat** per DNS-01 steht nur `*.__DOMAIN__` im Log, nicht jeder einzelne Name.
+
+## Kurz zusammengefasst
+
+- HTTPS verschlüsselt und beweist die Echtheit des Servers. Dafür braucht jeder Name ein Zertifikat.
+- Let's Encrypt stellt es kostenlos aus, dein Reverse Proxy holt und erneuert es automatisch.
+- HTTP-01 braucht Port 80, TLS-ALPN-01 Port 443, DNS-01 nur einen DNS-Anbieter mit API und kann Wildcards.
+- Alle Zertifikate sind öffentlich einsehbar, also auch deine Subdomains.

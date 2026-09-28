@@ -1,6 +1,106 @@
 ---
 slug: benennung
 title: "Benennung"
+description: "Ordner, Stacks, Container, Subdomains und Netzwerke: Mit einem festen Namensschema findest du dich auch nach Monaten noch zurecht. Hier ist das Schema, das alle Vorlagen dieser Seite verwenden."
 level: 1
-status: stub
+related: [directory-structure, docker-compose, docker-networks, dns-domains]
+practice: first-stack
 ---
+
+<OneWay />
+
+## Warum ein Namensschema?
+
+Namen tauchen in einem Homelab an vielen Stellen auf: im Ordner, in `docker ps`, in Logs, im Monitoring, in der
+Adresszeile des Browsers. Heißt derselbe Dienst an jeder Stelle anders, suchst du ständig. Ein festes Schema spart dir
+dieses Suchen. Und es macht Befehle vorhersehbar: Du weißt, wie der Container heißt, ohne nachzusehen.
+
+Die Regel dieser Seite ist einfach: **Ein Dienst hat einen Namen, und der gilt überall.**
+
+## Ordner, Stack und Container
+
+Der Name eines Dienstes ist seine ID, zum Beispiel `vaultwarden` oder `nextcloud`. Kleinbuchstaben, Ziffern und
+Bindestriche, keine Leerzeichen.
+
+- **Ordner:** `__ROOT__/vaultwarden`
+- **Stack-Name:** Docker Compose nimmt ohne weitere Angabe den Ordnernamen als Projektnamen. Du musst also nichts tun.
+- **Container:** `container_name: vaultwarden`
+
+Ohne `container_name` würde Compose Namen wie `vaultwarden-vaultwarden-1` erzeugen (Projekt, Dienst, Nummer). Das
+funktioniert, ist aber lang und schwer zu tippen. Mit festem Namen reicht `docker logs vaultwarden`.
+
+## Hilfscontainer
+
+Viele Dienste bestehen aus mehreren Containern, etwa einer App, einer Datenbank und einem Cache. Der Hauptcontainer
+heißt wie der Ordner, alle anderen nach dem Schema `<id>-<rolle>`:
+
+```yaml
+services:
+  nextcloud:
+    container_name: nextcloud
+  db:
+    container_name: nextcloud-db
+  redis:
+    container_name: nextcloud-redis
+```
+
+Die Schlüssel unter `services:` bleiben kurz (`db`, `redis`). Unter diesen Namen erreichen sich die Container
+innerhalb des Stacks, zum Beispiel mit `MYSQL_HOST=db`. So sieht jede `compose.yaml` ähnlich aus, und in `docker ps`
+erkennst du trotzdem sofort, welche Datenbank zu welchem Dienst gehört.
+
+Gängige Rollen sind `db`, `redis`, `worker` oder `cron`. Wichtig ist nur, dass du immer dieselben verwendest.
+
+<Callout type="warning" title="container_name muss eindeutig sein">
+  Zwei Container mit demselben Namen kann es auf einem Server nicht geben. Hättest du in zwei Stacks je einen
+  Container namens `db`, startet der zweite nicht. Das Präfix mit der ID verhindert das.
+</Callout>
+
+## Subdomains
+
+Die Subdomain ist der Name, den du im Browser tippst. Hier darf er kürzer oder sprechender sein als die ID, zum
+Beispiel:
+
+| Dienst      | Subdomain            |
+| ----------- | -------------------- |
+| vaultwarden | `vault.__DOMAIN__`   |
+| nextcloud   | `cloud.__DOMAIN__`   |
+| forgejo     | `git.__DOMAIN__`     |
+| pocket-id   | `id.__DOMAIN__`      |
+
+Die Vorlagen dieser Seite bringen einen Vorschlag mit. Überleg dir, ob du nach Funktion (`git`, `fotos`) oder nach
+Produkt (`forgejo`, `immich`) benennen willst. Funktionsnamen haben einen Vorteil: Wechselst du später das Produkt,
+bleibt die Adresse gleich. Mehr zu Domains unter [DNS & Domains](/de/nachschlagen/dns-domains/).
+
+## Netzwerke
+
+- **Proxy-Netzwerk:** Ein gemeinsames Netzwerk, in dem der Reverse Proxy und alle Web-Dienste hängen. Es heißt hier
+  `__NETWORK__` und wird einmal von Hand angelegt:
+
+  ```bash
+  docker network create __NETWORK__
+  ```
+
+- **Stack-Netzwerk:** Jeder Stack bekommt von Compose automatisch ein eigenes Netzwerk namens `<projekt>_default`,
+  zum Beispiel `nextcloud_default`. Datenbanken hängen nur dort und sind damit vom Rest getrennt.
+
+Weitere Netzwerke brauchst du selten. Falls doch, gib ihnen einen Namen, der den Zweck beschreibt, etwa `monitoring`.
+Mehr unter [Docker-Netzwerke](/de/nachschlagen/docker-netzwerke/).
+
+## Hostnamen
+
+Auch deine Geräte brauchen Namen. Ein Hostname sollte kurz sein, nur Kleinbuchstaben, Ziffern und Bindestriche
+enthalten und nicht verraten, was darauf läuft. Beliebt sind Schemata wie `homelab`, `nas`, `pi` oder durchnummeriert
+`srv01`, `srv02`. Manche nehmen auch Planeten oder Figuren aus Büchern. Das ist Geschmackssache, solange du dabei
+bleibst. Wie du den Hostnamen setzt, zeigt der Guide [Feste IP & Hostname](/de/einrichten/feste-ip-hostname/).
+
+## Kurz zusammengefasst
+
+| Was                  | Schema                    | Beispiel               |
+| -------------------- | ------------------------- | ---------------------- |
+| Ordner               | `__ROOT__/<id>`           | `__ROOT__/nextcloud`   |
+| Stack (Projekt)      | = Ordnername              | `nextcloud`            |
+| Hauptcontainer       | `<id>`                    | `nextcloud`            |
+| Hilfscontainer       | `<id>-<rolle>`            | `nextcloud-db`         |
+| Subdomain            | kurz, nach Funktion       | `cloud.__DOMAIN__`     |
+| Proxy-Netzwerk       | einmal, gemeinsam         | `__NETWORK__`          |
+| Hostname             | kurz, Kleinbuchstaben     | `homelab`              |

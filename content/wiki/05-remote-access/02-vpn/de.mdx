@@ -1,5 +1,75 @@
 ---
 title: "VPN"
+description: "Ein VPN verbindet dein Handy oder Notebook von unterwegs verschlüsselt mit deinem Heimnetz. Du erreichst alle Dienste, als wärst du zuhause – und für den Rest des Internets bleibt dein Server unsichtbar."
 level: 2
-status: stub
+related: [port-forwarding, tunnels, access-methods-compared, cgnat-ds-lite]
+practice: vpn-wireguard
 ---
+
+<OneWay />
+
+## Warum ein VPN
+
+Viele Dienste im Homelab brauchst nur du: Portainer, das Proxmox-Webinterface, die Router-Oberfläche, SSH. Diese Dienste haben im offenen Internet nichts verloren. Trotzdem willst du auch von unterwegs heran.
+
+Genau dafür gibt es ein **VPN** (*Virtual Private Network*). Dein Gerät baut eine verschlüsselte Verbindung zu deinem Heimnetz auf. Danach verhält es sich, als stünde es in deinem WLAN. Du rufst Dienste über ihre internen Adressen auf, etwa `192.168.1.10`.
+
+Der entscheidende Vorteil: **Nur wer einen passenden Schlüssel hat, kommt rein.** Ein Angreifer sieht keine Login-Seite, die er ausprobieren könnte. Bei WireGuard antwortet der Server auf fremde Pakete nicht einmal.
+
+## Die drei gängigen Wege
+
+<Cards>
+  <Card title="WireGuard selbst betreiben">
+    Ein schlankes, modernes VPN-Protokoll. Läuft auf deinem Server, du verwaltest die Schlüssel selbst. Braucht eine Portfreigabe für einen UDP-Port.
+  </Card>
+  <Card title="Tailscale oder Headscale">
+    Baut auf WireGuard auf, kümmert sich aber um Schlüssel und Verbindungsaufbau. Funktioniert ohne Portfreigabe, auch hinter CGNAT.
+  </Card>
+  <Card title="VPN im Router">
+    Viele Router bringen einen VPN-Server mit, etwa die FRITZ!Box mit WireGuard. Einrichten per Klick, ohne extra Software auf dem Server.
+  </Card>
+</Cards>
+
+### WireGuard selbst
+
+[WireGuard](https://www.wireguard.com/) ist ein VPN-Protokoll, das im Linux-Kernel steckt. Die Konfiguration ist kurz: Jedes Gerät hat ein Schlüsselpaar, und der Server kennt die öffentlichen Schlüssel aller erlaubten Geräte.
+
+Damit Geräte von außen deinen Server erreichen, gibst du im Router **einen UDP-Port** frei (üblich ist 51820). Das setzt eine öffentliche IPv4-Adresse oder funktionierendes IPv6 voraus. Anders als bei einer Web-Oberfläche ist dieser offene Port unkritisch: WireGuard ignoriert alle Pakete ohne gültigen Schlüssel.
+
+Wer lieber klickt als Konfigurationsdateien schreibt, findet mit [wg-easy](https://github.com/wg-easy/wg-easy) eine Weboberfläche, die als Container läuft und QR-Codes für die Handy-App erzeugt. Die Anleitung [VPN mit WireGuard](/de/einrichten/vpn-wireguard/) führt dich durch das Setup.
+
+### Tailscale und Headscale
+
+[Tailscale](https://tailscale.com/) nutzt ebenfalls WireGuard, nimmt dir aber die Arbeit ab. Du installierst auf jedem Gerät den Client und meldest dich an. Tailscale verteilt die Schlüssel und findet selbst einen Weg zwischen den Geräten, notfalls über eigene Relay-Server. Deshalb brauchst du **keine Portfreigabe**, und es funktioniert auch hinter CGNAT oder DS-Lite.
+
+Der Haken: Die Koordination läuft über die Server von Tailscale, und du brauchst dort ein Konto. Deine eigentlichen Daten laufen verschlüsselt zwischen deinen Geräten. Für den privaten Einsatz gibt es einen kostenlosen Tarif.
+
+Wer die Koordination selbst in der Hand haben will, nimmt [Headscale](https://github.com/juanfont/headscale). Das ist eine freie Nachbildung des Tailscale-Koordinationsservers, mit der die offiziellen Tailscale-Clients zusammenarbeiten. Headscale muss aber selbst aus dem Internet erreichbar sein, läuft also typischerweise auf einem kleinen VPS.
+
+### VPN im Router
+
+Wenn dein Router einen VPN-Server mitbringt, ist das oft der schnellste Weg. Die FRITZ!Box kann in aktuellen FRITZ!OS-Versionen WireGuard, andere Router bieten WireGuard oder OpenVPN. Du legst im Router eine Verbindung an und scannst einen QR-Code mit dem Handy.
+
+Nachteil: Du bist an den Funktionsumfang und die Updates des Routers gebunden. Und auch hier brauchst du eine öffentlich erreichbare Adresse.
+
+## Alles durch den Tunnel oder nur das Heimnetz?
+
+Bei jedem VPN legst du fest, welcher Verkehr durch die Verbindung läuft:
+
+- **Nur das Heimnetz** (*Split Tunneling*): Nur Anfragen an deine Heimnetz-Adressen gehen durchs VPN, der Rest direkt ins Internet. Das ist schneller und reicht für den Zugriff auf deine Dienste.
+- **Alles** (*Full Tunnel*): Dein gesamter Verkehr läuft über deinen Anschluss zuhause. Praktisch in fremden WLANs, aber langsamer, weil dein Upload zuhause zum Flaschenhals wird.
+
+Bei WireGuard steuerst du das über `AllowedIPs` in der Client-Konfiguration: `192.168.1.0/24` für nur das Heimnetz, `0.0.0.0/0` für alles.
+
+<Callout title="Kein Ersatz für öffentliche Dienste">
+Ein VPN eignet sich für Dienste, die nur du und deine Familie nutzt. Willst du etwas mit Leuten teilen, die kein VPN installieren sollen, etwa einen Nextcloud-Link oder eine Foto-Galerie, brauchst du einen öffentlichen Eingang über [Portfreigabe](/de/nachschlagen/portfreigabe/) oder [Tunnel](/de/nachschlagen/tunnel/).
+</Callout>
+
+## Welcher Weg passt?
+
+- **Öffentliche IPv4 und Lust auf Technik:** WireGuard selbst, eventuell mit wg-easy.
+- **CGNAT oder DS-Lite, oder du willst es einfach:** Tailscale.
+- **Wie Tailscale, aber ohne fremden Anbieter:** Headscale auf einem VPS.
+- **Router kann es und du willst nichts installieren:** VPN im Router.
+
+Eine Gegenüberstellung aller Zugriffswege findest du unter [Zugriffswege im Vergleich](/de/nachschlagen/zugriffswege-vergleich/).

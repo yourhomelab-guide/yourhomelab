@@ -1,0 +1,206 @@
+---
+slug: betriebsmodelle
+title: "Betriebsmodelle im Überblick"
+description: "Linux direkt auf der Hardware, Proxmox oder ein NAS-System, darauf docker run, Compose oder Kubernetes: Hier siehst du, wie die Schichten zusammenpassen und welche Kombination für dich sinnvoll ist."
+level: 1
+related: [bare-metal-linux, proxmox-ve, vms-or-containers, docker-compose]
+practice: installing-the-os
+---
+
+<OneWay />
+
+## Zwei Fragen, zwei Schichten
+
+Wer sich Homelabs anderer Leute ansieht, findet scheinbar hundert verschiedene Setups. Fast alle lassen sich aber
+mit zwei Fragen beschreiben:
+
+1. **Unterbau:** Was läuft direkt auf der Hardware? Ein normales Linux, ein Hypervisor oder ein NAS-System?
+2. **Container:** Wie startest und verwaltest du deine Dienste? Per Einzelbefehl, per Datei, per Weboberfläche oder
+   mit einem Orchestrierer?
+
+Beide Fragen kannst du getrennt beantworten. Die Antwort auf die zweite ist fast immer „Docker Compose“, egal
+worauf es läuft.
+
+## Schicht 1: der Unterbau
+
+<Cards>
+  <Card title="Bare Metal">
+    Debian oder Ubuntu direkt auf der Hardware, darauf Docker. Wenig bewegliche Teile, volle Leistung. Der Weg der Anleitungen dieser Seite.
+  </Card>
+  <Card title="Hypervisor">
+    Ein System, das virtuelle Maschinen (VMs) ausführt, im Homelab meist Proxmox VE. Mehrere Systeme auf einem Rechner, mit Snapshots und Backups eingebaut.
+  </Card>
+  <Card title="NAS-System">
+    TrueNAS oder Unraid kümmern sich vor allem um Festplatten und Freigaben. Apps laufen über eine eigene Oberfläche, intern ebenfalls mit Docker.
+  </Card>
+</Cards>
+
+**[Bare-Metal Linux](/de/nachschlagen/bare-metal-linux/)** ist der einfachste Start. Ein System, ein Ort für
+Logs, und fast jede Anleitung im Netz passt. Was fehlt, sind Snapshots des ganzen Systems und die Möglichkeit,
+nebenher ein anderes Betriebssystem zu betreiben.
+
+Ein **Hypervisor** ist ein Betriebssystem, dessen Aufgabe es ist, andere Systeme laufen zu lassen. Im Homelab ist
+**[Proxmox VE](/de/nachschlagen/proxmox-ve/)** der Standard: kostenlos, Open Source, auf Debian aufgebaut. Daneben
+gibt es XCP-ng (Open Source, auf Basis von Xen) und Hyper-V, das in Windows Pro und Windows Server steckt. VMware
+ESXi war lange verbreitet. Seit der Übernahme durch Broadcom ist die kostenlose Version aber nur noch eingeschränkt
+verfügbar, für ein neues Homelab ist ESXi deshalb selten die erste Wahl.
+
+**[TrueNAS und Unraid](/de/nachschlagen/truenas-unraid/)** lohnen sich, wenn der Rechner vor allem ein Datenspeicher
+mit mehreren Platten ist. Sie bringen App-Kataloge mit, verwalten Docker aber auf ihre eigene Weise. Pfade und
+Abläufe weichen deshalb von den Anleitungen dieser Seite ab.
+
+### Docker unter Proxmox: VM oder LXC?
+
+Proxmox kennt zwei Arten von Gästen: VMs mit eigenem Kernel und LXC-Container, die sich den Kernel mit dem Host
+teilen. Docker läuft technisch auch in einem LXC-Container, und viele betreiben es erfolgreich so. Wir empfehlen
+trotzdem, wie auch die Proxmox-Dokumentation, eine **VM**: Sie trennt stärker, braucht keine gelockerten
+Sicherheitsoptionen, und ein Update des Proxmox-Hosts ändert nichts an deinem Docker. Die Gründe stehen ausführlich im
+Artikel [Proxmox VE](/de/nachschlagen/proxmox-ve/). Den Unterschied zwischen VMs und Containern erklärt
+[VMs oder Container?](/de/nachschlagen/vms-oder-container/).
+
+In der VM installierst du Debian oder Ubuntu und folgst den Anleitungen, als wäre sie ein eigener Server.
+
+## Schicht 2: Wie Container gestartet werden
+
+Was ein Container ist, erklärt [Was ist Docker?](/de/nachschlagen/was-ist-docker/). Hier geht es darum, wie du ihn
+startest. Nimm als Beispiel [Uptime Kuma](/de/dienste/uptime-kuma/), ein Tool, das deine Dienste überwacht.
+
+### docker run: ein Befehl
+
+```bash
+docker run -d \
+  --name uptime-kuma \
+  --restart unless-stopped \
+  -e TZ=__TZ__ \
+  -p 3001:3001 \
+  -v __DATA(uptime-kuma)__/data:/app/data \
+  louislam/uptime-kuma:2
+```
+
+Das ist ideal, um schnell etwas auszuprobieren. Der Haken: Der Befehl steht danach nirgends. Für ein Update musst
+du den Container löschen und den Befehl exakt wiederholen. Nach ein paar Monaten weiß niemand mehr, mit welchen
+Optionen ein Container gestartet wurde.
+
+### Docker Compose: eine Datei
+
+Dasselbe als `__ROOT__/uptime-kuma/compose.yaml`:
+
+```yaml
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    container_name: uptime-kuma
+    restart: unless-stopped
+    environment:
+      - TZ=__TZ__
+    ports:
+      - "3001:3001"
+    volumes:
+      - __DATA(uptime-kuma)__/data:/app/data
+```
+
+Gestartet wird mit `docker compose up -d` im Ordner des Stacks. Der Inhalt ist derselbe, aber jetzt steht er in
+einer Datei. Die kannst du lesen, sichern, mit Git versionieren und nach einer Änderung einfach erneut anwenden.
+Genau deshalb ist [Docker Compose](/de/nachschlagen/docker-compose/) der Standard dieser Seite.
+
+### Compose mit Weboberfläche
+
+Werkzeuge wie Portainer, Dockhand, Dockge oder Komodo zeigen deine Stacks im Browser: Status, Logs, Neustart per
+Klick. Das ist bequem, vor allem vom Handy aus. Eine Regel macht dir das Leben leichter:
+
+<Callout title="Dateien bleiben führend">
+Behalte deine Stacks als `compose.yaml` unter `__ROOT__` und nutze die Oberfläche zum Ansehen und Steuern. Stacks, die
+du nur in der Oberfläche anlegst, liegen im Datenordner des Werkzeugs und hängen an ihm. Mehr dazu im Guide
+[Portainer oder Dockhand](/de/einrichten/portainer-dockhand/).
+</Callout>
+
+### Orchestrierung: Kubernetes, k3s, Docker Swarm
+
+Ein Orchestrierer verteilt Container auf mehrere Server, startet sie bei einem Ausfall anderswo neu und rollt
+Updates schrittweise aus. Kubernetes ist der Standard in Rechenzentren, **k3s** eine schlanke Variante davon, die
+gut auf kleiner Hardware läuft. **Docker Swarm** ist in Docker schon eingebaut und einfacher, wird aber seltener
+genutzt.
+
+Das ist spannende Technik, und wer beruflich mit Cloud oder DevOps zu tun hat, lernt im Homelab viel damit. Für
+einen oder wenige Server zuhause bringt sie aber vor allem zusätzliche Konzepte, die du verstehen und pflegen
+musst. Compose ist dort übersichtlicher, leichter zu sichern und reicht für fast alle Dienste. Die Anleitungen dieser
+Seite behandeln Kubernetes deshalb nicht.
+
+## Welche Kombination passt?
+
+| Situation | Unterbau | Container | Einstieg |
+| --- | --- | --- | --- |
+| **Ein Rechner, Einstieg** | Debian oder Ubuntu direkt auf der Hardware | Docker Compose | Der Weg dieser Seite, ab [Betriebssystem installieren](/de/einrichten/betriebssystem-installieren/) |
+| **Mehrere Systeme, ausprobieren, Snapshots** | Proxmox VE, darin eine Debian-VM | Docker Compose in der VM | [Proxmox VE](/de/nachschlagen/proxmox-ve/), dann die Guides in der VM |
+| **Viel Speicher, NAS zuerst** | TrueNAS oder Unraid | Compose-Stacks trotzdem als Dateien, oder eine Linux-VM | [TrueNAS & Unraid](/de/nachschlagen/truenas-unraid/) |
+| **Lernen für den Beruf** | Proxmox mit mehreren VMs | k3s zusätzlich, wichtige Dienste weiter mit Compose | Erst Compose sicher beherrschen |
+
+Wenn du unsicher bist: Nimm die erste Zeile. Ein Umzug ist später leicht, weil jeder Dienst als `compose.yaml`
+mit seinen Daten unter `__ROOT__` liegt. Den Ordner kopierst du auf das neue System, etwa in eine VM unter Proxmox,
+und startest die Stacks dort neu.
+
+## Entscheidungshilfe
+
+<Quiz
+  questions={[
+    {
+      question: "Was willst du vor allem?",
+      answers: [
+        { label: "Ein paar Dienste zuverlässig betreiben", points: { einfach: 5 } },
+        { label: "Viel ausprobieren, auch andere Systeme", points: { proxmox: 5 } },
+        { label: "Daten und Medien zentral speichern", points: { nas: 5 } },
+        { label: "Für den Beruf lernen", points: { k3s: 5 } },
+      ],
+    },
+    {
+      question: "Wie viel RAM hat dein Server?",
+      answers: [
+        { label: "8 GB oder weniger, oder weiß ich noch nicht", points: { einfach: 1 } },
+        { label: "16 GB oder mehr", points: { proxmox: 2, k3s: 1 } },
+      ],
+    },
+    {
+      question: "Wie viele Festplatten für Daten?",
+      answers: [
+        { label: "Eine oder zwei", points: { einfach: 1 } },
+        { label: "Drei oder mehr", points: { nas: 3, proxmox: 1 } },
+      ],
+    },
+    {
+      question: "Wie viel Zeit willst du in die Pflege stecken?",
+      answers: [
+        { label: "Möglichst wenig", points: { einfach: 2, nas: 1 } },
+        { label: "Gern auch mal einen Abend", points: { proxmox: 1, k3s: 2 } },
+      ],
+    },
+  ]}
+  results={{
+    einfach: {
+      title: "Debian oder Ubuntu mit Docker Compose",
+      text: "Ein Linux direkt auf der Hardware, darauf Compose-Stacks. Das ist der Weg dieser Seite: Starte mit dem Guide Betriebssystem installieren.",
+    },
+    proxmox: {
+      title: "Proxmox mit Debian-VM",
+      text: "Proxmox als Unterbau, Docker Compose in einer Debian-VM. So hast du Snapshots und Platz für weitere Systeme. In der VM folgst du den normalen Guides.",
+    },
+    nas: {
+      title: "TrueNAS oder Unraid",
+      text: "Das NAS-System kümmert sich um Platten und Freigaben. Halte deine Dienste trotzdem als Compose-Dateien, oder betreibe sie in einer Linux-VM.",
+    },
+    k3s: {
+      title: "Compose als Basis, k3s zum Lernen",
+      text: "Betreibe deine wichtigen Dienste mit Compose und baue daneben einen k3s-Cluster aus VMs, zum Beispiel unter Proxmox. So lernst du, ohne dass dein Alltag davon abhängt.",
+    },
+  }}
+/>
+
+## Wie machen es andere?
+
+Im Bereich [Homelabs](/de/homelabs/) zeigen Leute ihre Setups: welche Hardware, welcher Unterbau, welche Dienste.
+Dort siehst du, wie die Schichten in der Praxis zusammenkommen.
+
+## Weiterlesen
+
+- [Docker installieren](/de/einrichten/docker-installieren/) und [Erster Stack mit Compose](/de/einrichten/erster-stack/)
+- [VMs oder Container?](/de/nachschlagen/vms-oder-container/)
+- [Kubernetes: Konzepte](https://kubernetes.io/docs/concepts/) und [k3s: Dokumentation](https://docs.k3s.io/)

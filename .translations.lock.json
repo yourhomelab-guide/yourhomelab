@@ -47,12 +47,12 @@
     "hash": "53fb7aed617bbbfa",
     "by": "claude"
   },
-  "content/guides/02-securing/02-hardening-ssh/de.mdx": {
-    "hash": "5ac10d0bf0605303",
+  "content/guides/02-securing/02-users-sudo/de.mdx": {
+    "hash": "f62488fada6311a7",
     "by": "claude"
   },
-  "content/guides/02-securing/03-users-sudo/de.mdx": {
-    "hash": "f62488fada6311a7",
+  "content/guides/02-securing/03-hardening-ssh/de.mdx": {
+    "hash": "5ac10d0bf0605303",
     "by": "claude"
   },
   "content/guides/02-securing/04-firewall-ufw/de.mdx": {
@@ -95,11 +95,11 @@
     "hash": "f364c15dd8412062",
     "by": "claude"
   },
-  "content/guides/04-access/03-vpn-wireguard/de.mdx": {
+  "content/guides/04-access/04-vpn-wireguard/de.mdx": {
     "hash": "c549033ae99d52f5",
     "by": "claude"
   },
-  "content/guides/04-access/04-cloudflare-tunnel/de.mdx": {
+  "content/guides/04-access/05-cloudflare-tunnel/de.mdx": {
     "hash": "767f986cc76f6b12",
     "by": "claude"
   },
@@ -123,7 +123,7 @@
     "hash": "7b553860a38eba07",
     "by": "claude"
   },
-  "content/guides/06-operations/01-backups-restic/de.mdx": {
+  "content/guides/06-operations/01-backups-borgmatic/de.mdx": {
     "hash": "d19be75c899d3785",
     "by": "claude"
   },
@@ -447,6 +447,10 @@
     "hash": "f4124edec3ae7ebf",
     "by": "claude"
   },
+  "src/i18n/de.json#home.allHomelabs": {
+    "hash": "9bc5ee6383f22c89",
+    "by": "claude"
+  },
   "src/i18n/de.json#home.allServices": {
     "hash": "997a49303180c44c",
     "by": "claude"
@@ -551,6 +555,14 @@
     "hash": "bb8f48ee26d70001",
     "by": "claude"
   },
+  "src/i18n/de.json#home.homelabsLead": {
+    "hash": "f766d3153a1acf15",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.homelabsTitle": {
+    "hash": "04f2e12641972f36",
+    "by": "claude"
+  },
   "src/i18n/de.json#home.lead": {
     "hash": "84aa676930e7bc99",
     "by": "claude"
@@ -581,6 +593,270 @@
   },
   "src/i18n/de.json#home.title": {
     "hash": "e186873a414501cd",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.access.lan-only": {
+    "hash": "042f7a80b7ff3d3a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.access.port-forwarding": {
+    "hash": "ce4a7771496cef96",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.access.tunnel": {
+    "hash": "cf23f35d540d4323",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.access.vpn": {
+    "hash": "2762a0671924e3e5",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.access.vps": {
+    "hash": "72cb3e6176ee7a5f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.added": {
+    "hash": "7316421ab3baee82",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.auth": {
+    "hash": "9d6322c1f4d9d3f3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.back": {
+    "hash": "96c9ef86862cd36c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.backup": {
+    "hash": "838557924a5cdfb2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.by": {
+    "hash": "cd019275803b48e9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.count": {
+    "hash": "cc6f3fa910248395",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.domain": {
+    "hash": "9aa5269b0cbb18a2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.edit": {
+    "hash": "0d548c2d7f216d96",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.example": {
+    "hash": "2071c7736acd16f6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.exampleNote": {
+    "hash": "b112aa03dc501ed0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.field.access": {
+    "hash": "878ef7d4eeaaf159",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.field.location": {
+    "hash": "2145893cd732fbd6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.field.management": {
+    "hash": "2456bb8ed72ffaa4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.field.platform": {
+    "hash": "cdf648878bc01354",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.field.proxy": {
+    "hash": "8f5358d2e288b0ad",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.filter": {
+    "hash": "e16aea9c00b3924b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.filters": {
+    "hash": "638e249f4a15ebb8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.hardware": {
+    "hash": "7975300f01bc46f8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.lead": {
+    "hash": "d6a00c06b7d76540",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.location.cloud": {
+    "hash": "d6914cdf2935728d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.location.hybrid": {
+    "hash": "6c67dc13f83949fe",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.location.local": {
+    "hash": "f69c25b51b80211c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.management.ansible": {
+    "hash": "e876abbe46eade2f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.management.cli": {
+    "hash": "0e2c4018ed08f5a0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.management.compose": {
+    "hash": "e3b38239bd3c4a63",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.management.dockge": {
+    "hash": "e4d4ebcdb2e30a32",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.management.dockhand": {
+    "hash": "7d7f2d52554e97f1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.management.gitops": {
+    "hash": "4012e2e70e0eab52",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.management.komodo": {
+    "hash": "60df8ba1b264550f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.management.other": {
+    "hash": "e7aa6f052cee4664",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.management.portainer": {
+    "hash": "e4c9166cab99b3b7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.monitoring": {
+    "hash": "1dc83f605edf0ae2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.more": {
+    "hash": "f62dcdd0b7dd5acb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.none": {
+    "hash": "07c4251ad2033469",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.platform.bare-metal": {
+    "hash": "67886f78a8093d00",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.platform.kubernetes": {
+    "hash": "21f48de365c9da7c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.platform.nas": {
+    "hash": "cc4439db0a126986",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.platform.other": {
+    "hash": "e7aa6f052cee4664",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.platform.proxmox": {
+    "hash": "f882f09e10025922",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.platform.swarm": {
+    "hash": "b2c1f6a96520aafb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.platform.truenas": {
+    "hash": "93ce25ae0980944f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.platform.unraid": {
+    "hash": "6e8a09172af5e006",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.proxy.caddy": {
+    "hash": "da12414e87375439",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.proxy.haproxy": {
+    "hash": "597992364235f046",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.proxy.nginx": {
+    "hash": "5be1ecc7935f1dd8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.proxy.none": {
+    "hash": "24f082c89259d9a7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.proxy.npm": {
+    "hash": "4ea5dcaa2c72c4eb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.proxy.other": {
+    "hash": "1ff8bfc66a7cd843",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.proxy.traefik": {
+    "hash": "54ace6970a10f182",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.reset": {
+    "hash": "5b59510b692f04e6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.servers": {
+    "hash": "aef7de28d52977f1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.serversN": {
+    "hash": "f0fd041448da4aa5",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.services": {
+    "hash": "a6f5acc69db6b9a0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.story": {
+    "hash": "2a0cd48deab58f42",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.submitCta": {
+    "hash": "7c8ccc18f3d98c58",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.submitText": {
+    "hash": "ae14bb347c6379c3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.submitTitle": {
+    "hash": "9c72ae08d677d8d6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.title": {
+    "hash": "6b939ac2d9a1474c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.watts": {
+    "hash": "d2dbdb0e5188a29d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.wattsN": {
+    "hash": "a4be47521c4d4297",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.writtenIn": {
+    "hash": "a5ffff7763f69da1",
     "by": "claude"
   },
   "src/i18n/de.json#lang.hint": {
@@ -617,6 +893,10 @@
   },
   "src/i18n/de.json#meta.description": {
     "hash": "c697efb44a345c02",
+    "by": "claude"
+  },
+  "src/i18n/de.json#nav.homelabs": {
+    "hash": "6b939ac2d9a1474c",
     "by": "claude"
   },
   "src/i18n/de.json#nav.services": {
@@ -785,6 +1065,10 @@
   },
   "src/i18n/de.json#service.image": {
     "hash": "1aa4cb0bcca76e92",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.networkText": {
+    "hash": "d1ff5fd62e929781",
     "by": "claude"
   },
   "src/i18n/de.json#service.npm": {

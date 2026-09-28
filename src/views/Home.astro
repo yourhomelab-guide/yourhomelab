@@ -5,7 +5,7 @@ import OneWay from '../components/OneWay.astro';
 import ServiceLogo from '../components/ServiceLogo.astro';
 import GuidesData from '../components/GuidesData.astro';
 import { site } from '../config/site';
-import { getFaq, getServices, getSetupPath, getWiki } from '../lib/content';
+import { getFaq, getHomelabs, getServices, getSetupPath, getWiki } from '../lib/content';
 import { t, type Lang } from '../lib/i18n';
 import { url } from '../lib/routes';
 
@@ -13,7 +13,8 @@ interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
-const [{ stages, guides }, services, faq, wiki] = await Promise.all([getSetupPath(lang), getServices(lang), getFaq(lang), getWiki(lang)]);
+const [{ stages, guides }, services, faq, wiki, homelabs] = await Promise.all([getSetupPath(lang), getServices(lang), getFaq(lang), getWiki(lang), getHomelabs()]);
+const labs = homelabs.slice(0, 3);
 const faqRendered = await Promise.all(faq.map(async (f) => ({ q: f.entry.data.question, Content: (await render(f.entry)).Content })));
 const pad = (n: number) => String(n).padStart(2, '0');
 const popular = services.filter((s) => s.popular);
@@ -28,7 +29,7 @@ const guideLink = (id: string) => {
 };
 const doors = [
   { n: 1, href: url.section(lang, 'wiki'), links: ['what-is-docker', 'cloud-hybrid-local', 'reverse-proxy-explained'].map(wikiLink) },
-  { n: 2, href: url.section(lang, 'setup'), links: ['hardening-ssh', 'creating-the-directory-structure', 'backups-restic'].map(guideLink) },
+  { n: 2, href: url.section(lang, 'setup'), links: ['hardening-ssh', 'creating-the-directory-structure', 'backups-borgmatic'].map(guideLink) },
   { n: 3, href: url.section(lang, 'services'), links: ['vaultwarden', 'immich', 'forgejo'].map((id) => services.find((s) => s.id === id)).map((s) => (s ? { t: s.name, href: url.service(lang, s.id) } : null)) },
 ];
 ---
@@ -121,6 +122,31 @@ const doors = [
       </div>
     </section>
 
+    {
+      labs.length > 0 && (
+        <section class="labs">
+          <div class="sec-head">
+            <div class="labs-intro">
+              <h2 class="h2">{t(lang, 'home.homelabsTitle')}</h2>
+              <p>{t(lang, 'home.homelabsLead')}</p>
+            </div>
+            <a class="link-btn" href={url.section(lang, 'homelabs')}>{t(lang, 'home.allHomelabs', { n: homelabs.length })} →</a>
+          </div>
+          <div class="lab-grid">
+            {labs.map((l) => (
+              <a class="lab card" href={url.homelab(lang, l.id)}>
+                <strong>{l.data.name}</strong>
+                <span class="lab-meta">
+                  {t(lang, 'homelabs.serversN', { n: l.data.servers })} · {l.data.platform.map((v) => t(lang, `homelabs.platform.${v}`)).join(', ')}
+                </span>
+                <p>{l.data.summary}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
+
     <section class="faq">
       <div class="faq-intro">
         <h2>{t(lang, 'home.faqTitle')}</h2>
@@ -175,6 +201,48 @@ const doors = [
   <GuidesData lang={lang} />
 </Base>
 
+<script>
+  // FAQ accordion: animate open/close with the Web Animations API (works in every browser,
+  // unlike ::details-content). Only one answer is open at a time, like name="faq" without JS.
+  const items = [...document.querySelectorAll<HTMLDetailsElement>('details.qa')];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const opts = { duration: 260, easing: 'cubic-bezier(0.2, 0, 0, 1)' };
+
+  function setOpen(d: HTMLDetailsElement, open: boolean) {
+    const body = d.querySelector<HTMLElement>('.qa-a')!;
+    body.getAnimations().forEach((a) => a.cancel());
+    if (reduce.matches) {
+      d.open = open;
+      return;
+    }
+    if (open) {
+      d.classList.remove('is-closing');
+      d.open = true;
+      const h = body.offsetHeight;
+      body.animate([{ height: '0px', paddingBottom: '0px', opacity: 0 }, { height: `${h}px`, opacity: 1 }], opts);
+    } else {
+      d.classList.add('is-closing');
+      const h = body.offsetHeight;
+      const a = body.animate([{ height: `${h}px` }, { height: '0px', paddingBottom: '0px', opacity: 0 }], opts);
+      a.onfinish = () => {
+        d.open = false;
+        d.classList.remove('is-closing');
+      };
+    }
+  }
+
+  for (const d of items) {
+    // Closing the others is done here, animated; the native exclusive group would snap them shut
+    d.removeAttribute('name');
+    d.querySelector('summary')!.addEventListener('click', (e) => {
+      e.preventDefault();
+      const open = !d.open || d.classList.contains('is-closing');
+      if (open) items.filter((o) => o !== d && o.open && !o.classList.contains('is-closing')).forEach((o) => setOpen(o, false));
+      setOpen(d, open);
+    });
+  }
+</script>
+
 <style>
   .home { padding-bottom: 80px; display: flex; flex-direction: column; gap: 72px; }
   .hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 56px; align-items: center; padding-top: 72px; }
@@ -223,21 +291,29 @@ const doors = [
   .pop-name { font-size: 14.5px; font-weight: 600; }
   .pop-cat { font-size: 12.5px; color: var(--muted); }
 
+  .labs { display: flex; flex-direction: column; gap: 20px; }
+  .labs-intro { display: flex; flex-direction: column; gap: 8px; max-width: 640px; }
+  .labs-intro p { font-size: 16px; line-height: 1.6; color: var(--text-3); }
+  .lab-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+  .lab { padding: 22px; display: flex; flex-direction: column; gap: 8px; color: var(--text); }
+  .lab:hover { box-shadow: var(--ring); text-decoration: none; color: var(--text); }
+  .lab strong { font-size: 17px; font-weight: 700; }
+  .lab-meta { font-size: 13px; color: var(--muted); }
+  .lab p { font-size: 14.5px; line-height: 1.55; color: var(--text-3); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
   .faq { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 40px; align-items: start; }
   .faq-intro { display: flex; flex-direction: column; gap: 12px; max-width: 420px; }
   .faq-intro h2 { font-size: 32px; font-weight: 700; letter-spacing: -0.025em; }
   .faq-intro p { font-size: 16px; line-height: 1.6; color: var(--text-3); }
   .faq-list { display: flex; flex-direction: column; gap: 8px; }
-  .qa { border-radius: 16px; overflow: hidden; interpolate-size: allow-keywords; }
-  .qa summary { list-style: none; padding: 18px 20px 18px 22px; display: flex; justify-content: space-between; align-items: center; gap: 16px; cursor: pointer; font-size: 16px; font-weight: 600; line-height: 1.4; }
+  .qa { border-radius: 16px; overflow: hidden; }
+  .qa summary { -webkit-tap-highlight-color: transparent; list-style: none; padding: 18px 20px 18px 22px; display: flex; justify-content: space-between; align-items: center; gap: 16px; cursor: pointer; font-size: 16px; font-weight: 600; line-height: 1.4; }
   .qa summary::-webkit-details-marker { display: none; }
   .qa summary:hover { color: var(--accent-600); }
   .chev { width: 20px; height: 20px; flex: none; display: flex; align-items: center; justify-content: center; transition: transform 0.25s ease; }
   .chev::before { content: ''; width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: translateY(-2px) rotate(45deg); }
-  .qa[open] .chev { transform: rotate(180deg); }
-  .qa::details-content { block-size: 0; overflow: hidden; transition: block-size 0.28s ease, content-visibility 0.28s allow-discrete; }
-  .qa[open]::details-content { block-size: auto; }
-  .qa-a { padding: 0 64px 20px 22px; font-size: 15px; line-height: 1.65; color: var(--text-3); text-wrap: pretty; }
+  .qa[open]:not(.is-closing) .chev { transform: rotate(180deg); }
+  .qa-a { overflow: hidden; padding: 0 64px 20px 22px; font-size: 15px; line-height: 1.65; color: var(--text-3); text-wrap: pretty; }
   .qa-a :global(p) { margin: 0; }
   .qa-a :global(code) { font-family: var(--mono); font-size: 0.9em; }
 

@@ -1,6 +1,115 @@
 ---
 slug: hardware-uebersicht
 title: "Hardware-Übersicht"
+description: "Für den Einstieg brauchst du keinen teuren Server. Ein sparsamer Mini-PC reicht für viele Dienste. Hier siehst du, welche Geräteklassen es gibt und worauf es bei RAM, SSD und Stromverbrauch ankommt."
 level: 1
-status: stub
+related: [costs-power, cloud-hybrid-local, truenas-unraid, proxmox-ve]
+practice: choosing-hardware
 ---
+
+<OneWay />
+
+## Worauf es ankommt
+
+Ein Homelab-Server läuft rund um die Uhr, meistens ohne viel zu tun. Deshalb zählen vor allem drei Dinge:
+
+- **Stromverbrauch im Leerlauf.** Der Rechner wartet die meiste Zeit. Ob er dabei 8 oder 50 Watt zieht, macht über ein
+  Jahr einen spürbaren Unterschied. Rechenbeispiele stehen in [Kosten & Stromverbrauch](/de/nachschlagen/kosten-strom/).
+- **Arbeitsspeicher (RAM).** Jeder Container belegt Speicher. RAM ist bei vielen Diensten eher der Engpass als die
+  Rechenleistung.
+- **Leise und klein.** Das Gerät steht oft im Flur, im Regal oder neben dem Router.
+
+Rohe Rechenleistung ist dagegen selten entscheidend. Ein aktueller Einsteiger-Prozessor reicht für Passwortmanager,
+Dateisync, Monitoring und einen Reverse Proxy locker aus.
+
+## Die Geräteklassen
+
+<Cards>
+  <Card title="Mini-PC (N100/N150-Klasse)">
+    Neue, kompakte Rechner mit sparsamen Intel-Prozessoren. Wenig Stromverbrauch, leise, x86 wie ein normaler PC.
+    Für die meisten Einsteiger die naheliegende Wahl.
+  </Card>
+  <Card title="Gebrauchter Business-Mini-PC">
+    Ausgemusterte Firmenrechner im Kleinformat, etwa Lenovo ThinkCentre Tiny, HP EliteDesk/ProDesk Mini oder Dell
+    OptiPlex Micro. Robust, gut aufrüstbar und gebraucht oft günstig.
+  </Card>
+  <Card title="Raspberry Pi">
+    Sehr sparsam und klein. Nutzt einen ARM-Prozessor, deshalb läuft nicht jedes Docker-Image darauf. Gut für wenige,
+    leichte Dienste.
+  </Card>
+  <Card title="NAS">
+    Fertige Speichergeräte mit mehreren Festplatteneinschüben, zum Beispiel von Synology oder QNAP. Stark bei Speicher,
+    bei Docker oft eingeschränkt und mit wenig RAM ausgeliefert.
+  </Card>
+  <Card title="Alter Desktop-PC">
+    Kostet nichts, wenn er schon da ist, und bietet viel Platz für Festplatten. Braucht im Leerlauf aber meist deutlich
+    mehr Strom.
+  </Card>
+  <Card title="VPS">
+    Ein gemieteter virtueller Server im Rechenzentrum. Keine Hardware zuhause, feste IP, dafür monatliche Kosten und
+    wenig Speicherplatz.
+  </Card>
+</Cards>
+
+## Im Vergleich
+
+Die Werte sind grobe Richtwerte. Der tatsächliche Verbrauch hängt stark vom Modell, von den eingebauten Festplatten und
+von den BIOS-Einstellungen ab.
+
+| Gerät                      | Leerlauf (grob)          | Stärken                               | Schwächen                                |
+| -------------------------- | ------------------------ | ------------------------------------- | ---------------------------------------- |
+| Mini-PC N100/N150          | etwa 5–10 W              | Sparsam, leise, neu mit Garantie      | Meist nur ein RAM-Steckplatz, wenig Platz für Platten |
+| Gebrauchter Business-Mini-PC | etwa 8–15 W            | Robust, aufrüstbar, günstig           | Ältere CPU, gebraucht ohne Garantie      |
+| Raspberry Pi               | etwa 3–5 W               | Sehr sparsam, winzig                  | ARM, SD-Karte als Schwachstelle          |
+| NAS (2–4 Einschübe)        | etwa 15–40 W mit Platten | Viel Speicher, Festplatten-Redundanz  | Docker oft eingeschränkt, wenig RAM      |
+| Alter Desktop-PC           | etwa 30–70 W             | Vorhanden, viel Platz                 | Hoher Stromverbrauch, laut               |
+| VPS                        | kein eigener Strom       | Feste IP, kein Gerät zuhause          | Monatliche Kosten, wenig Speicher        |
+
+## Arbeitsspeicher
+
+Als grobe Orientierung:
+
+- **4 GB** reichen für eine Handvoll leichter Dienste, etwa Reverse Proxy, Passwortmanager und Monitoring.
+- **8–16 GB** sind ein bequemer Start für ein typisches Homelab mit Datenbanken und einer Dateicloud.
+- **Mehr** brauchst du für speicherhungrige Dienste wie Fotoarchive mit Gesichtserkennung oder wenn du zusätzlich
+  virtuelle Maschinen betreiben willst, etwa mit [Proxmox VE](/de/nachschlagen/proxmox-ve/).
+
+Achte beim Kauf darauf, ob sich RAM nachrüsten lässt. Viele N100-Mini-PCs haben nur einen einzigen Steckplatz.
+
+## Speicher: SSD und Festplatten
+
+Installiere das System auf einer **SSD**. Sie ist schnell, leise und sparsam. Eine NVMe-SSD mit 256–512 GB reicht für
+Betriebssystem, Container und die Daten der meisten Dienste.
+
+Für große Datenmengen wie Fotos oder Videos kommen **Festplatten (HDD)** dazu. Sie sind pro Terabyte günstiger,
+brauchen aber zusätzlich Strom und machen Geräusche. In einem Mini-PC ist dafür meist kein Platz, dann hilft ein
+externes Gehäuse per USB oder ein separates NAS.
+
+<Callout type="warning" title="Raspberry Pi und SD-Karten">
+SD-Karten vertragen dauerhafte Schreibzugriffe schlecht und können ohne Vorwarnung ausfallen. Betreibe einen Pi als
+Server besser mit einer SSD, per USB oder beim Raspberry Pi 5 über einen NVMe-Adapter.
+</Callout>
+
+## ECC-Speicher
+
+**ECC** (Error Correcting Code) ist Arbeitsspeicher, der einzelne Bitfehler erkennt und korrigiert. In Servern im
+Rechenzentrum ist er Standard. In Foren wird er vor allem im Zusammenhang mit ZFS und
+[TrueNAS](/de/nachschlagen/truenas-unraid/) empfohlen.
+
+Für den Einstieg ist ECC keine Voraussetzung. Mini-PCs und die meisten Desktop-Systeme unterstützen ihn gar nicht. Wenn
+du später ein großes Datengrab mit wertvollen Daten planst, lohnt sich ein Blick darauf. Wichtiger als ECC sind in
+jedem Fall gute Backups.
+
+## Und die Architektur?
+
+Die meisten Mini-PCs, Business-Rechner und Desktops nutzen **x86-64** (auch amd64 genannt). Dafür gibt es praktisch jedes
+Docker-Image. Der Raspberry Pi und manche Cloud-Server nutzen **ARM64**. Viele bekannte Projekte bieten Images für beide
+Architekturen an, aber nicht alle. Prüfe das vorher auf der Projektseite, wenn du auf ARM setzt.
+
+## Empfehlung für den Start
+
+Ein Mini-PC der N100/N150-Klasse oder ein gebrauchter Business-Mini-PC mit 16 GB RAM und einer NVMe-SSD ist für die
+meisten Einsteiger eine gute, sparsame Basis. Wenn du erst ausprobieren willst, tut es auch ein alter Rechner, der
+ohnehin herumsteht, oder ein kleiner VPS. Welches Modell zu deinem Plan passt, klärt
+[Cloud, Hybrid oder Lokal?](/de/nachschlagen/cloud-hybrid-lokal/), die konkrete Auswahl der Guide
+[Hardware auswählen](/de/einrichten/hardware-auswaehlen/).

@@ -1,5 +1,123 @@
 ---
 title: "Volumes & Bind Mounts"
+description: "Container sind wegwerfbar, deine Daten nicht. Named Volumes und Bind Mounts legen Daten außerhalb des Containers ab. Diese Seite nutzt Bind Mounts, weil dann ein einziger Ordner alles enthält, was du sichern musst."
 level: 2
-status: stub
+related: [directory-structure, backup-strategies, docker-compose]
+practice: creating-the-directory-structure
 ---
+
+## Warum Daten nicht in den Container gehören
+
+Ein Container ist dafür gebaut, jederzeit gelöscht und neu erstellt zu werden. Genau das passiert bei jedem Update: Compose wirft den alten Container weg und startet einen neuen aus dem neuen Image. Alles, was das Programm in den Container selbst geschrieben hat, ist dann verloren.
+
+Deshalb bindest du die Ordner, in denen ein Programm seine Daten ablegt, von außen ein. Das Programm schreibt scheinbar in seinen eigenen Ordner, tatsächlich landen die Dateien auf dem Server. Docker kennt dafür zwei Wege.
+
+## Named Volumes und Bind Mounts
+
+<Cards>
+  <Card title="Named Volume">
+    Docker verwaltet den Speicherort selbst. Du vergibst nur einen Namen, die Dateien liegen irgendwo unter /var/lib/docker/volumes.
+  </Card>
+  <Card title="Bind Mount">
+    Du bestimmst den Ordner auf dem Server selbst, zum Beispiel ./data/db neben der compose.yaml. Du siehst die Dateien direkt.
+  </Card>
+</Cards>
+
+In der `compose.yaml` sehen beide fast gleich aus:
+
+```yaml
+services:
+  app:
+    image: example/app:1
+    volumes:
+      - app-data:/var/lib/app       # named volume: name on the left
+      - ./data/config:/config       # bind mount: path on the left
+
+volumes:
+  app-data:                         # named volumes must be declared here
+```
+
+Die Regel: Beginnt der linke Teil mit `/` oder `./`, ist es ein Bind Mount. Sonst ist es ein Named Volume.
+
+| | Named Volume | Bind Mount |
+| --- | --- | --- |
+| **Speicherort** | Von Docker verwaltet | Von dir gewählt |
+| **Dateien ansehen** | Nur über Umwege | Direkt mit `ls`, `cat` oder einem Editor |
+| **Backup** | Pro Volume, meist über einen Hilfscontainer | Ordner kopieren, fertig |
+| **Rechte** | Docker kümmert sich darum | Musst du selbst passend setzen |
+| **Löschen** | `docker compose down -v` entfernt es | Bleibt, bis du den Ordner löschst |
+
+## Warum diese Seite Bind Mounts nutzt
+
+Named Volumes sind technisch sauber und machen weniger Ärger mit Rechten. Für ein Homelab überwiegt aber ein Vorteil der Bind Mounts: **Alles liegt an einem Ort.**
+
+Jeder Dienst bekommt einen Ordner unter `__ROOT__`, und seine Daten liegen im Unterordner `data/`:
+
+```
+__ROOT__/
+└── vaultwarden/
+    ├── compose.yaml
+    ├── .env
+    └── data/
+        └── data/        ← mounted into the container as /data
+```
+
+Für ein Backup musst du dann nur einen Ordner sichern: `__ROOT__`. Darin stecken Konfiguration, Secrets und Daten aller Dienste. Ziehst du auf einen neuen Server um, kopierst du den Ordner und startest die Stacks neu. Mehr dazu in [Verzeichnisstruktur](/de/nachschlagen/verzeichnisstruktur/) und [Backup-Strategien](/de/nachschlagen/backup-strategien/).
+
+Alle Vorlagen unter [Dienste](/de/dienste/) folgen diesem Muster. Wählst du in "Mein Setup" einen zentralen Datenordner, wird aus `./data/…` automatisch `__DATA_ROOT__/<dienst>/…`.
+
+<Callout type="warning" title="Datenbanken nicht im laufenden Betrieb kopieren">
+Eine Datenbank schreibt ständig in ihre Dateien. Kopierst du den Ordner während sie läuft, kann die Kopie unbrauchbar sein. Erstelle vorher einen Dump mit dem Werkzeug der Datenbank oder stoppe den Stack kurz mit `docker compose stop`.
+</Callout>
+
+## Rechte: wem gehören die Dateien?
+
+Bei Bind Mounts gilt auf dem Server und im Container dieselbe Rechteverwaltung. Linux kennt dabei keine Benutzernamen, sondern nur Nummern: die **UID** (User ID) und die **GID** (Group ID). Läuft ein Programm im Container als UID 1000, gehören die Dateien, die es anlegt, auch auf dem Server der UID 1000.
+
+Daraus ergeben sich zwei typische Probleme:
+
+- **Der Ordner fehlt.** Existiert der Pfad links noch nicht, legt Docker ihn beim Start an, und zwar als root. Ein Programm, das im Container nicht als root läuft, darf dann nicht hineinschreiben. Lege die Ordner deshalb vorher selbst an.
+- **Die Nummern passen nicht.** Das Programm läuft als eine andere UID als der Besitzer des Ordners. Im Log steht dann meist "Permission denied".
+
+Deine eigene UID und GID zeigt der Befehl `id`. Beim ersten angelegten Benutzer ist das in der Regel 1000.
+
+```bash
+id
+```
+
+## PUID und PGID
+
+Viele Images, allen voran die von [LinuxServer.io](https://www.linuxserver.io/), lösen das Problem mit zwei Umgebungsvariablen. Du sagst dem Container, unter welcher UID und GID er arbeiten soll:
+
+```yaml
+environment:
+  - PUID=__PUID__
+  - PGID=__PGID__
+```
+
+Setzt du hier deine eigenen Werte ein, gehören alle Dateien in `./data` deinem Benutzer. Du kannst sie ohne `sudo` bearbeiten und sichern.
+
+`PUID` und `PGID` sind aber eine Konvention, kein Docker-Standard. Images, die sie nicht kennen, ignorieren sie einfach. Manche Images laufen stattdessen immer als eine feste UID, die in ihrer Dokumentation steht. Dann passt du den Besitzer des Ordners an:
+
+```bash
+sudo chown -R 1000:1000 __ROOT__/<dienst>/data
+```
+
+Ersetze `1000:1000` durch die UID und GID aus der Doku des Images. Andere Images unterstützen den Compose-Schlüssel `user:`, mit dem du die UID direkt vorgibst. Was davon gilt, steht immer in der Dokumentation des jeweiligen Images.
+
+## Nur lesen erlaubt
+
+Hängst du `:ro` an einen Mount, kann der Container die Dateien lesen, aber nicht ändern:
+
+```yaml
+volumes:
+  - ./config.yml:/app/config.yml:ro
+```
+
+Das ist sinnvoll für Konfigurationsdateien, die nur du änderst. Eine Ausnahme ist der Docker-Socket `/var/run/docker.sock`, den etwa Traefik einbindet: Dort verhindert `:ro` nur, dass die Datei selbst verändert wird. Über den Socket kann der Container trotzdem Befehle an Docker schicken. Gib ihn deshalb nur Containern, denen du vertraust.
+
+## Weiterlesen
+
+- [Docker-Doku zu Bind Mounts](https://docs.docker.com/engine/storage/bind-mounts/)
+- [Docker-Doku zu Volumes](https://docs.docker.com/engine/storage/volumes/)
+- [Verzeichnisstruktur anlegen](/de/einrichten/verzeichnisstruktur-anlegen/): den Ordner `__ROOT__` einrichten

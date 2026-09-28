@@ -1,0 +1,142 @@
+---
+title: "VPN mit WireGuard"
+description: "Am Ende verbindet sich dein Handy oder Laptop von unterwegs per WireGuard mit deinem Heimnetz. Du verwaltest die Zugänge in wg-easy und richtest neue Geräte per QR-Code ein."
+level: 2
+minutes: 30
+requires: [Docker Compose, Domain oder DynDNS, Portfreigabe am Router]
+---
+
+Ein VPN (Virtual Private Network) baut einen verschlüsselten Tunnel von deinem Gerät nach Hause. Du bist dann so im Heimnetz, als säßest du auf dem Sofa, und erreichst alle Dienste, ohne sie ins Internet zu stellen. Nach außen ist nur ein einziger UDP-Port offen, und WireGuard antwortet dort nur Geräten mit passendem Schlüssel. Hintergründe stehen unter [VPN](/de/nachschlagen/vpn/).
+
+[WireGuard](https://www.wireguard.com/) ist ein modernes, schnelles VPN-Protokoll und steckt direkt im Linux-Kernel. Dieser Guide nutzt [wg-easy](https://wg-easy.github.io/wg-easy/): Es bringt WireGuard in einem Container mit und dazu eine Weboberfläche, in der du Geräte anlegst und per QR-Code verteilst.
+
+<Callout title="Alternativen">
+- **Router-VPN:** Viele Router können WireGuard selbst, die FRITZ!Box etwa seit FRITZ!OS 7.50. Dann brauchst du auf dem Server gar nichts. Schau zuerst dort nach.
+- **Tailscale:** baut auf WireGuard auf und funktioniert ohne Portfreigabe, auch hinter CGNAT und DS-Lite. Die Koordination läuft über Server von Tailscale. Details unter [Zugriffswege im Vergleich](/de/nachschlagen/zugriffswege-vergleich/).
+- **Natives WireGuard:** ohne Weboberfläche, Konfiguration von Hand. Lohnt sich, wenn du verstehen willst, was im Hintergrund passiert.
+</Callout>
+
+<Callout type="warning" title="Nicht bei CGNAT oder DS-Lite">
+Damit dein Handy den Server erreicht, braucht dein Anschluss eine öffentliche IPv4-Adresse. Wie du das prüfst, steht im Guide [Domain & DNS](/de/einrichten/domain-dns/). Ohne öffentliche IPv4 nimm Tailscale.
+</Callout>
+
+<Steps>
+
+<Step title="Verzeichnis anlegen">
+wg-easy bekommt wie jeder Stack einen eigenen Ordner unter `__ROOT__`. Die WireGuard-Konfiguration mit allen Schlüsseln landet in `__DATA(wg-easy)__`.
+
+```bash
+mkdir -p __ROOT__/wg-easy __DATA(wg-easy)__/wireguard
+cd __ROOT__/wg-easy
+```
+</Step>
+
+<Step title="compose.yaml schreiben">
+Lege die Datei `compose.yaml` an. Sie folgt der [offiziellen Vorlage](https://github.com/wg-easy/wg-easy/blob/master/docker-compose.yml), speichert die Daten aber in deinem Datenordner. wg-easy hängt nicht im Proxy-Netzwerk, sondern bekommt ein eigenes.
+
+```yaml
+services:
+  wg-easy:
+    image: ghcr.io/wg-easy/wg-easy:15
+    container_name: wg-easy
+    restart: unless-stopped
+    environment:
+      # Allow the web UI over plain HTTP. Only safe because it is bound to the LAN below.
+      - INSECURE=true
+    networks:
+      wg:
+        ipv4_address: 10.42.42.42
+        ipv6_address: fdcc:ad94:bacf:61a3::2a
+    volumes:
+      - __DATA(wg-easy)__/wireguard:/etc/wireguard
+      - /lib/modules:/lib/modules:ro
+    ports:
+      # WireGuard itself, forwarded by the router
+      - "51820:51820/udp"
+      # Web UI, reachable from the home network only. Use your server's LAN IP.
+      - "192.168.1.10:51821:51821/tcp"
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv6.conf.all.forwarding=1
+      - net.ipv6.conf.default.forwarding=1
+
+networks:
+  wg:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.42.42.0/24
+        - subnet: fdcc:ad94:bacf:61a3::/64
+```
+
+Ersetze `192.168.1.10` durch die LAN-IP deines Servers. So ist die Weboberfläche nur im Heimnetz (und später über das VPN) erreichbar. Wer sie bedienen kann, kann sich neue Zugänge ausstellen, deshalb gehört sie nicht ins Internet.
+
+`NET_ADMIN` und die `sysctls` braucht der Container, um die WireGuard-Schnittstelle anzulegen und Pakete ins Heimnetz weiterzuleiten.
+</Step>
+
+<Step title="Starten und einrichten">
+Starte den Stack und schau ins Log, ob WireGuard ohne Fehler hochkommt.
+
+```bash
+docker compose up -d
+docker compose logs -f wg-easy
+```
+
+Mit `Strg+C` beendest du die Log-Anzeige. Öffne dann `http://192.168.1.10:51821` im Browser. Beim ersten Aufruf führt dich ein Assistent durch die Einrichtung:
+
+1. **Admin-Konto anlegen.** Nimm ein langes Passwort aus deinem Passwortmanager.
+2. **Host:** die Adresse, unter der deine Geräte den Server von außen finden, zum Beispiel `vpn.__DOMAIN__`. Durch den Wildcard-Record zeigt der Name bereits auf deine öffentliche IP.
+3. **Port:** `51820`.
+
+Die übrigen Einstellungen kannst du auf den Standardwerten lassen.
+</Step>
+
+<Step title="UDP-Port 51820 freigeben">
+Leite im Router den Port **51820/UDP** an die feste IP deines Servers weiter. Achte auf UDP, WireGuard nutzt kein TCP. Ports für die Weboberfläche gibst du nicht frei. Wie eine Portfreigabe funktioniert, steht unter [Portfreigabe](/de/nachschlagen/portfreigabe/).
+
+Nutzt du UFW, erlaube den Port auch dort:
+
+```bash
+sudo ufw allow 51820/udp comment 'WireGuard'
+```
+
+Streng genommen umgehen Ports, die Docker veröffentlicht, die UFW-Regeln. Die Regel schadet aber nicht und dokumentiert, welche Ports offen sein sollen.
+
+Nutzt du Cloudflare als DNS-Anbieter, darf der Eintrag für `vpn.__DOMAIN__` nicht über Cloudflare laufen („DNS only“, graue Wolke). Der Cloudflare-Proxy leitet nur Webverkehr weiter, kein WireGuard.
+</Step>
+
+<Step title="Gerät hinzufügen">
+Jedes Gerät bekommt einen eigenen Zugang mit eigenem Schlüssel. So kannst du ein verlorenes Handy einzeln sperren.
+
+1. Lege in wg-easy einen neuen Client an und gib ihm einen sprechenden Namen, etwa `handy-anna`.
+2. Installiere die offizielle WireGuard-App auf dem Gerät. Es gibt sie für Android, iOS, Windows, macOS und Linux, siehe [wireguard.com/install](https://www.wireguard.com/install/).
+3. **Handy:** In der App einen Tunnel per QR-Code hinzufügen und den QR-Code aus wg-easy scannen.
+4. **Laptop:** Die Konfigurationsdatei in wg-easy herunterladen und in der App importieren.
+
+Die Konfiguration enthält den privaten Schlüssel des Geräts. Verschicke sie nicht per Messenger oder E-Mail.
+</Step>
+
+<Step title="Verbindung testen">
+Schalte am Handy das WLAN aus, damit es wirklich über das Mobilfunknetz geht. Aktiviere den Tunnel in der WireGuard-App und öffne `http://192.168.1.10:51821`. Siehst du die Anmeldeseite von wg-easy, bist du zuhause angekommen. In wg-easy zeigt der Client jetzt auch übertragene Daten und den letzten Handshake.
+
+Klappt es nicht, prüfe der Reihe nach:
+
+- Löst `vpn.__DOMAIN__` auf deine aktuelle öffentliche IP auf? (`dig +short vpn.__DOMAIN__`)
+- Ist die Portfreigabe auf UDP und die richtige Server-IP eingestellt?
+- Nutzt das Netz, in dem du gerade bist, denselben Adressbereich wie dein Heimnetz, etwa beide `192.168.178.x`? Dann weiß dein Gerät nicht, wohin es die Pakete schicken soll. Ändere in dem Fall den Adressbereich deines Heimnetzes auf etwas Selteneres.
+</Step>
+
+<Step title="Optional: nur Heimnetz-Verkehr durch den Tunnel">
+Standardmäßig schickt wg-easy den **gesamten** Internetverkehr des Geräts über dein Zuhause (Full Tunnel). Das schützt dich in fremden WLANs, belastet aber deinen Upload.
+
+Willst du nur den Verkehr ins Heimnetz durch den Tunnel schicken (Split Tunnel), trage in den Einstellungen von wg-easy bei den **Allowed IPs** nur dein Heimnetz und das VPN-Netz ein, zum Beispiel `192.168.1.0/24, 10.8.0.0/24`. Das VPN-Netz steht in den Einstellungen unter den Adressbereichen. Danach musst du die Konfiguration auf den Geräten neu einlesen. Details stehen in der [Dokumentation von wg-easy](https://wg-easy.github.io/wg-easy/).
+</Step>
+
+</Steps>

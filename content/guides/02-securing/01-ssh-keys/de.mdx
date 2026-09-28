@@ -1,7 +1,126 @@
 ---
 slug: ssh-schluessel
 title: "SSH-Schlüssel einrichten"
+description: "Am Ende meldest du dich mit einem ed25519-Schlüssel statt mit einem Passwort am Server an, und ein kurzer Befehl wie ssh homelab reicht für die Verbindung."
 level: 1
 minutes: 15
-status: stub
+requires: [Linux-Server, SSH-Zugang mit Passwort]
 ---
+
+Ein Passwort kann erraten, abgefangen oder durch Ausprobieren geknackt werden. Ein SSH-Schlüssel nicht: Er besteht aus zwei Teilen. Der **private Schlüssel** bleibt auf deinem Rechner und verlässt ihn nie. Der **öffentliche Schlüssel** kommt auf den Server. Beim Anmelden beweist dein Rechner, dass er den passenden privaten Schlüssel besitzt, ohne ihn zu übertragen.
+
+Dieser Guide richtet den Schlüssel ein. Nach [Benutzer & sudo](/de/einrichten/benutzer-sudo/) schaltest du in [SSH härten](/de/einrichten/ssh-haerten/) die Passwort-Anmeldung dann ganz ab. Die Hintergründe stehen in [SSH-Grundlagen](/de/nachschlagen/ssh-grundlagen/).
+
+In den Beispielen heißt der Server `192.168.1.10` und dein Benutzer auf dem Server `alex`. Ersetze beides durch deine Werte.
+
+<Steps>
+
+<Step title="Prüfen, ob du schon einen Schlüssel hast">
+Vielleicht hast du schon einmal einen Schlüssel erzeugt, etwa für GitHub. Den kannst du weiterverwenden. Schau in den Ordner `.ssh` in deinem Benutzerverzeichnis.
+
+Auf macOS und Linux:
+
+```bash
+ls -l ~/.ssh
+```
+
+Auf Windows in der PowerShell:
+
+```powershell
+ls $env:USERPROFILE\.ssh
+```
+
+Gibt es dort `id_ed25519` und `id_ed25519.pub`, überspringst du den nächsten Schritt. Steht dort nur `id_rsa`, ist das ein älterer RSA-Schlüssel. Er funktioniert, aber ein neuer ed25519-Schlüssel ist kürzer und moderner.
+</Step>
+
+<Step title="Schlüsselpaar erzeugen">
+Windows 10 und 11, macOS und praktisch jede Linux-Distribution bringen OpenSSH schon mit. Der Befehl ist überall gleich. Auf Windows tippst du ihn in die PowerShell, sonst ins Terminal.
+
+```bash
+ssh-keygen -t ed25519 -C "laptop-alex"
+```
+
+- `-t ed25519` wählt den Schlüsseltyp. ed25519 ist aktueller Standard: sicher, schnell und kurz.
+- `-C` ist nur ein Kommentar. Er hilft dir später zu erkennen, von welchem Gerät ein Schlüssel stammt.
+
+Den vorgeschlagenen Speicherort bestätigst du mit Enter. Danach fragt `ssh-keygen` nach einer **Passphrase**. Nimm eine. Sie verschlüsselt den privaten Schlüssel auf deiner Platte. Wird dein Laptop gestohlen, kann niemand den Schlüssel ohne Passphrase benutzen.
+
+Du hast jetzt zwei Dateien:
+
+- `id_ed25519` ist der private Schlüssel. Nie weitergeben, nie auf einen Server kopieren.
+- `id_ed25519.pub` ist der öffentliche Schlüssel. Den darfst du überall hinterlegen.
+</Step>
+
+<Step title="Öffentlichen Schlüssel auf den Server kopieren">
+Auf dem Server landet der öffentliche Schlüssel in der Datei `~/.ssh/authorized_keys` deines Benutzers. Jede Zeile dort ist ein Schlüssel, der sich anmelden darf.
+
+Auf **macOS und Linux** erledigt das `ssh-copy-id`. Es fragt ein letztes Mal nach deinem Passwort auf dem Server:
+
+```bash
+ssh-copy-id -i ~/.ssh/id_ed25519.pub alex@192.168.1.10
+```
+
+Auf **Windows** gibt es `ssh-copy-id` nicht. Dieser Einzeiler in der PowerShell macht dasselbe: Er schickt den Schlüssel per SSH zum Server, legt dort den Ordner an und hängt den Schlüssel an `authorized_keys` an.
+
+```powershell
+type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh alex@192.168.1.10 "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+```
+
+Die Rechte `700` und `600` sind wichtig. Kann jemand anderes als du die Dateien schreiben, ignoriert der SSH-Server sie aus Sicherheitsgründen.
+
+<Callout title="Nur root auf dem Server?">
+Bei manchen gemieteten Servern gibt es anfangs nur den Benutzer root. Dann kopierst du den Schlüssel erst einmal zu root und legst im Guide [Benutzer & sudo](/de/einrichten/benutzer-sudo/) einen eigenen Benutzer an.
+</Callout>
+</Step>
+
+<Step title="Anmeldung mit Schlüssel testen">
+Melde dich neu an:
+
+```bash
+ssh alex@192.168.1.10
+```
+
+Hast du eine Passphrase gesetzt, fragt SSH jetzt nach **der Passphrase deines Schlüssels**, nicht nach dem Passwort des Servers. Fragt SSH nach `alex@192.168.1.10's password`, hat es nicht geklappt. Häufige Ursachen: der Schlüssel liegt beim falschen Benutzer, oder die Rechte auf dem Server stimmen nicht. Mit `ssh -v alex@192.168.1.10` siehst du, welche Schlüssel SSH anbietet und was der Server antwortet.
+</Step>
+
+<Step title="Kurzname in ~/.ssh/config anlegen">
+Statt jedes Mal Benutzer und IP zu tippen, legst du auf deinem Rechner einen Eintrag in `~/.ssh/config` an. Auf Windows liegt die Datei unter `C:\Users\<dein Name>\.ssh\config` (ohne Dateiendung). Gibt es sie noch nicht, legst du sie an.
+
+```text
+Host homelab
+    HostName 192.168.1.10
+    User alex
+    IdentityFile ~/.ssh/id_ed25519
+    AddKeysToAgent yes
+```
+
+Ab jetzt reicht:
+
+```bash
+ssh homelab
+```
+
+Der Kurzname funktioniert auch mit `scp` und `rsync` sowie in Editoren wie VS Code (Remote SSH).
+</Step>
+
+<Step title="Passphrase nicht jedes Mal eingeben">
+Damit du die Passphrase nicht bei jeder Verbindung tippen musst, merkt sich der **SSH-Agent** den entsperrten Schlüssel, bis du dich abmeldest. `AddKeysToAgent yes` aus dem vorigen Schritt übergibt den Schlüssel beim ersten Verbinden automatisch an den Agenten.
+
+- **Linux:** Die meisten Desktops starten den Agenten automatisch.
+- **macOS:** Der Agent läuft immer. Soll sich macOS die Passphrase dauerhaft im Schlüsselbund merken, ergänzt du im Eintrag die Zeile `UseKeychain yes`. Diese Option gibt es nur auf macOS.
+- **Windows:** Der Dienst ist standardmäßig aus. Aktiviere ihn einmal in einer PowerShell, die du **als Administrator** öffnest:
+
+```powershell
+Get-Service ssh-agent | Set-Service -StartupType Automatic
+Start-Service ssh-agent
+ssh-add $env:USERPROFILE\.ssh\id_ed25519
+```
+</Step>
+
+</Steps>
+
+## Mehrere Geräte
+
+Nutze pro Gerät einen eigenen Schlüssel, statt einen privaten Schlüssel herumzukopieren. Jeder bekommt eine eigene Zeile in `authorized_keys`. Geht ein Laptop verloren, löschst du nur seine Zeile, und alle anderen Geräte kommen weiter rein. Dafür ist der Kommentar mit `-C` nützlich.
+
+Sichere außerdem den privaten Schlüssel oder hinterlege mindestens einen zweiten Schlüssel von einem anderen Gerät. Sobald die Passwort-Anmeldung aus ist, ist der Schlüssel dein einziger Weg auf den Server, abgesehen von Bildschirm und Tastatur direkt am Gerät oder der Web-Konsole deines Hosters.

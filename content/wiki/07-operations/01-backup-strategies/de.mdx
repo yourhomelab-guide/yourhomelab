@@ -1,6 +1,119 @@
 ---
 slug: backup-strategien
 title: "Backup-Strategien"
+description: "Irgendwann geht etwas kaputt: eine Festplatte, ein Update oder ein falscher Befehl. Mit einer einfachen Strategie sind deine Daten trotzdem sicher, und du weißt genau, was du wohin sicherst."
 level: 1
-status: stub
+related: [directory-structure, volumes-bind-mounts, managing-secrets, env-files]
+practice: backups-borgmatic
 ---
+
+## Warum Backups Pflicht sind
+
+Solange du Dienste nur ausprobierst, ist ein Datenverlust ärgerlich. Sobald aber Fotos, Passwörter oder Dokumente
+auf deinem Server liegen, ist er ein Problem. Die häufigsten Ursachen sind unspektakulär: eine Festplatte stirbt,
+ein Update zerschießt eine Datenbank, du löschst versehentlich den falschen Ordner. Seltener, aber schlimmer:
+Ransomware (Schadsoftware, die deine Daten verschlüsselt), Diebstahl, Brand oder Wasserschaden.
+
+Ein Backup ist eine **Kopie deiner Daten an einem anderen Ort**, die du im Ernstfall zurückspielen kannst. Wichtig ist
+der zweite Teil: Ein Backup, das du nie zurückgespielt hast, ist nur eine Hoffnung.
+
+## Die 3-2-1-Regel
+
+Die bekannteste Faustregel für Backups lautet:
+
+- **3** Kopien deiner Daten (das Original plus zwei Backups),
+- auf **2** verschiedenen Medien oder Geräten,
+- davon **1** Kopie außer Haus (offsite).
+
+Für ein Homelab heißt das zum Beispiel: Die Daten liegen auf dem Server, ein Backup geht auf eine USB-Platte oder
+ein NAS im Heimnetz, ein zweites Backup geht verschlüsselt zu einem Cloud-Speicher oder auf einen Rechner bei Freunden.
+Die lokale Kopie ist schnell wiederhergestellt, die externe schützt vor Brand und Diebstahl.
+
+## RAID ist kein Backup
+
+RAID verteilt Daten so auf mehrere Festplatten, dass der Ausfall einer Platte nichts kaputt macht. Das ist praktisch,
+denn der Server läuft einfach weiter. Aber RAID spiegelt **jede** Änderung sofort: Löschst du eine Datei oder
+verschlüsselt Ransomware deine Fotos, passiert das auf allen Platten gleichzeitig. RAID schützt also die Verfügbarkeit,
+nicht deine Daten. Gleiches gilt für Sync-Dienste wie Nextcloud oder Syncthing: Sie verteilen auch Fehler zuverlässig.
+
+## Versionierung
+
+Ein gutes Backup hält mehrere **Stände** (Snapshots) aus der Vergangenheit vor. Merkst du erst nach zwei Wochen, dass
+eine Datei beschädigt ist, hilft dir das Backup von gestern nicht. Übliche Aufbewahrungsregeln sind etwa: die letzten
+7 täglichen, 4 wöchentlichen und 6 monatlichen Stände behalten, ältere löschen.
+
+Moderne Backup-Tools speichern dabei nur die Änderungen (Deduplizierung). Viele Snapshots brauchen deshalb kaum mehr
+Platz als einer.
+
+## Verschlüsselung
+
+Deine Backups enthalten alles: Datenbanken, Konfiguration und die `.env`-Dateien mit Passwörtern und API-Schlüsseln.
+Liegt ein Backup außer Haus, sollte es deshalb **immer verschlüsselt** sein, und zwar bevor es deinen Server verlässt.
+Dann kann auch der Speicheranbieter nichts damit anfangen.
+
+<Callout type="warning" title="Das Passwort gehört nicht nur auf den Server">
+  Ohne das Passwort bzw. den Schlüssel deines Backup-Repositorys ist das Backup wertlos. Bewahre es zusätzlich an einem
+  anderen Ort auf, etwa in deinem Passwortmanager oder ausgedruckt. Ist der Server weg, brauchst du es am dringendsten.
+</Callout>
+
+## Was du sichern solltest
+
+Hier zahlt sich die Verzeichnisstruktur dieser Seite aus: Alles, was zu deinem Homelab gehört, liegt unter einem
+einzigen Ordner, standardmäßig `__ROOT__`. Darin hat jeder Dienst seinen eigenen Ordner mit `compose.yaml`, `.env`
+und den Daten in `data/`. Ein Backup von `__ROOT__` enthält damit alles, was du zum Wiederherstellen brauchst.
+Mehr dazu unter [Verzeichnisstruktur](/de/nachschlagen/verzeichnisstruktur/).
+
+Nicht sichern musst du:
+
+- **Docker-Images**: Die lädt `docker compose pull` jederzeit neu herunter.
+- **Das Betriebssystem**: Neu installieren geht schneller, als ein System-Backup zurückzuspielen. Notiere dir aber,
+  was du am System geändert hast (siehe [Dokumentation](/de/nachschlagen/dokumentation/)).
+
+### Datenbanken brauchen Extra-Aufmerksamkeit
+
+Eine Datenbank schreibt ständig in ihre Dateien. Kopierst du diese Dateien im laufenden Betrieb, kann das Backup
+einen halbfertigen Zustand enthalten, den die Datenbank später nicht mehr lesen kann. Zwei einfache Lösungen:
+
+1. **Dump erstellen:** Vor dem Backup exportierst du die Datenbank in eine Datei und sicherst diese mit.
+   Für PostgreSQL etwa so:
+
+   ```bash
+   cd __ROOT__/immich
+   docker compose exec -T database pg_dumpall -U postgres > data/db-dump.sql
+   ```
+
+   Der Name des Datenbank-Containers (`database`) und der Benutzer hängen vom jeweiligen Stack ab.
+
+2. **Stack kurz stoppen:** `docker compose stop`, Backup, `docker compose start`. Das ist am einfachsten, bedeutet
+   aber ein paar Minuten Ausfall, meist nachts kein Problem.
+
+SQLite-Datenbanken (eine einzelne Datei, zum Beispiel bei Vaultwarden oder Uptime Kuma) sind ebenfalls betroffen.
+Viele Dienste beschreiben in ihrer Doku, wie man sie richtig sichert. Ein Blick dort hinein lohnt sich.
+
+## Tools
+
+Für Linux-Server gibt es drei bewährte Werkzeuge. Alle drei verschlüsseln, deduplizieren und verwalten Snapshots.
+
+<Cards>
+  <Card title="BorgBackup + borgmatic">
+    Borg ist sehr ausgereift und effizient. borgmatic ergänzt eine einzige Konfigurationsdatei für Quellen,
+    Aufbewahrung, Prüfungen und Hooks. Das Ziel ist eine lokale Platte oder ein Rechner mit SSH und Borg, es gibt
+    auch spezialisierte Anbieter dafür. Die Guides dieser Seite nutzen borgmatic.
+  </Card>
+  <Card title="restic">
+    Ein einzelnes Programm, Verschlüsselung immer aktiv. Speichert lokal, per SFTP oder direkt in S3-kompatiblen
+    Cloud-Speicher, ohne dass auf dem Ziel etwas installiert sein muss.
+  </Card>
+  <Card title="Kopia">
+    Ähnlich wie restic, bringt aber zusätzlich eine Weboberfläche und eine Desktop-App mit.
+  </Card>
+</Cards>
+
+Alle sind gute Wahl. Wichtiger als das Tool ist, dass das Backup **automatisch** läuft, etwa per Cronjob oder
+systemd-Timer, und dass du regelmäßig prüfst, ob es funktioniert.
+
+## Restore testen
+
+Probe regelmäßig den Ernstfall: Stelle einen Dienst aus dem Backup auf einem anderen Rechner oder in einem anderen
+Ordner wieder her und prüfe, ob er startet und deine Daten da sind. Erst dann weißt du, dass dein Backup taugt.
+Wie das geht, zeigt der Guide [Restore testen](/de/einrichten/restore-testen/).

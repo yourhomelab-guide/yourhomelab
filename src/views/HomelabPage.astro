@@ -1,0 +1,143 @@
+---
+import { render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { site } from '../config/site';
+import { getServices, type Homelab } from '../lib/content';
+import { formatDate, t, type Lang } from '../lib/i18n';
+import { url } from '../lib/routes';
+
+interface Props {
+  lang: Lang;
+  lab: Homelab;
+}
+const { lang, lab } = Astro.props;
+const d = lab.data;
+const { Content } = await render(lab);
+const hasStory = !!lab.body?.trim();
+const services = await getServices(lang);
+const known = new Map(services.map((s) => [s.id, s]));
+/** "Vaultwarden" or "vaultwarden" both link to the service page */
+const svcLink = (name: string) => known.get(name.toLowerCase().replace(/\s+/g, '-'));
+const facts: [string, string | undefined][] = [
+  ['homelabs.field.location', t(lang, `homelabs.location.${d.location}`)],
+  ['homelabs.field.platform', d.platform.map((v) => t(lang, `homelabs.platform.${v}`)).join(', ')],
+  ['homelabs.field.management', d.management.map((v) => t(lang, `homelabs.management.${v}`)).join(', ')],
+  ['homelabs.field.proxy', d.proxy.map((v) => t(lang, `homelabs.proxy.${v}`)).join(', ') || undefined],
+  ['homelabs.field.access', d.access.map((v) => t(lang, `homelabs.access.${v}`)).join(', ') || undefined],
+  ['homelabs.servers', String(d.servers)],
+  ['homelabs.hardware', d.hardware],
+  ['homelabs.watts', d.watts ? t(lang, 'homelabs.wattsN', { n: d.watts }) : undefined],
+  ['homelabs.domain', d.domain],
+  ['homelabs.auth', d.auth],
+  ['homelabs.backup', d.backup],
+  ['homelabs.monitoring', d.monitoring],
+];
+---
+
+<Base lang={lang} title={d.name} description={d.summary} alternates={{ de: url.homelab('de', lab.id), en: url.homelab('en', lab.id) }} nav="homelabs">
+  <main class="wrap lab">
+    <div class="crumbs">
+      <a href={url.section(lang, 'homelabs')}>{t(lang, 'homelabs.title')}</a><span>/</span><span class="here">{d.name}</span>
+    </div>
+
+    <div class="hero card">
+      <div class="title-row">
+        <h1>{d.name}</h1>
+        {d.example && <span class="tag ex">{t(lang, 'homelabs.example')}</span>}
+      </div>
+      <span class="by">
+        {d.github ? <a href={`https://github.com/${d.github}`}>{t(lang, 'homelabs.by', { name: d.author })}</a> : t(lang, 'homelabs.by', { name: d.author })}
+        · {t(lang, 'homelabs.added', { date: formatDate(lang, d.added) })}
+        {d.lang !== lang && <> · {t(lang, 'homelabs.writtenIn')}</>}
+      </span>
+      <p lang={d.lang}>{d.summary}</p>
+      {d.example && <p class="note">{t(lang, 'homelabs.exampleNote')}</p>}
+    </div>
+
+    <div class="cols">
+      <div class="main" lang={d.lang}>
+        {
+          hasStory && (
+            <section class="story card prose">
+              <h2>{t(lang, 'homelabs.story')}</h2>
+              <Content />
+            </section>
+          )
+        }
+        {
+          d.services.length > 0 && (
+            <section class="card box">
+              <h2>{t(lang, 'homelabs.services')}</h2>
+              <div class="chips">
+                {d.services.map((name) => {
+                  const s = svcLink(name);
+                  return s ? (
+                    <a class="chip linked" href={url.service(lang, s.id)}>
+                      {s.name}
+                    </a>
+                  ) : (
+                    <span class="chip">{name}</span>
+                  );
+                })}
+              </div>
+            </section>
+          )
+        }
+      </div>
+
+      <aside class="side">
+        <dl class="facts card" lang={d.lang}>
+          {
+            facts
+              .filter(([, v]) => v)
+              .map(([k, v]) => (
+                <>
+                  <dt lang={lang}>{t(lang, k)}</dt>
+                  <dd>{v}</dd>
+                </>
+              ))
+          }
+        </dl>
+        <div class="links">
+          {d.link && <a href={d.link}>{t(lang, 'homelabs.more')} ↗</a>}
+          <a href={`${site.repo}/tree/${site.branch}/content/homelabs/${lab.id}/homelab.md`}>{t(lang, 'homelabs.edit')} ↗</a>
+          <a href={url.section(lang, 'homelabs')}>← {t(lang, 'homelabs.back')}</a>
+        </div>
+      </aside>
+    </div>
+  </main>
+</Base>
+
+<style>
+  .lab { padding-top: 36px; padding-bottom: 88px; display: flex; flex-direction: column; gap: 24px; }
+  .crumbs { font-size: 13.5px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+  .crumbs .here { color: var(--text-2); }
+  .hero { border-radius: 24px; padding: 28px; display: flex; flex-direction: column; gap: 10px; }
+  .title-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .title-row h1 { font-size: 38px; font-weight: 700; letter-spacing: -0.025em; }
+  .ex { background: var(--warn-bg); color: var(--warn-fg); }
+  .by { font-size: 14px; color: var(--muted); }
+  .hero p { font-size: 16.5px; line-height: 1.55; color: var(--text-3); max-width: 720px; }
+  .hero .note { font-size: 14px; color: var(--warn-fg); background: var(--warn-bg); border-radius: 12px; padding: 10px 14px; align-self: flex-start; }
+  .cols { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+  .main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .story, .box { padding: 26px; display: flex; flex-direction: column; gap: 12px; }
+  .story h2, .box h2 { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+  .linked:hover { background: var(--accent-50); color: var(--accent-600); text-decoration: none; }
+  .side { position: sticky; top: calc(var(--header-h) + 24px); display: flex; flex-direction: column; gap: 14px; }
+  .facts { padding: 20px; margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; font-size: 14px; line-height: 1.5; }
+  .facts dt { font-size: 12.5px; font-weight: 600; color: var(--muted); margin-top: 10px; }
+  .facts dt:first-child { margin-top: 0; }
+  .facts dd { margin: 0; color: var(--text-2); overflow-wrap: anywhere; }
+  .links { display: flex; flex-direction: column; gap: 8px; font-size: 14px; padding: 0 4px; }
+  @media (max-width: 1000px) {
+    .cols { grid-template-columns: minmax(0, 1fr); }
+    .side { position: static; }
+  }
+  @media (max-width: 720px) {
+    .lab { padding-top: 24px; }
+    .hero { padding: 20px; }
+    .title-row h1 { font-size: 30px; }
+    .story, .box { padding: 20px; }
+  }
+</style>

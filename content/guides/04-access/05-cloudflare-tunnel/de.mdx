@@ -1,0 +1,120 @@
+---
+title: "Cloudflare Tunnel"
+description: "Am Ende ist ein Dienst unter deiner Domain aus dem Internet erreichbar, ohne dass du am Router einen Port öffnest. Das funktioniert auch hinter CGNAT und DS-Lite."
+level: 2
+minutes: 20
+requires: [Docker Compose, Domain mit DNS bei Cloudflare]
+---
+
+Bei einem Tunnel baut dein Server selbst eine ausgehende Verbindung zu Cloudflare auf. Anfragen an deine Domain landen zuerst bei Cloudflare und kommen durch diesen Tunnel zu dir. Weil die Verbindung von innen nach außen geht, brauchst du keine Portfreigabe und keine öffentliche IPv4. Wie Tunnel allgemein funktionieren, erklärt der Artikel [Tunnel](/de/nachschlagen/tunnel/).
+
+Das Programm auf deiner Seite heißt `cloudflared`. Es läuft als Container im Proxy-Netzwerk und erreicht deine Dienste dort über ihren Namen.
+
+## Vor- und Nachteile
+
+| Vorteile | Nachteile |
+| --- | --- |
+| Kein offener Port am Router | TLS endet bei Cloudflare: Cloudflare kann deinen Verkehr unverschlüsselt sehen |
+| Funktioniert hinter CGNAT und DS-Lite | Du bist von einem US-Anbieter und seinen Regeln abhängig |
+| Deine Heim-IP bleibt verborgen | Im kostenlosen Plan sind Uploads auf 100 MB pro Anfrage begrenzt |
+| Kostenlos, kein eigener Server nötig | Video-Streaming (Jellyfin, Plex) ist laut Nutzungsbedingungen nicht vorgesehen |
+
+Für Dienste wie einen Passwortmanager oder Fotos heißt der erste Nachteil: Du vertraust Cloudflare deine Daten im Klartext an. Wer das nicht will, nimmt für private Dienste lieber ein [VPN](/de/einrichten/vpn-wireguard/) und nutzt den Tunnel nur für Dinge, die ohnehin öffentlich sein sollen. Einen Überblick gibt [Zugriffswege im Vergleich](/de/nachschlagen/zugriffswege-vergleich/).
+
+<Steps>
+
+<Step title="Domain zu Cloudflare holen">
+Der Tunnel funktioniert nur mit einer Domain, deren DNS Cloudflare verwaltet. Lege ein kostenloses Konto bei [Cloudflare](https://dash.cloudflare.com/) an, füge deine Domain hinzu und trage bei deinem Registrar die beiden Nameserver ein, die Cloudflare dir anzeigt.
+
+Bis Cloudflare die Domain als aktiv meldet, können ein paar Minuten bis einige Stunden vergehen. Mehr zu DNS steht im Guide [Domain & DNS](/de/einrichten/domain-dns/).
+</Step>
+
+<Step title="Tunnel anlegen">
+Tunnel verwaltest du im **Zero-Trust-Dashboard** von Cloudflare. Beim ersten Aufruf wählst du dort einen Plan, der kostenlose reicht.
+
+1. Öffne im Zero-Trust-Dashboard „Networks → Tunnels“ und lege einen neuen Tunnel vom Typ **Cloudflared** an.
+2. Gib ihm einen Namen, etwa `homelab`.
+3. Wähle als Umgebung **Docker**. Cloudflare zeigt dir einen `docker run`-Befehl.
+4. Kopiere daraus nur den langen **Token** hinter `--token`. Den Befehl selbst brauchst du nicht.
+
+Die Menüpunkte ändern sich bei Cloudflare gelegentlich. Die aktuelle Anleitung steht in der [offiziellen Dokumentation](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/create-remote-tunnel/).
+</Step>
+
+<Step title="Verzeichnis und .env anlegen">
+Der Token ist ein Secret: Wer ihn hat, kann deinen Tunnel betreiben. Er kommt deshalb in die `.env`, nicht in die `compose.yaml`.
+
+```bash
+mkdir -p __ROOT__/cloudflared
+cd __ROOT__/cloudflared
+nano .env
+chmod 600 .env
+```
+
+Inhalt der `.env`:
+
+```bash
+TUNNEL_TOKEN=hier-den-token-einfuegen
+```
+</Step>
+
+<Step title="compose.yaml schreiben">
+`cloudflared` liest den Token aus der Variable `TUNNEL_TOKEN`. Der Container hängt im Proxy-Netzwerk, damit er deine Dienste per Containername erreicht. Er braucht keine Ports, weil er nur nach außen verbindet.
+
+```yaml
+services:
+  cloudflared:
+    # Pin a specific version tag once it runs, see hub.docker.com/r/cloudflare/cloudflared
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    networks:
+      - __NETWORK__
+
+networks:
+  __NETWORK__:
+    external: true
+```
+</Step>
+
+<Step title="Starten und prüfen">
+Starte den Stack. `cloudflared` verbindet sich sofort mit Cloudflare.
+
+```bash
+docker compose up -d
+docker compose logs -f cloudflared
+```
+
+Im Log sollten nach kurzer Zeit mehrere Zeilen mit `Registered tunnel connection` auftauchen. Mit `Strg+C` beendest du die Anzeige. Im Zero-Trust-Dashboard steht der Tunnel jetzt auf **Healthy**.
+</Step>
+
+<Step title="Dienst veröffentlichen">
+Jetzt sagst du Cloudflare, welcher Name zu welchem Dienst führt. Öffne den Tunnel im Dashboard und füge unter **Public Hostname** (je nach Dashboard-Version auch „Published application routes“) einen Eintrag hinzu. Als Beispiel dient [Uptime Kuma](/de/dienste/uptime-kuma/):
+
+| Feld | Wert |
+| --- | --- |
+| Subdomain | `status` |
+| Domain | `__DOMAIN__` |
+| Type | `HTTP` |
+| URL | `uptime-kuma:3001` |
+
+Bei der URL trägst du den **Containernamen** und den Port **im Container** ein. Das klappt, weil `cloudflared` und der Dienst im selben Netzwerk `__NETWORK__` hängen. Cloudflare legt den passenden DNS-Eintrag selbst an und kümmert sich um das Zertifikat.
+
+Öffne danach `https://status.__DOMAIN__`. Du solltest Uptime Kuma sehen.
+</Step>
+
+<Step title="Zugriff absichern">
+Alles, was du über den Tunnel veröffentlichst, ist öffentlich im Internet. Der Tunnel ersetzt keinen Login.
+
+- Veröffentliche nur Dienste, die eine eigene, gute Anmeldung haben.
+- Für alles andere schalte einen Login davor. Das geht direkt bei Cloudflare mit **Access** im Zero-Trust-Dashboard, siehe [Cloudflare-Doku zu Access](https://developers.cloudflare.com/cloudflare-one/applications/), oder mit einem eigenen Dienst wie [Pocket ID](/de/einrichten/pocket-id/) oder [Tinyauth](/de/einrichten/tinyauth/).
+- Veröffentliche keine Verwaltungsoberflächen wie Portainer oder die Oberfläche deines Reverse Proxys.
+</Step>
+
+</Steps>
+
+<Callout title="Tunnel und Traefik kombinieren">
+Statt jeden Dienst einzeln auf seinen Container zeigen zu lassen, kannst du den Tunnel auch auf Traefik zeigen lassen. Dann greifen die Labels und Middlewares aus den anderen Guides. Das hat aber Haken: Traefik kann ohne offene Ports kein Zertifikat per TLS-Challenge holen und leitet HTTP auf HTTPS um. Du musst also die TLS-Einstellungen des Tunnels anpassen oder Traefik auf die DNS-Challenge umstellen. Das ist eher etwas für Fortgeschrittene, die Optionen stehen in der [Cloudflare-Doku zu den Origin-Einstellungen](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/configure-tunnels/origin-configuration/).
+</Callout>

@@ -1,6 +1,117 @@
 ---
 slug: kosten-strom
 title: "Kosten & Stromverbrauch"
+description: "Ein Server zuhause läuft rund um die Uhr, deshalb ist Strom der wichtigste laufende Kostenpunkt. Hier lernst du, wie du aus Watt die Kosten pro Jahr ausrechnest, und was Domain und VPS ungefähr kosten."
 level: 1
-status: stub
+related: [hardware-overview, is-it-worth-it, cloud-hybrid-local, dns-domains]
+practice: choosing-hardware
 ---
+
+## Warum der Leerlauf zählt
+
+Ein Homelab-Server tut die meiste Zeit fast nichts. Er wartet auf Anfragen, synchronisiert ab und zu ein paar Dateien
+und macht nachts ein Backup. Für die Stromrechnung ist deshalb nicht die maximale Leistung entscheidend, sondern der
+Verbrauch im **Leerlauf** (englisch „idle“).
+
+Ein Gerät, das unter Last 60 Watt zieht, aber 23 Stunden am Tag bei 8 Watt wartet, ist sparsamer als eines, das im
+Leerlauf 40 Watt braucht. Schau beim Vergleichen also immer auf den Idle-Verbrauch.
+
+## Von Watt zu Euro
+
+Die Rechnung ist einfach. Ein Jahr hat 8.760 Stunden (24 × 365).
+
+1. **Watt × 8.760 = Wattstunden pro Jahr**
+2. **÷ 1.000 = Kilowattstunden (kWh) pro Jahr**
+3. **× Strompreis pro kWh = Kosten pro Jahr**
+
+Oder kurz: **Watt × 8,76 × Strompreis = Euro pro Jahr.**
+
+<Callout title="Annahme für die Beispiele">
+Alle Beispiele auf dieser Seite rechnen mit **0,35 € pro kWh**. Das ist nur eine Annahme. Dein tatsächlicher Preis
+steht auf deiner Stromrechnung und kann deutlich davon abweichen. Setz ihn einfach in die Formel ein.
+</Callout>
+
+### Beispielrechnung: 10 Watt
+
+Angenommen, dein Mini-PC braucht im Durchschnitt 10 Watt:
+
+- 10 W × 8.760 h = 87.600 Wh
+- 87.600 Wh ÷ 1.000 = **87,6 kWh pro Jahr**
+- 87,6 kWh × 0,35 € = **etwa 31 € pro Jahr**, also rund 2,50 € im Monat
+
+### Faustregel
+
+Jedes Watt Dauerverbrauch kostet bei 0,35 €/kWh gut **3 € pro Jahr**. Damit kannst du Geräte schnell im Kopf vergleichen:
+
+| Durchschnittlicher Verbrauch | kWh pro Jahr | Kosten pro Jahr (bei 0,35 €/kWh) | Typisch für                    |
+| ---------------------------- | ------------ | -------------------------------- | ------------------------------ |
+| 5 W                          | ca. 44       | ca. 15 €                         | Raspberry Pi, sehr sparsamer Mini-PC |
+| 10 W                         | ca. 88       | ca. 31 €                         | Mini-PC der N100/N150-Klasse   |
+| 15 W                         | ca. 131      | ca. 46 €                         | Gebrauchter Business-Mini-PC   |
+| 30 W                         | ca. 263      | ca. 92 €                         | NAS mit Festplatten            |
+| 50 W                         | ca. 438      | ca. 153 €                        | Alter Desktop-PC               |
+
+Die Zuordnung in der rechten Spalte ist grob. Welche Geräte es gibt, steht in der
+[Hardware-Übersicht](/de/nachschlagen/hardware-uebersicht/).
+
+## Messen statt schätzen
+
+Herstellerangaben und Werte aus Foren sind nur ein Anhaltspunkt. Der echte Verbrauch hängt von deinem Modell, den
+angeschlossenen Festplatten, den BIOS-Einstellungen und den laufenden Diensten ab.
+
+Am einfachsten misst du mit einer **Messsteckdose** (Energiekostenmessgerät). Du steckst sie zwischen Steckdose und
+Netzteil, und sie zeigt den aktuellen Verbrauch und die Summe in kWh an. Solche Geräte gibt es günstig im Baumarkt,
+manche Stadtbibliotheken und Verbraucherzentralen verleihen sie auch.
+
+So bekommst du einen realistischen Wert:
+
+1. Server anschließen und normal laufen lassen, mit allen Diensten.
+2. Die Messsteckdose ein paar Tage mitlaufen lassen, am besten eine ganze Woche.
+3. Die gemessenen kWh durch die Stunden teilen und mal 1.000 nehmen. Das ergibt den Durchschnitt in Watt, inklusive
+   Backups und Lastspitzen.
+
+<Callout title="Kleine Stellschrauben">
+Festplatten, die sich schlafen legen dürfen, ein abgeschalteter Monitor und nicht benötigte Geräte am USB-Port sparen
+oft ein paar Watt. Bei manchen Rechnern hilft auch ein Blick in die Energiespar-Optionen im BIOS.
+</Callout>
+
+## Weitere Kosten
+
+Strom ist beim Server zuhause der größte laufende Posten, aber nicht der einzige.
+
+### Hardware
+
+Einmalig beim Kauf. Neue Mini-PCs und gebrauchte Business-Rechner liegen je nach Ausstattung meist im unteren bis
+mittleren dreistelligen Bereich, ein vorhandener alter Rechner kostet nichts. Festplatten für große Datenmengen kommen
+gegebenenfalls dazu. Über die Jahre fallen gelegentlich Ersatzteile an.
+
+### Domain
+
+Für eigene Adressen wie `cloud.__DOMAIN__` brauchst du eine Domain. Übliche Endungen wie `.de` oder `.com` kosten als
+grobe Größenordnung etwa 5 bis 20 € pro Jahr. Achte auf den Preis für die **Verlängerung**: Manche Anbieter locken mit
+einem günstigen ersten Jahr und verlangen danach deutlich mehr. Mehr dazu in [DNS & Domains](/de/nachschlagen/dns-domains/).
+
+### VPS
+
+Ein kleiner virtueller Server kostet als grobe Größenordnung ab etwa 4 bis 5 € im Monat, größere Pakete entsprechend
+mehr. Er ersetzt entweder den Server zuhause oder dient im Hybrid-Modell als öffentlicher Eingang. Welches Modell für
+dich passt, klärt [Cloud, Hybrid oder Lokal?](/de/nachschlagen/cloud-hybrid-lokal/).
+
+### Backup-Speicher
+
+Mindestens eine Kopie deiner Daten gehört außer Haus. Das kann eine externe Festplatte bei Freunden sein oder ein
+Cloud-Speicher, der je nach Datenmenge monatlich kostet. Plane das von Anfang an mit ein, siehe
+[Backup-Strategien](/de/nachschlagen/backup-strategien/).
+
+## Ein Beispiel fürs ganze Jahr
+
+Unter den Annahmen dieser Seite könnte ein typisches Einsteiger-Setup so aussehen:
+
+| Posten                        | Kosten pro Jahr (grob) |
+| ----------------------------- | ---------------------- |
+| Mini-PC mit 10 W Durchschnitt | ca. 31 € Strom         |
+| Domain                        | ca. 5–20 €             |
+| Backup-Speicher außer Haus    | je nach Anbieter und Datenmenge |
+
+Dazu kommt einmalig die Hardware. Vergleiche das mit den Abos, die du ersetzen willst, dann siehst du schnell, ob sich
+Selfhosting für dich auch finanziell lohnt. Mehr dazu in [Wann lohnt es sich?](/de/nachschlagen/wann-lohnt-es-sich/).

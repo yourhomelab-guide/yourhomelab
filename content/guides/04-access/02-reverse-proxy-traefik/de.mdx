@@ -7,6 +7,10 @@ requires: [Docker Compose, Domain]
 services: [traefik]
 ---
 
+<Callout title="Traefik oder Nginx Proxy Manager?">
+Traefik ist am Anfang etwas komplizierter, bietet dafür am meisten Möglichkeiten: Die Konfiguration steht als Labels direkt in der `compose.yaml` jedes Dienstes, Middlewares wie Login-Schutz schaltest du per Label davor, und alles lässt sich als Datei versionieren. Wer es erst mal einfach will, nimmt [Nginx Proxy Manager](/de/einrichten/reverse-proxy-npm/) mit Weboberfläche.
+</Callout>
+
 <Steps>
 
 <Step title="Proxy-Netzwerk anlegen">
@@ -18,12 +22,12 @@ docker network create __NETWORK__
 </Step>
 
 <Step title="Verzeichnis anlegen">
-Jeder Stack bekommt einen eigenen Ordner unter `__ROOT__`. Persistente Daten liegen im Unterordner `data/`, dann reicht ein Backup dieses Pfads.
+Jeder Stack bekommt einen eigenen Ordner unter `__ROOT__`. Die persistenten Daten von Traefik, also die Zertifikate, liegen in `__DATA(traefik)__`.
 
 ```bash
-mkdir -p __ROOT__/traefik/data/letsencrypt
-touch __ROOT__/traefik/data/letsencrypt/acme.json
-chmod 600 __ROOT__/traefik/data/letsencrypt/acme.json
+mkdir -p __ROOT__/traefik __DATA(traefik)__/letsencrypt
+touch __DATA(traefik)__/letsencrypt/acme.json
+chmod 600 __DATA(traefik)__/letsencrypt/acme.json
 ```
 </Step>
 

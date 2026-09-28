@@ -1,6 +1,139 @@
 ---
 slug: verzeichnisstruktur
 title: "Verzeichnisstruktur"
+description: "Wo liegen compose.yaml, .env und die Daten deiner Dienste? Es gibt mehrere gängige Varianten. Hier vergleichen wir sie ehrlich und zeigen, welche diese Seite empfiehlt und warum."
 level: 1
-status: stub
+related: [volumes-bind-mounts, docker-compose, backup-strategies, naming]
+practice: creating-the-directory-structure
 ---
+
+<OneWay />
+
+## Warum die Struktur wichtig ist
+
+Am Anfang ist es egal, wo deine erste `compose.yaml` liegt. Nach zehn Diensten nicht mehr. Dann willst du wissen:
+Was muss ins Backup? Wo liegt die Konfiguration von Vaultwarden? Welcher Ordner gehört zu welchem Container?
+
+Eine feste Struktur beantwortet diese Fragen, bevor sie entstehen. Und sie macht dein Backup einfach: Im besten Fall
+sicherst du **einen einzigen Ordner** und hast alles.
+
+## Die gängigen Varianten
+
+Im Netz findest du vor allem fünf Muster. Alle funktionieren, sie setzen nur andere Schwerpunkte.
+
+**(a) `/opt/stacks` oder `/opt/docker`.** Sehr verbreitet, auch weil manche Tools (etwa Dockge) `/opt/stacks` als
+Standard nutzen. Ein Ordner pro Dienst, meist mit Daten darin.
+
+**(b) `~/docker` im Home-Verzeichnis.** Bequem: Du brauchst kein `sudo` zum Anlegen und hast alles unter deinem Benutzer.
+
+**(c) Named Volumes.** Du schreibst nur die `compose.yaml`, die Daten verwaltet Docker selbst unter
+`/var/lib/docker/volumes/`. Mehr dazu unter [Volumes & Bind Mounts](/de/nachschlagen/volumes-bind-mounts/).
+
+**(d) Getrennt: `compose/` und `data/`.** Konfiguration und Daten liegen in zwei parallelen Bäumen.
+
+**(e) Alles pro Dienst in einem Ordner.** `compose.yaml`, `.env` und `data/` liegen zusammen. Das ist eigentlich eine
+Frage der inneren Ordnung und lässt sich mit (a) oder (b) kombinieren.
+
+```
+(c) Named Volumes                      (d) Getrennt                     (e) Pro Dienst
+/opt/stacks/                           /srv/homelab/                    /srv/homelab/
+└── vaultwarden/                       ├── compose/                     └── vaultwarden/
+    └── compose.yaml                   │   └── vaultwarden/                 ├── compose.yaml
+/var/lib/docker/volumes/               │       ├── compose.yaml             ├── .env
+└── vaultwarden_data/                  │       └── .env                     └── data/
+    └── _data/                         └── data/
+                                           └── vaultwarden/
+```
+
+## Im Vergleich
+
+|                    | (a) `/opt/…`            | (b) `~/docker`              | (c) Named Volumes              | (d) compose + data         | (e) pro Dienst        |
+| ------------------ | ----------------------- | --------------------------- | ------------------------------ | -------------------------- | --------------------- |
+| **Backup**         | Ein Ordner              | Ein Ordner                  | Zwei Orte, Volumes nur als root | Zwei Ordner (oder deren Eltern) | Ein Ordner       |
+| **Rechte**         | Braucht einmal `sudo`   | Einfach, gehört dir         | Alles gehört root              | Wie gewählter Ort          | Wie gewählter Ort     |
+| **Übersicht**      | Gut                     | Gut                         | Daten schwer zu finden         | Gut, aber zwei Stellen     | Sehr gut              |
+| **Git-tauglich**   | Nur mit `.gitignore`    | Nur mit `.gitignore`        | Ja, nur Compose-Dateien        | Sehr gut                   | Nur mit `.gitignore`  |
+| **FHS**            | `/opt` ist für Software | Home ist für Benutzerdaten  | Docker-intern                  | Je nach Ort                | Je nach Ort           |
+
+Ein paar Punkte dazu:
+
+- **FHS** ist der [Filesystem Hierarchy Standard](https://refspecs.linuxfoundation.org/FHS_3.0/fhs/index.html). Er
+  beschreibt, wofür die Ordner unter Linux gedacht sind. `/opt` ist für zusätzlich installierte Softwarepakete,
+  `/srv` für "Daten, die dieser Server bereitstellt". Für ein Homelab passt `/srv` am besten. Wirklich schlimm ist
+  `/opt` aber nicht, es ist nur eine Frage der Konvention.
+- **Home-Verzeichnis:** Praktisch, aber deine Dienste hängen dann an einem Benutzerkonto. Wechselst du den Benutzer
+  oder hat ein zweiter Admin Zugriff, wird es unübersichtlich.
+- **Named Volumes** sind nicht falsch. Docker kümmert sich um Rechte, und für manche Datenbanken ist das bequem.
+  Aber die Daten liegen versteckt, Namen wie `vaultwarden_data` entstehen aus Projektname und Volume-Name, und für
+  ein Backup brauchst du root-Rechte auf `/var/lib/docker`. Für Einsteiger ist ein sichtbarer Ordner einfacher.
+
+## Die Empfehlung dieser Seite
+
+Für den Einstieg empfehlen wir **einen einzigen Wurzelordner** mit **einem Unterordner pro Dienst**:
+
+```
+/srv/homelab/
+├── traefik/
+│   ├── compose.yaml
+│   ├── .env
+│   └── data/
+└── vaultwarden/
+    ├── compose.yaml
+    ├── .env
+    └── data/
+```
+
+Das ist Variante (e) unter `/srv`. Die Vorteile:
+
+- **Ein Ordner fürs Backup.** Sicherst du `/srv/homelab`, hast du Konfiguration, Secrets und Daten aller Dienste.
+- **Alles beieinander.** Willst du einen Dienst umziehen oder löschen, nimmst du genau einen Ordner.
+- **Kurze Pfade in der `compose.yaml`.** Persistente Daten mountest du als Bind Mount nach `./data/…`. Der Pfad ist
+  relativ zum Stack-Ordner, die Datei funktioniert also überall.
+
+Den Namen `homelab` darfst du natürlich durch deinen eigenen ersetzen, etwa `/srv/docker` oder `/srv/zuhause`. Trag
+den Ordner unter "Mein Setup" ein, dann passen sich alle Befehle und Vorlagen dieser Seite an. Dort heißt er
+`__ROOT__`, der Standard ist `/srv/homelab`. Wie du die Struktur anlegst und die Rechte setzt, zeigt der Guide
+[Verzeichnisstruktur anlegen](/de/einrichten/verzeichnisstruktur-anlegen/).
+
+## Alternative für Fortgeschrittene
+
+Wenn du deine Compose-Dateien mit Git verwalten willst, etwa mit
+[Forgejo und automatischen Deployments](/de/einrichten/git-deployments-forgejo/), ist die Trennung von Konfiguration
+und Daten praktischer:
+
+```
+/srv/homelab/
+├── compose/
+│   ├── traefik/
+│   │   ├── compose.yaml
+│   │   └── .env
+│   └── vaultwarden/
+│       ├── compose.yaml
+│       └── .env
+└── data/
+    ├── traefik/
+    └── vaultwarden/
+```
+
+Der Ordner `compose/` ist dann ein sauberes Git-Repository ohne Daten. Und `data/` kannst du auf eine eigene Platte
+legen oder anders sichern als die Konfiguration. Das Backup bleibt trotzdem einfach: Du sicherst weiterhin `/srv/homelab`.
+
+So stellst du das unter "Mein Setup" ein:
+
+- **Ordner für Stacks:** `/srv/homelab/compose`
+- **Persistente Daten:** "Zentraler Datenordner"
+- **Datenordner:** `/srv/homelab/data`
+
+Die Vorlagen schreiben dann statt `./data/…` den vollen Pfad in die `compose.yaml`, zum Beispiel
+`/srv/homelab/data/vaultwarden/…`.
+
+## Gut zu wissen
+
+- **`compose.yaml` statt `docker-compose.yml`.** `compose.yaml` ist der aktuelle Standardname. Docker Compose findet
+  den alten Namen weiterhin, du musst also nichts umbenennen. Neue Dateien heißen hier aber immer `compose.yaml`.
+- **Datenbanken vor dem Backup dumpen.** Kopierst du die Dateien einer laufenden Datenbank, kann das Backup
+  inkonsistent sein. Erstelle vorher einen Dump oder stoppe den Stack kurz. Mehr unter
+  [Backup-Strategien](/de/nachschlagen/backup-strategien/).
+- **Die `.env` enthält Secrets.** Passwörter und Tokens stehen im Klartext darin. Verschlüssele deine Backups
+  (borgmatic tut das automatisch) und leg die `.env` nie in ein öffentliches Git-Repository. Mehr dazu unter
+  [.env-Dateien](/de/nachschlagen/env-dateien/).

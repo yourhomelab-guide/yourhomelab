@@ -1,7 +1,126 @@
 ---
 slug: betriebssystem-installieren
 title: "Betriebssystem installieren"
+description: "Auf deinem Server läuft ein schlankes Debian 13 oder Ubuntu Server LTS ohne Desktop, und du kannst dich von einem anderen Rechner aus per SSH anmelden."
 level: 1
 minutes: 40
-status: stub
+requires: [Server-Hardware, USB-Stick ab 4 GB, Monitor und Tastatur für die Installation]
 ---
+
+Ein Homelab-Server braucht keine grafische Oberfläche. Ein minimales Linux ohne Desktop startet schneller, braucht weniger RAM und hat weniger Software, die Updates und Sicherheitslücken mitbringen kann. Bedient wird der Server später bequem per SSH von deinem normalen Rechner aus. Alle weiteren Guides auf dieser Seite gehen von **Debian** oder **Ubuntu Server** aus.
+
+<OneWay />
+
+<Callout title="Du nutzt Proxmox?">
+Dann installierst du Debian oder Ubuntu genauso, nur in einer VM statt direkt auf der Hardware. Die VM legst du in der Proxmox-Oberfläche an und bindest das ISO-Image als virtuelles Laufwerk ein, einen USB-Stick brauchst du dafür nicht. Mehr dazu unter [Proxmox VE](/de/nachschlagen/proxmox-ve/) und [Betriebsmodelle im Überblick](/de/nachschlagen/betriebsmodelle/).
+</Callout>
+
+<Steps>
+
+<Step title="Debian oder Ubuntu Server wählen">
+Beide Systeme sind gute Grundlagen. Die Befehle in den Guides funktionieren auf beiden gleich.
+
+- **Debian 13** ist schlank, sehr stabil und ändert sich wenig. Eine gute Wahl, wenn du ein ruhiges System willst.
+- **Ubuntu Server LTS** baut auf Debian auf, bringt etwas neuere Pakete mit und hat einen sehr geführten Installer. LTS steht für Long Term Support: Diese Versionen bekommen fünf Jahre lang Updates.
+
+Wenn du keine Vorliebe hast, nimm Debian. Lade das passende Image von der offiziellen Seite herunter:
+
+- Debian: [debian.org/download](https://www.debian.org/download) (das „netinst“-Image für amd64, es lädt die Pakete während der Installation aus dem Netz)
+- Ubuntu Server: [ubuntu.com/download/server](https://ubuntu.com/download/server) (die aktuelle LTS-Version)
+</Step>
+
+<Step title="Installations-USB-Stick erstellen">
+Das heruntergeladene ISO-Image musst du auf einen USB-Stick schreiben. Einfaches Kopieren reicht nicht, der Stick muss bootfähig werden. Alle Daten auf dem Stick gehen dabei verloren.
+
+- **Windows, macOS, Linux**: [balenaEtcher](https://etcher.balena.io/) – Image wählen, Stick wählen, „Flash“.
+- **Windows**: alternativ [Rufus](https://rufus.ie/).
+- **Linux-Terminal**: mit `dd`. Prüf vorher mit `lsblk` sehr genau, welches Gerät dein Stick ist, denn `dd` überschreibt ohne Nachfrage.
+
+```bash
+lsblk
+sudo dd if=debian-13-amd64-netinst.iso of=/dev/sdX bs=4M status=progress conv=fsync
+```
+
+Ersetze `/dev/sdX` durch deinen Stick und den Dateinamen durch den deines Images.
+</Step>
+
+<Step title="Vom USB-Stick starten">
+Schließ Monitor, Tastatur und ein **LAN-Kabel** an den Server an. Mit Kabel findet der Installer das Netzwerk sofort, und du musst kein WLAN einrichten.
+
+Steck den USB-Stick ein und schalte den Rechner ein. Drück direkt nach dem Einschalten die Taste für das Bootmenü. Welche das ist, hängt vom Hersteller ab, häufig `F12`, `F11`, `F10` oder `Esc`. Wähl dort den USB-Stick aus.
+
+Wenn der Stick nicht auftaucht, schau im BIOS/UEFI nach, ob Booten von USB erlaubt ist. Secure Boot kannst du eingeschaltet lassen, Debian und Ubuntu unterstützen es.
+</Step>
+
+<Step title="Debian installieren">
+Wähl im Startmenü **Install** (die Textversion reicht völlig). Der Installer fragt nacheinander:
+
+1. **Sprache, Standort, Tastatur**: nach deinen Wünschen.
+2. **Rechnername (Hostname)**: ein kurzer Name in Kleinbuchstaben, z. B. `homelab`. Unter diesem Namen taucht der Server später im Netzwerk auf.
+3. **Domain-Name**: leer lassen.
+4. **Root-Passwort**: **leer lassen**. Dann sperrt Debian das Root-Konto, und dein normaler Benutzer bekommt automatisch `sudo`-Rechte. So arbeiten auch alle Guides auf dieser Seite.
+5. **Benutzer und Passwort**: dein normales Konto. Wähl ein starkes Passwort.
+6. **Partitionierung**: „Geführt – vollständige Festplatte verwenden“ und „Alle Dateien auf eine Partition“ ist für den Anfang die einfachste Wahl. Achte darauf, die richtige Platte zu wählen, falls mehrere eingebaut sind.
+7. **Paketmanager**: einen Spiegelserver in deiner Nähe wählen, Proxy leer lassen.
+
+Bei **Softwareauswahl** kommt der wichtigste Schritt. Setz die Häkchen so:
+
+- **Debian-Desktop-Umgebung** (englisch „Debian desktop environment“): aus
+- alle Desktops (GNOME, KDE, Xfce …): aus
+- **SSH-Server**: an
+- **Standard-Systemwerkzeuge**: an
+
+Den Bootloader GRUB installierst du auf die Systemplatte. Danach startet der Rechner neu. Zieh den USB-Stick ab.
+
+<Callout title="Doch ein Root-Passwort vergeben?">
+Dann bekommt dein Benutzer kein `sudo`. Du kannst es nachholen: als root anmelden (`su -`), dann `apt install sudo` und `usermod -aG sudo deinname` ausführen und dich neu anmelden.
+</Callout>
+</Step>
+
+<Step title="Oder: Ubuntu Server installieren">
+Wenn du Ubuntu gewählt hast, führt dich der Installer durch ähnliche Fragen:
+
+1. **Sprache und Tastatur** wählen.
+2. **Installationstyp**: „Ubuntu Server“ reicht. Die Variante „minimized“ ist noch kleiner, bringt aber weniger Werkzeuge mit, die du dann nachinstallieren musst.
+3. **Netzwerk**: Die LAN-Verbindung bekommt automatisch eine Adresse per DHCP. So lassen. Die feste Adresse richtest du im nächsten Guide ein.
+4. **Speicher**: „Use an entire disk“. Ubuntu legt dabei standardmäßig ein LVM an und nutzt oft nicht den ganzen Platz für das System. Prüf in der Zusammenfassung die Größe von `ubuntu-lv` und setz sie bei Bedarf auf das Maximum.
+5. **Profil**: Name, Servername (z. B. `homelab`), Benutzername und Passwort.
+6. **SSH**: Häkchen bei **Install OpenSSH server** setzen.
+7. **Featured Server Snaps**: nichts auswählen. Docker installierst du später sauber aus dem offiziellen Repository.
+
+Nach der Installation neu starten und den USB-Stick abziehen.
+</Step>
+
+<Step title="Anmelden und IP-Adresse herausfinden">
+Melde dich direkt am Server mit deinem Benutzer an. Dann findest du heraus, welche IP-Adresse er im Heimnetz bekommen hat:
+
+```bash
+ip -br address
+```
+
+Die Zeile mit deiner Netzwerkkarte (z. B. `enp1s0` oder `eno1`) zeigt die Adresse, etwa `192.168.1.50/24`. Die Zahl hinter dem Schrägstrich gehört nicht zur Adresse. Notier dir die Adresse.
+</Step>
+
+<Step title="System aktualisieren">
+Das Installationsmedium ist meist schon ein paar Wochen alt. Hol dir gleich die aktuellen Updates:
+
+```bash
+sudo apt update
+sudo apt full-upgrade -y
+sudo reboot
+```
+</Step>
+
+<Step title="Per SSH verbinden">
+Ab jetzt brauchst du Monitor und Tastatur am Server nicht mehr. Öffne auf deinem normalen Rechner ein Terminal (unter Windows PowerShell oder Windows Terminal, dort ist SSH bereits dabei) und verbinde dich:
+
+```bash
+ssh deinname@192.168.1.50
+```
+
+Ersetze Benutzername und Adresse durch deine Werte. Beim ersten Verbinden fragt SSH, ob du dem Server vertraust. Bestätige mit `yes`. Was dabei passiert, erklärt [SSH-Grundlagen](/de/nachschlagen/ssh-grundlagen/).
+
+Die Adresse, die du gerade benutzt, hat der Router per DHCP vergeben und kann sich ändern. Deshalb gibst du dem Server im nächsten Guide eine [feste IP und einen Hostnamen](/de/einrichten/feste-ip-hostname/). Danach ersetzt du das Passwort durch [SSH-Schlüssel](/de/einrichten/ssh-schluessel/).
+</Step>
+
+</Steps>

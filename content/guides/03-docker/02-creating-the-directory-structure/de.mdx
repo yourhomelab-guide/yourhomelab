@@ -1,7 +1,148 @@
 ---
 slug: verzeichnisstruktur-anlegen
 title: "Verzeichnisstruktur anlegen"
+description: "Am Ende hast du einen einzigen Wurzelordner für dein ganzes Homelab, der dir gehört. Jeder Dienst bekommt darin einen eigenen Ordner mit compose.yaml, .env und Daten, und für das Backup musst du dir genau einen Pfad merken."
 level: 1
 minutes: 10
-status: stub
+requires: [Docker installiert]
 ---
+
+Bevor du den ersten Container startest, lohnt sich eine Entscheidung: Wo liegen deine Compose-Dateien und die Daten der Dienste? Das klingt nach Kleinkram. Es entscheidet aber, wie einfach später Backups, Umzüge und die Fehlersuche werden. Hintergründe und weitere Varianten findest du im Artikel [Verzeichnisstruktur](/de/nachschlagen/verzeichnisstruktur/).
+
+## Es gibt mehrere verbreitete Varianten
+
+Docker selbst schreibt dir nichts vor. In Anleitungen und Foren begegnen dir vor allem diese Ordner:
+
+| Ort | Typisch für | Anmerkung |
+| --- | --- | --- |
+| `/opt/stacks` oder `/opt/docker` | Dockge (nutzt `/opt/stacks` als Standard), viele Blogartikel | Funktioniert gut. `/opt` ist laut Linux-Konvention aber eher für zusätzliche Software gedacht, nicht für Daten. |
+| `~/docker` im Home-Verzeichnis | Schnelle Tests, Anleitungen für Einsteiger | Kein `sudo` nötig. Hängt aber an einem Benutzerkonto, und das Home-Verzeichnis enthält noch vieles andere. |
+| `/srv/…` | Server, die Daten bereitstellen | `/srv` ist laut Filesystem Hierarchy Standard genau für „Daten, die dieser Server anbietet“ vorgesehen. |
+| Getrennt: Compose-Dateien hier, Daten dort | Größere Setups, Git-Workflows | Flexibel, aber zwei Orte, die du im Blick behalten musst. |
+
+Alle diese Wege sind legitim. Wichtiger als der genaue Pfad ist, dass du **einen** Ort wählst und dabei bleibst.
+
+<OneWay />
+
+## Die Empfehlung dieser Seite
+
+Für den Einstieg empfehlen wir **einen einzigen Wurzelordner**: `/srv/homelab`. In den Befehlen dieser Seite heißt er `__ROOT__` und wird durch den Wert aus „Mein Setup“ ersetzt. Darin bekommt jeder Dienst einen eigenen Ordner, und in diesem Ordner liegt alles, was zu dem Dienst gehört:
+
+```
+/srv/homelab/            ← __ROOT__
+├── traefik/
+│   ├── compose.yaml     ← welche Container, welche Einstellungen
+│   ├── .env             ← Variablen und Secrets
+│   └── data/            ← persistente Daten (Zertifikate, Datenbanken …)
+└── vaultwarden/
+    ├── compose.yaml
+    ├── .env
+    └── data/
+```
+
+Das hat drei Vorteile:
+
+- **Ein Backup-Ziel.** Sicherst du `/srv/homelab`, hast du alles: Konfiguration, Secrets und Daten aller Dienste.
+- **Alles an einem Platz.** Willst du wissen, wie ein Dienst eingerichtet ist, schaust du in genau einen Ordner.
+- **Leicht umzuziehen.** Einen Dienst auf einen anderen Server bringen heißt: Stack stoppen, Ordner kopieren, dort starten.
+
+Die Datei heißt `compose.yaml`. Das ist der aktuelle Standardname von Docker Compose. Der alte Name `docker-compose.yml` funktioniert auch noch.
+
+<Steps>
+
+<Step title="Wurzelordner anlegen">
+`/srv` gehört root. Deshalb brauchst du einmal `sudo`, um den Ordner anzulegen.
+
+```bash
+sudo mkdir -p __ROOT__
+```
+</Step>
+
+<Step title="Ordner deinem Benutzer übergeben">
+Damit du danach ohne `sudo` Dateien anlegen und bearbeiten kannst, übergibst du den Ordner deinem Benutzer. `chmod 750` sorgt dafür, dass andere Benutzer auf dem Server nicht hineinschauen können. Das ist wichtig, weil hier später Passwörter in `.env`-Dateien liegen.
+
+```bash
+sudo chown "$USER":"$(id -gn)" __ROOT__
+chmod 750 __ROOT__
+ls -ld __ROOT__
+```
+
+In der Ausgabe sollten jetzt dein Benutzername und `drwxr-x---` stehen.
+
+<Callout title="Dateien, die root gehören">
+Manche Container legen Dateien in `data/` als root oder mit einer eigenen Benutzer-ID an. Das ist normal. Solche Dateien kannst du nur mit `sudo` lesen oder löschen. Auch das Backup läuft später deshalb mit `sudo`.
+</Callout>
+</Step>
+
+<Step title="Einen Ordner pro Dienst">
+Für jeden neuen Dienst legst du einen Unterordner mit dem Namen des Dienstes an. Kleinbuchstaben, keine Leerzeichen. Der Ordnername ist gleichzeitig der Projektname, den Docker Compose für Container und Netzwerke nutzt.
+
+Das machst du jeweils beim Einrichten des Dienstes. Für den ersten Stack sieht das so aus:
+
+```bash
+mkdir -p __ROOT__/whoami
+```
+
+Persistente Daten landen immer im Unterordner `data/` des Dienstes. In der `compose.yaml` steht dann zum Beispiel `./data/db:/var/lib/postgresql/data`. Der Punkt am Anfang bedeutet: relativ zum Ordner, in dem die `compose.yaml` liegt.
+</Step>
+
+<Step title="„Mein Setup“ prüfen">
+Öffne oben auf der Seite „Mein Setup“ und kontrolliere unter „Pfade“:
+
+- **Ordner für Stacks:** `/srv/homelab` (oder dein eigener Pfad)
+- **Persistente Daten:** „Im Stack-Ordner“
+
+Ab jetzt setzen alle Befehle und Compose-Dateien auf dieser Seite deinen Pfad ein.
+</Step>
+
+</Steps>
+
+<Callout title="Das Proxy-Netzwerk kommt später">
+Viele Anleitungen legen an dieser Stelle schon ein Docker-Netzwerk für den Reverse Proxy an. Das brauchst du erst, wenn du einen Reverse Proxy einrichtest. Es ist deshalb Teil des Guides [Reverse Proxy mit Traefik](/de/einrichten/reverse-proxy-traefik/).
+</Callout>
+
+## Alternative: Konfiguration und Daten getrennt
+
+Manche trennen Compose-Dateien und Daten in zwei Ordner. Das lohnt sich, wenn du
+
+- die Compose-Dateien als Git-Repository führen willst, ohne dass Datenbanken oder Uploads darin landen,
+- die Daten auf einer anderen, größeren Platte ablegen willst,
+- Konfiguration und Daten unterschiedlich oft sichern möchtest.
+
+Unter demselben Wurzelordner sieht das so aus:
+
+```
+/srv/homelab/
+├── compose/             ← Ordner für Stacks
+│   ├── traefik/
+│   │   ├── compose.yaml
+│   │   └── .env
+│   └── vaultwarden/
+│       ├── compose.yaml
+│       └── .env
+└── data/                ← zentraler Datenordner
+    ├── traefik/
+    └── vaultwarden/
+```
+
+Angelegt wird das genauso wie oben, nur mit zwei Unterordnern:
+
+```bash
+sudo mkdir -p /srv/homelab/compose /srv/homelab/data
+sudo chown -R "$USER":"$(id -gn)" /srv/homelab
+chmod 750 /srv/homelab
+```
+
+Stelle dann in „Mein Setup“ unter „Pfade“ ein:
+
+- **Ordner für Stacks:** `/srv/homelab/compose`
+- **Persistente Daten:** „Zentraler Datenordner“
+- **Datenordner:** `/srv/homelab/data`
+
+Die Compose-Dateien auf dieser Seite verweisen dann nicht mehr auf `./data/…`, sondern auf den passenden Unterordner im Datenordner. Das Backup-Ziel bleibt `/srv/homelab`.
+
+<Callout type="warning" title="Die .env gehört nicht in ein öffentliches Repository">
+Auch wenn du den Compose-Ordner mit Git verwaltest: Die `.env` enthält Passwörter und Schlüssel. Trag sie in die `.gitignore` ein. Mehr dazu im Guide [.env & Secrets](/de/einrichten/env-secrets/).
+</Callout>
+
+Weiter geht es mit dem [ersten Stack](/de/einrichten/erster-stack/). Dort legst du den ersten Dienst in deiner neuen Struktur an.

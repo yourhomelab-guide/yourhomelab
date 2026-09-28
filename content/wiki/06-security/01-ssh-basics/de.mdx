@@ -1,6 +1,141 @@
 ---
 slug: ssh-grundlagen
 title: "SSH-Grundlagen"
+description: "Mit SSH steuerst du deinen Server sicher über das Netzwerk, ganz ohne Bildschirm und Tastatur am Gerät. Hier erfährst du, wie Client und Server zusammenspielen, warum Schlüssel besser sind als Passwörter und wie du dir mit einer kleinen Konfigurationsdatei Tipparbeit sparst."
 level: 1
-status: stub
+related: [attack-surface, managing-secrets, ip-ports-nat]
+practice: ssh-keys
 ---
+
+## Was SSH macht
+
+SSH (Secure Shell) öffnet eine verschlüsselte Verbindung zu einem anderen Rechner. Du tippst Befehle auf deinem Laptop,
+ausgeführt werden sie auf dem Server. Alles, was durch die Leitung geht, ist verschlüsselt: Passwörter, Befehle, Ausgaben.
+
+Für ein Homelab ist SSH der normale Arbeitsweg. Der Server steht irgendwo im Regal, du verwaltest ihn vom Schreibtisch aus.
+
+## Client und Server
+
+Zu jeder Verbindung gehören zwei Seiten:
+
+- Der **Server** ist ein Dienst (`sshd`), der auf dem Homelab-Rechner läuft und standardmäßig auf Port 22 lauscht.
+  Auf Debian und Ubuntu Server installierst du ihn mit dem Paket `openssh-server`, meist direkt bei der Installation.
+- Der **Client** ist das Programm `ssh` auf deinem Laptop. Linux, macOS und Windows 10/11 bringen es bereits mit.
+
+Eine Verbindung sieht so aus:
+
+```bash
+ssh admin@192.168.1.10
+```
+
+Vor dem `@` steht der Benutzername auf dem Server, dahinter die Adresse. Mit `exit` beendest du die Sitzung.
+
+## Schlüsselpaare statt Passwörter
+
+Ein Passwort kann man erraten oder abfangen. Sobald SSH aus dem Internet erreichbar ist, probieren Bots rund um die Uhr
+gängige Kombinationen durch. Schlüssel lösen dieses Problem.
+
+Ein **Schlüsselpaar** besteht aus zwei Dateien:
+
+| Datei | Wo sie liegt | Wer sie sehen darf |
+| --- | --- | --- |
+| Privater Schlüssel, z. B. `~/.ssh/id_ed25519` | nur auf deinem Laptop | niemand außer dir |
+| Öffentlicher Schlüssel, z. B. `~/.ssh/id_ed25519.pub` | auf jedem Server, auf den du willst | jeder |
+
+Der öffentliche Schlüssel kommt auf dem Server in die Datei `~/.ssh/authorized_keys`. Beim Anmelden stellt der Server
+eine Aufgabe, die nur mit dem passenden privaten Schlüssel lösbar ist. Der private Schlüssel selbst verlässt deinen
+Laptop dabei nie.
+
+Ein neues Paar erzeugst du so:
+
+```bash
+ssh-keygen -t ed25519 -C "laptop"
+```
+
+`ed25519` ist ein moderner, kurzer und sicherer Schlüsseltyp. Der Kommentar hinter `-C` hilft dir später, Schlüssel
+auseinanderzuhalten. Vergib eine **Passphrase**: Dann ist der private Schlüssel auch dann nutzlos, wenn jemand die Datei
+kopiert. Damit du die Passphrase nicht ständig eintippen musst, merkt sich der `ssh-agent` sie für die Sitzung.
+
+Den öffentlichen Schlüssel überträgst du mit:
+
+```bash
+ssh-copy-id admin@192.168.1.10
+```
+
+Wie das Schritt für Schritt geht und wie du danach den Passwort-Login abschaltest, zeigen die Guides
+[SSH-Schlüssel einrichten](/de/einrichten/ssh-schluessel/) und [SSH härten](/de/einrichten/ssh-haerten/).
+
+<Callout type="warning" title="Privaten Schlüssel nie weitergeben">
+  Kopiere den privaten Schlüssel nicht auf Server, in Chats oder in Git-Repos. Brauchst du Zugriff von einem zweiten
+  Gerät, erzeuge dort ein eigenes Schlüsselpaar. So kannst du ein verlorenes Gerät gezielt aussperren.
+</Callout>
+
+## known_hosts und Fingerprint
+
+Schlüssel gibt es auch auf der anderen Seite. Jeder SSH-Server hat einen eigenen **Host-Key**. Damit beweist er dir,
+dass du wirklich mit deinem Server sprichst und nicht mit einem Gerät, das sich dazwischengeschaltet hat.
+
+Beim ersten Verbinden siehst du eine Meldung wie diese:
+
+```text
+The authenticity of host '192.168.1.10 (192.168.1.10)' can't be established.
+ED25519 key fingerprint is SHA256:...
+Are you sure you want to continue connecting (yes/no/[fingerprint])?
+```
+
+Der **Fingerprint** ist eine kurze Prüfsumme des Host-Keys. Wer es genau nehmen will, vergleicht ihn mit dem Wert,
+den der Server selbst anzeigt (direkt am Gerät oder in der Konsole deines VPS-Anbieters):
+
+```bash
+ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
+```
+
+Bestätigst du mit `yes`, speichert der Client den Host-Key in `~/.ssh/known_hosts`. Ab dann prüft er bei jeder
+Verbindung, ob der Schlüssel noch derselbe ist.
+
+Ändert sich der Host-Key, bricht SSH mit einer großen Warnung ab (`REMOTE HOST IDENTIFICATION HAS CHANGED`). Das
+passiert ganz harmlos, wenn du den Server neu installiert hast oder eine IP an ein anderes Gerät vergeben wurde. Nur
+dann entfernst du den alten Eintrag:
+
+```bash
+ssh-keygen -R 192.168.1.10
+```
+
+Hast du nichts geändert, nimm die Warnung ernst und verbinde dich nicht einfach trotzdem.
+
+## Die Datei ~/.ssh/config
+
+Mit der Zeit tippst du immer wieder dieselben Benutzernamen, IPs und Schlüsselpfade. Die Datei `~/.ssh/config` auf
+deinem Laptop fasst das zusammen:
+
+```text
+Host homelab
+    HostName 192.168.1.10
+    User admin
+    IdentityFile ~/.ssh/id_ed25519
+
+Host vps
+    HostName vps.__DOMAIN__
+    User admin
+    Port 22
+```
+
+Danach reicht `ssh homelab`. Die Abkürzung funktioniert auch für `scp` und `rsync` sowie in Editoren wie VS Code mit
+Remote-SSH. Alle Optionen beschreibt die Manpage `man ssh_config`.
+
+## Rechte der Dateien
+
+SSH ist streng mit Dateirechten. Sind der Ordner oder der private Schlüssel für andere lesbar, verweigert der Client den
+Schlüssel. Die richtigen Rechte setzt du so:
+
+```bash
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/id_ed25519 ~/.ssh/config
+```
+
+Auf dem Server gilt dasselbe für `~/.ssh` und `~/.ssh/authorized_keys`.
+
+## Weiterlesen
+
+- [OpenSSH-Handbuch](https://www.openssh.com/manual.html)
+- [Angriffsfläche klein halten](/de/nachschlagen/angriffsflaeche/): warum SSH möglichst nicht offen im Internet stehen sollte

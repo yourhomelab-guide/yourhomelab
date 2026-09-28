@@ -1,6 +1,92 @@
 ---
 slug: was-ist-selfhosting
 title: "Was ist Selfhosting?"
+description: "Selfhosting heißt: Du betreibst Dienste wie Passwortmanager, Fotoarchiv oder Cloud-Speicher auf einem Rechner, den du selbst kontrollierst, statt sie bei einem großen Anbieter zu nutzen."
 level: 1
-status: stub
+related: [is-it-worth-it, cloud-hybrid-local, hardware-overview, what-is-docker]
+practice: choosing-hardware
 ---
+
+## Die Idee in einem Satz
+
+Du nutzt heute wahrscheinlich viele Dienste, die auf fremden Servern laufen: Fotos in einer Cloud, Passwörter in einem
+Online-Tresor, Dateien bei einem Speicheranbieter. Beim Selfhosting installierst du vergleichbare Software auf einem
+eigenen Server. Die Daten liegen dann bei dir, und du entscheidest, wer darauf zugreift.
+
+Ein **Server** ist dabei nichts Exotisches. Gemeint ist einfach ein Rechner, der rund um die Uhr läuft und Dienste im
+Netzwerk anbietet. Das kann ein sparsamer Mini-PC im Regal sein, ein altes Notebook oder ein gemieteter virtueller
+Server in einem Rechenzentrum.
+
+## Was du damit machen kannst
+
+Die Auswahl an freier Software ist groß. Typische Einstiegsprojekte:
+
+<Cards>
+  <Card title="Passwörter">
+    Ein eigener Passwortmanager wie [Vaultwarden](/de/dienste/vaultwarden/), kompatibel mit den Bitwarden-Apps.
+  </Card>
+  <Card title="Fotos">
+    Ein privates Fotoarchiv wie [Immich](/de/dienste/immich/), das Bilder vom Handy automatisch sichert.
+  </Card>
+  <Card title="Dateien">
+    Eine eigene Cloud für Dateien, Kalender und Kontakte, zum Beispiel [Nextcloud](/de/dienste/nextcloud/).
+  </Card>
+  <Card title="Überblick">
+    Monitoring wie [Uptime Kuma](/de/dienste/uptime-kuma/), das dir meldet, wenn etwas ausfällt.
+  </Card>
+</Cards>
+
+Viele Leute fangen mit einem Dienst an und merken schnell, wie viel sich damit machen lässt. Dieses Hobby nennt man oft
+**Homelab**: eine kleine, eigene IT-Umgebung zuhause zum Betreiben, Lernen und Ausprobieren.
+
+## Wie das technisch aussieht
+
+Ein typisches Setup auf dieser Seite besteht aus wenigen Bausteinen:
+
+1. **Hardware**: ein Rechner, der dauerhaft läuft. Welche Geräte sich eignen, steht in der
+   [Hardware-Übersicht](/de/nachschlagen/hardware-uebersicht/).
+2. **Betriebssystem**: meist ein schlankes Linux wie Debian oder Ubuntu Server, ohne grafische Oberfläche. Du
+   verwaltest es per [SSH](/de/nachschlagen/ssh-grundlagen/) von deinem normalen Rechner aus.
+3. **Docker**: Jeder Dienst läuft in einem eigenen **Container**, einer abgeschotteten Umgebung mit allem, was die
+   Software braucht. Beschrieben wird er in einer kurzen Datei namens `compose.yaml`. Mehr dazu in
+   [Was ist Docker?](/de/nachschlagen/was-ist-docker/).
+4. **Reverse Proxy**: ein Dienst, der Anfragen annimmt und an den richtigen Container weiterreicht. Er sorgt auch für
+   HTTPS-Zertifikate, damit du Adressen wie `vault.__DOMAIN__` statt IP-Adresse und Port nutzen kannst. Siehe
+   [Reverse Proxy erklärt](/de/nachschlagen/reverse-proxy-erklaert/).
+5. **Backups**: eine Sicherung deiner Daten an einem anderen Ort. Ohne diesen Punkt ist Selfhosting ein Risiko.
+
+Alle Dienste liegen in einem gemeinsamen Ordner, standardmäßig `__ROOT__`. Pro Dienst gibt es einen Unterordner mit
+`compose.yaml`, `.env` und `data/`. So weißt du immer, wo was liegt, und sicherst am Ende genau einen Ordner.
+
+## Wo der Server steht
+
+Selfhosting heißt nicht zwingend, dass der Rechner bei dir im Wohnzimmer steht. Es gibt drei Modelle: lokal zuhause,
+in der Cloud auf einem gemieteten Server oder eine Mischung aus beidem. Welches zu dir passt, klärt der Artikel
+[Cloud, Hybrid oder Lokal?](/de/nachschlagen/cloud-hybrid-lokal/).
+
+Entscheidend ist nicht der Standort, sondern die Kontrolle: Du wählst die Software, bestimmst über Updates und weißt,
+wo deine Daten liegen.
+
+## Was du mitbringen solltest
+
+Du musst kein Profi sein. Hilfreich sind:
+
+- **Neugier und Geduld.** Nicht alles klappt beim ersten Versuch. Fehlermeldungen lesen gehört dazu.
+- **Etwas Zeit.** Die Einrichtung dauert ein paar Abende, danach reichen meist wenige Minuten pro Woche für Updates
+  und einen kurzen Blick aufs System.
+- **Grundlagen im Terminal.** Befehle kopieren, Dateien bearbeiten, Ordner wechseln. Den Rest lernst du unterwegs.
+- **Verantwortungsgefühl.** Du bist jetzt dein eigener IT-Betrieb. Wenn etwas kaputtgeht, gibt es keinen Support,
+  den du anrufen kannst.
+
+Ob sich der Aufwand für dich lohnt, beleuchtet [Wann lohnt es sich?](/de/nachschlagen/wann-lohnt-es-sich/) ehrlich,
+mit Vor- und Nachteilen.
+
+## So geht es weiter
+
+Wenn du loslegen willst, folge den Anleitungen unter „Einrichten“ der Reihe nach. Sie beginnen mit der Wahl der
+Hardware und führen dich über Installation, Absicherung und Docker bis zum ersten Dienst mit eigener Domain.
+
+<Callout title="Klein anfangen">
+Starte mit einem einzigen Dienst, den du wirklich nutzt. Wenn der zuverlässig läuft und gesichert ist, kommt der
+nächste dazu. Das ist entspannter als zehn Dienste auf einmal.
+</Callout>

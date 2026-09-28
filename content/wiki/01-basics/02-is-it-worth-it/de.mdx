@@ -1,6 +1,84 @@
 ---
 slug: wann-lohnt-es-sich
 title: "Wann lohnt es sich?"
+description: "Selfhosting bringt Kontrolle, Lerneffekt und oft niedrigere laufende Kosten. Dafür übernimmst du Zeitaufwand und Verantwortung, vor allem für Backups. Ein ehrlicher Blick auf beide Seiten."
 level: 1
-status: stub
+related: [what-is-self-hosting, costs-power, backup-strategies, attack-surface]
 ---
+
+## Die kurze Antwort
+
+Selfhosting lohnt sich, wenn du Freude am Basteln hast, deine Daten selbst in der Hand haben willst und bereit bist,
+dich regelmäßig um dein System zu kümmern. Es lohnt sich weniger, wenn du nur Geld sparen willst oder ein Dienst
+unter allen Umständen erreichbar sein muss.
+
+## Was dafür spricht
+
+- **Kontrolle über deine Daten.** Fotos, Passwörter und Dokumente liegen auf deiner Hardware. Kein Anbieter wertet sie
+  aus, ändert plötzlich die Bedingungen oder stellt den Dienst ein.
+- **Keine Abo-Spirale.** Viele Cloud-Dienste kosten monatlich, pro Person oder pro Speicherplatz. Ein eigener Server
+  kostet vor allem Strom und einmal Hardware. Wie viel genau, zeigt
+  [Kosten & Stromverbrauch](/de/nachschlagen/kosten-strom/).
+- **Du lernst viel.** Linux, Netzwerke, DNS, Zertifikate, Container: Das Wissen hilft dir auch im Beruf oder beim
+  Verständnis, wie das Internet funktioniert.
+- **Freiheit bei der Auswahl.** Du kombinierst die Software, die zu dir passt, und bist nicht an ein Ökosystem gebunden.
+- **Speicher ist günstig.** Große Datenmengen wie Fotoarchive oder Medien sind auf eigenen Festplatten oft deutlich
+  günstiger als in der Cloud.
+
+## Was dagegen spricht
+
+- **Zeitaufwand.** Die Einrichtung dauert ein paar Abende. Danach brauchst du Zeit für Updates, gelegentliche Fehler
+  und neue Versionen, die etwas anders machen als die alten. Rechne mit etwa einer halben bis einer Stunde pro Woche,
+  wenn alles läuft, und mit mehr, wenn nicht.
+- **Du bist der Support.** Fällt nachts die Festplatte aus oder startet ein Container nicht mehr, kümmerst du dich.
+  Wenn andere (Familie, Freunde) deine Dienste nutzen, hängen sie von dir ab.
+- **Verfügbarkeit.** Stromausfall, Router-Neustart, Umzug, Urlaub: Ein Server zuhause ist nicht so zuverlässig wie ein
+  Rechenzentrum. Für die meisten privaten Dienste ist das in Ordnung, aber nicht für alles.
+- **Sicherheit liegt bei dir.** Ein Dienst, den du ins Internet stellst, wird innerhalb von Stunden von automatischen
+  Scannern gefunden. Updates und eine kleine [Angriffsfläche](/de/nachschlagen/angriffsflaeche/) sind Pflicht.
+- **Hardware und Strom kosten auch Geld.** Gegenüber einem kostenlosen Angebot sparst du nichts.
+
+## Die wichtigste Verantwortung: Backups
+
+Bei einem Cloud-Anbieter kümmert sich jemand anderes darum, dass deine Daten einen Festplattendefekt überleben. Beim
+Selfhosting bist das du. Das ist der Punkt, den Einsteiger am häufigsten unterschätzen.
+
+<Callout type="warning" title="Ohne Backup kein Selfhosting">
+Wenn du Fotos oder Passwörter nur auf deinem Server speicherst, ohne Sicherung an einem anderen Ort, sind sie
+schlechter geschützt als vorher in der Cloud. Richte Backups ein, bevor du wichtige Daten umziehst, und teste die
+Wiederherstellung mindestens einmal.
+</Callout>
+
+Eine bewährte Faustregel ist **3-2-1**: drei Kopien deiner Daten, auf zwei verschiedenen Medien, eine davon außer Haus.
+Wie das praktisch aussieht, erklären [Backup-Strategien](/de/nachschlagen/backup-strategien/) und der Guide
+[Backups mit borgmatic](/de/einrichten/backups-borgmatic/).
+
+## Wann du es lieber lässt
+
+Nicht jeder Dienst eignet sich gleich gut. Bei diesen Fällen solltest du genau überlegen:
+
+- **E-Mail-Server.** Technisch machbar, praktisch mühsam. Viele Internetanbieter sperren ausgehenden Port 25 für
+  Privatanschlüsse, und die dynamischen IP-Adressen von Privatanschlüssen stehen oft auf Sperrlisten. Damit deine Mails nicht im Spam landen,
+  brauchst du unter anderem korrekte SPF-, DKIM- und DMARC-Einträge, einen passenden Reverse-DNS-Eintrag und eine
+  saubere IP-Reputation. Und wenn dein Server ausfällt, kommen im schlimmsten Fall wichtige Mails nicht an. Für E-Mail
+  ist ein guter Anbieter mit eigener Domain meist die bessere Wahl.
+- **Dienste, die immer laufen müssen.** Wenn ein Ausfall echten Schaden anrichtet, etwa bei geschäftlichen Daten oder
+  bei Diensten, auf die andere angewiesen sind, brauchst du mehr als einen einzelnen Server zuhause.
+- **Einziger Speicherort für unersetzliche Daten.** Solange es kein funktionierendes Backup gibt, lass die Originale
+  lieber noch zusätzlich dort, wo sie jetzt sind.
+- **Wenn du keine Zeit hast.** Ein Server, der monatelang keine Updates bekommt, ist ein Risiko. Dann ist ein
+  gepflegter Cloud-Dienst die sicherere Wahl.
+
+## Ein guter Mittelweg
+
+Du musst dich nicht für alles oder nichts entscheiden. Viele betreiben zuhause Dienste, bei denen Datenhoheit und
+Speicherplatz zählen, zum Beispiel Fotos, Dateien und Passwörter, und lassen E-Mail bei einem Anbieter. Auch ein
+gemieteter Server kann der richtige Einstieg sein, siehe [Cloud, Hybrid oder Lokal?](/de/nachschlagen/cloud-hybrid-lokal/).
+
+Zugriff von unterwegs ist ebenfalls kein Alles-oder-nichts: Über ein [VPN](/de/nachschlagen/vpn/) erreichst du deine
+Dienste, ohne sie öffentlich ins Internet zu stellen. Das senkt das Risiko deutlich.
+
+<Callout title="Ehrliche Selbsteinschätzung">
+Frag dich: Macht mir das Einrichten Spaß? Habe ich jede Woche ein bisschen Zeit? Bin ich bereit, Backups ernst zu
+nehmen? Wenn du dreimal „ja“ sagst, steht einem Start nichts im Weg.
+</Callout>

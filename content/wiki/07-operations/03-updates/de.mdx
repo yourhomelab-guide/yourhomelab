@@ -1,5 +1,114 @@
 ---
 title: "Updates"
+description: "Updates schließen Sicherheitslücken und bringen neue Funktionen, können aber auch etwas kaputt machen. Hier erfährst du, welche Updates es gibt und wie du sie ohne böse Überraschungen einspielst."
 level: 1
-status: stub
+related: [images-tags, backup-strategies, attack-surface, monitoring]
+practice: updates-renovate
 ---
+
+## Zwei Arten von Updates
+
+Auf deinem Server gibt es zwei Ebenen, die du aktuell halten musst:
+
+<Cards>
+  <Card title="Betriebssystem">
+    Kernel, Systembibliotheken, SSH, Docker selbst. Kommt über den Paketmanager (`apt`) von Debian bzw. Ubuntu.
+  </Card>
+  <Card title="Container-Images">
+    Die Dienste, die in Docker laufen, etwa Vaultwarden oder Immich. Kommen als neue Image-Versionen aus einer Registry.
+  </Card>
+</Cards>
+
+Die beiden laufen unabhängig voneinander. `apt upgrade` aktualisiert keinen einzigen Container, und ein neues Image
+ändert nichts am Betriebssystem.
+
+## Betriebssystem-Updates
+
+Sicherheitsupdates für Debian und Ubuntu sind in der Regel klein und gut getestet. Sie lassen sich deshalb gefahrlos
+automatisch installieren, mit dem Paket `unattended-upgrades`. Wie das geht, zeigt der Guide
+[Automatische Updates](/de/einrichten/automatische-updates/).
+
+Von Hand prüfst und installierst du Updates so:
+
+```bash
+sudo apt update
+sudo apt upgrade
+```
+
+Nach Kernel-Updates ist ein Neustart nötig. Liegt die Datei `/var/run/reboot-required` vor, wartet das System darauf.
+
+Ein Upgrade auf eine neue **Hauptversion** (etwa von Debian 12 auf 13) ist dagegen ein größerer Schritt. Lies vorher
+die Release Notes, mach ein Backup und plane etwas Zeit ein.
+
+## Container-Updates
+
+Ein Container wird nicht aktualisiert, sondern **ersetzt**: Docker lädt das neue Image, löscht den alten Container
+und startet einen neuen. Deine Daten überleben das, weil sie in `data/` außerhalb des Containers liegen
+(siehe [Volumes & Bind Mounts](/de/nachschlagen/volumes-bind-mounts/)).
+
+Welche Version du bekommst, legt der **Tag** in der `compose.yaml` fest. Mehr dazu unter
+[Images & Tags](/de/nachschlagen/images-tags/). Das Update selbst sind zwei Befehle im Stack-Ordner:
+
+```bash
+cd __ROOT__/vaultwarden
+docker compose pull
+docker compose up -d
+```
+
+`pull` lädt neue Images herunter, `up -d` erstellt nur die Container neu, deren Image sich geändert hat.
+Alte, nicht mehr genutzte Images räumst du danach mit `docker image prune` auf.
+
+### Erst lesen, dann updaten
+
+Bevor du einen Dienst aktualisierst, wirf einen Blick in die **Changelogs** bzw. Release Notes, meist auf der
+Releases-Seite des Projekts bei GitHub oder Codeberg. Achte besonders auf Wörter wie "Breaking Changes",
+"Migration" oder "Deprecated". Manche Updates verlangen, dass du Umgebungsvariablen änderst oder einen Zwischenschritt
+machst.
+
+### Major-Versionen
+
+Viele Projekte nummerieren nach dem Schema `Major.Minor.Patch` (zum Beispiel `2.4.1`). Patch- und Minor-Updates
+sollten nichts kaputt machen. Ein Sprung in der ersten Zahl (Major) darf das dagegen. Besonders heikel sind
+**Datenbanken**: Ein PostgreSQL-Container von Version 15 auf 16 zu heben, funktioniert nicht einfach per neuem Tag,
+weil sich das Datenformat ändert. Dafür brauchst du einen Dump und ein Restore. Pinne Datenbank-Images deshalb immer
+auf eine Major-Version, etwa `postgres:16`.
+
+<Callout type="warning" title="Vor größeren Updates: Backup">
+  Mach vor Major-Updates ein frisches Backup des Stack-Ordners, inklusive Datenbank-Dump. Geht etwas schief, setzt du
+  den alten Tag wieder ein und spielst die Daten zurück. Siehe [Backup-Strategien](/de/nachschlagen/backup-strategien/).
+</Callout>
+
+## Automatische Container-Updates?
+
+Es gibt Werkzeuge, die Container ganz ohne dein Zutun aktualisieren. Das bekannteste war **Watchtower**. Das
+ursprüngliche Projekt (`containrrr/watchtower`) ist allerdings nicht mehr gepflegt und wurde im Dezember 2025
+archiviert. Es gibt Forks, deren Pflege du vor dem Einsatz selbst prüfen solltest.
+
+Unabhängig vom Werkzeug ist die Abwägung dieselbe:
+
+| | Automatische Updates | Updates von Hand |
+| --- | --- | --- |
+| **Pro** | Sicherheitslücken schnell geschlossen, kein Aufwand | Du liest Changelogs, reagierst auf Breaking Changes |
+| **Contra** | Ein fehlerhaftes Update legt nachts einen Dienst lahm, ohne dass du es merkst | Du musst daran denken, Updates bleiben liegen |
+
+Ein guter Mittelweg: **automatisch benachrichtigen, bewusst aktualisieren.** Tools wie
+[Diun](https://crazymax.dev/diun/) melden dir neue Image-Versionen, ohne sie einzuspielen. Wenn du Watchtower oder
+einen Fork trotzdem nutzt, dann eher für unkritische Dienste und mit fest gepinnten Major-Versionen.
+
+## Renovate: Updates als Pull Request
+
+Führst du deine Compose-Dateien in einem Git-Repository, etwa in Forgejo, kann
+[Renovate](https://docs.renovatebot.com/) die Arbeit übernehmen. Renovate durchsucht das Repository nach Image-Tags
+und öffnet für jede neue Version einen **Pull Request** mit Link zu den Release Notes. Du prüfst, führst zusammen,
+und dein Deployment spielt die Änderung ein.
+
+So hast du beides: Du verpasst kein Update, entscheidest aber selbst. Und in der Git-Historie steht, wann welche
+Version kam, was bei der Fehlersuche hilft. Wie du das einrichtest, zeigt der Guide
+[Updates mit Renovate](/de/einrichten/updates-renovate/).
+
+## Eine einfache Routine
+
+- Betriebssystem: Sicherheitsupdates automatisch, Neustart bei Bedarf.
+- Container: einmal pro Woche oder alle zwei Wochen Changelogs lesen, `pull` und `up -d`.
+- Nach dem Update kurz prüfen, ob alles läuft, zum Beispiel in [Uptime Kuma](/de/dienste/uptime-kuma/).
+- Datenbanken und Major-Versionen: nur mit frischem Backup und etwas Zeit.

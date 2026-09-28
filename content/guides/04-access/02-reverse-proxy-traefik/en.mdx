@@ -21,9 +21,9 @@ docker network create __NETWORK__
 Every stack gets its own folder under `__ROOT__`. Persistent data lives in the `data/` subfolder, so backing up that path is enough.
 
 ```bash
-mkdir -p __ROOT__/traefik/data/letsencrypt
-touch __ROOT__/traefik/data/letsencrypt/acme.json
-chmod 600 __ROOT__/traefik/data/letsencrypt/acme.json
+mkdir -p __ROOT__/traefik __DATA(traefik)__/letsencrypt
+touch __DATA(traefik)__/letsencrypt/acme.json
+chmod 600 __DATA(traefik)__/letsencrypt/acme.json
 ```
 </Step>
 

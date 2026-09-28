@@ -198,6 +198,16 @@ export function getVariants(s: Pick<Service, 'id' | 'name' | 'main' | 'port' | '
   return variantCache.get(s.id)!;
 }
 
+/* ------------------------------------------------------------ homelabs */
+
+export type Homelab = CollectionEntry<'homelabs'>;
+
+/** Showcase entries, newest first; demo entries last. Entries are not translated. */
+export const getHomelabs = () =>
+  once('homelabs', async () =>
+    (await getCollection('homelabs')).sort((a, b) => Number(a.data.example) - Number(b.data.example) || b.data.added.getTime() - a.data.added.getTime()),
+  );
+
 /* ----------------------------------------------------------------- misc */
 
 export const getFaq = (lang: Lang) => once(`faq:${lang}`, async () => (await localize('faq', lang)).sort((a, b) => orderOf(a.key) - orderOf(b.key)));

@@ -201,7 +201,7 @@ function toXml(text) {
   // Placeholders first, so nothing inside them is touched
   s = s.replace(/`[^`]+`/g, (m) => `\u0000${keep.push(m) - 1}\u0000`);
   s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, t, u) => `\u0001${links.push({ t, u }) - 1}\u0001`);
-  s = s.replace(/<\/?[A-Za-z][^>]*>|\{[^}]*\}|__[A-Z_]+__/g, (m) => `\u0000${keep.push(m) - 1}\u0000`);
+  s = s.replace(/<\/?[A-Za-z][^>]*>|\{[^}]*\}|__[A-Z_]+(?:\([a-z0-9-]+\))?__/g, (m) => `\u0000${keep.push(m) - 1}\u0000`);
   s = xmlEsc(s);
   s = s.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(^|[^*\w])\*(?!\s)(.+?)\*(?!\w)/g, '$1<i>$2</i>');
   s = s.replace(/\u0000(\d+)\u0000/g, '<x i="$1"/>');
