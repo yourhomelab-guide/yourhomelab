@@ -47,11 +47,11 @@
     "hash": "53fb7aed617bbbfa",
     "by": "claude"
   },
-  "content/guides/02-securing/02-hardening-ssh/de.mdx": {
+  "content/guides/02-securing/03-hardening-ssh/de.mdx": {
     "hash": "5ac10d0bf0605303",
     "by": "claude"
   },
-  "content/guides/02-securing/03-users-sudo/de.mdx": {
+  "content/guides/02-securing/02-users-sudo/de.mdx": {
     "hash": "f62488fada6311a7",
     "by": "claude"
   },

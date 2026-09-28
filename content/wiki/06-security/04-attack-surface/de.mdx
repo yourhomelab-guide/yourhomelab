@@ -1,6 +1,136 @@
 ---
 slug: angriffsflaeche
 title: "Angriffsfläche klein halten"
+description: "Jeder offene Port und jede erreichbare Oberfläche ist eine mögliche Tür in dein Homelab. Hier erfährst du, welche Türen du schließen kannst, warum Docker an deiner Firewall vorbeigeht und welche Gewohnheiten dein Setup mit wenig Aufwand deutlich sicherer machen."
 level: 2
-status: stub
+related: [port-forwarding, vpn, single-sign-on, updates]
+practice: firewall-ufw
 ---
+
+## Was Angriffsfläche bedeutet
+
+Die **Angriffsfläche** ist alles, was ein Angreifer von außen ansprechen kann: offene Ports, Login-Seiten,
+Programme mit Sicherheitslücken. Je kleiner sie ist, desto weniger kann schiefgehen.
+
+Du musst dafür kein Sicherheitsexperte sein. Die meisten Angriffe auf Homelabs sind automatisiert. Bots scannen das
+Internet nach offenen Ports, bekannten Lücken und Standardpasswörtern. Wer diese einfachen Ziele vermeidet, ist schon
+sehr gut geschützt.
+
+## Nur nötige Ports öffnen
+
+Jeder Port, der aus dem Internet erreichbar ist, muss abgesichert sein. Der einfachste Schutz: den Port gar nicht erst
+öffnen.
+
+- **Im Router:** Mit einem Reverse Proxy brauchst du nur Port 80 und 443 freizugeben. Alle Dienste laufen über diese
+  beiden Ports. Mehr dazu in [Portfreigabe](/de/nachschlagen/portfreigabe/).
+- **Ohne offene Ports:** Mit einem [VPN](/de/nachschlagen/vpn/) oder einem [Tunnel](/de/nachschlagen/tunnel/) musst du
+  gar nichts freigeben. Für Dienste, die nur du nutzt, ist das oft die beste Wahl.
+- **SSH:** Gib Port 22 nicht im Router frei, wenn du nicht musst. Von unterwegs erreichst du den Server über das VPN.
+
+Welche Ports auf deinem Server lauschen, siehst du mit:
+
+```bash
+sudo ss -tlnp
+```
+
+Alles, was dort mit `0.0.0.0` oder `[::]` steht, ist auf allen Netzwerkschnittstellen erreichbar. `127.0.0.1` bedeutet:
+nur vom Server selbst.
+
+## Docker geht an UFW vorbei
+
+Das ist eine der häufigsten Überraschungen. Du richtest [UFW](/de/einrichten/firewall-ufw/) ein, erlaubst nur SSH, 80 und
+443, und trotzdem ist ein Container auf Port 8080 erreichbar.
+
+Der Grund: Wenn ein Container einen Port veröffentlicht (`ports:` in der `compose.yaml`), schreibt Docker eigene
+Firewall-Regeln. Diese greifen, bevor die Regeln von UFW überhaupt geprüft werden. UFW zeigt den Port nicht an, er ist
+aber offen.
+
+Die Lösung ist, Ports gar nicht erst zu veröffentlichen:
+
+- **Dienste hinter dem Reverse Proxy** brauchen keine `ports:`. Der Proxy erreicht sie über das gemeinsame Netzwerk
+  `__NETWORK__`. Nur der Proxy selbst veröffentlicht 80 und 443.
+- **Braucht ein Port nur lokalen Zugriff,** binde ihn an `127.0.0.1`:
+
+```yaml
+    ports:
+      - "127.0.0.1:8080:8080"
+```
+
+Dann erreichst du den Dienst nur vom Server selbst, etwa über einen SSH-Tunnel. Hintergründe findest du in der
+[Docker-Dokumentation zu Paketfiltern](https://docs.docker.com/engine/network/packet-filtering-firewalls/).
+
+<Callout type="warning" title="Router ist nicht gleich Firewall">
+  Steht dein Server zuhause hinter einem Router ohne Portfreigabe, sind veröffentlichte Ports nur im Heimnetz
+  erreichbar. Bei einem VPS dagegen hängt der Server direkt im Internet. Dort ist jeder veröffentlichte Port sofort
+  weltweit offen.
+</Callout>
+
+## Admin-Oberflächen nicht öffentlich machen
+
+Das Traefik-Dashboard, [Portainer](/de/dienste/portainer/), die Oberfläche von
+[Nginx Proxy Manager](/de/dienste/nginx-proxy-manager/) oder die Verwaltung deines Routers sind mächtig. Wer dort
+reinkommt, kontrolliert oft den ganzen Server.
+
+- Mach solche Oberflächen nur im Heimnetz oder über das VPN erreichbar.
+- Musst du sie über den Reverse Proxy veröffentlichen, schalte einen Login davor, zum Beispiel mit
+  [Tinyauth](/de/einrichten/tinyauth/) oder [Pocket ID](/de/einrichten/pocket-id/). Siehe auch
+  [Single Sign-On](/de/nachschlagen/single-sign-on/).
+- Ändere Standardpasswörter sofort nach der Installation.
+
+## Den Docker-Socket schützen
+
+Manche Container bekommen den Docker-Socket `/var/run/docker.sock` eingebunden, etwa Traefik, Portainer oder
+Monitoring-Werkzeuge. Über den Socket steuern sie Docker.
+
+Wichtig zu wissen: **Zugriff auf den Socket ist so gut wie root-Zugriff auf den Server.** Wer ihn nutzen kann, startet
+beliebige Container mit beliebigen Rechten. Die Endung `:ro` beim Einbinden ändert daran wenig. Sie verhindert nur,
+dass die Datei selbst verändert wird, nicht die Befehle, die über den Socket gehen.
+
+Deshalb gilt:
+
+- Gib den Socket nur Containern, die ihn wirklich brauchen, und nur aus vertrauenswürdigen Quellen.
+- Für mehr Sicherheit gibt es **Socket-Proxys**. Sie stehen zwischen Container und Socket und lassen nur bestimmte
+  Anfragen durch, zum Beispiel nur Lesezugriffe.
+- Dasselbe gilt für die Gruppe `docker` auf dem Server: Wer in ihr ist, hat faktisch root-Rechte.
+
+## Updates einspielen
+
+Viele Angriffe nutzen Lücken, für die es längst Updates gibt. Halte deshalb zwei Ebenen aktuell:
+
+- **Das Betriebssystem:** mit [automatischen Updates](/de/einrichten/automatische-updates/) für Sicherheitspatches.
+- **Die Container:** Images regelmäßig aktualisieren, siehe [Updates](/de/nachschlagen/updates/).
+
+Dienste, die aus dem Internet erreichbar sind, haben dabei Vorrang.
+
+## Logins schützen
+
+Öffentliche Login-Seiten ziehen Passwort-Rater an. Dagegen helfen:
+
+- **Starke, einzigartige Passwörter** und wo möglich Passkeys oder ein zweiter Faktor.
+- **Schlüssel statt Passwort bei SSH**, siehe [SSH-Grundlagen](/de/nachschlagen/ssh-grundlagen/).
+- **CrowdSec:** liest die Logs deines Reverse Proxys und anderer Dienste, erkennt auffälliges Verhalten wie viele
+  fehlgeschlagene Logins und sperrt die IP. Zusätzlich teilen alle Nutzer ihre Erkenntnisse, sodass bekannte Angreifer
+  oft schon vorab blockiert werden. Mit Traefik lässt sich CrowdSec als Middleware einbinden, siehe
+  [CrowdSec](/de/einrichten/crowdsec/).
+
+## Least Privilege: so wenig Rechte wie möglich
+
+Das **Prinzip der geringsten Rechte** (Least Privilege) heißt: Jeder Benutzer, jeder Dienst und jeder Container bekommt
+nur die Rechte, die er wirklich braucht. Wird er kompromittiert, bleibt der Schaden begrenzt.
+
+Im Homelab bedeutet das zum Beispiel:
+
+- Du arbeitest als normaler Benutzer mit `sudo`, nicht als root. Siehe [Benutzer & sudo](/de/einrichten/benutzer-sudo/).
+- Container laufen, wo möglich, nicht als root. Viele Images unterstützen dafür `user:` in der `compose.yaml` oder
+  Variablen wie `PUID` und `PGID`.
+- Container teilen nur die Netzwerke, die sie brauchen. Eine Datenbank muss nicht im Proxy-Netzwerk hängen.
+- Bind Mounts nur so weit wie nötig, und mit `:ro`, wenn der Container nur lesen muss.
+
+## Kurze Checkliste
+
+- Im Router nur 80 und 443 freigegeben, oder gar nichts dank VPN oder Tunnel.
+- Keine unnötigen `ports:` in den `compose.yaml`-Dateien.
+- Admin-Oberflächen nur intern oder hinter einem Login.
+- SSH nur mit Schlüssel.
+- Betriebssystem und Images aktuell.
+- Docker-Socket nur dort, wo er nötig ist.

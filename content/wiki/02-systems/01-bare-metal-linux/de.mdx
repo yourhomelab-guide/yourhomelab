@@ -1,5 +1,89 @@
 ---
 title: "Bare-Metal Linux"
+description: "Die einfachste Grundlage für ein Homelab: ein normales Linux direkt auf der Hardware, darauf Docker. Diesen Weg gehen die Anleitungen dieser Seite."
 level: 1
-status: stub
+related: [proxmox-ve, truenas-unraid, vms-or-containers, hardware-overview]
+practice: installing-the-os
 ---
+
+<OneWay />
+
+## Was heißt „Bare Metal“?
+
+„Bare Metal“ heißt wörtlich „nacktes Metall“. Gemeint ist: Das Betriebssystem läuft **direkt auf der Hardware**, ohne
+eine Virtualisierungsschicht dazwischen. Du installierst also ein ganz normales Linux auf deinen Mini-PC oder dein altes
+Notebook, genau wie auf einem Desktop-Rechner, nur ohne grafische Oberfläche.
+
+Auf diesem Linux installierst du anschließend Docker. Jeder Dienst läuft dann in seinem eigenen Container. Die
+Trennung zwischen den Diensten übernimmt also Docker, nicht ein Hypervisor.
+
+## Warum dieser Weg?
+
+Für den Einstieg hat Bare-Metal Linux viele Vorteile:
+
+- **Wenig bewegliche Teile.** Ein System, ein Paketmanager, ein Ort für Logs. Wenn etwas nicht läuft, suchst du an
+  genau einer Stelle.
+- **Volle Leistung.** Keine Schicht, die RAM oder CPU abzweigt. Das zählt auf kleiner Hardware mit 8 oder 16 GB RAM.
+- **Riesige Wissensbasis.** Fast jede Anleitung im Netz geht von Debian oder Ubuntu aus. Fehlermeldungen findest du
+  schnell per Suchmaschine.
+- **Gut übertragbar.** Was du hier lernst (SSH, Benutzer, Firewall, Docker), brauchst du auch später auf einem VPS oder
+  in einer VM unter Proxmox.
+
+Docker bringt die wichtigste Eigenschaft einer VM schon mit: Dienste sind voneinander getrennt und lassen sich einzeln
+starten, stoppen und aktualisieren. Für die meisten Homelabs reicht das völlig.
+
+## Welche Distribution?
+
+Eine Distribution ist ein fertiges Paket aus Linux-Kernel, Programmen und Paketverwaltung. Für einen Server bieten sich
+zwei an:
+
+| | Debian | Ubuntu Server |
+| --- | --- | --- |
+| **Charakter** | Schlank, konservativ, sehr stabil | Etwas neuere Pakete, mehr vorinstalliert |
+| **Support** | Etwa drei Jahre pro Version, plus Langzeit-Support (LTS) durch Freiwillige | LTS-Versionen erhalten fünf Jahre Standard-Updates |
+| **Neue Versionen** | Etwa alle zwei Jahre | LTS alle zwei Jahre (April, gerade Jahreszahl) |
+| **Hersteller** | Community-Projekt | Canonical (Firma) |
+
+Beide sind eine gute Wahl, und alle Befehle auf dieser Seite funktionieren auf beiden. Bei Ubuntu nimm immer eine
+**LTS-Version** (Long Term Support), keine Zwischenversion. Wenn du dich nicht entscheiden kannst: Debian.
+
+<Callout title="Server ohne Desktop">
+Installiere keine grafische Oberfläche. Du verwaltest den Server per [SSH](/de/nachschlagen/ssh-grundlagen/) von
+deinem Rechner aus. Das spart RAM, und es gibt weniger Software, die Updates braucht.
+</Callout>
+
+## Wie sieht das Setup aus?
+
+Wenn du den Anleitungen unter [Einrichten](/de/einrichten/betriebssystem-installieren/) folgst, sieht dein Server
+am Ende ungefähr so aus:
+
+- Debian oder Ubuntu Server, Login nur per SSH-Schlüssel
+- Firewall (UFW) und automatische Sicherheitsupdates
+- Docker mit dem Compose-Plugin
+- Ein Ordner für alles, standardmäßig `/srv/homelab` (`__ROOT__`), darin ein Unterordner pro Dienst
+- Ein Reverse Proxy wie Traefik, der die Dienste unter deiner Domain erreichbar macht
+
+Ein Ordner für alles hat einen großen Vorteil: Dein Backup muss nur `__ROOT__` sichern. Mehr dazu unter
+[Verzeichnisstruktur](/de/nachschlagen/verzeichnisstruktur/).
+
+## Grenzen
+
+Bare Metal ist nicht in jeder Lage die beste Wahl:
+
+- **Keine System-Snapshots.** Vor einem großen Upgrade kannst du nicht mit einem Klick den ganzen Server
+  sichern und zurückrollen. Deine Daten schützt ein gutes [Backup](/de/nachschlagen/backup-strategien/), das
+  Betriebssystem musst du im Notfall neu installieren. Mit Docker und einem sauberen Ordner ist das aber schnell erledigt.
+- **Ein System für alles.** Willst du etwas ausprobieren, das nicht in Docker läuft, zum Beispiel ein anderes
+  Betriebssystem oder Home Assistant OS, brauchst du eine VM. Dann lohnt sich ein Blick auf
+  [Proxmox VE](/de/nachschlagen/proxmox-ve/).
+- **Viele Festplatten.** Wenn dein Server vor allem ein Datenspeicher mit mehreren Platten ist, nehmen dir
+  [TrueNAS oder Unraid](/de/nachschlagen/truenas-unraid/) viel Arbeit ab.
+
+Du kannst später umsteigen. Weil alle Dienste als `compose.yaml` mit Daten im selben Ordner vorliegen, ziehst du sie
+mit wenig Aufwand auf ein neues System um, etwa in eine VM unter Proxmox.
+
+## Weiterlesen
+
+- [Debian: Installationsanleitung](https://www.debian.org/releases/stable/installmanual)
+- [Ubuntu Server: Dokumentation](https://documentation.ubuntu.com/server/)
+- [VMs oder Container?](/de/nachschlagen/vms-oder-container/)

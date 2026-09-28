@@ -1,0 +1,127 @@
+---
+title: "Reverse Proxy mit Nginx Proxy Manager"
+description: "Nginx Proxy Manager nimmt alle Anfragen auf Port 80 und 443 entgegen und leitet sie an deine Container weiter. Proxy-Hosts und Let's-Encrypt-Zertifikate richtest du bequem in einer Weboberfläche ein."
+level: 1
+minutes: 20
+requires: [Docker Compose, Domain, Portfreigabe für 80 und 443]
+services: [nginx-proxy-manager]
+---
+
+<Callout title="Traefik oder Nginx Proxy Manager?">
+[Traefik](/de/einrichten/reverse-proxy-traefik/) ist am Anfang etwas komplizierter, bietet dafür mehr Möglichkeiten und Automatik: Die Konfiguration steht als Labels direkt in der `compose.yaml` jedes Dienstes, und Middlewares für Login-Schutz lassen sich einfach davorschalten. Die übrigen Guides dieser Seite zeigen deshalb Traefik-Labels.
+
+Nginx Proxy Manager (NPM) ist der einfachere Einstieg: Du klickst Proxy-Hosts in einer Weboberfläche zusammen und holst Zertifikate per Häkchen. Die Konfiguration steckt dafür in einer Datenbank statt in Dateien. Ein späterer Umstieg auf Traefik ist jederzeit möglich, deine Dienste bleiben dabei unverändert.
+</Callout>
+
+Ein Reverse Proxy ist die einzige Tür zu deinen Diensten: Er lauscht auf Port 80 und 443 und entscheidet anhand des Namens, welcher Container antwortet. Mehr dazu unter [Reverse Proxy erklärt](/de/nachschlagen/reverse-proxy-erklaert/).
+
+<Steps>
+
+<Step title="Proxy-Netzwerk anlegen">
+NPM und deine Dienste hängen in einem gemeinsamen Docker-Netzwerk. Darin erreicht NPM jeden Container über seinen Namen. Du legst das Netzwerk einmal an und nutzt es danach in jedem Stack.
+
+```bash
+docker network create __NETWORK__
+```
+
+Hast du das Netzwerk schon angelegt, meldet Docker einen Fehler. Den kannst du ignorieren.
+</Step>
+
+<Step title="Verzeichnis anlegen">
+Wie jeder Stack bekommt NPM einen eigenen Ordner unter `__ROOT__`. Datenbank, Einstellungen und Zertifikate landen in `__DATA(nginx-proxy-manager)__`.
+
+```bash
+mkdir -p __ROOT__/nginx-proxy-manager __DATA(nginx-proxy-manager)__
+cd __ROOT__/nginx-proxy-manager
+```
+</Step>
+
+<Step title="compose.yaml und .env schreiben">
+Lege die beiden Dateien im Ordner an. NPM veröffentlicht drei Ports: 80 und 443 für deine Dienste und 81 für die Weboberfläche.
+
+<ServiceFiles id="nginx-proxy-manager" />
+</Step>
+
+<Step title="Starten und anmelden">
+Starte den Stack und schau ins Log, bis keine neuen Meldungen mehr kommen. Beim ersten Start legt NPM seine Datenbank und Schlüssel an, das kann ein, zwei Minuten dauern.
+
+```bash
+docker compose up -d
+docker compose logs -f nginx-proxy-manager
+```
+
+Mit `Strg+C` beendest du die Log-Anzeige. Öffne dann im Browser `http://192.168.1.10:81` (ersetze die IP durch die deines Servers).
+
+Aktuelle Versionen zeigen beim ersten Aufruf einen Einrichtungsassistenten, in dem du dein Admin-Konto anlegst. Ältere Versionen haben stattdessen ein Standardkonto (`admin@example.com` / `changeme`). Wenn du das siehst, ändere E-Mail und Passwort sofort nach dem Login. Nimm ein langes, zufälliges Passwort aus deinem Passwortmanager.
+</Step>
+
+<Step title="Ersten Proxy-Host anlegen">
+Ein **Proxy-Host** verbindet einen Namen mit einem Container. Als Beispiel nimmt dieser Schritt [Uptime Kuma](/de/dienste/uptime-kuma/), das intern auf Port 3001 läuft. Der Container muss im Netzwerk `__NETWORK__` hängen.
+
+Klicke auf „Hosts → Proxy Hosts → Add Proxy Host“ und fülle aus:
+
+| Feld | Wert |
+| --- | --- |
+| Domain Names | `status.__DOMAIN__` |
+| Scheme | `http` |
+| Forward Hostname / IP | `uptime-kuma` |
+| Forward Port | `3001` |
+| Block Common Exploits | an |
+| Websockets Support | an |
+
+Als Hostname trägst du den **Containernamen** ein, nicht die IP des Servers. Das klappt, weil beide Container im selben Netzwerk hängen und Docker die Namen dort auflöst. Der Port ist der Port **im Container**, wie er in der Dokumentation des Dienstes steht. Der Dienst selbst braucht deshalb keine eigene Portfreigabe in seiner `compose.yaml`.
+
+Websockets brauchen viele moderne Weboberflächen für Live-Updates. Es schadet nicht, sie immer einzuschalten.
+</Step>
+
+<Step title="Zertifikat holen">
+Wechsle im selben Dialog auf den Reiter „SSL“:
+
+1. Wähle bei „SSL Certificate“ die Option für ein neues Let's-Encrypt-Zertifikat.
+2. Schalte **Force SSL** ein. Dann leitet NPM jede HTTP-Anfrage auf HTTPS um.
+3. **HTTP/2 Support** kannst du ebenfalls einschalten.
+4. Bestätige die Nutzungsbedingungen von Let's Encrypt, falls gefragt, und speichere.
+
+Let's Encrypt prüft über Port 80, ob dir die Domain gehört. Klappt das nicht, stimmt meist der DNS-Eintrag oder die Portfreigabe noch nicht. Prüfe beides im Guide [Domain & DNS](/de/einrichten/domain-dns/).
+
+Öffne danach `https://status.__DOMAIN__`. Du solltest Uptime Kuma mit gültigem Zertifikat sehen. NPM erneuert die Zertifikate automatisch.
+</Step>
+
+<Step title="Port 81 aus dem Internet heraushalten">
+Die Weboberfläche auf Port 81 steuert deinen ganzen Zugang. Sie darf nicht aus dem Internet erreichbar sein.
+
+Zuhause ist das meist schon erfüllt, solange dein Router nur 80 und 443 weiterleitet. Aber Vorsicht: Ports, die Docker veröffentlicht, **umgehen UFW**. Eine Regel wie `ufw deny 81` hilft also nicht. Sicherer ist es, Port 81 in der `compose.yaml` nur an eine bestimmte Adresse zu binden.
+
+Im Heimnetz bindest du ihn an die LAN-IP deines Servers:
+
+```yaml
+    ports:
+      - "80:80"
+      - "192.168.1.10:81:81"
+      - "443:443"
+```
+
+Auf einem gemieteten Server bindest du ihn an `127.0.0.1` und erreichst ihn über einen SSH-Tunnel:
+
+```yaml
+      - "127.0.0.1:81:81"
+```
+
+```bash
+ssh -L 8181:127.0.0.1:81 benutzer@server
+```
+
+Solange die Verbindung steht, öffnest du die Oberfläche auf deinem Rechner unter `http://localhost:8181`. Nach der Änderung startest du den Stack neu:
+
+```bash
+docker compose up -d
+```
+</Step>
+
+</Steps>
+
+## Wie geht es weiter?
+
+Für jeden weiteren Dienst legst du einen Proxy-Host an: neue Subdomain, Containername, interner Port, Zertifikat. Die Traefik-Labels in anderen Guides dieser Seite brauchst du mit NPM nicht, stell dafür unter „Mein Setup“ Nginx Proxy Manager als Reverse Proxy ein.
+
+Sichere den Ordner `__DATA(nginx-proxy-manager)__` regelmäßig mit. Darin stecken alle Proxy-Hosts und Zertifikate. Details zu weiteren Funktionen wie Access Lists findest du in der [offiziellen Dokumentation](https://nginxproxymanager.com/guide/).

@@ -1,7 +1,139 @@
 ---
 slug: erster-stack
 title: "Erster Stack mit Compose"
+description: "Am Ende läuft dein erster Container, beschrieben in einer compose.yaml, und du erreichst ihn im Browser über die IP deines Servers. Nebenbei lernst du die fünf Compose-Befehle, die du im Alltag immer wieder brauchst."
 level: 1
 minutes: 20
-status: stub
+requires: [Docker mit Compose-Plugin, Verzeichnisstruktur angelegt]
 ---
+
+Ein **Stack** ist ein Ordner mit einer `compose.yaml`. Darin steht, welche Container laufen sollen, mit welchem Image, welchen Ports und welchen Daten. Statt lange `docker run`-Befehle zu tippen, beschreibst du den gewünschten Zustand in einer Datei, und `docker compose` stellt ihn her. Mehr dazu im Artikel [Docker Compose](/de/nachschlagen/docker-compose/).
+
+Als ersten Dienst nimmst du **whoami** von den Traefik-Entwicklern. Das ist ein winziger Webserver, der nur anzeigt, welche Anfrage bei ihm ankommt. Er speichert nichts und braucht keine Einrichtung. Damit kannst du dich ganz auf Compose konzentrieren. Denselben Container nutzt du später auch, um den Reverse Proxy zu testen.
+
+Einen Reverse Proxy gibt es an dieser Stelle noch nicht. Du erreichst den Container deshalb direkt über die IP-Adresse des Servers und einen Port.
+
+<Steps>
+
+<Step title="Stack-Ordner anlegen">
+Jeder Dienst bekommt einen eigenen Ordner unter `__ROOT__`. Alle `docker compose`-Befehle führst du in diesem Ordner aus.
+
+```bash
+mkdir -p __ROOT__/whoami
+cd __ROOT__/whoami
+```
+</Step>
+
+<Step title="compose.yaml schreiben">
+Öffne eine neue Datei im Editor:
+
+```bash
+nano compose.yaml
+```
+
+Füge diesen Inhalt ein, speichere mit `Strg+O` und `Enter` und beende nano mit `Strg+X`:
+
+```yaml
+services:
+  whoami:
+    image: traefik/whoami:latest
+    container_name: whoami
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+```
+
+Was die Zeilen bedeuten:
+
+- `services:` listet die Container des Stacks. Hier gibt es nur einen, `whoami`.
+- `image:` sagt, welches Image Docker von Docker Hub holt. Für einen Testcontainer ist `latest` in Ordnung. Für echte Dienste nutzt du besser eine feste Version, siehe [Images & Tags](/de/nachschlagen/images-tags/).
+- `container_name:` gibt dem Container einen festen, gut lesbaren Namen.
+- `restart: unless-stopped` startet den Container nach einem Absturz oder Neustart des Servers automatisch wieder, außer du hast ihn selbst gestoppt.
+- `ports:` verbindet Port `8080` des Servers mit Port `80` im Container. Links steht immer der Server, rechts der Container.
+
+Achte auf die Einrückung. YAML nutzt Leerzeichen, keine Tabs, und die Einrückung bestimmt die Struktur.
+</Step>
+
+<Step title="Stack starten">
+`up` erstellt und startet alles, was in der `compose.yaml` steht. `-d` (detached) lässt den Container im Hintergrund laufen, sodass du dein Terminal zurückbekommst.
+
+```bash
+docker compose up -d
+```
+
+Beim ersten Mal lädt Docker das Image herunter. Danach meldet Compose, dass der Container `whoami` gestartet ist.
+</Step>
+
+<Step title="Status prüfen">
+`ps` zeigt die Container dieses Stacks, ihren Zustand und die veröffentlichten Ports.
+
+```bash
+docker compose ps
+```
+
+In der Spalte `STATUS` sollte `Up` stehen, bei `PORTS` etwas wie `0.0.0.0:8080->80/tcp`.
+</Step>
+
+<Step title="Im Browser testen">
+Öffne auf deinem Rechner im selben Netz `http://192.168.1.10:8080`. Ersetze `192.168.1.10` durch die IP deines Servers.
+
+Du siehst eine kurze Textseite mit `Hostname`, `IP` und den Headern deiner Anfrage. Das ist die Antwort aus dem Container.
+
+Direkt auf dem Server geht es auch:
+
+```bash
+curl http://localhost:8080
+```
+
+<Callout type="warning" title="Docker-Ports umgehen UFW">
+Ports aus `ports:` sind erreichbar, auch wenn du sie in [UFW](/de/einrichten/firewall-ufw/) nicht freigegeben hast. Docker trägt seine eigenen Firewall-Regeln ein, die vor denen von UFW greifen. Zuhause hinter dem Router ist das meist nur im Heimnetz sichtbar. Auf einem gemieteten Server ist der Port aber sofort **aus dem Internet** erreichbar. Dort schreibst du besser `"127.0.0.1:8080:80"`. Dann lauscht der Port nur lokal und du testest mit `curl`. Später übernimmt ohnehin der Reverse Proxy, und die Dienste brauchen gar keine eigenen Ports mehr.
+</Callout>
+</Step>
+
+<Step title="Logs ansehen">
+Alles, was ein Container ausgibt, landet in seinen Logs. Das ist die erste Anlaufstelle, wenn etwas nicht funktioniert.
+
+```bash
+docker compose logs
+docker compose logs -f
+```
+
+Mit `-f` (follow) laufen neue Zeilen live mit. Lade die Seite im Browser neu und schau zu. Beenden mit `Strg+C`. Der Container läuft dabei weiter.
+</Step>
+
+<Step title="Aktualisieren">
+So bringst du einen Stack auf den neuesten Stand des Images. `pull` lädt neue Images, `up -d` ersetzt nur die Container, deren Image sich geändert hat.
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+Dasselbe `up -d` nutzt du, wenn du die `compose.yaml` geändert hast. Compose erkennt die Änderung und erstellt den Container neu.
+</Step>
+
+<Step title="Stoppen und entfernen">
+`down` stoppt die Container des Stacks und entfernt sie samt dem Netzwerk, das Compose für den Stack angelegt hat.
+
+```bash
+docker compose down
+```
+
+Deine Dateien im Stack-Ordner bleiben dabei unangetastet, also auch alles unter `data/`. Ein erneutes `docker compose up -d` stellt den Stack wieder her. Lass den Ordner `whoami` stehen, du brauchst ihn im nächsten Guide.
+</Step>
+
+</Steps>
+
+## Die Befehle im Überblick
+
+| Befehl | Wirkung |
+| --- | --- |
+| `docker compose up -d` | Stack erstellen oder auf den Stand der `compose.yaml` bringen |
+| `docker compose ps` | Container des Stacks und ihren Zustand anzeigen |
+| `docker compose logs -f` | Logs live verfolgen |
+| `docker compose pull` | Neue Images herunterladen |
+| `docker compose down` | Container stoppen und entfernen, Daten bleiben |
+
+Alle Befehle beziehen sich auf die `compose.yaml` im aktuellen Ordner. Bekommst du `no configuration file provided`, bist du im falschen Ordner.
+
+Weiter geht es mit [.env & Secrets](/de/einrichten/env-secrets/). Dort lernst du, wie Einstellungen und Passwörter aus der `compose.yaml` herauskommen.

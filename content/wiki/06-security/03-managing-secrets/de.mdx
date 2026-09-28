@@ -1,6 +1,147 @@
 ---
 slug: secrets-verwalten
 title: "Secrets verwalten"
+description: "Datenbankpasswörter, API-Tokens und Client-Secrets sind die Schlüssel zu deinem Homelab. Hier erfährst du, wo sie hingehören, wie du sie sicher erzeugst und aufbewahrst und was du tust, wenn doch einmal eins nach außen gelangt ist."
 level: 2
-status: stub
+related: [env-files, backup-strategies, directory-structure]
+practice: env-secrets
 ---
+
+<OneWay />
+
+## Was ein Secret ist
+
+Ein **Secret** ist jede Information, mit der man sich Zugriff verschaffen kann: Passwörter für Datenbanken, API-Tokens,
+das Client-Secret für [Single Sign-On](/de/nachschlagen/single-sign-on/), Schlüssel für verschlüsselte Backups.
+
+Die Gefahr liegt selten in einem ausgeklügelten Angriff. Meist landet ein Secret einfach an der falschen Stelle: in einem
+öffentlichen Git-Repo, in einem Screenshot im Forum oder in einem unverschlüsselten Backup. Deshalb geht es hier vor
+allem um Ordnung und ein paar feste Gewohnheiten.
+
+## Die Grundregel: Secrets in die .env
+
+Die `compose.yaml` beschreibt, **wie** ein Dienst läuft. Die `.env` daneben enthält, was nur dich etwas angeht. So
+kannst du die `compose.yaml` gefahrlos teilen oder versionieren.
+
+```text
+__ROOT__/nextcloud/
+├── compose.yaml    ← teilbar
+├── .env            ← Secrets, bleibt privat
+└── data/
+```
+
+In der `compose.yaml` verweist du nur auf die Variable:
+
+```yaml
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+```
+
+Wie `.env`-Dateien genau funktionieren, erklärt [.env-Dateien](/de/nachschlagen/env-dateien/).
+
+### Rechte einschränken
+
+Die `.env` sollte nur dein Benutzer lesen können:
+
+```bash
+chmod 600 __ROOT__/nextcloud/.env
+```
+
+`600` heißt: Der Besitzer darf lesen und schreiben, alle anderen gar nichts. Docker Compose liest die Datei mit deinen
+Rechten, das funktioniert also weiter.
+
+### Nicht in Git
+
+Führst du deine Stacks als Git-Repo, schließe `.env`-Dateien von Anfang an aus. Eine `.gitignore` im Wurzelordner reicht:
+
+```text
+.env
+*.env
+!.env.example
+```
+
+Die `.env.example` enthält alle Variablen mit leeren oder Beispielwerten. So weißt du beim Neuaufsetzen, was du
+ausfüllen musst. Ist ein Secret einmal committet, bleibt es in der Git-Historie, auch wenn du die Datei später löschst.
+Dann hilft nur noch: Secret austauschen (siehe unten).
+
+## Secrets zufällig erzeugen
+
+Denk dir keine Passwörter für Dienste aus. Du musst sie dir nicht merken, also dürfen sie lang und zufällig sein:
+
+```bash
+openssl rand -hex 32
+```
+
+Das erzeugt 64 Zeichen aus `0-9` und `a-f`. Die Variante `openssl rand -base64 32` ist kürzer, enthält aber Zeichen wie
+`/`, `+` und `=`. Die können in Verbindungs-URLs oder bei manchen Images Probleme machen. Hex ist die sichere Wahl.
+
+Nimm für jeden Dienst und jede Datenbank ein eigenes Secret. Wird eins bekannt, ist nur ein Dienst betroffen.
+
+## Wo du den Überblick behältst
+
+Die `.env` auf dem Server ist die Stelle, an der der Dienst das Secret liest. Sie ist aber kein guter Ort, um sich zu
+merken, was es alles gibt. Zwei Ergänzungen haben sich bewährt:
+
+- **Passwortmanager:** Lege wichtige Secrets zusätzlich in deinem Passwortmanager ab, etwa in
+  [Vaultwarden](/de/dienste/vaultwarden/) oder KeePassXC. Besonders wichtig ist das für alles, ohne das du ein Backup
+  nicht wiederherstellen kannst, zum Beispiel das Passwort deines restic-Repositorys.
+- **Verschlüsselte Backups:** Dein Backup von `__ROOT__` enthält alle `.env`-Dateien. Es muss daher verschlüsselt sein.
+  restic erledigt das automatisch, siehe [Backup-Strategien](/de/nachschlagen/backup-strategien/).
+
+<Callout type="warning" title="Vorsicht beim Teilen von Ausgaben">
+  `docker compose config` zeigt die fertige Konfiguration mit allen eingesetzten Werten, also auch mit deinen
+  Passwörtern. Dasselbe gilt für `docker inspect`. Prüfe solche Ausgaben, bevor du sie in einem Forum oder Chat postest.
+</Callout>
+
+## Docker Secrets: Secrets als Datei
+
+Umgebungsvariablen sind bequem, aber für jeden sichtbar, der `docker inspect` ausführen darf. Docker Compose kennt
+deshalb zusätzlich **Secrets**: Das Secret liegt in einer eigenen Datei und wird im Container unter `/run/secrets/`
+eingebunden.
+
+```yaml
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+```
+
+Das funktioniert nur, wenn das Image das Secret aus einer Datei lesen kann. Viele offizielle Images unterstützen dafür
+Variablen mit der Endung `_FILE`, wie hier Postgres. Ob ein Image das kann, steht in seiner Dokumentation. Für den
+Einstieg ist die `.env` völlig in Ordnung. Details findest du in der
+[Docker-Dokumentation zu Secrets in Compose](https://docs.docker.com/compose/how-tos/use-secrets/).
+
+## Für Fortgeschrittene: SOPS und age
+
+Willst du dein Homelab komplett in Git verwalten, inklusive Secrets? Dann kannst du die Secrets verschlüsselt
+einchecken. Ein verbreitetes Werkzeug dafür ist [SOPS](https://github.com/getsops/sops) zusammen mit
+[age](https://github.com/FiloSottile/age) für die Schlüssel. SOPS verschlüsselt nur die Werte, die Variablennamen bleiben
+lesbar. Vor dem Deployment entschlüsselst du die Datei auf dem Server.
+
+Das lohnt sich vor allem, wenn du [Git-Deployments](/de/einrichten/git-deployments-forgejo/) nutzt oder mehrere Server
+betreibst. Den privaten age-Schlüssel musst du dann besonders gut sichern, denn ohne ihn kommst du an keins deiner
+Secrets mehr.
+
+## Secrets austauschen
+
+Früher oder später musst du ein Secret wechseln, etwa weil es in einem Repo gelandet ist oder jemand keinen Zugriff
+mehr haben soll. Man nennt das **Rotation**.
+
+1. Neues Secret erzeugen.
+2. Im Dienst ändern, falls der Dienst es gespeichert hat.
+3. In der `.env` eintragen und den Stack mit `docker compose up -d` neu starten.
+4. Den Eintrag im Passwortmanager aktualisieren.
+
+Achtung bei Datenbanken: Images wie Postgres oder MariaDB übernehmen das Passwort aus der Umgebungsvariable nur beim
+allerersten Start, wenn die Datenbank angelegt wird. Änderst du danach nur die `.env`, passt das Passwort nicht mehr.
+Du musst es zuerst in der Datenbank selbst ändern und erst dann in der `.env`.

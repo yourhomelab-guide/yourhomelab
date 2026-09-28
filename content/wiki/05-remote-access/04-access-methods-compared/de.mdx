@@ -1,6 +1,121 @@
 ---
 slug: zugriffswege-vergleich
 title: "Zugriffswege im Vergleich"
+description: "Portfreigabe, VPN, Tunnel oder eigener VPS: Es gibt mehrere Wege, deine Dienste von außen zu erreichen. Welcher passt, hängt davon ab, wer zugreifen soll und was dein Internetanschluss erlaubt."
 level: 1
-status: stub
+related: [port-forwarding, vpn, tunnels, cgnat-ds-lite]
 ---
+
+<OneWay />
+
+## Zwei Fragen vorab
+
+Bevor du dich für einen Weg entscheidest, kläre zwei Dinge:
+
+1. **Wer soll zugreifen?** Nur du und deine Familie, oder auch andere Menschen, die einfach einen Link im Browser öffnen?
+2. **Was kann dein Anschluss?** Hast du eine eigene öffentliche IPv4-Adresse, oder sitzt du hinter [CGNAT oder DS-Lite](/de/nachschlagen/cgnat-ds-lite/)? Ohne öffentliche IPv4 kommen Anfragen von außen nicht bis zu deinem Router.
+
+Die erste Frage entscheidet zwischen **privat** (VPN) und **öffentlich** (Portfreigabe, Tunnel, VPS). Die zweite entscheidet, welche öffentlichen Wege überhaupt funktionieren.
+
+## Die Wege im Überblick
+
+<Cards>
+  <Card title="Portfreigabe">
+    Der Router leitet Port 80 und 443 an deinen Reverse Proxy weiter. Direkt und ohne Dritte, braucht aber eine öffentliche IPv4.
+  </Card>
+  <Card title="VPN">
+    Deine Geräte verbinden sich verschlüsselt mit dem Heimnetz. Nichts ist öffentlich, nur du kommst rein.
+  </Card>
+  <Card title="Tunnel">
+    Dein Server verbindet sich nach außen zu einem Anbieter wie Cloudflare, der die Anfragen durchreicht. Kein offener Port nötig.
+  </Card>
+  <Card title="Eigener VPS">
+    Ein gemieteter Server mit fester IP ist dein öffentlicher Eingang, per WireGuard mit dem Heimserver verbunden.
+  </Card>
+</Cards>
+
+## Im Vergleich
+
+|                    | Portfreigabe                   | VPN (WireGuard, Tailscale)          | Tunnel (Cloudflare)              | Eigener VPS (WireGuard, Pangolin)  |
+| ------------------ | ------------------------------ | ----------------------------------- | -------------------------------- | ---------------------------------- |
+| **Wer kommt rein** | Alle                           | Nur deine Geräte                    | Alle                             | Alle                               |
+| **Sicherheit**     | Mittel, alles hängt am Proxy und an den Diensten | Hoch, nichts ist öffentlich | Mittel, Heim-IP bleibt verborgen | Mittel, Heim-IP bleibt verborgen   |
+| **Aufwand**        | Gering                         | Gering (Tailscale) bis mittel (WireGuard) | Gering                      | Hoch, zweiter Server               |
+| **CGNAT-tauglich** | Nein                           | Tailscale ja, WireGuard selbst nein | Ja                               | Ja                                 |
+| **Abhängigkeit**   | Keine                          | Keine (WireGuard) bzw. Anbieter (Tailscale) | Cloudflare               | VPS-Anbieter                       |
+| **Für wen**        | Öffentliche IPv4, Dienste für andere | Admin-Zugriff, Dienste nur für dich | CGNAT, schneller Start      | CGNAT, volle Kontrolle             |
+
+Ein paar Anmerkungen zur Tabelle:
+
+- **Sicherheit** meint hier, wie viel von außen sichtbar ist. Portfreigabe, Tunnel und VPS machen deine Dienste gleichermaßen öffentlich. Wie sicher das ist, entscheiden dein Reverse Proxy, Login-Schutz und aktuelle Updates.
+- **WireGuard selbst** braucht eine Portfreigabe für einen UDP-Port und damit ebenfalls eine öffentliche IPv4 oder funktionierendes IPv6.
+- **Cloudflare Tunnel** ist ungeeignet für große Uploads und Medien-Streaming. Details stehen unter [Tunnel](/de/nachschlagen/tunnel/).
+
+## Die übliche Kombination
+
+Die meisten Homelabs nutzen nicht nur einen Weg:
+
+- **Admin-Oberflächen und SSH nur über VPN.** Portainer, Router, Proxmox und Co. sind nie öffentlich.
+- **Dienste für andere über Portfreigabe, Tunnel oder VPS.** Etwa eine Nextcloud zum Teilen oder Vaultwarden für die Familie, geschützt durch Reverse Proxy und Login.
+- **Alles andere bleibt im Heimnetz.** Nicht jeder Dienst muss von außen erreichbar sein.
+
+## Entscheidungshilfe
+
+<Quiz
+  questions={[
+    {
+      question: "Wer soll auf deine Dienste zugreifen?",
+      answers: [
+        { label: "Nur ich und meine eigenen Geräte", points: { vpn: 5 } },
+        { label: "Auch Familie und Freunde, einfach per Browser", points: { portfreigabe: 1, tunnel: 1, vps: 1 } },
+        { label: "Beides, je nach Dienst", points: { vpn: 1, portfreigabe: 1, tunnel: 1 } },
+      ],
+    },
+    {
+      question: "Hat dein Anschluss eine öffentliche IPv4?",
+      answers: [
+        { label: "Ja", points: { portfreigabe: 3 } },
+        { label: "Nein, DS-Lite oder CGNAT", points: { tunnel: 2, vps: 2, vpn: 1 } },
+        { label: "Weiß ich nicht", points: { tunnel: 1, vpn: 1 } },
+      ],
+    },
+    {
+      question: "Wie wichtig ist dir, dass kein Anbieter deinen Verkehr sieht?",
+      answers: [
+        { label: "Sehr wichtig", points: { portfreigabe: 1, vps: 2, vpn: 1 } },
+        { label: "Nicht so wichtig, Hauptsache einfach", points: { tunnel: 2 } },
+      ],
+    },
+    {
+      question: "Wie viel willst du betreiben?",
+      answers: [
+        { label: "So wenig wie möglich", points: { tunnel: 1, vpn: 1 } },
+        { label: "Ein zweiter Server ist okay", points: { vps: 2 } },
+      ],
+    },
+  ]}
+  results={{
+    vpn: {
+      title: "VPN",
+      text: "Du brauchst nichts öffentlich zu machen. Mit WireGuard (bei öffentlicher IPv4) oder Tailscale (auch hinter CGNAT) erreichst du von unterwegs alles, als wärst du zuhause.",
+    },
+    portfreigabe: {
+      title: "Portfreigabe",
+      text: "Gib Port 80 und 443 an deinen Reverse Proxy frei, sonst nichts. Für Admin-Oberflächen und SSH nimmst du zusätzlich ein VPN.",
+    },
+    tunnel: {
+      title: "Tunnel",
+      text: "Cloudflare Tunnel macht deine Dienste ohne Portfreigabe erreichbar, auch hinter CGNAT. Denk an die Grenzen bei großen Uploads und Streaming und nutze für Admin-Zugriffe ein VPN.",
+    },
+    vps: {
+      title: "Eigener VPS",
+      text: "Ein kleiner VPS mit WireGuard oder Pangolin ist dein öffentlicher Eingang, ohne dass ein Tunnel-Anbieter mitliest. Dafür pflegst du einen zweiten Server.",
+    },
+  }}
+/>
+
+## Weiterlesen
+
+- [Portfreigabe](/de/nachschlagen/portfreigabe/): was du freigibst und was nie
+- [VPN](/de/nachschlagen/vpn/): WireGuard, Tailscale und Router-VPN
+- [Tunnel](/de/nachschlagen/tunnel/): Cloudflare Tunnel und eigener VPS

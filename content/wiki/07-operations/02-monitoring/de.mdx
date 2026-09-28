@@ -1,5 +1,79 @@
 ---
 title: "Monitoring"
+description: "Monitoring sagt dir, wie es deinem Server geht und ob deine Dienste erreichbar sind, bevor es dir jemand anderes sagt. Für den Anfang reichen zwei kleine Werkzeuge."
 level: 1
-status: stub
+related: [logs, updates, backup-strategies]
+practice: monitoring-beszel
 ---
+
+## Warum überhaupt Monitoring?
+
+Ohne Monitoring merkst du Probleme erst, wenn etwas nicht mehr geht: Die Fotos laden nicht, der Passwortmanager
+synchronisiert nicht. Oft kündigt sich das vorher an. Die Festplatte läuft langsam voll, ein Container startet immer
+wieder neu, der Arbeitsspeicher ist dauerhaft am Limit. Monitoring macht solche Entwicklungen sichtbar und schlägt Alarm,
+wenn etwas ausfällt.
+
+## Drei Blickwinkel
+
+Monitoring im Homelab beantwortet drei unterschiedliche Fragen. Jede braucht ein anderes Werkzeug.
+
+| Frage | Was gemessen wird | Beispiel-Werkzeug |
+| --- | --- | --- |
+| **Wie geht es dem Server?** | CPU, RAM, Festplattenplatz, Temperatur, Netzwerk, Verbrauch pro Container | Beszel |
+| **Ist der Dienst erreichbar?** | Antwortet die Website? Stimmt der Statuscode? Läuft das Zertifikat bald ab? | Uptime Kuma |
+| **Was ist passiert?** | Fehlermeldungen und Ereignisse der Dienste | Logs, siehe [Logs](/de/nachschlagen/logs/) |
+
+Ressourcen-Monitoring zeigt dir Trends und Ursachen. Erreichbarkeits-Monitoring zeigt dir, was der Nutzer sieht.
+Ein Server kann völlig gesund aussehen, während der Reverse Proxy falsch konfiguriert ist und niemand deine Dienste
+erreicht. Umgekehrt kann eine Website noch antworten, obwohl die Platte in zwei Tagen voll ist. Deshalb lohnen sich beide.
+
+## Ressourcen: Beszel
+
+[Beszel](/de/dienste/beszel/) besteht aus zwei Teilen: dem **Hub** mit Weboberfläche und einem kleinen **Agenten**,
+der auf jedem überwachten Server läuft und Messwerte an den Hub liefert. Du siehst Verläufe für CPU, RAM, Festplatten,
+Netzwerk und für jeden Docker-Container einzeln. So erkennst du etwa, welcher Container plötzlich viel Speicher braucht.
+
+Beszel ist bewusst schlank. Große Lösungen wie Prometheus mit Grafana können mehr, sind für den Einstieg aber
+deutlich aufwendiger. Du kannst später immer noch umsteigen.
+
+## Erreichbarkeit: Uptime Kuma
+
+[Uptime Kuma](/de/dienste/uptime-kuma/) prüft in festen Abständen, ob deine Dienste antworten. Es kann unter anderem
+HTTP(S)-Seiten aufrufen, Ports testen, Hosts anpingen und Docker-Container abfragen. Dazu warnt es, wenn ein
+TLS-Zertifikat bald abläuft. Auf Wunsch baust du daraus eine Statusseite, die du mit Familie oder Mitbewohnern teilst.
+
+<Callout title="Von außen prüfen">
+  Uptime Kuma auf demselben Server sieht nicht, was von außen passiert. Fällt der Server oder dein Internetanschluss aus,
+  fällt auch das Monitoring aus und kann dich nicht mehr warnen. Betreibe Uptime Kuma deshalb am besten auf einem
+  anderen Gerät, zum Beispiel einem kleinen VPS, oder ergänze einen externen Check-Dienst, der deine öffentlichen
+  Adressen von außen aufruft.
+</Callout>
+
+## Benachrichtigungen
+
+Monitoring bringt wenig, wenn du täglich ins Dashboard schauen musst. Richte deshalb Benachrichtigungen ein. Beszel
+und Uptime Kuma können unter anderem per E-Mail, Telegram, Discord, Matrix oder
+[ntfy](https://ntfy.sh) (Push-Nachrichten aufs Handy) Bescheid geben.
+
+Ein paar Tipps, damit die Warnungen nützlich bleiben:
+
+- **Wenige, wichtige Alarme.** Dienst nicht erreichbar, Festplatte über etwa 85 Prozent voll, Zertifikat läuft ab.
+  Wer ständig Warnungen bekommt, ignoriert sie irgendwann.
+- **Schwellen mit Geduld.** Kurze CPU-Spitzen sind normal. Warne erst, wenn ein Wert einige Minuten lang hoch ist.
+- **Benachrichtigung testen.** Beide Tools haben einen Test-Knopf. Nutze ihn, bevor du dich darauf verlässt.
+
+## Auch Backups überwachen
+
+Ein Backup-Job, der seit Wochen still fehlschlägt, ist ein klassisches Problem. Uptime Kuma kennt dafür den
+Monitor-Typ **Push**: Dein Backup-Skript ruft am Ende eine URL auf. Bleibt dieser Aufruf aus, bekommst du eine Warnung.
+So merkst du auch Fehler, die keine Fehlermeldung erzeugen.
+
+## Wie anfangen?
+
+1. Beszel installieren und den Agenten auf deinem Server einrichten:
+   [Monitoring mit Beszel](/de/einrichten/monitoring-beszel/).
+2. Uptime Kuma aufsetzen und für jeden Dienst einen HTTP-Monitor anlegen:
+   [Uptime Kuma](/de/einrichten/uptime-kuma/).
+3. Benachrichtigungen einrichten und testen.
+
+Damit weißt du, wie es deinem Server geht, und erfährst von Ausfällen als Erster.

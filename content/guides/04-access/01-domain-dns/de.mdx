@@ -1,6 +1,110 @@
 ---
 title: "Domain & DNS"
+description: "Am Ende gehört dir eine Domain, deren Subdomains alle auf deinen Server zeigen. Ändert sich deine IP, zieht DynDNS den Eintrag automatisch nach."
 level: 1
 minutes: 15
-status: stub
+requires: [Zugang zum Router, Server mit fester IP im Heimnetz]
 ---
+
+Mit einer eigenen Domain erreichst du deine Dienste unter Namen wie `fotos.__DOMAIN__` statt über IP-Adresse und Port. Außerdem brauchst du sie für gültige TLS-Zertifikate von Let's Encrypt. Wie DNS im Hintergrund funktioniert, erklärt der Artikel [DNS & Domains](/de/nachschlagen/dns-domains/).
+
+<OneWay />
+
+<Steps>
+
+<Step title="Anschluss prüfen">
+Bevor du Geld ausgibst: Prüfe, ob dein Server von außen überhaupt erreichbar sein kann. Viele Anschlüsse (vor allem Kabel und Glasfaser) haben keine eigene öffentliche IPv4-Adresse mehr, sondern DS-Lite oder CGNAT. Dann teilst du dir eine IPv4 mit anderen Kunden, und eingehende Verbindungen kommen nicht bei dir an.
+
+Frag auf dem Server deine öffentliche Adresse ab:
+
+```bash
+curl -4 ifconfig.me
+curl -6 ifconfig.me
+```
+
+Vergleiche die IPv4 mit der WAN- bzw. Internet-Adresse, die dein Router in seiner Oberfläche anzeigt. Sind beide gleich, hast du eine eigene öffentliche IPv4. Zeigt der Router eine Adresse aus `100.64.0.0/10` (also `100.64.x.x` bis `100.127.x.x`) oder gar keine IPv4, steckst du hinter CGNAT bzw. DS-Lite.
+
+In dem Fall helfen dir die A-Records unten wenig. Lies [CGNAT & DS-Lite](/de/nachschlagen/cgnat-ds-lite/) und nimm für den Zugriff einen [Cloudflare Tunnel](/de/einrichten/cloudflare-tunnel/) oder ein VPN wie Tailscale. Eine Domain brauchst du trotzdem.
+</Step>
+
+<Step title="Domain kaufen">
+Du kaufst eine Domain bei einem Registrar, also einem Anbieter, der Domains verwaltet und verkauft. Für gängige Endungen wie `.de` oder `.com` zahlst du meist ein paar Euro bis etwa 20 Euro im Jahr.
+
+Worauf du achten solltest:
+
+- **Verlängerungspreis**, nicht nur den Preis im ersten Jahr. Lockangebote werden danach oft deutlich teurer.
+- **DNS-Verwaltung mit API oder DynDNS**, falls sich deine IP ändert (siehe unten).
+- **Kurzer, neutraler Name.** Er taucht in jeder Adresse auf. Dein Klarname ist nicht nötig.
+
+Wenn du später einen [Cloudflare Tunnel](/de/einrichten/cloudflare-tunnel/) nutzen willst, muss Cloudflare die DNS-Verwaltung übernehmen. Das geht auch mit einer Domain von einem anderen Registrar: Du trägst dort einfach die Nameserver von Cloudflare ein.
+</Step>
+
+<Step title="A- und AAAA-Record anlegen">
+Ein DNS-Record ordnet einem Namen eine Adresse zu. Ein **A-Record** zeigt auf eine IPv4-Adresse, ein **AAAA-Record** auf eine IPv6-Adresse.
+
+Öffne die DNS-Verwaltung deines Anbieters und lege diese Einträge an:
+
+| Typ | Name | Wert | TTL |
+| --- | --- | --- | --- |
+| A | `@` (die Domain selbst) | deine öffentliche IPv4 | 300 |
+| A | `*` | deine öffentliche IPv4 | 300 |
+
+Der Eintrag `*` ist ein **Wildcard-Record**: Jede Subdomain wie `fotos.__DOMAIN__` oder `passwort.__DOMAIN__` zeigt damit auf deinen Server. Du musst also nicht für jeden neuen Dienst einen Eintrag anlegen. Welcher Dienst antwortet, entscheidet später der Reverse Proxy anhand des Namens.
+
+Die **TTL** (Time to Live) sagt, wie viele Sekunden andere Server einen Eintrag zwischenspeichern dürfen. 300 Sekunden sind ein guter Wert, solange du noch ausprobierst.
+
+Für IPv6 legst du dieselben beiden Einträge als AAAA-Record an. Achtung: Bei IPv6 gibt es kein NAT. Der Wert ist die IPv6 **des Servers**, nicht die des Routers:
+
+```bash
+ip -6 addr show scope global
+```
+
+Nimm die Adresse, die nicht als `temporary` markiert ist. Im Router musst du für IPv6 außerdem die Ports für genau dieses Gerät freigeben. Wenn du dir unsicher bist, lass den AAAA-Record erst mal weg. Ein falscher AAAA-Record ist schlimmer als keiner, weil viele Geräte IPv6 bevorzugen.
+</Step>
+
+<Step title="DynDNS einrichten, wenn sich deine IP ändert">
+Bei den meisten privaten Anschlüssen ändert sich die öffentliche IP gelegentlich, etwa nach einem Neustart des Routers. Dann zeigt dein A-Record ins Leere. **DynDNS** (dynamisches DNS) löst das: Ein kleines Programm meldet deinem DNS-Anbieter jede neue IP.
+
+Der einfachste Weg ist der Router. Die FRITZ!Box zum Beispiel hat unter „Internet → Freigaben → DynDNS“ ein Formular für eine Update-URL, Benutzername und Kennwort. Welche Werte du dort einträgst, steht in der Hilfe deines DNS-Anbieters. Viele Registrare bieten dafür eigene DynDNS-Zugangsdaten an.
+
+Kann dein Router das nicht oder unterstützt dein Anbieter nur eine API, läuft ein DynDNS-Client auf dem Server. Verbreitet ist [ddclient](https://ddclient.net/), das es auch als Container gibt. Es unterstützt viele Anbieter, auch Cloudflare.
+
+Aktualisiere mit DynDNS den Eintrag für `@`. Dein Wildcard-Record `*` kann dann statt eines A-Records ein **CNAME** auf `__DOMAIN__` sein. Ein CNAME ist ein Verweis auf einen anderen Namen, so musst du nur einen Eintrag aktuell halten.
+
+Hast du eine feste IP, etwa bei einem gemieteten Server, überspringst du diesen Schritt.
+</Step>
+
+<Step title="Einträge prüfen">
+Mit `dig` fragst du DNS-Einträge direkt ab. Auf Debian und Ubuntu steckt es im Paket `bind9-dnsutils`:
+
+```bash
+sudo apt install bind9-dnsutils
+dig +short __DOMAIN__ A
+dig +short test.__DOMAIN__ A
+dig +short __DOMAIN__ AAAA
+```
+
+Alle Abfragen sollten deine IP-Adressen ausgeben. `test` steht für eine beliebige Subdomain, sie wird über den Wildcard-Record beantwortet. Kommt nichts zurück, frag direkt bei einem öffentlichen Resolver nach. Das umgeht den Zwischenspeicher deines Routers:
+
+```bash
+dig +short test.__DOMAIN__ A @1.1.1.1
+```
+
+Unter Windows und macOS funktioniert auch `nslookup`:
+
+```bash
+nslookup test.__DOMAIN__
+```
+
+Neue Einträge sind oft nach wenigen Minuten sichtbar. Hast du gerade erst die Nameserver geändert, kann es auch einige Stunden dauern.
+</Step>
+
+<Step title="Ports 80 und 443 freigeben">
+Damit Anfragen aus dem Internet bei deinem Server ankommen, leitet der Router die Ports 80 (HTTP) und 443 (HTTPS) an die feste IP deines Servers weiter. Diese beiden Ports braucht der Reverse Proxy, und Let's Encrypt prüft darüber, ob dir die Domain gehört. Wie das geht und was es für die Sicherheit bedeutet, steht unter [Portfreigabe](/de/nachschlagen/portfreigabe/).
+
+Gib nur diese beiden Ports frei, keine Ports einzelner Dienste. Alles Weitere regelt der Reverse Proxy.
+
+Weiter geht es mit dem [Reverse Proxy mit Traefik](/de/einrichten/reverse-proxy-traefik/) oder dem einfacheren [Nginx Proxy Manager](/de/einrichten/reverse-proxy-npm/).
+</Step>
+
+</Steps>

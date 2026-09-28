@@ -1,6 +1,92 @@
 ---
 slug: dokumentation
 title: "Dokumentation"
+description: "In einem halben Jahr weißt du nicht mehr, warum du etwas so eingerichtet hast. Ein paar kurze Notizen am richtigen Ort retten dir dann den Abend, besonders beim Restore."
 level: 1
-status: stub
+related: [directory-structure, backup-strategies, naming]
+practice: git-deployments-forgejo
 ---
+
+<OneWay />
+
+## Warum dokumentieren?
+
+Beim Einrichten ist alles klar. Ein paar Monate später bricht ein Update etwas, oder die Festplatte fällt aus. Dann
+stehst du vor deinem eigenen Setup wie vor dem eines Fremden. Welcher Port war das? Brauchte die App nicht noch einen
+Schritt nach dem Restore?
+
+Gute Homelab-Dokumentation ist kurz. Sie soll dir in genau diesen Momenten helfen, nicht jede Einstellung erklären.
+Was schon in der `compose.yaml` steht, musst du nicht noch einmal aufschreiben.
+
+## Wo die Notizen hingehören
+
+Es gibt zwei gängige Wege. Beide sind in Ordnung.
+
+<Cards>
+  <Card title="README pro Stack">
+    Eine kurze `README.md` im Ordner jedes Dienstes. Die Notiz liegt genau dort, wo du sie brauchst, und wandert mit
+    dem Dienst mit, wenn du ihn umziehst oder sicherst.
+  </Card>
+  <Card title="Zentrale Notizen">
+    Eine Datei, ein Wiki oder eine Notiz-App für das ganze Homelab. Gut für den Überblick über alle Geräte und
+    Dienste. Achtung: Wenn sie auf dem Homelab selbst läuft, ist sie im Notfall vielleicht nicht erreichbar.
+  </Card>
+</Cards>
+
+Viele kombinieren beides: pro Stack eine kurze `README.md`, dazu eine zentrale Übersicht mit Netzwerkplan und
+Geräteliste. Wichtig ist, dass die Restore-Anleitung auch dann lesbar ist, wenn der Server nicht läuft. Leg eine
+Kopie außerhalb des Homelabs ab, zum Beispiel in deinem Passwort-Manager oder ausgedruckt.
+
+## Was aufschreiben?
+
+Pro Dienst reichen meist diese Punkte:
+
+- **Zweck und Adresse:** Wofür ist der Dienst da, unter welcher Subdomain läuft er?
+- **Ports:** Welche Ports sind nach außen offen, und warum? Zum Beispiel SSH für Forgejo auf `2222`.
+- **Abhängigkeiten:** Braucht der Dienst andere Dienste, etwa Pocket ID für den Login oder einen SMTP-Server für Mails?
+- **Besonderheiten:** Alles, was du von Hand gemacht hast und was nicht in der `compose.yaml` steht. Etwa ein Befehl
+  nach der Installation oder eine Einstellung in der Weboberfläche.
+- **Restore-Schritte:** Wie bekommst du den Dienst aus dem Backup zurück? Muss eine Datenbank aus einem Dump
+  eingespielt werden?
+
+Eine `README.md` für Nextcloud könnte so aussehen:
+
+```markdown
+# Nextcloud
+
+Dateien und Kalender, erreichbar unter cloud.__DOMAIN__
+
+- Abhängigkeiten: Traefik, Pocket ID (Login per OIDC)
+- Datenbank: MariaDB (nextcloud-db), Dump liegt vor dem Backup in data/db-dump.sql
+- Besonderheit: Hintergrundjobs per Cron auf dem Host eingerichtet
+
+## Restore
+1. Ordner aus dem Backup zurückspielen
+2. docker compose up -d db
+3. Dump einspielen, dann docker compose up -d
+```
+
+Mehr braucht es selten. Schreib die Notiz direkt, nachdem du etwas eingerichtet hast. Später fehlt die Zeit oder die
+Erinnerung.
+
+## Der Netzwerkplan
+
+Für das ganze Homelab lohnt sich eine kleine Übersicht: Welche Geräte gibt es, welche IP haben sie, was läuft wo?
+Eine einfache Tabelle genügt:
+
+| Gerät     | IP             | Aufgabe                        |
+| --------- | -------------- | ------------------------------ |
+| Router    | `192.168.1.1`  | DHCP, Portfreigabe 80/443      |
+| homelab   | `192.168.1.10` | Docker-Host, alle Stacks       |
+| nas       | `192.168.1.20` | Backup-Ziel                    |
+
+Ergänze Portfreigaben am Router, VPN-Zugänge und wo deine Domain registriert ist. Diese Dinge vergisst man am
+schnellsten, weil man sie nur einmal einrichtet.
+
+## Dokumentation in Git
+
+Liegen deine Compose-Dateien und READMEs in einem Git-Repository, hast du automatisch eine Historie: Jede Änderung ist
+mit Datum und kurzer Beschreibung festgehalten. So siehst du später, wann du ein Image-Tag geändert hast und warum.
+Die `.env` bleibt dabei draußen. Wie das mit einem eigenen Git-Server funktioniert, zeigt der Guide
+[Git-Deployments mit Forgejo](/de/einrichten/git-deployments-forgejo/). Für eine Git-freundliche Ordnerstruktur siehe
+[Verzeichnisstruktur](/de/nachschlagen/verzeichnisstruktur/).

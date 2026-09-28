@@ -1,7 +1,119 @@
 ---
 slug: docker-installieren
 title: "Docker installieren"
+description: "Am Ende laufen Docker Engine und das Compose-Plugin aus dem offiziellen Docker-Repository, und du startest Container als normaler Benutzer ohne sudo."
 level: 1
 minutes: 10
-status: stub
+requires: [Debian- oder Ubuntu-Server, SSH-Zugang, Benutzer mit sudo-Rechten]
 ---
+
+Docker ist das Fundament für alle weiteren Guides. Jeder Dienst läuft später als Container, beschrieben in einer `compose.yaml`. Was Docker genau ist, erklärt [Was ist Docker?](/de/nachschlagen/was-ist-docker/).
+
+## Warum das offizielle Repository?
+
+Es gibt mehrere Wege, Docker zu installieren. Debian und Ubuntu bringen ein eigenes Paket mit (`docker.io`), Ubuntu bietet zusätzlich ein Snap-Paket an. Beide sind oft älter als die aktuelle Version, und das Compose-Plugin fehlt oder hinkt hinterher. Das Snap-Paket hat außerdem Einschränkungen beim Zugriff auf Ordner außerhalb des Home-Verzeichnisses.
+
+Deshalb nutzt du hier das **offizielle apt-Repository von Docker**. Du bekommst aktuelle Versionen über die normalen Paket-Updates, inklusive `docker compose`. Die Befehle folgen der offiziellen Anleitung für [Debian](https://docs.docker.com/engine/install/debian/) und [Ubuntu](https://docs.docker.com/engine/install/ubuntu/). Klappt etwas nicht, schau dort nach, ob sich etwas geändert hat.
+
+<Steps>
+
+<Step title="Alte oder fremde Pakete entfernen">
+Ist schon eine Docker-Version aus der Distribution installiert, kollidiert sie mit den offiziellen Paketen. Dieser Befehl entfernt sie. Auf einem frischen Server meldet apt nur, dass die Pakete nicht installiert sind. Das ist in Ordnung.
+
+```bash
+for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove -y $pkg; done
+```
+
+Vorhandene Images und Container unter `/var/lib/docker` bleiben dabei erhalten.
+</Step>
+
+<Step title="Signaturschlüssel von Docker holen">
+Mit diesem Schlüssel prüft apt, dass die Pakete wirklich von Docker stammen und unterwegs nicht verändert wurden.
+
+```bash
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL "https://download.docker.com/linux/$(. /etc/os-release && echo "$ID")/gpg" -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+```
+
+Der Teil `$(. /etc/os-release && echo "$ID")` setzt automatisch `debian` oder `ubuntu` ein.
+</Step>
+
+<Step title="Repository eintragen">
+Jetzt sagst du apt, wo die Docker-Pakete liegen. Der Befehl erkennt selbst, welche Debian- oder Ubuntu-Version du nutzt.
+
+```bash
+sudo tee /etc/apt/sources.list.d/docker.sources > /dev/null <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/$(. /etc/os-release && echo "$ID")
+Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+sudo apt-get update
+```
+
+In der Ausgabe von `apt-get update` sollte jetzt eine Zeile mit `download.docker.com` auftauchen.
+
+<Callout title="Nur für Debian und Ubuntu">
+Die Befehle lesen die Kennung aus `/etc/os-release`. Auf abgeleiteten Distributionen wie Linux Mint oder Raspberry Pi OS passt sie nicht immer. Nimm dann die passende Anleitung aus der [offiziellen Doku](https://docs.docker.com/engine/install/).
+</Callout>
+</Step>
+
+<Step title="Docker und Compose installieren">
+Diese Pakete bringen die Docker Engine (den Dienst, der Container ausführt), das Kommandozeilen-Werkzeug `docker` und das Compose-Plugin mit.
+
+```bash
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
+Der Docker-Dienst startet sofort und ab jetzt bei jedem Boot. Prüfe es:
+
+```bash
+systemctl status docker --no-pager
+docker --version
+docker compose version
+```
+
+Die letzten beiden Befehle brauchen hier noch `sudo`, falls sie einen Rechtefehler melden. Das behebst du im nächsten Schritt.
+
+Achte auf `docker compose` mit Leerzeichen. Das ist das aktuelle Plugin. Das alte Einzelprogramm `docker-compose` mit Bindestrich brauchst du nicht.
+</Step>
+
+<Step title="Deinen Benutzer zur Gruppe docker hinzufügen">
+Ohne diesen Schritt müsstest du vor jeden Docker-Befehl `sudo` schreiben. Mitglieder der Gruppe `docker` dürfen den Docker-Dienst direkt steuern.
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+Die neue Gruppe gilt erst nach einer neuen Anmeldung. Melde dich mit `exit` ab und per SSH wieder an. Danach zeigt `groups` die Gruppe `docker` an.
+
+<Callout type="warning" title="Die Gruppe docker ist so mächtig wie root">
+Wer Docker steuern darf, kann einen Container starten, der das komplette Dateisystem des Servers einbindet, und damit alles lesen und ändern. Nimm nur Benutzer in die Gruppe auf, denen du auch sudo-Rechte geben würdest. Hintergrund findest du in der [offiziellen Doku](https://docs.docker.com/engine/security/#docker-daemon-attack-surface).
+</Callout>
+</Step>
+
+<Step title="Mit hello-world testen">
+Das Image `hello-world` ist ein winziger Testcontainer. Er gibt einen Begrüßungstext aus und beendet sich wieder.
+
+```bash
+docker run --rm hello-world
+```
+
+Siehst du `Hello from Docker!`, funktioniert alles: Docker hat das Image heruntergeladen, einen Container gestartet, und du brauchtest dafür kein `sudo`. `--rm` löscht den beendeten Container gleich wieder.
+</Step>
+
+</Steps>
+
+## Updates
+
+Docker kommt jetzt aus einem normalen apt-Repository und wird mit `sudo apt-get upgrade` aktualisiert, genau wie der Rest des Systems. Hast du [automatische Updates](/de/einrichten/automatische-updates/) eingerichtet, beachte: unattended-upgrades installiert standardmäßig nur Updates aus den Quellen der Distribution, nicht aus fremden Repositories wie dem von Docker. Plane also gelegentlich ein manuelles Update ein:
+
+```bash
+sudo apt-get update && sudo apt-get upgrade
+```
+
+Weiter geht es mit der [Verzeichnisstruktur](/de/einrichten/verzeichnisstruktur-anlegen/). Dort legst du fest, wo deine Stacks und ihre Daten liegen.

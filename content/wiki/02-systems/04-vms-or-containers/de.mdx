@@ -1,6 +1,128 @@
 ---
 slug: vms-oder-container
 title: "VMs oder Container?"
+description: "Virtuelle Maschinen und Container trennen Dienste voneinander, aber auf unterschiedliche Weise. Der Unterschied liegt vor allem beim Kernel, und er entscheidet über Isolation und Ressourcenbedarf."
 level: 2
-status: stub
+related: [what-is-docker, proxmox-ve, bare-metal-linux, attack-surface]
+practice: installing-docker
 ---
+
+<OneWay />
+
+## Worum geht es?
+
+Auf einem Server laufen viele Dienste nebeneinander. Damit sie sich nicht in die Quere kommen, trennt man sie.
+Dafür gibt es zwei Techniken: **virtuelle Maschinen** (VMs) und **Container**. Beide sehen von außen ähnlich aus,
+funktionieren aber grundverschieden.
+
+Der entscheidende Begriff ist der **Kernel**. Das ist der Kern des Betriebssystems, der direkt mit der Hardware spricht
+und Speicher, Prozesse und Geräte verwaltet.
+
+## Virtuelle Maschinen
+
+Eine VM ist ein **simulierter Rechner**. Ein Hypervisor (etwa KVM in Proxmox) gaukelt ihr CPU, RAM, Festplatte und
+Netzwerkkarte vor. In der VM läuft ein vollständiges Betriebssystem **mit eigenem Kernel**. Es weiß oft nicht einmal,
+dass es virtualisiert ist.
+
+- **Starke Isolation.** Zwischen VM und Host steht der Hypervisor, unterstützt von der CPU (Intel VT-x, AMD-V).
+- **Jedes Betriebssystem.** Linux, Windows, Home Assistant OS, BSD.
+- **Fester Ressourcenbedarf.** Jede VM bootet ein eigenes System und reserviert RAM. Eine schlanke Linux-VM braucht
+  grob ein paar hundert MB RAM, bevor überhaupt ein Dienst läuft.
+
+## Container
+
+Ein Container ist **kein eigener Rechner**, sondern eine Gruppe von Prozessen auf dem Host, die abgeschottet wird.
+Alle Container **teilen sich den Kernel des Hosts**. Die Trennung übernehmen Funktionen des Linux-Kernels:
+
+- **Namespaces** sorgen dafür, dass ein Container nur seine eigenen Prozesse, sein eigenes Dateisystem und sein
+  eigenes Netzwerk sieht.
+- **cgroups** begrenzen, wie viel CPU und RAM ein Container nutzen darf.
+
+Das macht Container leicht: Sie starten in Sekunden und brauchen kaum mehr Ressourcen als das Programm selbst.
+Der Preis: Weil der Kernel geteilt ist, laufen nur Linux-Programme, und eine Lücke im Kernel betrifft alle Container
+gleichzeitig.
+
+Es gibt zwei Arten:
+
+- **Anwendungs-Container** wie [Docker](/de/nachschlagen/was-ist-docker/): ein Container pro Dienst, gebaut aus
+  einem fertigen Image. Das ist der Standard fürs Selfhosting.
+- **System-Container** wie LXC in Proxmox: ein ganzes Linux-System mit Paketverwaltung und mehreren Diensten, fast
+  wie eine kleine VM, aber ohne eigenen Kernel.
+
+## Im Vergleich
+
+| | VM | Container (Docker) |
+| --- | --- | --- |
+| **Kernel** | Eigener | Geteilt mit dem Host |
+| **Isolation** | Stark | Gut, aber schwächer |
+| **Start** | Sekunden bis Minuten | Meist unter einer Sekunde |
+| **Overhead** | Eigenes Betriebssystem pro VM | Kaum mehr als das Programm |
+| **Betriebssysteme** | Beliebig | Nur Linux (auf einem Linux-Host) |
+| **Typischer Einsatz** | Getrennte Systeme, anderes OS | Einzelne Dienste |
+
+## Wann nimmst du was?
+
+Für ein Homelab ist die Frage selten „entweder oder“. Die übliche Kombination ist: **Docker-Container für die
+Dienste**, und falls nötig **eine VM als Hülle drumherum**.
+
+- **Nur Docker:** Du hast einen Rechner und willst ein paar Dienste betreiben. Linux direkt auf der Hardware, darauf
+  Docker. So arbeiten die [Anleitungen dieser Seite](/de/einrichten/docker-installieren/).
+- **VM mit Docker darin:** Du nutzt Proxmox oder ein NAS-System und willst Docker sauber vom Host trennen.
+- **Eigene VM:** Für alles, was ein eigenes Betriebssystem braucht (Home Assistant OS, Windows, eine Firewall wie
+  OPNsense), oder für Dienste, die du besonders streng abschotten willst.
+- **LXC:** Für kleine, einzelne Linux-Dienste unter Proxmox, wenn RAM knapp ist.
+
+<Callout title="Container sind trotzdem sicher genug">
+Die schwächere Isolation heißt nicht, dass Container unsicher sind. Wichtiger als die Technik ist, wie du sie
+nutzt: aktuelle Images, keine unnötigen Rechte wie `privileged: true`, möglichst wenig offene Ports. Mehr dazu unter
+[Angriffsfläche klein halten](/de/nachschlagen/angriffsflaeche/).
+</Callout>
+
+## Entscheidungshilfe
+
+<Quiz
+  questions={[
+    {
+      question: "Was willst du betreiben?",
+      answers: [
+        { label: "Ein paar Web-Dienste wie Vaultwarden oder Immich", points: { docker: 2 } },
+        { label: "Auch ein anderes Betriebssystem, etwa Home Assistant OS", points: { vm: 2 } },
+        { label: "Viele kleine Linux-Dienste unter Proxmox", points: { lxc: 2, vm: 1 } },
+      ],
+    },
+    {
+      question: "Wie viel Hardware hast du?",
+      answers: [
+        { label: "Einen kleinen Rechner mit 8 GB RAM oder weniger", points: { docker: 2, lxc: 1 } },
+        { label: "Einen Rechner mit 16 GB RAM oder mehr", points: { vm: 1, docker: 1 } },
+      ],
+    },
+    {
+      question: "Wie wichtig sind dir Snapshots vom ganzen System?",
+      answers: [
+        { label: "Nicht so wichtig, Backups der Daten reichen", points: { docker: 2 } },
+        { label: "Sehr wichtig, ich probiere gern aus", points: { vm: 2, lxc: 1 } },
+      ],
+    },
+  ]}
+  results={{
+    docker: {
+      title: "Docker direkt auf Linux",
+      text: "Installiere Debian oder Ubuntu direkt auf der Hardware und betreibe jeden Dienst als Docker-Container. Das ist der einfachste Weg und der, dem diese Seite folgt.",
+    },
+    vm: {
+      title: "Proxmox mit einer Docker-VM",
+      text: "Installiere Proxmox VE und lege eine VM mit Debian oder Ubuntu für Docker an. Daneben ist Platz für weitere VMs, und vor Upgrades machst du einen Snapshot.",
+    },
+    lxc: {
+      title: "Proxmox mit LXC-Containern",
+      text: "LXC-Container sparen RAM und eignen sich für einzelne, schlanke Dienste. Für Docker nimmst du trotzdem besser eine VM.",
+    },
+  }}
+/>
+
+## Weiterlesen
+
+- [Was ist Docker?](/de/nachschlagen/was-ist-docker/)
+- [Proxmox VE](/de/nachschlagen/proxmox-ve/)
+- [Docker-Dokumentation: Was ist ein Container?](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/)

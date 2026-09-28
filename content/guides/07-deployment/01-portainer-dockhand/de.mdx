@@ -1,6 +1,122 @@
 ---
 title: "Portainer oder Dockhand"
+description: "Am Ende läuft Portainer CE oder Dockhand als Weboberfläche für deine Container und Stacks, erreichbar nur für dich und mit eigenem Login."
 level: 1
 minutes: 15
-status: stub
+requires: [Docker Compose, Reverse Proxy oder VPN]
+services: [portainer, dockhand]
 ---
+
+Bis jetzt hast du alles über SSH und `docker compose` gesteuert. Das bleibt der zuverlässigste Weg. Eine Weboberfläche ist trotzdem praktisch: Du siehst auf einen Blick, welche Container laufen, liest Logs im Browser und startest einen hängenden Dienst neu, ohne ein Terminal zu öffnen. Zwei Werkzeuge sind im Homelab verbreitet: **Portainer CE** und **Dockhand**.
+
+<OneWay />
+
+## Die beiden im Überblick
+
+<Cards>
+  <Card title="Portainer CE">
+    Der Klassiker seit vielen Jahren. Verwaltet Container, Images, Volumes, Netzwerke und Compose-Stacks. Große Community, viele Anleitungen. Die Community Edition (CE) ist Open Source, daneben gibt es eine kostenpflichtige Business Edition.
+  </Card>
+  <Card title="Dockhand">
+    Ein jüngeres, schlankes Werkzeug mit Fokus auf Compose-Stacks. Bringt einen Compose-Editor, Deployments aus Git-Repositories und Schwachstellen-Scans für Images mit. Lizenz BSL 1.1: frei für private Nutzung, aber nicht klassisch Open Source.
+  </Card>
+</Cards>
+
+|                        | Portainer CE                            | Dockhand                                     |
+| ---------------------- | --------------------------------------- | -------------------------------------------- |
+| **Schwerpunkt**        | Alles rund um Docker, sehr umfangreich  | Compose-Stacks, aufgeräumte Oberfläche       |
+| **Stacks aus Git**     | Ja                                      | Ja, mit Webhooks und automatischem Abgleich  |
+| **Mehrere Server**     | Ja, über den Portainer Agent            | Ja, über Socket, Agent oder TCP              |
+| **Anmeldung**          | Eigene Benutzer, Admin-Konto beim Start | Lokale Benutzer, SSO per OIDC                |
+| **Lizenz**             | Open Source (zlib)                      | BSL 1.1, frei für private Nutzung            |
+| **Reife**              | Sehr etabliert                          | Jung, entwickelt sich schnell                |
+
+Kurz gesagt: Wenn du etwas Bewährtes mit vielen Anleitungen im Netz willst, nimm Portainer. Wenn dir eine modernere Oberfläche wichtiger ist und du hauptsächlich mit Compose-Stacks arbeitest, probier Dockhand. Du brauchst nur eins von beiden.
+
+<Callout type="warning" title="Docker-Socket heißt Root-Zugriff">
+Beide Werkzeuge binden `/var/run/docker.sock` ein. Wer den Docker-Socket steuert, kann beliebige Container starten, auch einen, der das ganze Dateisystem des Servers einbindet. Das ist praktisch dasselbe wie Root-Zugriff auf den Server. Stell die Oberfläche deshalb nie ungeschützt ins Internet: Erreichbar nur über VPN oder im Heimnetz, oder zusätzlich hinter einem Login-Schutz wie [Tinyauth](/de/einrichten/tinyauth/) oder [Pocket ID](/de/einrichten/pocket-id/).
+</Callout>
+
+## Einrichten
+
+<Steps>
+
+<Step title="Stack-Ordner anlegen">
+Wie jeder Dienst bekommt auch die Oberfläche einen eigenen Ordner unter `__ROOT__`. Leg nur den Ordner für das Werkzeug an, das du gewählt hast.
+
+```bash
+# Portainer
+mkdir -p __ROOT__/portainer __DATA(portainer)__
+
+# oder Dockhand
+mkdir -p __ROOT__/dockhand __DATA(dockhand)__
+```
+</Step>
+
+<Step title="compose.yaml schreiben">
+Die Vorlagen sind an dein Setup angepasst. Mit Traefik bekommt der Dienst Labels und landet im Netzwerk `__NETWORK__`, ohne Reverse Proxy wird der Port direkt freigegeben.
+
+**Portainer** speichert seine Datenbank, Einstellungen und die in der Oberfläche angelegten Stacks in `__DATA(portainer)__/data`:
+
+<ServiceFiles id="portainer" />
+
+**Dockhand** speichert seine Datenbank ebenfalls in `__DATA(dockhand)__/data`:
+
+<ServiceFiles id="dockhand" />
+
+Portainer nutzt das Tag `lts` (Long Term Support), also die stabile Linie mit weniger häufigen Updates. Wie du später auf feste Versionen umstellst und sie automatisch aktuell hältst, zeigt [Updates mit Renovate](/de/einrichten/updates-renovate/).
+</Step>
+
+<Step title="Starten">
+Starte den Stack und schau kurz ins Log, ob alles hochkommt.
+
+```bash
+cd __ROOT__/portainer    # oder __ROOT__/dockhand
+docker compose up -d
+docker compose logs -f
+```
+
+Mit `Strg+C` verlässt du die Log-Ansicht, der Container läuft weiter.
+</Step>
+
+<Step title="Admin-Konto anlegen">
+Öffne die Oberfläche im Browser, mit Reverse Proxy unter `https://portainer.__DOMAIN__` bzw. `https://dockhand.__DOMAIN__`.
+
+- **Portainer** fragt beim ersten Aufruf nach Benutzername und Passwort für den Admin. Mach das direkt nach dem Start: Nach einigen Minuten ohne Einrichtung sperrt sich Portainer aus Sicherheitsgründen. Dann hilft `docker compose restart`. Wähle danach die lokale Umgebung („Get Started“).
+- **Dockhand** zeigt nach dem Start direkt die lokale Docker-Umgebung. Leg in den Einstellungen einen Benutzer an und prüfe, dass die Anmeldung wirklich aktiv ist, bevor du die Oberfläche von anderen Geräten aus nutzt.
+
+Nimm ein langes, zufälliges Passwort und speichere es in deinem Passwortmanager.
+</Step>
+
+<Step title="Zugriff absichern">
+Das eigene Login der Oberfläche ist die erste Hürde. Weil dahinter Root-Zugriff steckt, lohnt sich eine zweite:
+
+- **Nur intern:** Lass die Subdomain nur im Heimnetz oder über [VPN](/de/einrichten/vpn-wireguard/) auflösen. Von außen ist die Oberfläche dann gar nicht sichtbar.
+- **Login davor:** Hänge eine Middleware wie [Tinyauth](/de/einrichten/tinyauth/) vor den Router. Dann muss sich jeder zuerst dort anmelden.
+
+Eine öffentlich erreichbare Portainer- oder Dockhand-Oberfläche ohne zusätzlichen Schutz ist ein lohnendes Ziel für Angreifer.
+</Step>
+
+</Steps>
+
+## CLI-Stacks und UI-Stacks
+
+In der Oberfläche siehst du auch die Stacks, die du vorher per `docker compose` unter `__ROOT__` gestartet hast. Docker merkt sich über Labels, welche Container zu welchem Compose-Projekt gehören, und genau das lesen beide Werkzeuge aus. Starten, stoppen, Logs lesen und neu starten klappt deshalb für alle Stacks.
+
+Einen Unterschied gibt es beim **Bearbeiten**:
+
+- **Stacks, die du per CLI angelegt hast,** gehören nicht dem Werkzeug. Portainer zeigt sie als extern an und lässt dich die `compose.yaml` nicht ändern („Limited“). Die Datei liegt ja in `__ROOT__/<app>/`, nicht bei Portainer.
+- **Stacks, die du in der Oberfläche anlegst,** speichert das Werkzeug in seinem eigenen Datenordner. Bei Portainer liegen sie unter `__DATA(portainer)__/data/compose/<nummer>/`, mit Nummern statt Namen. Sie tauchen nicht in deiner Ordnerstruktur unter `__ROOT__` auf.
+
+Misch die beiden Welten deshalb nicht wild. Such dir eine Quelle der Wahrheit:
+
+- **Dateien unter `__ROOT__` bleiben führend** (die Empfehlung dieser Seite): Du legst Stacks per SSH oder Git an und nutzt die Oberfläche zum Nachschauen, für Logs und Neustarts. Dein Backup von `__ROOT__` enthält alles, und du kannst jederzeit ohne Oberfläche weiterarbeiten.
+- **Die Oberfläche ist führend:** Du legst alle Stacks dort an. Das ist bequem, bindet dich aber an das Werkzeug. Sichere dann unbedingt auch dessen Datenordner.
+
+Wenn du Stacks später aus Git ausrollen willst, geht es weiter mit [Git-Deployments mit Forgejo](/de/einrichten/git-deployments-forgejo/). Dockhand und Portainer können Stacks auch selbst aus einem Git-Repository deployen. Der Forgejo-Guide zeigt den Weg ohne Oberfläche, der mit jedem Werkzeug funktioniert.
+
+## Weiterlesen
+
+- [Portainer-Dokumentation](https://docs.portainer.io)
+- [Dockhand-Handbuch](https://dockhand.pro/manual)
+- [Angriffsfläche klein halten](/de/nachschlagen/angriffsflaeche/)

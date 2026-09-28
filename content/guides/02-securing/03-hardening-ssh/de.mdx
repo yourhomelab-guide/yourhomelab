@@ -1,0 +1,144 @@
+---
+slug: ssh-haerten
+title: "SSH härten"
+description: "Am Ende nimmt dein SSH-Server nur noch Schlüssel an, root kann sich nicht mehr direkt anmelden, und die Einstellungen stehen in einer eigenen, übersichtlichen Datei."
+level: 2
+minutes: 20
+requires: [SSH-Schlüssel-Login, Benutzer mit sudo-Rechten]
+---
+
+Sobald ein Server im Internet erreichbar ist, probieren Bots rund um die Uhr Benutzernamen und Passwörter auf Port 22 durch. Das ist kein gezielter Angriff, das passiert jedem. Mit Schlüssel-Login allein bist du schon gut geschützt. Solange die Passwort-Anmeldung aber noch erlaubt ist, reicht ein schwaches Passwort für einen Einbruch.
+
+Dieser Guide schaltet deshalb zwei Dinge ab: die Anmeldung per Passwort und die direkte Anmeldung als root. Danach kommt nur noch rein, wer einen hinterlegten Schlüssel besitzt, und zwar als normaler Benutzer.
+
+<Callout type="warning" title="Bevor du anfängst">
+Die Anmeldung mit Schlüssel muss funktionieren ([SSH-Schlüssel einrichten](/de/einrichten/ssh-schluessel/)), und zwar mit einem normalen Benutzer, der `sudo` darf. Meldest du dich bisher nur als root an, erledige zuerst [Benutzer & sudo](/de/einrichten/benutzer-sudo/). Sonst sperrst du dich aus.
+</Callout>
+
+<Steps>
+
+<Step title="Zweite Sitzung offen lassen">
+Öffne **zwei** SSH-Verbindungen zum Server und lass eine davon bis zum Ende dieses Guides einfach offen. Bestehende Sitzungen bleiben bestehen, auch wenn du den SSH-Dienst neu startest. Geht bei der Konfiguration etwas schief, kannst du es über diese Sitzung reparieren.
+
+```bash
+ssh homelab
+```
+
+Auf einem gemieteten Server kennst du außerdem am besten schon vorher den Weg zur Web-Konsole deines Hosters. Zuhause hilft im Notfall ein Bildschirm am Gerät.
+</Step>
+
+<Step title="Eigene Konfigurationsdatei anlegen">
+Die Hauptdatei `/etc/ssh/sshd_config` lässt du unverändert. Aktuelle Debian- und Ubuntu-Versionen lesen zusätzlich alle Dateien in `/etc/ssh/sshd_config.d/`, die auf `.conf` enden. Eine eigene Datei dort hat zwei Vorteile: Du siehst auf einen Blick, was du geändert hast, und Paket-Updates überschreiben nichts.
+
+Prüf kurz, ob die Hauptdatei den Ordner einbindet:
+
+```bash
+grep -i '^Include' /etc/ssh/sshd_config
+```
+
+Die Ausgabe sollte `Include /etc/ssh/sshd_config.d/*.conf` enthalten. Dann legst du die Datei an:
+
+```bash
+sudo nano /etc/ssh/sshd_config.d/10-hardening.conf
+```
+
+```text
+# Only allow key-based logins
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+
+# No direct root login
+PermitRootLogin no
+
+# Fewer attempts per connection, no graphical forwarding
+MaxAuthTries 3
+X11Forwarding no
+```
+
+Speichern mit Strg+O, Enter, beenden mit Strg+X.
+
+<Callout title="Warum 10- im Dateinamen?">
+Beim SSH-Server gilt für die meisten Optionen: Der erste gefundene Wert gewinnt, nicht der letzte. Die Dateien im Ordner werden alphabetisch gelesen, und zwar vor dem Rest der Hauptdatei. Auf Cloud-Servern liegt dort oft schon `50-cloud-init.conf` mit `PasswordAuthentication yes`. Eine Datei namens `hardening.conf` käme erst danach und hätte keine Wirkung. Mit `10-` am Anfang wird deine Datei zuerst gelesen. Was sonst im Ordner liegt, zeigt `ls /etc/ssh/sshd_config.d/`.
+</Callout>
+</Step>
+
+<Step title="Konfiguration testen">
+Bevor du den Dienst neu startest, prüfst du die Syntax. Ein Tippfehler könnte sonst verhindern, dass der SSH-Server wieder startet.
+
+```bash
+sudo sshd -t
+```
+
+Keine Ausgabe heißt: alles in Ordnung. Danach kontrollierst du, welche Werte der Server tatsächlich verwenden wird. `sshd -T` gibt die fertige Konfiguration aus, mit kleingeschriebenen Namen:
+
+```bash
+sudo sshd -T | grep -Ei '^(passwordauthentication|kbdinteractiveauthentication|permitrootlogin|pubkeyauthentication)'
+```
+
+Erwartet (die Reihenfolge kann abweichen):
+
+```text
+permitrootlogin no
+pubkeyauthentication yes
+passwordauthentication no
+kbdinteractiveauthentication no
+```
+
+Steht irgendwo noch `yes`, wo `no` stehen sollte, gewinnt eine andere Datei. Such sie mit `sudo grep -ri passwordauthentication /etc/ssh/`.
+</Step>
+
+<Step title="SSH-Dienst neu starten">
+Auf Debian und Ubuntu heißt der Dienst `ssh`, nicht `sshd`:
+
+```bash
+sudo systemctl restart ssh
+```
+
+Deine offenen Sitzungen bleiben dabei bestehen.
+</Step>
+
+<Step title="In einem neuen Terminal testen">
+Lass die bestehenden Sitzungen offen und öffne ein **neues** Terminal. Die normale Anmeldung muss weiter funktionieren:
+
+```bash
+ssh homelab
+```
+
+Dann prüfst du, ob Passwörter wirklich abgelehnt werden. Dieser Befehl verbietet SSH, deinen Schlüssel zu benutzen:
+
+```bash
+ssh -o PubkeyAuthentication=no homelab
+```
+
+Erwartet ist `Permission denied (publickey).` ohne Frage nach einem Passwort. Zum Schluss prüfst du root:
+
+```bash
+ssh root@192.168.1.10
+```
+
+Auch das muss abgelehnt werden. Erst wenn alle drei Tests passen, schließt du die zweite Sitzung.
+</Step>
+
+</Steps>
+
+## Wenn etwas schiefgeht
+
+Kommst du im neuen Terminal nicht mehr rein, wechselst du in die noch offene Sitzung. Dort benennst du die Datei um und startest den Dienst neu:
+
+```bash
+sudo mv /etc/ssh/sshd_config.d/10-hardening.conf /root/10-hardening.conf.off
+sudo systemctl restart ssh
+```
+
+Dann gilt wieder der alte Zustand, und du kannst in Ruhe suchen. Das Log des SSH-Servers zeigt, warum eine Anmeldung scheitert:
+
+```bash
+sudo journalctl -u ssh -n 50
+```
+
+## Was ist mit dem Port?
+
+Oft liest man den Rat, SSH auf einen anderen Port als 22 zu legen. Das macht die Logs ruhiger, weil weniger Bots anklopfen. Sicherer wird der Server dadurch kaum, denn mit Schlüssel-Login sind die Rateversuche ohnehin chancenlos. Dieser Guide lässt den Port deshalb bei 22.
+
+Noch besser ist es, wenn SSH gar nicht aus dem Internet erreichbar ist. Zuhause gibst du Port 22 im Router einfach nicht frei und kommst von unterwegs per [VPN](/de/einrichten/vpn-wireguard/) ins Heimnetz. Im nächsten Schritt beschränkt außerdem die [Firewall](/de/einrichten/firewall-ufw/), wer überhaupt verbinden darf. Mehr dazu in [Angriffsfläche klein halten](/de/nachschlagen/angriffsflaeche/).

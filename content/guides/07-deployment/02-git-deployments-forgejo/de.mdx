@@ -1,6 +1,251 @@
 ---
 title: "Git-Deployments mit Forgejo"
+description: "Am Ende liegen alle Compose-Dateien als privates Git-Repository in deinem eigenen Forgejo. Du änderst sie auf deinem Rechner, pushst, und der Server holt sich die Änderungen per Skript und startet die betroffenen Stacks neu."
 level: 3
 minutes: 45
-status: stub
+requires: [Docker Compose, Reverse Proxy mit Domain, Grundkenntnisse in Git]
+services: [forgejo]
 ---
+
+Solange du deine `compose.yaml`-Dateien direkt auf dem Server bearbeitest, gibt es keine Historie. Wenn ein Update etwas kaputt macht, weißt du nicht mehr, wie die Datei vorher aussah. Mit Git bekommst du drei Dinge:
+
+- **Historie:** Jede Änderung ist ein Commit mit Datum und Beschreibung. Zurück geht es mit einem Befehl.
+- **Ein Ort für die Wahrheit:** Du bearbeitest Dateien auf deinem Rechner in deinem Editor, nicht per SSH mit `nano`.
+- **Automatisierung:** Tools wie [Renovate](/de/einrichten/updates-renovate/) können dir Updates als Pull Request vorschlagen.
+
+Das Repository liegt in **Forgejo**, einer schlanken Git-Plattform, die du selbst hostest. So landen deine Konfigurationen nicht bei einem fremden Anbieter.
+
+<OneWay />
+
+## Welcher Ordner wird zum Repository?
+
+Ins Repository gehören die Compose-Dateien, nicht die Daten und nicht die Secrets. Wie das aussieht, hängt von deiner [Verzeichnisstruktur](/de/nachschlagen/verzeichnisstruktur/) ab:
+
+- **Pro Stack (Standard):** `__ROOT__` wird zum Repository. Die Ordner `data/` und die `.env`-Dateien schließt du per `.gitignore` aus.
+- **Zentral:** Hier sind Konfiguration und Daten schon getrennt. Das Repository ist der Stack-Ordner `__ROOT__`, die Daten liegen außerhalb unter `__DATA_ROOT__`. Das passt besonders gut zu Git, weil nichts Großes im Repo-Ordner liegt. Die `.gitignore` muss dann nur noch die `.env`-Dateien ausschließen.
+
+Die Befehle unten funktionieren für beide Varianten.
+
+<Callout type="warning" title="Keine Secrets ins Repository">
+Die `.env`-Dateien enthalten Passwörter und Tokens. Sie gehören nie in ein Git-Repository, auch nicht in ein privates. Was einmal committet ist, steht für immer in der Historie. Committe stattdessen eine `.env.example` mit Platzhaltern, damit du weißt, welche Variablen ein Stack braucht.
+</Callout>
+
+## Einrichten
+
+<Steps>
+
+<Step title="Forgejo installieren">
+Forgejo läuft wie jeder andere Dienst als Stack. Git über SSH nutzt Port 2222, damit er nicht mit dem SSH-Zugang des Servers kollidiert.
+
+```bash
+mkdir -p __ROOT__/forgejo __DATA(forgejo)__
+```
+
+<ServiceFiles id="forgejo" />
+
+```bash
+cd __ROOT__/forgejo
+docker compose up -d
+```
+
+Öffne danach `https://git.__DOMAIN__`. Beim ersten Aufruf zeigt Forgejo die Erstkonfiguration:
+
+- Datenbank: **SQLite** reicht für ein Homelab völlig.
+- Server-Domain `git.__DOMAIN__`, Basis-URL `https://git.__DOMAIN__/`, SSH-Port **2222**.
+- In den optionalen Einstellungen die **Selbstregistrierung deaktivieren**. Sonst kann sich jeder ein Konto anlegen.
+- Ebenfalls dort dein Admin-Konto anlegen.
+
+Port 2222 muss im Heimnetz erreichbar sein. Eine Portfreigabe im Router brauchst du dafür nicht.
+</Step>
+
+<Step title="Repository in Forgejo anlegen">
+Klick in Forgejo oben rechts auf **+** → **Neues Repository**. Name zum Beispiel `homelab`, Sichtbarkeit **privat**. Lass das Repository leer: kein README, keine `.gitignore`, keine Lizenz. Die Dateien kommen gleich vom Server.
+
+In den Befehlen unten steht `DEIN-NAME` für deinen Forgejo-Benutzernamen.
+</Step>
+
+<Step title=".gitignore schreiben">
+Die `.gitignore` legt fest, was Git ignoriert. Sie kommt direkt nach `__ROOT__`.
+
+```bash
+cd __ROOT__
+cat > .gitignore <<'EOF'
+# Secrets: never commit
+.env
+*.env
+
+# Persistent data of each stack
+data/
+EOF
+```
+
+`data/` ohne führenden Schrägstrich passt auf jeden Ordner mit diesem Namen, also auf `traefik/data/`, `vaultwarden/data/` und so weiter. Das schließt auch die Daten von Forgejo selbst aus.
+
+Für jeden Stack mit `.env` legst du eine `.env.example` an: dieselben Variablen, aber ohne echte Werte.
+</Step>
+
+<Step title="Repository anlegen und pushen">
+Richte Git einmal mit deinem Namen ein und leg das Repository an. Prüf vor dem ersten Commit mit `git status`, dass keine `.env` und kein `data/`-Ordner in der Liste auftaucht.
+
+```bash
+git config --global user.name "Dein Name"
+git config --global user.email "__EMAIL__"
+
+cd __ROOT__
+git init -b main
+git add .
+git status
+git commit -m "Initial import"
+```
+
+Den ersten Push machst du über HTTPS mit deinem Forgejo-Benutzernamen und Passwort:
+
+```bash
+git push https://git.__DOMAIN__/DEIN-NAME/homelab.git main
+```
+
+Danach siehst du alle Compose-Dateien in der Weboberfläche von Forgejo.
+</Step>
+
+<Step title="Server bekommt einen Deploy-Key">
+Ab jetzt soll der Server nur noch **lesen**. Dafür bekommt er einen eigenen SSH-Schlüssel, einen sogenannten Deploy-Key. Er gilt nur für dieses eine Repository.
+
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/forgejo_deploy -N "" -C "homelab-server"
+cat ~/.ssh/forgejo_deploy.pub
+```
+
+Kopiere die ausgegebene Zeile. In Forgejo: Repository → **Einstellungen** → **Deploy-Schlüssel** → **Deploy-Schlüssel hinzufügen**. Setz keinen Haken bei Schreibzugriff.
+
+Weil Forgejo auf demselben Server läuft, verbindet sich der Server direkt über `localhost`. Das umgeht DNS und Router. Trag dazu einen Eintrag in `~/.ssh/config` ein:
+
+```bash
+cat >> ~/.ssh/config <<'EOF'
+
+Host forgejo-local
+  HostName localhost
+  Port 2222
+  User git
+  IdentityFile ~/.ssh/forgejo_deploy
+EOF
+```
+
+Jetzt verknüpfst du das lokale Repository mit Forgejo:
+
+```bash
+cd __ROOT__
+git remote add origin forgejo-local:DEIN-NAME/homelab.git
+git fetch origin
+git branch --set-upstream-to=origin/main main
+git pull
+```
+
+Beim ersten Verbinden fragt SSH, ob du dem Host vertraust. Antworte mit `yes`. `git pull` sollte „Already up to date“ melden.
+</Step>
+
+<Step title="Auf deinem Rechner klonen">
+Auf deinem Laptop oder PC hinterlegst du deinen normalen öffentlichen SSH-Schlüssel in Forgejo: oben rechts → **Einstellungen** → **SSH-/GPG-Schlüssel**. Dann klonst du das Repository:
+
+```bash
+git clone ssh://git@git.__DOMAIN__:2222/DEIN-NAME/homelab.git
+```
+
+Ab jetzt gilt: Änderungen machst du hier, committest und pushst sie. Auf dem Server bearbeitest du die Compose-Dateien nicht mehr direkt, sonst gibt es Konflikte beim nächsten `git pull`. Nur die `.env`-Dateien pflegst du weiterhin auf dem Server.
+</Step>
+
+<Step title="Deploy-Skript auf dem Server">
+Das Deployment ist im einfachsten Fall nur `git pull` und danach `docker compose up -d` in jedem Stack-Ordner. `up -d` ist harmlos für Stacks ohne Änderung: Docker lässt Container in Ruhe, deren Konfiguration gleich geblieben ist, und erstellt nur geänderte neu.
+
+Leg das Skript außerhalb des Repositories an, damit es sich nicht selbst überschreibt, während es läuft:
+
+```bash
+mkdir -p ~/bin
+cat > ~/bin/homelab-deploy <<'EOF'
+#!/usr/bin/env bash
+# Pull the latest compose files and apply them to every stack.
+set -euo pipefail
+
+cd __ROOT__
+git pull --ff-only
+
+for dir in */; do
+  [ -f "$dir/compose.yaml" ] || continue
+  # An empty file named .skip keeps a stack out of automatic deploys.
+  [ -f "$dir/.skip" ] && continue
+  echo "==> $dir"
+  (cd "$dir" && docker compose up -d --remove-orphans)
+done
+EOF
+chmod +x ~/bin/homelab-deploy
+```
+
+Teste es einmal von Hand:
+
+```bash
+~/bin/homelab-deploy
+```
+
+`--ff-only` sorgt dafür, dass das Skript abbricht, statt Änderungen zu mischen, falls auf dem Server doch jemand etwas direkt geändert hat. `--remove-orphans` räumt Container weg, die du aus einer `compose.yaml` gelöscht hast. Stacks, die gestoppt bleiben sollen, bekommen eine leere Datei `.skip` in ihren Ordner.
+</Step>
+
+<Step title="Regelmäßig ausführen">
+Damit du nach einem Push nicht per SSH auf den Server musst, lässt du das Skript per Cron regelmäßig laufen. Öffne deine Crontab:
+
+```bash
+crontab -e
+```
+
+und füge diese Zeile hinzu. Sie prüft alle 15 Minuten auf Änderungen:
+
+```bash
+*/15 * * * * $HOME/bin/homelab-deploy >> $HOME/homelab-deploy.log 2>&1
+```
+
+Ab jetzt ist dein Ablauf: Datei ändern, committen, pushen, ein paar Minuten warten. Im Log siehst du, was passiert ist:
+
+```bash
+tail -n 50 ~/homelab-deploy.log
+```
+</Step>
+
+<Step title="Fortgeschritten: Deploy per Forgejo Actions">
+Statt alle 15 Minuten nachzuschauen, kann Forgejo das Deployment direkt nach jedem Push starten. Dafür gibt es **Forgejo Actions**, ein CI-System im Stil von GitHub Actions. Die Jobs führt ein separates Programm aus, der **Forgejo Runner**.
+
+Der grobe Ablauf:
+
+1. Actions für das Repository in dessen Einstellungen einschalten.
+2. Den Forgejo Runner auf dem Server installieren und registrieren. Für ein Deployment auf demselben Server braucht der Runner ein Label, das Jobs direkt auf dem Host ausführt statt in einem Container (zum Beispiel `homelab:host`). Er läuft dann als dein Benutzer, der in der Gruppe `docker` ist. Die Schritte stehen in der [Runner-Dokumentation](https://forgejo.org/docs/latest/admin/actions/runner-installation/).
+3. Einen Workflow ins Repository legen, der bei jedem Push auf `main` das Skript aufruft, zum Beispiel `.forgejo/workflows/deploy.yaml`:
+
+```yaml
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: homelab
+    steps:
+      - run: ~/bin/homelab-deploy
+```
+
+Danach kannst du den Cron-Eintrag entfernen.
+
+<Callout type="warning" title="Runner mit Host-Zugriff">
+Ein Runner, der direkt auf dem Host läuft und Docker steuern darf, hat praktisch Root-Rechte. Registriere ihn deshalb nur für dein eigenes Repository, nicht für die ganze Instanz, und lass keine fremden Nutzer Workflows anlegen.
+</Callout>
+</Step>
+
+</Steps>
+
+## Wenn etwas schiefgeht
+
+- **`git pull` bricht ab mit „Not possible to fast-forward“:** Auf dem Server wurde eine Datei geändert, die auch im Repository geändert wurde. Mit `git status` und `git diff` siehst du, was es ist. Übernimm die Änderung in dein Repository auf dem Rechner und setz die Datei auf dem Server mit `git checkout -- <datei>` zurück.
+- **Ein Update ist kaputt:** Mach den Commit auf deinem Rechner mit `git revert` rückgängig und pushe. Beim nächsten Lauf rollt das Skript die alte Version wieder aus.
+- **Neuer Stack startet nicht:** Wahrscheinlich fehlt die `.env`. Die legst du auf dem Server von Hand an, zum Beispiel aus der `.env.example`.
+
+## Weiterlesen
+
+- [Forgejo-Dokumentation](https://forgejo.org/docs/latest/)
+- [Forgejo Actions für Administratoren](https://forgejo.org/docs/latest/admin/actions/)
+- [Updates mit Renovate](/de/einrichten/updates-renovate/): Updates als Pull Requests in genau diesem Repository

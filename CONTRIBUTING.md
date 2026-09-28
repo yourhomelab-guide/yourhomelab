@@ -176,6 +176,7 @@ In code blocks, inline code, `compose.yaml` and `.env.example`, these values are
 | `__NETWORK__` | `proxy` |
 | `__ROOT__` | `/srv/homelab` |
 | `__DATA_ROOT__` | `/srv/homelab/data` |
+| `__DATA(<id>)__` | Data folder of one service: `/srv/homelab/<id>/data`, or `<data folder>/<id>` in central mode |
 | `__TZ__`, `__PUID__`, `__PGID__` | `Europe/Berlin`, `1000`, `1000` |
 | `__SECRET__` | Random value (`.env.example` only) |
 | `__HOST__`, `__URL__` | Host or full URL of the service (service templates only) |

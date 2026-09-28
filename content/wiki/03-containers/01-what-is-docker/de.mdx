@@ -1,6 +1,84 @@
 ---
 slug: was-ist-docker
 title: "Was ist Docker?"
+description: "Docker packt ein Programm mitsamt allem, was es zum Laufen braucht, in ein Paket, das auf jedem Linux-Server gleich funktioniert. Fast jeder selbst gehostete Dienst wird heute so ausgeliefert."
 level: 1
-status: stub
+related: [vms-or-containers, images-tags, docker-compose]
+practice: installing-docker
 ---
+
+## Warum überhaupt Docker?
+
+Stell dir vor, du willst drei Dienste auf einem Server betreiben. Der erste braucht PHP 8.2, der zweite PHP 8.3, der dritte eine bestimmte Version von Node.js. Installierst du alles direkt auf dem System, kommen sich die Abhängigkeiten schnell in die Quere. Updates werden zum Risiko, und nach einem Jahr weiß niemand mehr, welche Datei zu welchem Programm gehört.
+
+Docker löst das Problem, indem jeder Dienst in einem eigenen, abgeschotteten **Container** läuft. Der Container bringt seine Bibliotheken und Laufzeitumgebung selbst mit. Auf dem Server selbst brauchst du nur noch Docker. Einen Dienst zu entfernen heißt: Container löschen. Nichts bleibt im System zurück, außer den Daten, die du bewusst behalten willst.
+
+Deshalb liefern fast alle Selfhosting-Projekte ihre Software als Docker-Image aus. Die Installation schrumpft oft auf eine kurze Konfigurationsdatei und einen Befehl.
+
+## Die drei Grundbegriffe
+
+<Cards>
+  <Card title="Image">
+    Die Vorlage. Ein Image enthält das Programm und alles, was es braucht, als unveränderliches Paket. Es wird einmal gebaut und dann nur noch benutzt.
+  </Card>
+  <Card title="Container">
+    Eine laufende Instanz eines Images. Aus einem Image kannst du beliebig viele Container starten. Jeder hat seinen eigenen Prozessraum und sein eigenes Netzwerk.
+  </Card>
+  <Card title="Registry">
+    Der Ort, an dem Images liegen, damit andere sie herunterladen können. Die bekannteste ist Docker Hub, daneben gibt es zum Beispiel die GitHub Container Registry.
+  </Card>
+</Cards>
+
+## Eine Analogie
+
+Ein Image ist wie ein Rezept samt vorgepackter Zutaten in einer Kiste. Der Container ist das Gericht, das du daraus kochst. Du kannst aus derselben Kiste mehrmals kochen, und jedes Gericht schmeckt gleich, egal in welcher Küche. Die Registry ist der Laden, in dem die Kisten im Regal stehen.
+
+Die Analogie hat eine Grenze: Wenn du einen Container löschst, ist alles weg, was er zur Laufzeit in sich selbst geschrieben hat. Daten, die bleiben sollen, speicherst du deshalb außerhalb des Containers auf dem Server. Wie das geht, erklärt [Volumes & Bind Mounts](/de/nachschlagen/volumes-bind-mounts/).
+
+## Wie ein Container entsteht
+
+Der Ablauf ist immer gleich:
+
+1. Docker lädt das Image aus einer Registry herunter (**pull**).
+2. Docker startet daraus einen Container (**run**).
+3. Der Container läuft, bis du ihn stoppst oder er abstürzt. Mit einer Neustart-Regel startet Docker ihn automatisch wieder.
+
+Ausprobieren kannst du das mit einem einzigen Befehl, sobald Docker installiert ist:
+
+```bash
+docker run --rm hello-world
+```
+
+Docker lädt das kleine Image `hello-world`, startet es, der Container gibt einen Begrüßungstext aus und beendet sich. `--rm` räumt den Container danach gleich wieder weg.
+
+Im Alltag startest du Container aber nicht mit langen `docker run`-Befehlen. Du beschreibst sie in einer Datei `compose.yaml` und startest sie mit `docker compose up -d`. Das ist lesbarer, lässt sich sichern und jederzeit wiederholen. Mehr dazu in [Docker Compose](/de/nachschlagen/docker-compose/).
+
+## Container sind keine virtuellen Maschinen
+
+Eine virtuelle Maschine (VM) simuliert einen kompletten Rechner mit eigenem Betriebssystem-Kern. Ein Container dagegen teilt sich den Kern (Kernel) mit dem Server und ist nur ein abgeschotteter Prozess. Das macht Container klein und schnell: Sie starten in Sekunden und brauchen kaum zusätzlichen Arbeitsspeicher.
+
+Der Preis dafür ist eine schwächere Trennung als bei einer VM. Für die meisten Homelab-Dienste reicht sie völlig aus. Wann sich trotzdem eine VM lohnt, steht in [VMs oder Container?](/de/nachschlagen/vms-oder-container/).
+
+## Docker und Podman
+
+Docker ist nicht die einzige Container-Software. Die bekannteste Alternative ist **Podman**, entwickelt von Red Hat. Die Unterschiede in Kürze:
+
+|                   | Docker                                  | Podman                                        |
+| ----------------- | --------------------------------------- | --------------------------------------------- |
+| **Aufbau**        | Ein Hintergrunddienst (Daemon) verwaltet alle Container | Kein zentraler Daemon, jeder Container ist ein normaler Prozess |
+| **Rechte**        | Daemon läuft als root                   | Standardmäßig ohne root-Rechte (rootless)     |
+| **Befehle**       | `docker …`                              | Weitgehend gleich, `podman …`                 |
+| **Compose**       | `docker compose` ist fest integriert    | Möglich, aber mit mehr Eigenheiten            |
+| **Verbreitung**   | Standard in fast allen Anleitungen      | Vor allem bei Fedora, RHEL und Co.            |
+
+Podman ist technisch interessant und sicherheitsbewusst gebaut. Für den Einstieg empfiehlt diese Seite trotzdem Docker: Fast jede Anleitung und jede Compose-Datei, die du im Netz findest, geht von Docker aus. Wenn etwas nicht klappt, findest du mit Docker schneller Hilfe.
+
+<Callout title="Wer in der Gruppe docker ist, hat root-Rechte">
+Der Docker-Daemon läuft als root. Wer Docker-Befehle ausführen darf, kann damit praktisch alles auf dem Server tun. Nimm deshalb nur Benutzer in die Gruppe `docker` auf, denen du auch `sudo` geben würdest.
+</Callout>
+
+## Weiterlesen
+
+- [Offizielle Einführung in Docker](https://docs.docker.com/get-started/docker-overview/)
+- [Images & Tags](/de/nachschlagen/images-tags/): welche Version eines Images du bekommst
+- [Docker installieren](/de/einrichten/docker-installieren/): Docker Engine und Compose-Plugin auf Debian oder Ubuntu

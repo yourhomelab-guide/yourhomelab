@@ -1,5 +1,5 @@
 /** Browser-side state: "Mein Setup" values and guide progress, both in localStorage only. */
-import { defaultSetup, placeholders, type Setup } from '../config/site';
+import { appDataDir, defaultSetup, placeholders, type Setup } from '../config/site';
 
 const SETUP_KEY = 'yhl-setup';
 const PROGRESS_KEY = 'yhl-progress';
@@ -62,7 +62,8 @@ export function applyPlaceholders(root: ParentNode = document, s = getSetup()) {
   const map = placeholders as Record<string, keyof Setup>;
   root.querySelectorAll<HTMLElement>('[data-ph]').forEach((el) => {
     const ph = el.dataset.ph!;
-    if (ph === 'SECRET') {
+    if (el.dataset.arg !== undefined) el.textContent = appDataDir(s, el.dataset.arg);
+    else if (ph === 'SECRET') {
       if (!el.dataset.generated) {
         el.textContent = randomSecret();
         el.dataset.generated = '1';

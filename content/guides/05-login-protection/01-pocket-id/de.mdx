@@ -1,6 +1,107 @@
 ---
 title: "Pocket ID einrichten"
+description: "Am Ende läuft Pocket ID unter einer eigenen Subdomain: ein zentraler Login-Dienst, bei dem du dich mit einem Passkey statt mit einem Passwort anmeldest, und ein erster OIDC-Client für einen deiner Dienste."
 level: 2
 minutes: 20
-status: stub
+requires: [Reverse Proxy mit HTTPS, Domain]
+services: [pocket-id]
 ---
+
+Viele Dienste bringen ihre eigene Benutzerverwaltung mit. Bei fünf Diensten hast du fünf Passwörter, fünf Login-Seiten und fünf Stellen, an denen du einen Benutzer anlegen oder sperren musst. [Single Sign-On](/de/nachschlagen/single-sign-on/) löst das: Ein zentraler Dienst prüft, wer du bist, und die anderen Dienste vertrauen ihm.
+
+Pocket ID ist so ein zentraler Dienst, ein sogenannter **OIDC-Provider**. OIDC (OpenID Connect) ist der offene Standard, über den ein Dienst sagt: "Melde dich bitte dort an und komm mit einer Bestätigung zurück." Pocket ID kennt dabei nur eine Anmeldeart: **Passkeys**. Ein Passkey ist ein Schlüsselpaar, das dein Gerät (Handy, Laptop, Passwortmanager oder Hardware-Schlüssel) verwaltet. Es gibt kein Passwort, das jemand erraten oder abfischen kann.
+
+<Callout title="Voraussetzung: HTTPS">
+Browser erlauben Passkeys nur auf Seiten mit gültigem HTTPS. Richte deshalb zuerst deinen Reverse Proxy ein, z. B. mit [Traefik](/de/einrichten/reverse-proxy-traefik/) oder [Nginx Proxy Manager](/de/einrichten/reverse-proxy-npm/). Pocket ID läuft danach unter `id.__DOMAIN__`.
+</Callout>
+
+<Steps>
+
+<Step title="compose.yaml und .env schreiben">
+Pocket ID bekommt wie jeder Dienst einen eigenen Ordner unter `__ROOT__`. Die Datenbank (SQLite) und hochgeladene Bilder landen in `data/`, damit sind sie in deinem Backup enthalten.
+
+<ServiceFiles id="pocket-id" />
+
+Zwei Variablen sind wichtig:
+
+- `APP_URL` ist die öffentliche Adresse von Pocket ID. Sie muss exakt stimmen, denn Passkeys sind fest an diese Domain gebunden. Ändert sich die Domain später, funktionieren die registrierten Passkeys nicht mehr.
+- `TRUST_PROXY=true` sagt Pocket ID, dass es hinter einem Reverse Proxy läuft. Dann sieht es im Audit-Log die echte IP-Adresse deiner Besucher statt der des Proxys.
+</Step>
+
+<Step title="Starten und prüfen">
+Starte den Stack und schau ins Log. Wenn keine Fehler kommen und der Container läuft, ist Pocket ID bereit.
+
+```bash
+cd __ROOT__/pocket-id
+docker compose up -d
+docker compose logs -f pocket-id
+```
+
+Mit `Strg+C` verlässt du die Log-Ansicht, der Container läuft weiter.
+</Step>
+
+<Step title="Admin-Konto anlegen">
+Direkt nach dem ersten Start gibt es noch keinen Benutzer. Den ersten legst du über die Setup-Seite an. Er wird automatisch Administrator.
+
+Öffne im Browser:
+
+```text
+https://id.__DOMAIN__/setup
+```
+
+Trage Vorname, Nachname, Benutzername und E-Mail-Adresse ein und schicke das Formular ab.
+
+<Callout type="warning" title="Nicht warten">
+Die Setup-Seite ist öffentlich erreichbar, solange noch kein Konto existiert. Lege das Admin-Konto deshalb direkt nach dem Start an.
+</Callout>
+</Step>
+
+<Step title="Passkey registrieren">
+Nach dem Anlegen fordert Pocket ID dich auf, einen Passkey einzurichten. Dein Browser oder Betriebssystem fragt dann, wo der Passkey gespeichert werden soll: im Passwortmanager, auf dem Handy oder auf einem Hardware-Schlüssel wie einem YubiKey.
+
+Registriere danach unter **Mein Konto** einen **zweiten Passkey** auf einem anderen Gerät. Geht dein Handy verloren, kommst du so trotzdem noch hinein.
+
+Melde dich einmal ab und wieder an, um zu prüfen, dass alles klappt.
+</Step>
+
+<Step title="Notfall: ausgesperrt">
+Hast du keinen Zugriff mehr auf einen deiner Passkeys, erzeugst du auf dem Server einen einmaligen Anmeldelink. Er gilt eine Stunde.
+
+```bash
+cd __ROOT__/pocket-id
+docker compose exec pocket-id /app/pocket-id one-time-access-token DEIN_BENUTZERNAME
+```
+
+Die Ausgabe enthält eine URL. Öffne sie, melde dich damit an und registriere sofort einen neuen Passkey.
+</Step>
+
+<Step title="OIDC-Client für einen Dienst anlegen">
+Damit sich ein Dienst über Pocket ID anmelden darf, legst du für ihn einen **OIDC-Client** an. Das ist ein Eintrag, der festlegt, welcher Dienst Anmeldungen anfragen darf und wohin Pocket ID danach zurückleitet.
+
+1. Öffne im Admin-Bereich **OIDC Clients** und klicke auf **OIDC-Client hinzufügen**.
+2. Gib einen **Namen** ein, z. B. den Namen des Dienstes. Er erscheint auf der Anmeldeseite.
+3. Trage die **Callback-URL** ein. Das ist die Adresse im Dienst, an die Pocket ID nach dem Login zurückleitet. Welche das ist, steht in der Doku des jeweiligen Dienstes. Für [Tinyauth](/de/einrichten/tinyauth/) lautet sie zum Beispiel `https://login.__DOMAIN__/api/oauth/callback/generic`.
+4. Speichere den Client.
+
+Pocket ID zeigt dir danach **Client-ID** und **Client-Secret** sowie die **OIDC Discovery URL**:
+
+```text
+https://id.__DOMAIN__/.well-known/openid-configuration
+```
+
+Diese drei Werte trägst du im Dienst ein. Viele Dienste brauchen nur die Discovery URL (manchmal "Issuer URL" genannt, dann ohne den Teil ab `/.well-known`) und holen sich den Rest selbst. Das Secret gehört in die `.env` des Dienstes, nicht in die `compose.yaml`. Verlierst du es, kannst du in Pocket ID ein neues erzeugen.
+
+Die Pocket-ID-Doku hat fertige Anleitungen für viele verbreitete Dienste: [pocket-id.org/docs](https://pocket-id.org/docs).
+</Step>
+
+<Step title="Weitere Benutzer einladen (optional)">
+Unter **Benutzer** legst du weitere Konten an, etwa für deine Familie. Damit jemand seinen ersten Passkey registrieren kann, erzeugst du für das Konto einen einmaligen **Login-Code** bzw. Anmeldelink und gibst ihn weiter.
+
+Mit **Benutzergruppen** kannst du steuern, wer welchen Dienst nutzen darf: Beim OIDC-Client wählst du dann unter **Erlaubte Benutzergruppen** die passende Gruppe aus.
+</Step>
+
+</Steps>
+
+## Und Dienste ohne OIDC?
+
+Pocket ID schützt nur Dienste, die OIDC selbst unterstützen. Viele kleine Tools haben gar keinen Login oder nur einen einfachen. Für sie gibt es [Tinyauth](/de/einrichten/tinyauth/): Es sitzt als Middleware im Reverse Proxy vor dem Dienst und fragt den Login ab, bevor die Anfrage überhaupt ankommt. Tinyauth kann Pocket ID als Anmeldeweg nutzen. So meldest du dich überall mit demselben Passkey an.

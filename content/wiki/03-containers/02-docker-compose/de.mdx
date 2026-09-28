@@ -1,5 +1,107 @@
 ---
 title: "Docker Compose"
+description: "Mit Docker Compose beschreibst du einen Dienst samt Einstellungen, Daten und Netzwerken in einer einzigen Datei. Ein Befehl startet dann alles, und die Datei dokumentiert gleichzeitig dein Setup."
 level: 1
-status: stub
+related: [what-is-docker, volumes-bind-mounts, docker-networks, env-files]
+practice: first-stack
 ---
+
+## Warum Compose statt docker run?
+
+Einen Container kannst du mit `docker run` und einer langen Reihe von Optionen starten. Das funktioniert, hat aber Nachteile: Den Befehl musst du dir irgendwo merken, Tippfehler fallen erst beim Start auf, und bei einem Update musst du ihn exakt wiederholen.
+
+Docker Compose dreht das um. Du schreibst in eine Datei **`compose.yaml`**, wie deine Container aussehen sollen. Compose sorgt dann dafür, dass der tatsächliche Zustand dazu passt. Die Datei ist lesbar, lässt sich sichern und versionieren. Wenn der Server ausfällt, stellst du den Ordner wieder her und startest mit einem Befehl neu.
+
+Eine `compose.yaml` mit allen zugehörigen Containern nennt man **Stack**. Auf dieser Seite bekommt jeder Stack einen eigenen Ordner unter `__ROOT__`, siehe [Verzeichnisstruktur](/de/nachschlagen/verzeichnisstruktur/).
+
+## Ein kommentiertes Beispiel
+
+So sieht ein Stack für [Uptime Kuma](/de/dienste/uptime-kuma/) aus, ein Tool, das deine Dienste überwacht. Die Datei liegt in `__ROOT__/uptime-kuma/compose.yaml`.
+
+```yaml
+services:                             # all containers of this stack
+  uptime-kuma:                        # service name, also its DNS name inside the stack
+    image: louislam/uptime-kuma:2     # image and tag to run
+    container_name: uptime-kuma       # fixed name instead of an auto-generated one
+    restart: unless-stopped           # start again after crash or reboot, unless you stopped it
+    environment:                      # settings passed to the program
+      - TZ=${TZ}
+    volumes:                          # persistent data: host path : container path
+      - ./data/data:/app/data
+    ports:                            # host port : container port
+      - "3001:3001"
+    networks:
+      - __NETWORK__                   # join the shared proxy network
+
+networks:
+  __NETWORK__:
+    external: true                    # created once with "docker network create", not by this stack
+```
+
+Die wichtigsten Schlüssel im Überblick:
+
+| Schlüssel | Bedeutung |
+| --- | --- |
+| `services` | Liste der Container. Der Name (hier `uptime-kuma`) ist frei wählbar. |
+| `image` | Welches Image in welcher Version läuft. Details in [Images & Tags](/de/nachschlagen/images-tags/). |
+| `container_name` | Fester Name. Ohne ihn erzeugt Compose einen Namen aus Ordner und Dienst, etwa `uptime-kuma-uptime-kuma-1`. |
+| `restart` | Neustart-Regel. `unless-stopped` ist für Homelab-Dienste fast immer richtig. |
+| `environment` | Umgebungsvariablen, mit denen viele Programme konfiguriert werden. Secrets gehören in die [.env-Datei](/de/nachschlagen/env-dateien/). |
+| `volumes` | Verbindet Ordner auf dem Server mit Ordnern im Container. Siehe [Volumes & Bind Mounts](/de/nachschlagen/volumes-bind-mounts/). |
+| `ports` | Macht einen Port des Containers auf dem Server erreichbar. Links steht der Server, rechts der Container. |
+| `networks` | In welchen Docker-Netzwerken der Container hängt. Siehe [Docker-Netzwerke](/de/nachschlagen/docker-netzwerke/). |
+
+<Callout title="ports oder Reverse Proxy?">
+Das Beispiel zeigt `ports` und `networks` zusammen, damit du beide Schlüssel kennst. In der Praxis brauchst du meist nur eins davon: Mit einem Reverse Proxy wie Traefik hängt der Dienst nur im Netzwerk `__NETWORK__` und veröffentlicht keinen Port. Ohne Proxy greifst du über `http://<server-ip>:3001` zu. Die Vorlagen unter [Dienste](/de/dienste/) passen das automatisch an dein Setup an.
+</Callout>
+
+Relative Pfade wie `./data` beziehen sich immer auf den Ordner, in dem die `compose.yaml` liegt. Deshalb landen alle Daten eines Dienstes neben seiner Konfiguration.
+
+Variablen wie `${TZ}` liest Compose aus einer Datei `.env` im selben Ordner. So bleibt die `compose.yaml` frei von Passwörtern und du kannst sie teilen.
+
+## Die wichtigsten Befehle
+
+Alle Befehle führst du im Ordner des Stacks aus:
+
+```bash
+cd __ROOT__/uptime-kuma
+```
+
+| Befehl | Was er tut |
+| --- | --- |
+| `docker compose up -d` | Container erstellen und im Hintergrund starten. Nach Änderungen an der Datei einfach erneut ausführen. |
+| `docker compose ps` | Zeigt die Container des Stacks und ihren Status. |
+| `docker compose logs -f` | Zeigt die Logs live an. Beenden mit Strg+C. |
+| `docker compose pull` | Lädt neuere Versionen der Images. Danach `up -d`, um sie zu verwenden. |
+| `docker compose restart` | Startet die Container neu, ohne sie neu zu erstellen. |
+| `docker compose down` | Stoppt und entfernt die Container und das Stack-Netzwerk. Deine Daten in `./data` bleiben erhalten. |
+| `docker compose exec uptime-kuma sh` | Öffnet eine Shell im laufenden Container, falls das Image eine mitbringt. |
+| `docker compose config` | Prüft die Datei und zeigt sie mit eingesetzten Variablen an. Gut zur Fehlersuche. |
+
+Ein Update eines Dienstes sieht damit so aus:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+Compose erstellt nur die Container neu, deren Image oder Konfiguration sich geändert hat.
+
+## docker compose oder docker-compose?
+
+Du wirst in Anleitungen beide Schreibweisen finden. Der Unterschied:
+
+- **`docker-compose`** mit Bindestrich ist die alte, eigenständige Version 1, in Python geschrieben. Sie wird seit 2023 nicht mehr weiterentwickelt.
+- **`docker compose`** mit Leerzeichen ist die aktuelle Version 2. Sie ist ein Plugin von Docker selbst und wird mit dem Paket `docker-compose-plugin` installiert.
+
+Nutze immer `docker compose`. Alte Anleitungen funktionieren meist trotzdem, wenn du den Bindestrich durch ein Leerzeichen ersetzt. Auch den Dateinamen haben die Entwickler vereinfacht: `compose.yaml` ist der aktuelle Standard, `docker-compose.yml` wird weiterhin erkannt.
+
+<Callout title="Die Zeile version: brauchst du nicht mehr">
+Ältere Compose-Dateien beginnen mit `version: "3.8"` oder Ähnlichem. Die aktuelle Version von Compose ignoriert diese Angabe und gibt nur eine Warnung aus. Du kannst die Zeile einfach löschen.
+</Callout>
+
+## Weiterlesen
+
+- [Offizielle Compose-Dokumentation](https://docs.docker.com/compose/)
+- [Referenz aller Schlüssel der compose.yaml](https://docs.docker.com/reference/compose-file/services/)
+- [Erster Stack mit Compose](/de/einrichten/erster-stack/): Schritt für Schritt zum ersten laufenden Dienst

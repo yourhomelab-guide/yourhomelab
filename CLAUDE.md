@@ -27,7 +27,7 @@ Rules for the translation:
 - Keep MDX structure exactly: component names, props that are not prose, blank lines, heading levels, lists, tables.
   Translate prose props: `title="…"`, and `question` / `label` / `title` / `text` values inside `<Quiz>`.
 - Never change code blocks or inline code, except comments inside code blocks. Placeholders like `__DOMAIN__`,
-  `__ROOT__`, `__SECRET__` stay exactly as they are.
+  `__ROOT__`, `__SECRET__`, `__DATA(traefik)__` stay exactly as they are.
 - Internal links: `/de/nachschlagen/<de-slug>/` → `/en/wiki/<en-slug>/`, `/de/einrichten/…` → `/en/setup/…`,
   `/de/dienste/…` → `/en/services/…`, `/de/impressum/` → `/en/legal-notice/`, `/de/datenschutz/` → `/en/privacy/`.
   The English slug is the folder name without its number (or the `slug:` in the English file, if set).

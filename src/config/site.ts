@@ -61,6 +61,13 @@ export const defaultSetup = {
 export type Setup = typeof defaultSetup;
 
 /**
+ * Data folder of one app, used by the `__DATA(<app>)__` placeholder:
+ * `<root>/<app>/data` ("pro Stack") or `<dataRoot>/<app>` ("zentral").
+ */
+export const appDataDir = (s: Pick<Setup, 'root' | 'dataMode' | 'dataRoot'>, app: string) =>
+  s.dataMode === 'central' ? `${s.dataRoot}/${app}` : `${s.root}/${app}/data`;
+
+/**
  * Placeholders contributors can use in compose.yaml, .env.example and code blocks.
  * They are replaced with the visitor's values from "Mein Setup".
  */

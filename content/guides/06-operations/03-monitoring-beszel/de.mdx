@@ -1,6 +1,156 @@
 ---
 title: "Monitoring mit Beszel"
+description: "Beszel zeigt dir CPU, RAM, Festplatten, Netzwerk und jeden Container deines Servers mit Verlauf in einer schlanken Weboberfläche. Am Ende meldet es sich per Benachrichtigung, wenn die Platte vollläuft oder ein Server nicht mehr antwortet."
 level: 1
 minutes: 15
-status: stub
+requires: [Docker Compose, Reverse Proxy]
+services: [beszel]
 ---
+
+Ohne Monitoring merkst du Probleme erst, wenn etwas nicht mehr geht. Dabei kündigen sich viele Ausfälle an: Die Festplatte füllt sich über Wochen, ein Container frisst langsam immer mehr RAM, die CPU wird im Sommer zu heiß. [Beszel](https://beszel.dev) macht solche Trends sichtbar und ist dabei sehr sparsam. Hintergründe findest du unter [Monitoring](/de/nachschlagen/monitoring/).
+
+Beszel besteht aus zwei Teilen:
+
+- Der **Hub** ist die Weboberfläche. Er speichert die Messwerte und verschickt Alarme. Du brauchst ihn nur einmal.
+- Der **Agent** läuft auf jedem Server, den du überwachen willst. Er misst die Werte und schickt sie an den Hub. In diesem Guide läuft er auf demselben Server wie der Hub.
+
+Der Agent baut dabei selbst eine verschlüsselte **WebSocket**-Verbindung (eine dauerhafte Verbindung über HTTPS) zum Hub auf. Deshalb musst du für ihn keinen Port in der Firewall öffnen.
+
+<Steps>
+
+<Step title="Hub einrichten">
+Der Hub bekommt wie jeder Dienst einen eigenen Ordner unter `__ROOT__`. Seine Daten landen im Unterordner `data/`.
+
+```bash
+mkdir -p __ROOT__/beszel
+cd __ROOT__/beszel
+```
+
+Lege dort `compose.yaml` und `.env` an:
+
+<ServiceFiles id="beszel" />
+
+Dann startest du den Hub:
+
+```bash
+docker compose up -d
+```
+
+Nutzt du Nginx Proxy Manager, schalte beim Proxy-Host „Websockets Support“ ein. Sonst kann sich der Agent später nicht verbinden. Traefik und Caddy leiten WebSockets automatisch weiter.
+
+<Callout type="warning" title="Keinen Login-Schutz davorschalten">
+Beszel hat eine eigene Anmeldung. Schalte kein Tinyauth und keine andere Forward-Auth-Middleware davor: Der Agent verbindet sich über die Adresse `/api/beszel/agent-connect` und kann sich dort nicht interaktiv anmelden. Beszel unterstützt stattdessen selbst OAuth, zum Beispiel mit [Pocket ID](/de/einrichten/pocket-id/) (siehe [Beszel-Doku](https://beszel.dev/guide/oauth)).
+</Callout>
+</Step>
+
+<Step title="Admin-Konto anlegen">
+Öffne `https://beszel.__DOMAIN__` im Browser. Beim ersten Aufruf legst du ein Konto mit E-Mail und Passwort an. Nimm ein langes, zufälliges Passwort aus deinem Passwortmanager. Dieses Konto ist gleichzeitig Administrator.
+</Step>
+
+<Step title="System im Hub anlegen">
+Klicke oben rechts auf „Add System“ (in der deutschen Oberfläche „System hinzufügen“). Im Dialog trägst du ein:
+
+| Feld | Wert |
+| --- | --- |
+| Name | Name deines Servers, z. B. `homeserver` |
+| Host / IP | IP deines Servers, z. B. `192.168.1.10` |
+
+Darunter zeigt der Dialog zwei Werte, die du gleich für den Agent brauchst:
+
+- **Public Key** („Öffentlicher Schlüssel“): Damit erkennt der Agent, dass er mit deinem Hub spricht.
+- **Token**: Damit meldet sich der Agent beim Hub an.
+
+Lass den Dialog offen und wechsle ins Terminal.
+</Step>
+
+<Step title="Agent starten">
+Der Agent bekommt einen eigenen Stack. Er läuft mit `network_mode: host`, also direkt im Netzwerk des Servers statt in einem Docker-Netzwerk. Nur so sieht er die echten Netzwerkkarten. Über den Docker-Socket liest er die Statistiken deiner Container.
+
+```bash
+mkdir -p __ROOT__/beszel-agent __DATA(beszel-agent)__
+cd __ROOT__/beszel-agent
+```
+
+`compose.yaml`:
+
+```yaml
+services:
+  beszel-agent:
+    image: henrygd/beszel-agent:latest
+    container_name: beszel-agent
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - __DATA(beszel-agent)__:/var/lib/beszel-agent
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - LISTEN=45876
+      - HUB_URL=https://beszel.__DOMAIN__
+      - KEY=${KEY}
+      - TOKEN=${TOKEN}
+```
+
+`.env` (Werte aus dem offenen Dialog kopieren, den Key in Anführungszeichen, weil er ein Leerzeichen enthält):
+
+```bash
+KEY="ssh-ed25519 AAAA..."
+TOKEN=...
+```
+
+```bash
+chmod 600 .env
+docker compose up -d
+docker compose logs -f
+```
+
+Im Log sollte nach wenigen Sekunden stehen, dass die WebSocket-Verbindung zum Hub steht. Mit `Strg+C` beendest du die Anzeige.
+</Step>
+
+<Step title="System prüfen">
+Klicke im Dialog auf „Add System“ bzw. „System hinzufügen“. Der Server erscheint in der Liste. Wird sein Punkt grün, kommen Daten an. Klickst du auf den Server, siehst du Verläufe für CPU, RAM, Festplatte, Netzwerk und, wenn vorhanden, Temperaturen, dazu CPU und RAM jedes einzelnen Containers.
+
+Bleibt der Punkt rot, prüfe:
+
+- Ist `https://beszel.__DOMAIN__` vom Server selbst erreichbar? Test: `curl -I https://beszel.__DOMAIN__`. Manche Router leiten Anfragen von innen an die eigene öffentliche Adresse nicht zurück (fehlendes NAT-Loopback). Dann hilft ein lokaler DNS-Eintrag, der die Domain auf die interne IP zeigt.
+- Stimmen `KEY` und `TOKEN` in der `.env`? Nach einer Änderung `docker compose up -d` erneut ausführen.
+- Die [Common Issues](https://beszel.dev/guide/common-issues) der Beszel-Doku.
+</Step>
+
+<Step title="Benachrichtigungen einrichten">
+Damit Beszel dich warnen kann, braucht es einen Kanal. Öffne „Settings → Notifications“ („Einstellungen → Benachrichtigungen“). Beszel kennt zwei Wege:
+
+- **E-Mail**: Trag deine Adresse ein. Dafür muss Beszel Mails verschicken können. Die SMTP-Daten deines Mailanbieters hinterlegst du in den Admin-Einstellungen, die das Benutzermenü verlinkt.
+- **Webhook / Push**: Beszel nutzt [Shoutrrr](https://beszel.dev/guide/notifications/)-URLs und unterstützt damit unter anderem ntfy, Telegram, Discord, Gotify und Matrix. Für eine Push-Nachricht aufs Handy über den öffentlichen ntfy-Server reicht zum Beispiel:
+
+```bash
+ntfy://ntfy.sh/ein-langes-zufaelliges-topic
+```
+
+Installiere dazu die ntfy-App und abonniere dasselbe Topic. Jeder, der den Topic-Namen kennt, kann mitlesen. Wähle ihn deshalb lang und zufällig oder betreibe später einen eigenen ntfy-Server. Das genaue URL-Format für jeden Dienst steht in der [Beszel-Doku](https://beszel.dev/guide/notifications/).
+</Step>
+
+<Step title="Alarme festlegen">
+Alarme stellst du pro System ein. Klicke in der Systemliste auf das Glocken-Symbol neben deinem Server. Sinnvoll für den Anfang:
+
+| Alarm | Vorschlag |
+| --- | --- |
+| Status | an: meldet, wenn der Server nicht mehr antwortet |
+| Disk Usage | ab 85 % |
+| Memory Usage | ab 90 %, über 10 Minuten |
+| CPU Usage | ab 90 %, über 10 Minuten |
+| Temperature | nur, wenn dein Server Sensoren meldet |
+
+Die Dauer verhindert Fehlalarme: Ein kurzer Lastspitzen-Moment beim Update ist normal, zehn Minuten Volllast eher nicht. Über den Reiter „All Systems“ („Alle Systeme“) kannst du dieselben Werte später auf jeden neuen Server anwenden.
+</Step>
+
+<Step title="Weitere Server anbinden">
+Jeder weitere Server braucht nur einen Agent. Leg im Hub mit „Add System“ ein neues System an und starte auf dem Server denselben Agent-Stack mit dem neuen Key und Token. `HUB_URL` bleibt gleich. Weil der Agent die Verbindung aufbaut, klappt das auch bei einem VPS in der Cloud.
+
+Hub und Agent solltest du bei Updates immer gemeinsam aktualisieren, damit die Versionen zusammenpassen.
+</Step>
+
+</Steps>
+
+<Callout title="Beszel ergänzt, ersetzt aber keinen Außen-Check">
+Fällt der ganze Server aus, fällt auch Beszel aus, wenn es darauf läuft. Der Status-Alarm hilft dann nur für andere Server. Ob deine Dienste von außen erreichbar sind, prüft [Uptime Kuma](/de/einrichten/uptime-kuma/), idealerweise von einem zweiten Standort aus.
+</Callout>

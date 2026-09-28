@@ -58,6 +58,7 @@ const d = defaultSetup;
       <fieldset>
         <legend>{t(lang, 'setupDialog.sec3')}</legend>
         <label>{t(lang, 'setupDialog.root')}<input name="root" value={d.root} autocomplete="off" spellcheck="false" /></label>
+        <span class="hint">{t(lang, 'setupDialog.example')} <span class="mono" data-example="stack"></span></span>
         <div class="row">
           <span class="lbl">{t(lang, 'setupDialog.data')}</span>
           <label class="opt"><input type="radio" name="dataMode" value="stack" checked /><span>{t(lang, 'setupDialog.dataStack')}</span></label>
@@ -112,6 +113,7 @@ const d = defaultSetup;
   function update() {
     const s = read();
     form.querySelector('[data-example="url"]')!.textContent = s.urlMode === 'sub' ? `https://vault.${s.domain}` : `https://${s.domain}/vault`;
+    form.querySelector('[data-example="stack"]')!.textContent = `${s.root}/vaultwarden/compose.yaml`;
     form.querySelector('[data-example="data"]')!.textContent = s.dataMode === 'stack' ? `${s.root}/vaultwarden/data/` : `${s.dataRoot}/vaultwarden/`;
     form.querySelector<HTMLElement>('[data-when="has-proxy"]')!.hidden = s.proxy === 'none';
     form.querySelector<HTMLElement>('[data-when="central"]')!.hidden = s.dataMode !== 'central';
@@ -141,7 +143,9 @@ const d = defaultSetup;
   .dlg-head h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
   .dlg-head p { font-size: 14.5px; line-height: 1.5; color: var(--text-4); }
   .x { border: none; background: var(--bg); width: 36px; height: 36px; border-radius: 50%; font-size: 18px; color: var(--text-4); flex: none; }
-  .dlg-body { padding: 22px 30px; display: flex; flex-direction: column; gap: 26px; overflow-y: auto; }
+  .dlg-body { padding: 22px 30px; display: flex; flex-direction: column; gap: 26px; overflow-y: auto; overscroll-behavior: contain; }
+  /* Keep the page behind the open dialog from scrolling */
+  :global(html:has(#setup-dialog[open])) { overflow: hidden; }
   fieldset { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
   legend { padding: 0; margin-bottom: 12px; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
   label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text-4); min-width: 0; }

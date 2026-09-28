@@ -1,5 +1,96 @@
 ---
 title: "IP, Ports & NAT"
+description: "Jedes Gerät im Netz hat eine IP-Adresse, jeder Dienst lauscht auf einem Port. Und dein Router übersetzt per NAT zwischen deinem Heimnetz und dem Internet. Wer diese drei Begriffe versteht, versteht auch, warum ein Dienst erreichbar ist oder eben nicht."
 level: 1
-status: stub
+related: [dns-domains, port-forwarding, cgnat-ds-lite, docker-networks]
+practice: static-ip-hostname
 ---
+
+## Warum du das wissen solltest
+
+Fast jedes Problem beim Selfhosting der Art "Ich komme nicht auf meinen Dienst" hat eine von drei Ursachen: die falsche Adresse, der falsche Port oder eine Übersetzung (NAT) auf dem Weg dazwischen. Die Grundlagen sind überschaubar, und sie sparen dir später viel Rätselraten.
+
+## IP-Adressen
+
+Eine **IP-Adresse** ist die Hausnummer eines Geräts im Netzwerk. Es gibt zwei Versionen:
+
+- **IPv4**: vier Zahlen von 0 bis 255, etwa `192.168.1.20`. Davon gibt es nur rund 4,3 Milliarden, und die sind längst knapp.
+- **IPv6**: deutlich länger, etwa `2001:db8::20`. Der Adressraum ist so groß, dass jedes Gerät eine eigene, weltweit gültige Adresse bekommen kann.
+
+Bei IPv4 unterscheidet man **private** und **öffentliche** Adressen. Private Adressen gelten nur in deinem Heimnetz und werden im Internet nicht weitergeleitet. Dafür sind drei Bereiche reserviert:
+
+| Bereich | Typische Verwendung |
+| --- | --- |
+| `10.0.0.0/8` | Firmennetze, VPNs, manche Router |
+| `172.16.0.0/12` | Docker-Netzwerke nutzen oft Adressen daraus |
+| `192.168.0.0/16` | Die meisten Heimrouter, z. B. `192.168.1.x` oder `192.168.178.x` |
+
+Die Schreibweise `/8`, `/12` oder `/16` heißt **CIDR**. Sie gibt an, wie viele Bits vorne das Netz festlegen. Je kleiner die Zahl, desto größer der Bereich.
+
+Die öffentliche IPv4-Adresse bekommt dein Router vom Internetanbieter. Alle Geräte in deinem Haushalt teilen sich diese eine Adresse nach außen. Bei vielen Anschlüssen ändert sie sich regelmäßig, und manche Anbieter geben dir gar keine eigene mehr (siehe [CGNAT & DS-Lite](/de/nachschlagen/cgnat-ds-lite/)).
+
+Auf deinem Server siehst du seine Adressen so:
+
+```bash
+ip -brief address
+```
+
+Damit dein Server nach einem Neustart nicht plötzlich eine andere Adresse hat, gibst du ihm eine feste IP im Heimnetz. Wie das geht, zeigt [Feste IP & Hostname](/de/einrichten/feste-ip-hostname/).
+
+## Ports
+
+Eine IP-Adresse führt zum Gerät. Der **Port** sagt, welches Programm auf diesem Gerät gemeint ist. Ports sind Nummern von 0 bis 65535. Ein Port kann pro Adresse und Protokoll (TCP oder UDP) nur von einem Programm belegt werden.
+
+Einige Ports sind fest vergeben und begegnen dir ständig:
+
+| Port | Dienst |
+| --- | --- |
+| 22 | SSH |
+| 53 | DNS |
+| 80 | HTTP |
+| 443 | HTTPS |
+| 51820 (UDP) | WireGuard (Standard) |
+
+Welche Ports auf deinem Server gerade offen sind und lauschen, zeigt dieser Befehl. Mit `sudo` siehst du zusätzlich, welcher Prozess dahintersteckt:
+
+```bash
+sudo ss -tulpn
+```
+
+Eine Adresse wie `0.0.0.0:443` bedeutet: Der Dienst lauscht auf allen Netzwerkschnittstellen. `127.0.0.1:8080` bedeutet: nur lokal auf dem Server selbst, von außen nicht erreichbar.
+
+## NAT
+
+**NAT** (Network Address Translation) übersetzt Adressen. Dein Router macht das ständig: Wenn dein Laptop mit der privaten Adresse `192.168.1.30` eine Webseite aufruft, ersetzt der Router die Absenderadresse durch seine öffentliche IP. Die Antwort kommt beim Router an, und er weiß noch, an welches Gerät sie gehört.
+
+Das funktioniert gut für Verbindungen **von innen nach außen**. Für Verbindungen **von außen nach innen** weiß der Router aber nicht, welches Gerät gemeint ist. Genau dafür brauchst du eine [Portfreigabe](/de/nachschlagen/portfreigabe/): Du sagst dem Router, dass zum Beispiel alles auf Port 443 an `192.168.1.20` gehen soll.
+
+Nebeneffekt: NAT wirkt wie eine einfache Schutzschicht. Was nicht freigegeben ist, kommt von außen gar nicht erst durch.
+
+<Callout title="IPv6 und NAT">
+Bei IPv6 gibt es in der Regel kein NAT. Jedes Gerät hat eine öffentliche Adresse. Den Schutz übernimmt stattdessen die Firewall im Router, die eingehende Verbindungen standardmäßig blockiert. Für einen Dienst gibst du dort dann nicht einen Port weiter, sondern erlaubst den Zugriff auf Port und Gerät.
+</Callout>
+
+## NAT in Docker
+
+Docker nutzt das gleiche Prinzip. Container haben eigene, private Adressen in einem [Docker-Netzwerk](/de/nachschlagen/docker-netzwerke/). Mit `ports:` in der `compose.yaml` veröffentlichst du einen Port des Containers auf dem Host:
+
+```yaml
+ports:
+  - "8080:80"   # host port 8080 -> container port 80
+```
+
+Die linke Zahl ist der Port auf dem Server, die rechte der im Container. So können zwei Container intern beide Port 80 nutzen, ohne sich in die Quere zu kommen.
+
+<Callout type="warning" title="Docker umgeht UFW">
+Veröffentlichte Ports trägt Docker direkt in die Firewall-Regeln des Kernels ein. Regeln von UFW greifen dafür nicht. Ein `ports: "8080:80"` ist also im ganzen Netz erreichbar, auch wenn UFW Port 8080 blockiert. Veröffentliche deshalb nur die Ports des Reverse Proxys. Brauchst du einen Port nur lokal, binde ihn an `127.0.0.1`, z. B. `"127.0.0.1:8080:80"`.
+</Callout>
+
+Mit einem [Reverse Proxy](/de/nachschlagen/reverse-proxy-erklaert/) brauchst du meist nur zwei veröffentlichte Ports: 80 und 443. Alle anderen Dienste erreicht der Proxy über das gemeinsame Docker-Netzwerk.
+
+## Kurz zusammengefasst
+
+- Die **IP-Adresse** findet das Gerät, der **Port** das Programm darauf.
+- Im Heimnetz nutzt du private Adressen, nach außen teilen sich alle Geräte eine öffentliche.
+- **NAT** lässt ausgehende Verbindungen einfach durch, eingehende brauchen eine Portfreigabe.
+- Docker macht intern dasselbe: `ports:` verbindet einen Port auf dem Host mit einem Port im Container.

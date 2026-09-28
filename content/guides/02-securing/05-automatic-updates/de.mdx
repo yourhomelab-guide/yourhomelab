@@ -1,7 +1,110 @@
 ---
 slug: automatische-updates
 title: "Automatische Updates"
+description: "Am Ende spielt dein Server Sicherheitsupdates für das Betriebssystem jede Nacht selbst ein und startet bei Bedarf zu einer festen Uhrzeit neu."
 level: 1
 minutes: 10
-status: stub
+requires: [Debian- oder Ubuntu-Server, Benutzer mit sudo-Rechten]
 ---
+
+Die meisten Einbrüche nutzen Lücken, für die es längst ein Update gibt. Ein Server, der monatelang niemand aktualisiert, ist deshalb das größere Risiko als fast jede Fehlkonfiguration. Sicherheitsupdates von Debian und Ubuntu sind darauf ausgelegt, nichts kaputtzumachen. Deshalb lohnt es sich, sie automatisch einspielen zu lassen, statt auf deine Disziplin zu vertrauen.
+
+Das Werkzeug dafür heißt **unattended-upgrades**. Es läuft täglich, lädt die Paketlisten neu und installiert Updates aus den Quellen, die du freigibst. Standardmäßig sind das vor allem Sicherheitsupdates.
+
+<Steps>
+
+<Step title="Paket installieren">
+Auf Ubuntu ist es meist schon installiert, auf Debian oft nicht. Der Befehl schadet in beiden Fällen nicht.
+
+```bash
+sudo apt update
+sudo apt install unattended-upgrades
+```
+</Step>
+
+<Step title="Automatische Updates einschalten">
+
+```bash
+sudo dpkg-reconfigure -plow unattended-upgrades
+```
+
+Beantworte die Frage, ob stabile Updates automatisch heruntergeladen und installiert werden sollen, mit **Ja**. Das legt die Datei `/etc/apt/apt.conf.d/20auto-upgrades` an. Sie sollte so aussehen:
+
+```text
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+```
+
+Die `1` bedeutet: jeden Tag. Welche Quellen genau aktualisiert werden, steht in `/etc/apt/apt.conf.d/50unattended-upgrades`. Die Voreinstellung von Debian und Ubuntu ist für den Anfang passend.
+</Step>
+
+<Step title="Probelauf">
+Ein Probelauf zeigt, ob alles richtig eingerichtet ist, ohne etwas zu installieren:
+
+```bash
+sudo unattended-upgrade --dry-run --debug
+```
+
+In der Ausgabe siehst du die erlaubten Quellen und welche Pakete ein echter Lauf aktualisieren würde. Wann der nächste Lauf ansteht, zeigt:
+
+```bash
+systemctl list-timers 'apt-daily*'
+```
+
+Was tatsächlich installiert wurde, steht später in `/var/log/unattended-upgrades/unattended-upgrades.log`.
+</Step>
+
+<Step title="Neustarts regeln">
+Manche Updates, vor allem neue Kernel, wirken erst nach einem Neustart. Ist einer nötig, legt das System die Datei `/var/run/reboot-required` an. Von Haus aus startet unattended-upgrades aber **nicht** neu.
+
+Du hast zwei Möglichkeiten: Du prüfst ab und zu selbst, oder du erlaubst einen automatischen Neustart zu einer ruhigen Uhrzeit. Für Letzteres legst du eine eigene Datei an, statt die mitgelieferte zu ändern. So kommen sich Paket-Updates und deine Einstellungen nicht in die Quere.
+
+```bash
+sudo nano /etc/apt/apt.conf.d/51unattended-upgrades-local
+```
+
+```text
+Unattended-Upgrade::Automatic-Reboot "true";
+Unattended-Upgrade::Automatic-Reboot-Time "04:00";
+```
+
+Der Server startet dann nur neu, wenn ein Update es verlangt, und zwar um 4 Uhr. Deine Container kommen danach von selbst wieder hoch, wenn sie in der `compose.yaml` `restart: unless-stopped` haben. Das haben alle Vorlagen dieser Seite.
+
+Ob gerade ein Neustart aussteht, prüfst du jederzeit mit:
+
+```bash
+ls /var/run/reboot-required
+```
+</Step>
+
+<Step title="Dienste nach Updates neu starten">
+Nicht jedes Update braucht einen Neustart des ganzen Servers. Wird eine Bibliothek wie OpenSSL aktualisiert, reicht es, die Dienste neu zu starten, die sie benutzen. Bis dahin laufen sie mit der alten Version im Speicher weiter.
+
+Das Werkzeug **needrestart** findet solche Dienste. Auf Ubuntu ist es schon dabei, auf Debian installierst du es nach:
+
+```bash
+sudo apt install needrestart
+```
+
+Es meldet sich künftig nach `apt upgrade` von selbst. Du kannst es auch jederzeit direkt aufrufen:
+
+```bash
+sudo needrestart
+```
+</Step>
+
+</Steps>
+
+## Was nicht automatisch aktualisiert wird
+
+unattended-upgrades kümmert sich nur um Pakete des Betriebssystems. Zwei wichtige Dinge bleiben außen vor:
+
+- **Deine Container.** Die Images in deinen `compose.yaml`-Dateien aktualisiert unattended-upgrades nie. Eine Lücke in Vaultwarden oder Nextcloud bleibt offen, bis du ein neues Image ziehst. Wie du das planbar machst, zeigt der Guide [Updates mit Renovate](/de/einrichten/updates-renovate/). Den Hintergrund erklärt [Updates](/de/nachschlagen/updates/).
+- **Docker selbst.** Docker installierst du später aus dem Paket-Repository von Docker. Das steht nicht in der Standardliste von unattended-upgrades. Spiel es deshalb von Zeit zu Zeit von Hand ein:
+
+```bash
+sudo apt update
+sudo apt upgrade
+```
+
+Ein kurzer Blick einmal im Monat reicht. Wichtig ist nur, dass es regelmäßig passiert.

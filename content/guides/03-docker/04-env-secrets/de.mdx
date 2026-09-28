@@ -1,6 +1,134 @@
 ---
 title: ".env & Secrets"
+description: "Am Ende stehen Einstellungen und Passwörter deines Stacks in einer .env-Datei neben der compose.yaml, gut geschützt und außerhalb von Git. Du erzeugst sichere Zufallswerte und prüfst mit docker compose config, was Compose daraus macht."
 level: 2
 minutes: 15
-status: stub
+requires: [Erster Stack mit Compose]
 ---
+
+Eine `compose.yaml` beschreibt, **wie** ein Dienst läuft. Passwörter, API-Schlüssel und Werte, die sich von Server zu Server unterscheiden, gehören aber nicht hinein. Sonst landen sie in jedem Backup-Diff, in jedem Screenshot und im schlimmsten Fall in einem öffentlichen Git-Repository.
+
+Die Lösung ist eine Datei namens `.env` im selben Ordner. Docker Compose liest sie automatisch und setzt ihre Werte dort ein, wo in der `compose.yaml` `${NAME}` steht. So bleibt die `compose.yaml` frei von Geheimnissen, und du kannst sie teilen oder versionieren. Hintergründe findest du in den Artikeln [.env-Dateien](/de/nachschlagen/env-dateien/) und [Secrets verwalten](/de/nachschlagen/secrets-verwalten/).
+
+Du arbeitest in diesem Guide mit dem whoami-Stack aus dem [ersten Stack](/de/einrichten/erster-stack/) weiter.
+
+<Steps>
+
+<Step title=".env anlegen">
+Wechsle in den Stack-Ordner und lege die `.env` an:
+
+```bash
+cd __ROOT__/whoami
+nano .env
+```
+
+Inhalt:
+
+```bash
+# Time zone for the container
+TZ=__TZ__
+# Name that whoami shows in its answer
+WHOAMI_NAME=homelab
+```
+
+Die Regeln sind einfach: eine Variable pro Zeile, `NAME=Wert`, keine Leerzeichen um das `=`. Zeilen mit `#` sind Kommentare.
+</Step>
+
+<Step title="Variablen in der compose.yaml nutzen">
+Öffne die `compose.yaml` und ergänze den Block `environment:`:
+
+```yaml
+services:
+  whoami:
+    image: traefik/whoami:latest
+    container_name: whoami
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      - TZ=${TZ}
+      - WHOAMI_NAME=${WHOAMI_NAME}
+```
+
+Wichtig zu verstehen: Die `.env` wird **nicht** automatisch komplett an den Container weitergegeben. Compose ersetzt nur die `${…}`-Stellen in der `compose.yaml`. Erst über `environment:` kommt ein Wert im Container an. Das nennt sich Interpolation.
+</Step>
+
+<Step title="Mit docker compose config prüfen">
+Dieser Befehl zeigt die `compose.yaml` so, wie Compose sie nach dem Einsetzen der Variablen sieht. Tippfehler fallen hier sofort auf.
+
+```bash
+docker compose config
+```
+
+Unter `environment:` sollten jetzt deine echten Werte stehen, etwa `WHOAMI_NAME: homelab`. Fehlt eine Variable in der `.env`, warnt Compose mit `variable is not set. Defaulting to a blank string.`
+
+<Callout type="warning" title="Die Ausgabe enthält Klartext">
+`docker compose config` zeigt auch alle Passwörter im Klartext. Kopiere die Ausgabe nicht ungeprüft in ein Forum oder einen Chat.
+</Callout>
+</Step>
+
+<Step title="Stack neu starten und testen">
+Compose erkennt die geänderte Konfiguration und erstellt den Container neu.
+
+```bash
+docker compose up -d
+curl http://localhost:8080
+```
+
+In der Antwort steht jetzt die Zeile `Name: homelab`. Der Wert kam aus der `.env` über die `compose.yaml` in den Container.
+
+Ein einfacher Neustart mit `docker compose restart` reicht übrigens nicht. Er übernimmt keine geänderten Variablen. Nimm nach Änderungen an `.env` oder `compose.yaml` immer `docker compose up -d`.
+</Step>
+
+<Step title="Sichere Secrets erzeugen">
+Für Passwörter und Schlüssel, die du nicht selbst eintippen musst, nimmst du lange Zufallswerte. `openssl` ist auf Debian und Ubuntu vorinstalliert:
+
+```bash
+openssl rand -hex 32
+```
+
+Das ergibt 64 Zeichen aus `0-9` und `a-f`. Du kannst den Wert auch direkt an die `.env` anhängen, ohne dass er im Terminal-Verlauf auftaucht:
+
+```bash
+echo "DB_PASSWORD=$(openssl rand -hex 32)" >> .env
+```
+
+`DB_PASSWORD` ist hier nur ein Beispielname. Welche Variablen ein Dienst braucht, steht auf seiner Dienst-Seite in der `.env`. Dort sind die Zufallswerte bereits in deinem Browser vorausgefüllt.
+
+<Callout title="Warum hex?">
+Hex-Werte enthalten keine Sonderzeichen. Das erspart Ärger: Ein `$` in der `.env` versucht Compose sonst als Variable zu lesen. Brauchst du doch einmal ein `$` im Wert, setze den Wert in einfache Anführungszeichen, dann nimmt Compose ihn wörtlich.
+</Callout>
+</Step>
+
+<Step title="Datei schützen">
+Die `.env` soll nur dein Benutzer lesen können. `chmod 600` heißt: Lesen und Schreiben nur für den Besitzer, für alle anderen nichts.
+
+```bash
+chmod 600 .env
+ls -l .env
+```
+
+In der Ausgabe steht jetzt `-rw-------`. Mach das bei jeder neuen `.env`.
+</Step>
+
+<Step title=".env aus Git heraushalten">
+Führst du deine Compose-Dateien in einem Git-Repository, trag `.env` und die Datenordner in die `.gitignore` ein. Am besten in der `.gitignore` im Wurzelordner des Repositorys, dann gilt es für alle Stacks:
+
+```bash
+printf '.env\ndata/\n' >> .gitignore
+```
+
+Damit andere (oder du selbst auf einem neuen Server) wissen, welche Variablen nötig sind, kannst du eine `.env.example` mit Platzhaltern statt echter Werte einchecken.
+
+Ohne Git kannst du diesen Schritt überspringen. Denk nur daran: Die `.env` ist Teil deines Backups. Das Backup sollte deshalb verschlüsselt sein. [restic](/de/einrichten/backups-restic/) macht das automatisch.
+</Step>
+
+</Steps>
+
+## Gut zu wissen
+
+- **Passwörter ändern sich nicht rückwirkend.** Viele Datenbanken lesen das Passwort aus der Umgebung nur beim allerersten Start und legen damit den Benutzer an. Änderst du es später in der `.env`, passt das nicht mehr zur Datenbank. Lege Secrets deshalb vor dem ersten Start fest.
+- **Pflichtvariablen erzwingen.** Mit `${DB_PASSWORD:?fehlt in .env}` bricht Compose mit dieser Meldung ab, statt mit leerem Wert zu starten. `${TZ:-Europe/Berlin}` setzt dagegen einen Standardwert, falls die Variable fehlt.
+- **Umgebungsvariablen sind nicht unsichtbar.** Wer in der Gruppe `docker` ist, sieht sie zum Beispiel mit `docker inspect`. Für Einsteiger reicht die `.env` mit `chmod 600` völlig. Wie es strenger geht, etwa mit Compose-Secrets oder Variablen mit Endung `_FILE`, beschreibt [Secrets verwalten](/de/nachschlagen/secrets-verwalten/).
+
+Die Etappe Docker ist damit geschafft. Als Nächstes machst du deine Dienste mit [Domain & DNS](/de/einrichten/domain-dns/) unter einem eigenen Namen erreichbar.

@@ -1,5 +1,115 @@
 ---
 title: "Single Sign-On"
+description: "Mit Single Sign-On meldest du dich einmal an und bist in allen Diensten deines Homelabs eingeloggt. Hier lernst du die Grundbegriffe OIDC und OAuth2 kennen, den Unterschied zwischen Forward Auth und nativer Anmeldung und welche Werkzeuge sich für welchen Fall eignen."
 level: 2
-status: stub
+related: [reverse-proxy-explained, attack-surface, managing-secrets]
+practice: pocket-id
 ---
+
+<OneWay />
+
+## Warum Single Sign-On?
+
+Mit jedem neuen Dienst kommt ein neues Login dazu. Nach ein paar Monaten hast du zehn Benutzerkonten, zehn Passwörter
+und zehn Stellen, an denen du ein Konto für Familienmitglieder anlegen musst. Manche Dienste haben gar keinen eigenen
+Login und stehen ungeschützt da.
+
+**Single Sign-On (SSO)** bündelt das an einer Stelle. Ein zentraler Anmeldedienst, der **Identity Provider (IdP)**,
+kennt alle Benutzer. Die einzelnen Dienste fragen nur noch ihn: "Wer ist das, und darf er rein?"
+
+Das bringt dir:
+
+- **Ein Konto pro Person** statt eines Kontos pro Dienst und Person.
+- **Starke Anmeldung an einer Stelle**, etwa mit Passkeys oder zweitem Faktor, auch für Dienste, die das selbst nicht können.
+- **Schutz für Dienste ohne eigenen Login**, zum Beispiel Dashboards oder Admin-Oberflächen.
+
+## OAuth2 und OIDC in groben Zügen
+
+Du musst die Protokolle nicht im Detail kennen, aber die Begriffe tauchen überall auf.
+
+- **OAuth 2.0** regelt, wie eine Anwendung im Namen eines Benutzers Zugriff bekommt. Ursprünglich ging es um
+  Berechtigungen ("Diese App darf deine Kontakte lesen"), nicht um die Frage, wer jemand ist.
+- **OpenID Connect (OIDC)** baut auf OAuth 2.0 auf und ergänzt genau das: eine Identität. Der Dienst erfährt nach der
+  Anmeldung Benutzername, E-Mail-Adresse und oft auch Gruppen.
+
+Der Ablauf sieht immer ähnlich aus:
+
+1. Du öffnest einen Dienst, etwa `photos.__DOMAIN__`.
+2. Der Dienst leitet dich zum Identity Provider weiter, etwa `id.__DOMAIN__`.
+3. Du meldest dich dort an.
+4. Der IdP schickt dich mit einem signierten Nachweis zurück zum Dienst. Der Dienst prüft ihn und lässt dich rein.
+
+Damit das klappt, registrierst du jeden Dienst beim IdP als **Client**. Du bekommst eine **Client-ID** und ein
+**Client-Secret** und trägst beim IdP die **Redirect-URI** ein, also die Adresse, an die er nach dem Login zurückleitet.
+Das Client-Secret ist ein Passwort und gehört in die `.env` des Dienstes, siehe [Secrets verwalten](/de/nachschlagen/secrets-verwalten/).
+
+## Zwei Wege: native OIDC oder Forward Auth
+
+### Native OIDC
+
+Viele Dienste können OIDC selbst, zum Beispiel [Immich](/de/dienste/immich/) und [Forgejo](/de/dienste/forgejo/).
+In ihren Einstellungen trägst du die Adresse des IdP, Client-ID und Client-Secret ein. Auf der Login-Seite erscheint
+dann ein Knopf wie "Mit Pocket ID anmelden".
+
+Das ist der sauberste Weg: Der Dienst weiß, wer angemeldet ist, legt passende Benutzerkonten an und kann Rechte
+vergeben. Auch Apps auf dem Handy funktionieren meist problemlos, weil der Dienst den Ablauf selbst steuert.
+
+### Forward Auth
+
+Nicht jeder Dienst kann OIDC. Dann hilft **Forward Auth**: Der [Reverse Proxy](/de/nachschlagen/reverse-proxy-erklaert/)
+fragt bei jeder Anfrage erst einen Anmeldedienst, ob der Besucher eingeloggt ist. Nur wenn der zustimmt, reicht der Proxy
+die Anfrage an den eigentlichen Dienst weiter. Andernfalls landet der Besucher auf einer Login-Seite.
+
+In Traefik ist das eine Middleware, die du per Label an einen Router hängst. Caddy hat dafür `forward_auth`, Nginx
+Proxy Manager lässt sich über eigene Nginx-Konfiguration anbinden.
+
+Forward Auth schützt jeden Dienst, hat aber Grenzen:
+
+- Der Dienst selbst weiß nichts davon. Hat er einen eigenen Login, meldest du dich zweimal an.
+- Handy-Apps und andere Programme, die direkt mit der API sprechen, können mit der Login-Seite nichts anfangen und
+  brechen oft ab. Für solche Dienste ist native OIDC besser.
+
+| | Native OIDC | Forward Auth |
+| --- | --- | --- |
+| **Dienst muss es können** | Ja | Nein |
+| **Benutzerkonten im Dienst** | Werden automatisch angelegt | Bleiben getrennt |
+| **Apps und API** | Funktionieren meist | Oft problematisch |
+| **Gut für** | Dienste mit OIDC-Unterstützung | Dashboards, Admin-Oberflächen, Dienste ohne Login |
+
+In der Praxis kombinierst du beides: native OIDC, wo der Dienst es anbietet, Forward Auth für den Rest.
+
+## Welches Werkzeug?
+
+<Cards>
+  <Card title="Pocket ID">
+    Schlanker OIDC-Provider. Anmeldung nur mit Passkeys, keine Passwörter. Wenig Einrichtung, wenig Ressourcen.
+    Ideal für Dienste mit nativer OIDC-Unterstützung.
+  </Card>
+  <Card title="Tinyauth">
+    Kleine Login-Middleware für Forward Auth vor Traefik, Caddy oder NPM. Kann Benutzer selbst verwalten oder die
+    Anmeldung an Pocket ID weiterreichen.
+  </Card>
+  <Card title="Authentik">
+    Vollständiger Identity Provider mit OIDC, SAML, LDAP und eigenem Proxy. Sehr mächtig, aber komplexer und mit
+    rund 2 GB RAM deutlich hungriger.
+  </Card>
+</Cards>
+
+Für die meisten Homelabs reicht das Duo aus [Pocket ID](/de/dienste/pocket-id/) und [Tinyauth](/de/dienste/tinyauth/):
+Pocket ID ist der zentrale Login, Tinyauth schützt per Forward Auth die Dienste ohne OIDC und nutzt dafür Pocket ID als
+Anmeldung. [Authentik](/de/dienste/authentik/) lohnt sich, wenn du viele Benutzer, Gruppen und Regeln verwalten willst
+oder Protokolle wie LDAP brauchst.
+
+## Worauf du achten solltest
+
+- **Der IdP ist ein zentraler Schlüssel.** Fällt er aus, kommst du in keinen angebundenen Dienst mehr. Behalte in
+  wichtigen Diensten ein lokales Admin-Konto als Notzugang und sichere die Daten des IdP mit.
+- **HTTPS ist Pflicht.** OIDC funktioniert nur zuverlässig über gültige Zertifikate, siehe
+  [TLS & Zertifikate](/de/nachschlagen/tls-zertifikate/).
+- **Redirect-URIs genau eintragen.** Ein Tippfehler oder `http` statt `https` ist der häufigste Grund für
+  Fehlermeldungen beim ersten Login.
+
+## Weiterlesen
+
+- [Pocket ID einrichten](/de/einrichten/pocket-id/) und [Tinyauth vor Dienste schalten](/de/einrichten/tinyauth/)
+- [OpenID Connect erklärt (openid.net)](https://openid.net/developers/how-connect-works/)

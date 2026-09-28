@@ -1,7 +1,166 @@
 ---
 slug: restore-testen
 title: "Restore testen"
+description: "Du holst einzelne Dateien und einen kompletten Dienst aus deinem restic-Backup zurück, prüfst einen Datenbank-Dump und planst den Test als festen Termin ein. Danach weißt du, dass deine Backups im Ernstfall wirklich funktionieren."
 level: 2
-minutes: 20
-status: stub
+minutes: 30
+requires: [Backups mit restic, Docker Compose]
 ---
+
+Ein Backup, das du nie zurückgespielt hast, ist nur eine Hoffnung. Vielleicht fehlt ein Ordner, weil er außerhalb von `__ROOT__` lag. Vielleicht ist der Datenbank-Dump leer, weil der Befehl still gescheitert ist. Oder das Passwort ist doch nicht im Passwortmanager gelandet. All das findest du nur heraus, indem du wiederherstellst. Am besten jetzt, in Ruhe, und nicht erst, wenn die Platte schon tot ist.
+
+Dieser Guide baut auf [Backups mit restic](/de/einrichten/backups-restic/) auf. Du stellst immer in einen **separaten Ordner** oder auf einen **anderen Rechner** wieder her, nie über die laufenden Dienste.
+
+<Steps>
+
+<Step title="Einstellungen laden">
+Wie beim Backup arbeitest du als root und lädst die Einstellungen aus `/etc/restic/env`:
+
+```bash
+sudo -i
+set -a; source /etc/restic/env; set +a
+```
+
+Alle folgenden Befehle laufen in dieser Shell. Mit `exit` verlässt du sie am Ende.
+</Step>
+
+<Step title="Snapshots ansehen">
+Zuerst prüfst du, ob die Backups überhaupt regelmäßig ankommen:
+
+```bash
+restic snapshots
+```
+
+Du siehst eine Liste mit ID, Datum, Rechnername und gesichertem Pfad. Stimmt das Datum des neuesten Snapshots? Fehlen Tage, obwohl der Timer jede Nacht laufen sollte? Dann schau zuerst ins Log (`journalctl -u homelab-backup.service`).
+
+Den Inhalt eines Snapshots listest du mit `restic ls`. `latest` steht für den neuesten Snapshot, du kannst aber auch jede ID aus der Liste nehmen:
+
+```bash
+restic ls latest __ROOT__/vaultwarden
+```
+
+Prüfe hier, ob alle Stacks, alle `.env`-Dateien und die Datenbank-Dumps enthalten sind.
+</Step>
+
+<Step title="Einzelne Datei zurückholen">
+Der häufigste Fall im Alltag: Eine Datei ist kaputt oder gelöscht. Mit `--include` holst du nur diesen Pfad zurück, `--target` gibt den Zielordner an:
+
+```bash
+restic restore latest --target /tmp/restore-test --include __ROOT__/vaultwarden/.env
+```
+
+restic legt dabei den vollen Pfad unterhalb des Zielordners an. Die Datei liegt also unter `/tmp/restore-test` plus dem ursprünglichen Pfad. Vergleiche sie mit dem Original:
+
+```bash
+diff /tmp/restore-test__ROOT__/vaultwarden/.env __ROOT__/vaultwarden/.env && echo "identisch"
+```
+
+Für einen schnellen Blick in eine einzelne Datei geht es auch ohne Zielordner. `restic dump` gibt sie direkt im Terminal aus:
+
+```bash
+restic dump latest __ROOT__/vaultwarden/compose.yaml
+```
+</Step>
+
+<Step title="Backup als Ordner durchstöbern">
+Willst du dich erst umsehen, bevor du etwas zurückholst? `restic mount` bindet das ganze Repository als Ordner ein. Darin findest du jeden Snapshot als eigenes Verzeichnis. Dafür braucht es FUSE:
+
+```bash
+apt install fuse3
+mkdir -p /mnt/restic
+restic mount /mnt/restic
+```
+
+Der Befehl bleibt im Vordergrund. Öffne eine zweite SSH-Sitzung und schau dich um:
+
+```bash
+sudo ls /mnt/restic/snapshots/
+sudo ls /mnt/restic/snapshots/latest__ROOT__/
+```
+
+Einzelne Dateien kopierst du einfach mit `cp` heraus. Mit `Strg+C` im ersten Fenster hängst du das Repository wieder aus. Für große Datenmengen ist `restic restore` deutlich schneller als Kopieren aus dem Mount.
+</Step>
+
+<Step title="Datenbank-Dump einspielen">
+Ein Dump ist erst dann gut, wenn er sich einspielen lässt. Du testest das mit einem **Wegwerf-Container**, der nur für den Test läuft. Das Beispiel nutzt den Authentik-Dump aus dem Backup-Guide.
+
+Hole den Dump aus dem Backup:
+
+```bash
+restic restore latest --target /tmp/restore-test --include __ROOT__/authentik/backup
+```
+
+Starte eine leere Datenbank. Nimm dasselbe Image wie im Stack (steht in der `compose.yaml`), damit die Versionen zusammenpassen:
+
+```bash
+docker run -d --name restore-test-db \
+  -e POSTGRES_USER=authentik -e POSTGRES_PASSWORD=test -e POSTGRES_DB=authentik \
+  postgres:16-alpine
+```
+
+Warte ein paar Sekunden, bis die Datenbank bereit ist, und spiele den Dump ein:
+
+```bash
+gunzip -c /tmp/restore-test__ROOT__/authentik/backup/authentik.sql.gz \
+  | docker exec -i restore-test-db psql -U authentik -d authentik
+```
+
+Jetzt schaust du, ob Tabellen und Daten da sind:
+
+```bash
+docker exec restore-test-db psql -U authentik -d authentik -c '\dt'
+```
+
+Siehst du eine lange Liste von Tabellen, ist der Dump in Ordnung. Ist die Liste leer oder die Datei nur wenige Bytes groß, stimmt etwas mit dem Dump-Befehl im Backup-Skript nicht. Zum Schluss räumst du den Test-Container weg:
+
+```bash
+docker rm -f restore-test-db
+```
+
+Für MariaDB funktioniert es genauso, mit dem Image `mariadb` und dem Befehl `mariadb` statt `psql`.
+</Step>
+
+<Step title="Kompletten Dienst wiederherstellen">
+Der wichtigste Test: Läuft ein Dienst nach einem Totalausfall wieder? Das prüfst du am besten auf einem **anderen Rechner**, zum Beispiel einer VM auf deinem PC oder einem alten Notebook. So simulierst du ehrlich den Ernstfall, und der Test kommt deinem echten Server nicht in die Quere. Auf demselben Server geht das nur umständlich, weil Containernamen und Ports schon belegt sind.
+
+Auf dem Testrechner brauchst du Docker und restic. Kopiere das Passwort **aus deinem Passwortmanager**, nicht vom Server. Genau das musst du im Ernstfall auch tun. Lege `/etc/restic/password` und `/etc/restic/env` wie im Backup-Guide an, mit demselben Repository.
+
+<Callout type="warning" title="Kein Backup vom Testrechner">
+Richte auf dem Testrechner keinen Backup-Timer ein. Sonst landen Snapshots der Testumgebung im selben Repository, und `forget` räumt womöglich echte Stände weg.
+</Callout>
+
+Stelle dann einen Dienst an seinem gewohnten Pfad wieder her, hier Vaultwarden:
+
+```bash
+restic restore latest --target / --include __ROOT__/vaultwarden
+docker network create __NETWORK__
+cd __ROOT__/vaultwarden
+docker compose up -d
+docker compose logs -f
+```
+
+`--target /` schreibt die Dateien an ihren Originalpfad. Das ist nur auf dem Testrechner in Ordnung, nie auf deinem Server, solange dort die echten Daten liegen. `restic restore` stellt auch Besitzer und Rechte wieder her, deshalb läuft der Befehl als root.
+
+Startet der Container ohne Fehler im Log und findet er seine Daten? Um die Weboberfläche zu sehen, kannst du vorübergehend einen Port in die `compose.yaml` eintragen (etwa `ports: ["8080:80"]` beim Dienst `vaultwarden`) und `http://<IP des Testrechners>:8080` öffnen. Melde dich an und prüfe, ob deine Einträge da sind. Ohne HTTPS verweigern manche Dienste den Login. Dann genügt dir fürs Erste, dass der Container sauber startet und die Datenbank findet.
+
+Ganz genau nimmst du es, wenn du den kompletten Ordner inklusive Reverse Proxy zurückholst: `restic restore latest --target /`. Das ist der echte Ernstfall.
+</Step>
+
+<Step title="Aufräumen und regelmäßig wiederholen">
+Lösche die Testdaten, damit keine Kopien deiner Secrets herumliegen:
+
+```bash
+rm -rf /tmp/restore-test
+exit
+```
+
+Ein Restore-Test ist keine einmalige Sache. Dienste kommen dazu, Pfade ändern sich, ein Dump-Befehl bricht nach einem Update. Plane den Test deshalb fest ein:
+
+- **Monatlich**: Snapshots ansehen, eine Datei zurückholen, `restic check --read-data-subset=5%` laufen lassen.
+- **Alle drei bis sechs Monate**: einen Datenbank-Dump einspielen und einen kompletten Dienst auf dem Testrechner starten.
+- **Nach jeder größeren Änderung**: neuer Stack, neue Datenbank, neues Backup-Ziel.
+
+Trag dir die Termine in deinen Kalender ein. Schreib dir außerdem kurz auf, welche Schritte du gebraucht hast und was gehakt hat. Im Ernstfall bist du nervös, dann hilft eine fertige Anleitung mehr als jede Erinnerung. Mehr dazu unter [Dokumentation](/de/nachschlagen/dokumentation/).
+</Step>
+
+</Steps>

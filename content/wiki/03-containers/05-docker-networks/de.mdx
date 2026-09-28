@@ -1,6 +1,112 @@
 ---
 slug: docker-netzwerke
 title: "Docker-Netzwerke"
+description: "Docker-Netzwerke regeln, welche Container miteinander reden dürfen und was von außen erreichbar ist. Wer das Prinzip kennt, veröffentlicht nur die Ports, die wirklich nötig sind."
 level: 2
-status: stub
+related: [docker-compose, reverse-proxy-explained, attack-surface, ip-ports-nat]
+practice: reverse-proxy-traefik
 ---
+
+## Warum eigene Netzwerke?
+
+Jeder Container hat eine eigene Netzwerkschnittstelle mit eigener IP-Adresse. Diese Adressen liegen in virtuellen Netzwerken, die Docker auf dem Server anlegt. Von außen sind sie nicht direkt erreichbar.
+
+Das ist gewollt. Eine Datenbank soll nur mit ihrer App sprechen, nicht mit dem Internet und nicht mit anderen Diensten. Docker-Netzwerke trennen deine Stacks voneinander, und du entscheidest gezielt, wo eine Verbindung nötig ist.
+
+## Jeder Stack hat sein eigenes Netzwerk
+
+Startest du einen Stack mit `docker compose up -d`, legt Compose automatisch ein **Bridge-Netzwerk** für ihn an. Es heißt wie der Ordner mit dem Zusatz `_default`, zum Beispiel `nextcloud_default`. Alle Container dieses Stacks hängen darin, Container anderer Stacks nicht.
+
+Ein Bridge-Netzwerk ist ein virtueller Switch auf dem Server. Die Container darin können sich gegenseitig erreichen. Nach außen gehen sie über den Server ins Internet, zum Beispiel für Updates.
+
+## Container finden sich über ihren Namen
+
+IP-Adressen von Containern ändern sich bei jedem Neustart. Deshalb bringt Docker einen eigenen DNS-Dienst mit: In selbst angelegten Netzwerken, also auch im Stack-Netzwerk von Compose, erreichst du einen Container über seinen **Dienstnamen** aus der `compose.yaml`. Auch der `container_name` funktioniert.
+
+Beispiel aus der Vorlage für [Nextcloud](/de/dienste/nextcloud/):
+
+```yaml
+services:
+  nextcloud:
+    image: nextcloud:31-apache
+    environment:
+      - MYSQL_HOST=db          # "db" is resolved by Docker's internal DNS
+  db:
+    image: mariadb:11
+```
+
+Nextcloud verbindet sich mit dem Host `db`, und Docker löst den Namen zur aktuellen IP des Datenbank-Containers auf. Die Datenbank veröffentlicht keinen Port. Sie ist nur innerhalb des Stacks erreichbar.
+
+<Callout title="Das Netzwerk bridge ist eine Ausnahme">
+Container, die du ohne Compose mit `docker run` startest, landen im vorgegebenen Netzwerk `bridge`. Dort funktioniert die Namensauflösung nicht. Ein Grund mehr, alles mit Compose zu starten.
+</Callout>
+
+## Das gemeinsame Proxy-Netzwerk
+
+Ein Reverse Proxy wie Traefik muss alle Dienste erreichen, die er nach außen weiterreicht. Die Dienste liegen aber in getrennten Stack-Netzwerken. Die Lösung ist ein zusätzliches Netzwerk, das du einmal von Hand anlegst:
+
+```bash
+docker network create __NETWORK__
+```
+
+Jeder Stack, der über den Proxy erreichbar sein soll, tritt diesem Netzwerk bei. Weil Compose es nicht selbst anlegen soll, markierst du es als `external`:
+
+```yaml
+services:
+  nextcloud:
+    networks:
+      - default          # stack network, reaches the database
+      - __NETWORK__      # proxy network, reachable by Traefik
+  db:
+    # no networks key: only in the stack network
+
+networks:
+  __NETWORK__:
+    external: true
+```
+
+So hängt nur die Web-App im Proxy-Netzwerk. Die Datenbank bleibt im Stack-Netzwerk und ist für Traefik und andere Stacks unsichtbar. Gibst du bei einem Dienst `networks` an, musst du `default` mit aufführen, wenn er weiter mit den anderen Containern des Stacks reden soll.
+
+Die Vorlagen unter [Dienste](/de/dienste/) ergänzen das Proxy-Netzwerk automatisch, wenn du in "Mein Setup" einen Reverse Proxy gewählt hast. Wie ein Reverse Proxy grundsätzlich arbeitet, erklärt [Reverse Proxy erklärt](/de/nachschlagen/reverse-proxy-erklaert/).
+
+## Ports veröffentlichen oder nicht?
+
+Mit `ports` machst du einen Container-Port auf dem Server erreichbar:
+
+```yaml
+ports:
+  - "8080:80"              # all interfaces: server port 8080 to container port 80
+  - "127.0.0.1:8081:80"    # only reachable from the server itself
+```
+
+Ohne Angabe einer Adresse lauscht der Port auf allen Netzwerkschnittstellen des Servers. Er ist dann aus deinem Heimnetz erreichbar, bei einem VPS sogar aus dem ganzen Internet.
+
+Die Faustregel für dieses Homelab:
+
+- **Mit Reverse Proxy:** Nur der Proxy veröffentlicht Ports, nämlich 80 und 443. Alle anderen Dienste hängen im Netzwerk `__NETWORK__` und haben keinen `ports`-Eintrag.
+- **Ohne Reverse Proxy:** Der Dienst veröffentlicht seinen Web-Port, und du erreichst ihn über `http://192.168.1.10:8080` im Heimnetz.
+- **Nur für dich auf dem Server:** Binde an `127.0.0.1`. Dann kommst du nur per SSH-Tunnel heran.
+- **Andere Protokolle** wie SSH für Forgejo (`"2222:22"`) veröffentlichst du, weil der HTTP-Proxy sie nicht weiterleitet.
+
+<Callout type="warning" title="Docker umgeht UFW">
+Docker trägt veröffentlichte Ports direkt in die Firewall-Regeln des Kernels (iptables) ein, und zwar an einer Stelle, die vor den Regeln von UFW greift. Ein Port aus `ports` ist deshalb erreichbar, auch wenn UFW ihn nicht erlaubt. Verlass dich also nicht auf UFW, um Container-Ports zu schützen. Veröffentliche nur, was wirklich nach außen muss, und binde alles andere an `127.0.0.1` oder lass den `ports`-Eintrag ganz weg. Hintergründe stehen in der [Docker-Doku zu Paketfiltern](https://docs.docker.com/engine/network/packet-filtering-firewalls/).
+</Callout>
+
+## Das host-Netzwerk
+
+Mit `network_mode: host` verzichtet ein Container auf eigene Netzwerke und nutzt direkt die Netzwerkschnittstellen des Servers. Jeder Port, auf dem das Programm lauscht, ist sofort auf dem Server offen. Ein `ports`-Eintrag wird dann ignoriert, und Docker-DNS über Containernamen gibt es auch nicht.
+
+Das braucht man selten. Typische Fälle sind Programme, die Geräte im Heimnetz automatisch finden sollen, etwa Home Assistant oder ein Medienserver mit DLNA. Deren Suche arbeitet mit Broadcasts, die nicht durch ein Bridge-Netzwerk kommen. Für alles andere ist das Bridge-Netzwerk die bessere Wahl, weil es die Dienste voneinander trennt.
+
+## Nützliche Befehle
+
+```bash
+docker network ls                    # list all networks
+docker network inspect __NETWORK__   # show which containers are attached
+```
+
+## Weiterlesen
+
+- [Docker-Doku zu Netzwerken](https://docs.docker.com/engine/network/)
+- [Netzwerke in Compose](https://docs.docker.com/compose/how-tos/networking/)
+- [Angriffsfläche klein halten](/de/nachschlagen/angriffsflaeche/): warum weniger offene Ports besser sind

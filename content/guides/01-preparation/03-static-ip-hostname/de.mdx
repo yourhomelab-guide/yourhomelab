@@ -1,7 +1,167 @@
 ---
 slug: feste-ip-hostname
 title: "Feste IP & Hostname"
+description: "Dein Server hat eine feste Adresse im Heimnetz und einen sprechenden Namen. SSH-Verbindungen, Portfreigaben und DNS-Einträge zeigen damit dauerhaft auf das richtige Gerät."
 level: 1
 minutes: 15
-status: stub
+requires: [Linux-Server, SSH-Zugang, Zugang zur Router-Oberfläche]
 ---
+
+Dein Router verteilt Adressen im Heimnetz per **DHCP** (Dynamic Host Configuration Protocol) automatisch. Das ist bequem, aber die Adresse kann sich nach einem Neustart oder nach längerer Pause ändern. Für einen Server ist das ungünstig: Portfreigaben, DNS-Einträge und deine SSH-Verbindung zeigen dann plötzlich ins Leere. Deshalb bekommt der Server eine feste Adresse. Grundlagen dazu findest du unter [IP, Ports & NAT](/de/nachschlagen/ip-ports-nat/).
+
+Es gibt zwei Wege. Der empfohlene ist eine **DHCP-Reservierung** im Router: Der Server fragt weiter per DHCP, bekommt aber immer dieselbe Adresse. Alles bleibt an einer Stelle, und der Router weiß, welche Adressen vergeben sind. Die Alternative ist eine statische Konfiguration direkt auf dem Server.
+
+<OneWay />
+
+<Steps>
+
+<Step title="Aktuelle Netzwerkdaten notieren">
+Verbinde dich per SSH mit dem Server und schau dir Netzwerkkarte, Adresse und MAC-Adresse an. Die MAC-Adresse ist die fest eingebaute Kennung der Netzwerkkarte, an ihr erkennt der Router dein Gerät.
+
+```bash
+ip -br address
+ip -br link
+ip route
+```
+
+Notier dir:
+
+- den Namen der Netzwerkkarte, z. B. `enp1s0`
+- die aktuelle Adresse, z. B. `192.168.1.50/24`
+- die MAC-Adresse, z. B. `aa:bb:cc:dd:ee:ff`
+- das Gateway aus der Zeile `default via 192.168.1.1`, das ist dein Router
+</Step>
+
+<Step title="Empfohlen: Adresse im Router reservieren">
+Öffne die Oberfläche deines Routers im Browser. Die Adresse steht meist auf der Unterseite des Geräts. Such in der Liste der Netzwerkgeräte nach deinem Server (Hostname oder MAC-Adresse) und aktiviere die feste Zuweisung.
+
+Bei einer FRITZ!Box findest du das unter **Heimnetz → Netzwerk**. Dort den Server bearbeiten und „Diesem Netzwerkgerät immer die gleiche IPv4-Adresse zuweisen“ aktivieren. Bei anderen Routern heißt die Funktion z. B. „DHCP-Reservierung“, „Static Lease“ oder „Adressreservierung“.
+
+Du kannst die Adresse behalten, die der Server gerade hat, oder eine eigene wählen, etwa `192.168.1.10`. Starte danach den Server neu, damit er die reservierte Adresse sicher bekommt:
+
+```bash
+sudo reboot
+```
+
+Wenn du die Adresse geändert hast, verbindest du dich danach mit der neuen Adresse. Damit bist du fertig und kannst direkt beim Schritt **Hostname prüfen** weitermachen.
+</Step>
+
+<Step title="Alternative: statische IP auf Debian (ifupdown)">
+Nur nötig, wenn du keine Reservierung im Router einrichten kannst oder willst. Wähl dann eine Adresse **außerhalb** des DHCP-Bereichs deines Routers, sonst vergibt der Router sie womöglich zusätzlich an ein anderes Gerät. Den Bereich findest du in den DHCP-Einstellungen des Routers.
+
+<Callout type="warning" title="Am besten direkt am Server arbeiten">
+Ein Tippfehler in der Netzwerkkonfiguration kann die SSH-Verbindung trennen. Mach diesen Schritt am besten mit Monitor und Tastatur am Server.
+</Callout>
+
+Debian verwaltet das Netzwerk auf Servern mit `ifupdown`. Öffne die Konfiguration:
+
+```bash
+sudo nano /etc/network/interfaces
+```
+
+Ersetze den Block deiner Netzwerkkarte (die Zeile mit `inet dhcp` und ggf. `allow-hotplug`) durch eine statische Konfiguration. Netzwerkkarte, Adresse und Gateway passt du an deine Werte an:
+
+```text
+auto enp1s0
+iface enp1s0 inet static
+    address 192.168.1.10/24
+    gateway 192.168.1.1
+```
+
+Den DNS-Server trägst du in `/etc/resolv.conf` ein, meist ist das ebenfalls dein Router:
+
+```text
+nameserver 192.168.1.1
+```
+
+Starte den Server danach neu (`sudo reboot`) und verbinde dich mit der neuen Adresse.
+</Step>
+
+<Step title="Alternative: statische IP auf Ubuntu (netplan)">
+Ubuntu Server konfiguriert das Netzwerk mit **netplan**. Auch hier gilt: Adresse außerhalb des DHCP-Bereichs wählen.
+
+Die Installation hat die Konfiguration über cloud-init angelegt. Damit cloud-init deine Änderungen nicht wieder überschreibt, schaltest du dessen Netzwerkverwaltung ab:
+
+```bash
+echo 'network: {config: disabled}' | sudo tee /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+```
+
+Schau nach, welche Datei in `/etc/netplan/` liegt, und öffne sie:
+
+```bash
+ls /etc/netplan/
+sudo nano /etc/netplan/50-cloud-init.yaml
+```
+
+Ersetze den Inhalt durch eine statische Konfiguration. Achte auf die Einrückung mit Leerzeichen, YAML ist dabei streng:
+
+```yaml
+network:
+  version: 2
+  ethernets:
+    enp1s0:
+      dhcp4: false
+      addresses:
+        - 192.168.1.10/24
+      routes:
+        - to: default
+          via: 192.168.1.1
+      nameservers:
+        addresses: [192.168.1.1]
+```
+
+Teste die Konfiguration mit `netplan try`. Wenn du die neue Einstellung nicht innerhalb von zwei Minuten mit `Enter` bestätigst, stellt netplan die alte wieder her. So sperrst du dich nicht aus:
+
+```bash
+sudo netplan try
+```
+
+Wenn die Verbindung steht, bestätige mit `Enter` und verbinde dich danach mit der neuen Adresse.
+</Step>
+
+<Step title="Hostname prüfen und setzen">
+Der Hostname ist der Name des Servers im Netzwerk und in deiner Eingabeaufforderung. Kurz, klein geschrieben, ohne Leerzeichen, z. B. `homelab`. Du hast ihn bei der Installation schon vergeben. So prüfst du ihn:
+
+```bash
+hostnamectl
+```
+
+Wenn du ihn ändern willst:
+
+```bash
+sudo hostnamectl set-hostname homelab
+```
+
+Trag den neuen Namen auch in `/etc/hosts` ein, sonst meldet `sudo` eine Warnung, dass es den Namen nicht auflösen kann:
+
+```bash
+sudo nano /etc/hosts
+```
+
+Die Zeile mit `127.0.1.1` muss den neuen Namen enthalten:
+
+```text
+127.0.0.1       localhost
+127.0.1.1       homelab
+```
+
+Melde dich einmal ab und wieder an, dann zeigt auch die Eingabeaufforderung den neuen Namen.
+</Step>
+
+<Step title="Verbindung testen">
+Prüf zum Schluss, ob Adresse, Gateway und Namensauflösung stimmen:
+
+```bash
+ip -br address
+ip route
+ping -c 3 debian.org
+```
+
+Du solltest die feste Adresse sehen, eine `default`-Route über deinen Router und Antworten auf den Ping.
+
+Viele Router lösen Gerätenamen im Heimnetz auf. Dann erreichst du den Server auch per Name, z. B. `ssh deinname@homelab` oder bei einer FRITZ!Box `ssh deinname@homelab.fritz.box`. Klappt das nicht, nutzt du einfach die IP-Adresse.
+
+Als Nächstes sicherst du den Zugang ab: [SSH-Schlüssel einrichten](/de/einrichten/ssh-schluessel/).
+</Step>
+
+</Steps>

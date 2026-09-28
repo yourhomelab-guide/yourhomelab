@@ -1,0 +1,95 @@
+---
+slug: benutzer-sudo
+title: "Benutzer & sudo"
+description: "Am Ende arbeitest du mit einem eigenen Benutzer, der sich per SSH-Schlüssel anmeldet und Admin-Befehle mit sudo ausführt. root meldet sich nicht mehr direkt an."
+level: 1
+minutes: 10
+requires: [Linux-Server, SSH-Zugang]
+---
+
+root darf auf einem Linux-System alles, ohne Rückfrage. Ein Tippfehler als root kann das ganze System löschen, und ein Angreifer, der root übernimmt, hat sofort alles. Deshalb arbeitest du im Alltag als **normaler Benutzer** und holst dir Admin-Rechte nur für einzelne Befehle mit `sudo`. Das kostet ein paar Zeichen mehr, macht Fehler aber seltener und sichtbarer. Außerdem protokolliert sudo, wer wann welchen Befehl ausgeführt hat.
+
+## Brauchst du diesen Guide?
+
+Das hängt davon ab, wie dein Server eingerichtet wurde:
+
+- **Ubuntu Server:** Der Installer legt immer einen Benutzer mit sudo-Rechten an, root hat kein Passwort. Du bist fertig. Prüf höchstens kurz mit `sudo whoami`.
+- **Debian ohne root-Passwort:** Hast du im Installer das root-Passwort leer gelassen, bekommt dein Benutzer automatisch sudo-Rechte. Ebenfalls fertig.
+- **Debian mit root-Passwort:** Dein Benutzer existiert, darf aber kein sudo. Oft ist sudo gar nicht installiert. Wechsle mit `su -` zu root (das Minus ist wichtig, erst damit findet die Shell Befehle wie `usermod`) und mach mit Schritt 2 weiter.
+- **Gemieteter Server mit nur root:** Viele Hoster liefern Server nur mit root aus. Mach alle Schritte.
+
+In den Beispielen heißt der neue Benutzer `alex`. Nimm deinen eigenen Namen, kleingeschrieben und ohne Leerzeichen.
+
+<Steps>
+
+<Step title="Benutzer anlegen">
+Melde dich als root an und leg den Benutzer an:
+
+```bash
+adduser alex
+```
+
+`adduser` fragt nach einem Passwort und ein paar optionalen Angaben wie dem vollen Namen, die du mit Enter überspringen kannst. Wähle ein starkes Passwort. Per SSH brauchst du es später nicht mehr, aber `sudo` fragt danach.
+</Step>
+
+<Step title="sudo installieren und Benutzer berechtigen">
+Auf Debian fehlt sudo, wenn du bei der Installation ein root-Passwort gesetzt hast. Installier es als root und nimm den Benutzer in die Gruppe `sudo` auf. Mitglieder dieser Gruppe dürfen auf Debian und Ubuntu alle Befehle per sudo ausführen.
+
+```bash
+apt update
+apt install sudo
+usermod -aG sudo alex
+```
+
+`-aG` heißt „zur Gruppe hinzufügen“. Ohne das `-a` würde der Benutzer aus allen anderen Gruppen entfernt.
+</Step>
+
+<Step title="SSH-Schlüssel übernehmen">
+Hast du deinen Schlüssel bisher bei root hinterlegt, kopierst du ihn zum neuen Benutzer. Die Befehle laufen noch als root:
+
+```bash
+mkdir -p /home/alex/.ssh
+cp /root/.ssh/authorized_keys /home/alex/.ssh/
+chown -R alex:alex /home/alex/.ssh
+chmod 700 /home/alex/.ssh
+chmod 600 /home/alex/.ssh/authorized_keys
+```
+
+Ohne `chown` gehören die Dateien root, und der SSH-Server ignoriert sie. Hast du noch keinen Schlüssel auf dem Server, richte ihn wie im Guide [SSH-Schlüssel einrichten](/de/einrichten/ssh-schluessel/) direkt für `alex` ein.
+</Step>
+
+<Step title="Neuen Benutzer testen">
+Lass die root-Sitzung offen und öffne ein neues Terminal auf deinem Rechner:
+
+```bash
+ssh alex@192.168.1.10
+```
+
+Dann prüfst du sudo. Die Gruppenzugehörigkeit gilt erst ab einer neuen Anmeldung, deshalb testest du in dieser frischen Sitzung:
+
+```bash
+sudo whoami
+```
+
+Nach Eingabe deines Passworts muss `root` erscheinen. Klappt beides, arbeitest du ab jetzt nur noch als `alex`. Denk daran, in `~/.ssh/config` auf deinem Rechner `User alex` einzutragen.
+</Step>
+
+<Step title="root-Anmeldung sperren">
+Die direkte Anmeldung als root per SSH schaltest du mit `PermitRootLogin no` ab. Das erledigst du im nächsten Guide, [SSH härten](/de/einrichten/ssh-haerten/).
+
+Optional kannst du zusätzlich das Passwort von root sperren. Dann kann sich root auch an der lokalen Konsole nicht mehr anmelden. Ubuntu macht das von Haus aus so.
+
+```bash
+sudo passwd -l root
+```
+
+<Callout type="warning" title="Kehrseite">
+Mit gesperrtem root-Passwort funktioniert der Rettungsmodus beim Booten auf Debian nicht mehr, weil er nach dem root-Passwort fragt. Im Notfall brauchst du dann einen USB-Stick mit einem Live-System. Auf einem Server zuhause kannst du das Passwort deshalb auch behalten, solange SSH für root gesperrt ist. Rückgängig machst du die Sperre mit `sudo passwd -u root`.
+</Callout>
+</Step>
+
+</Steps>
+
+## Ein Wort zur Gruppe docker
+
+Später nimmst du deinen Benutzer in die Gruppe `docker` auf, damit du `docker` ohne sudo nutzen kannst. Das ist bequem, aber wisse: Wer Container starten darf, kann damit auch das ganze Dateisystem des Servers einbinden. Mitglied in `docker` zu sein, ist also praktisch so mächtig wie root. Nimm dort nur Benutzer auf, denen du auch sudo geben würdest. Mehr dazu im Guide [Docker installieren](/de/einrichten/docker-installieren/).
