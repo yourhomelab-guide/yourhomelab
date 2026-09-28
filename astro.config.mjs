@@ -33,6 +33,9 @@ const sitemapNoindex = () => ({
 export default defineConfig({
   site: 'https://yourhomelab.guide',
   trailingSlash: 'always',
+  // No page at "/": on the live server public/.htaccess sends visitors to /de/ or /en/ by browser language.
+  // This fallback only matters locally (dev/preview), where there is no .htaccess.
+  redirects: { '/': '/de/' },
   build: { format: 'directory', inlineStylesheets: 'auto' },
   compressHTML: true,
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },

@@ -17,7 +17,8 @@ ErrorDocument 404 /404.html
   RewriteCond %{HTTP_HOST} ^www\. [NC]
   RewriteRule ^ https://yourhomelab.guide%{REQUEST_URI} [R=301,L,NE]
 
-  # Language switch at "/": German browsers → /de/, everyone else → /en/ (302, so it can change per visitor)
+  # Language switch at "/": German browsers → /de/, everyone else → /en/ (302, so it can change per visitor).
+  # There is no page at "/" itself.
   RewriteCond %{HTTP:Accept-Language} ^\s*de [NC]
   RewriteRule ^$ /de/ [R=302,L,E=LANGREDIRECT:1]
   RewriteRule ^$ /en/ [R=302,L,E=LANGREDIRECT:1]
