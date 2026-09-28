@@ -37,7 +37,7 @@ jobs:
           node scripts/translate.mjs deepl
       - name: Check that the site still builds
         run: npm run build
-      - uses: peter-evans/create-pull-request@v7
+      - uses: peter-evans/create-pull-request@v8
         with:
           branch: auto/translations
           delete-branch: true
