@@ -178,11 +178,15 @@ const alternates = article ? { de: url.wiki('de', article.slugs.de), en: url.wik
       const y = sessionStorage.getItem(KEY);
       if (y) side.scrollTop = Number(y);
     } catch {}
+    // The current article must be visible on screen, not just inside the sidebar: at the top of the page the
+    // banners push the sidebar down, so its lower end can be below the viewport.
     const cur = side.querySelector<HTMLElement>('[aria-current="page"]');
     if (cur) {
       const r = cur.getBoundingClientRect();
       const s = side.getBoundingClientRect();
-      if (r.top < s.top || r.bottom > s.bottom) side.scrollTop += r.top - s.top - s.height / 2;
+      const top = Math.max(s.top, 0);
+      const bottom = Math.min(s.bottom, innerHeight);
+      if (r.top < top + 8 || r.bottom > bottom - 8) side.scrollTop += r.top + r.height / 2 - (top + bottom) / 2;
     }
     addEventListener('pagehide', () => {
       try {
