@@ -40,8 +40,8 @@ jobs:
           HOST: ${{ secrets.DEPLOY_HOST }}
           USER: ${{ secrets.DEPLOY_USER }}
           PASS: ${{ secrets.DEPLOY_PASSWORD }}
-          TARGET: ${{ vars.DEPLOY_PATH || 'public_html' }}
-          PROTOCOL: ${{ vars.DEPLOY_PROTOCOL || 'sftp' }}
+          TARGET: ${{ vars.DEPLOY_PATH || secrets.DEPLOY_PATH || 'public_html' }}
+          PROTOCOL: ${{ vars.DEPLOY_PROTOCOL || secrets.DEPLOY_PROTOCOL || 'sftp' }}
         run: |
           sudo apt-get install -y -qq lftp >/dev/null
           # Hashed assets first, HTML last, so visitors never get HTML pointing to missing files.
@@ -61,8 +61,8 @@ jobs:
           HOST: ${{ secrets.DEPLOY_HOST }}
           USER: ${{ secrets.DEPLOY_USER }}
           PASS: ${{ secrets.DEPLOY_PASSWORD }}
-          TARGET: ${{ vars.DEPLOY_PATH || 'public_html' }}
-          PROTOCOL: ${{ vars.DEPLOY_PROTOCOL || 'sftp' }}
+          TARGET: ${{ vars.DEPLOY_PATH || secrets.DEPLOY_PATH || 'public_html' }}
+          PROTOCOL: ${{ vars.DEPLOY_PROTOCOL || secrets.DEPLOY_PROTOCOL || 'sftp' }}
         run: |
           lftp -u "$USER","$PASS" "$PROTOCOL://$HOST" <<LFTP
           set sftp:auto-confirm yes
