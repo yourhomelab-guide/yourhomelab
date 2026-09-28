@@ -11,7 +11,7 @@ Email: hello@yourhomelab.guide
 
 ## 2. Hosting and server logs
 
-This website is hosted by Hetzner Online GmbH, Industriestr. 25, 91710 Gunzenhausen, on servers in Germany. When you visit, the web server processes technically necessary data: IP address, date and time, requested page, amount of data transferred, referrer, browser and operating system. This serves delivering the site and operating it securely (Art. 6 (1) (f) GDPR). Logs are deleted after <mark>7 days</mark>. A data processing agreement according to Art. 28 GDPR is in place with Hetzner.
+This website is hosted by Hetzner Online GmbH, Industriestr. 25, 91710 Gunzenhausen, on servers in Germany. When you visit, the web server processes technically necessary data: IP address, date and time, requested page, amount of data transferred, referrer, browser and operating system. This serves delivering the site and operating it securely (Art. 6 (1) (f) GDPR). Logs are deleted after 30 days. A data processing agreement according to Art. 28 GDPR is in place with Hetzner.
 
 ## 3. No cookies, no third-party providers
 

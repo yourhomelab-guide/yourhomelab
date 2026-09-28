@@ -11,7 +11,7 @@ E-Mail: hello@yourhomelab.guide
 
 ## 2. Hosting und Server-Logs
 
-Die Website wird bei der Hetzner Online GmbH, Industriestr. 25, 91710 Gunzenhausen, auf Servern in Deutschland betrieben. Beim Aufruf verarbeitet der Webserver technisch notwendige Daten: IP-Adresse, Datum und Uhrzeit, aufgerufene Seite, übertragene Datenmenge, Referrer, Browser und Betriebssystem. Das dient der Auslieferung und dem sicheren Betrieb der Seite (Art. 6 Abs. 1 lit. f DSGVO). Die Logs werden nach <mark>7 Tagen</mark> gelöscht. Mit Hetzner besteht ein Vertrag zur Auftragsverarbeitung nach Art. 28 DSGVO.
+Die Website wird bei der Hetzner Online GmbH, Industriestr. 25, 91710 Gunzenhausen, auf Servern in Deutschland betrieben. Beim Aufruf verarbeitet der Webserver technisch notwendige Daten: IP-Adresse, Datum und Uhrzeit, aufgerufene Seite, übertragene Datenmenge, Referrer, Browser und Betriebssystem. Das dient der Auslieferung und dem sicheren Betrieb der Seite (Art. 6 Abs. 1 lit. f DSGVO). Die Logs werden nach 30 Tagen gelöscht. Mit Hetzner besteht ein Vertrag zur Auftragsverarbeitung nach Art. 28 DSGVO.
 
 ## 3. Keine Cookies, keine fremden Anbieter
 

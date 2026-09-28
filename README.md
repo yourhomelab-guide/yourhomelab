@@ -1,57 +1,62 @@
 # yourhomelab
 
-**Dein eigener Server. Schritt für Schritt.** – Das Selfhosting-Handbuch unter [yourhomelab.guide](https://yourhomelab.guide).
+**Your own server. Step by step.** – The self-hosting handbook at [yourhomelab.guide](https://yourhomelab.guide).
 
-- **Nachschlagen**: Grundlagen wie ein Wiki
-- **Einrichten**: sieben Etappen vom leeren Rechner zum laufenden Homelab, jeder Schritt abhakbar
-- **Dienste**: geprüfte `compose.yaml` und `.env`, die sich an Domain, Pfade und Reverse Proxy des Besuchers anpassen
+- **Learn**: the fundamentals, organized like a wiki
+- **Set up**: seven stages from an empty machine to a running homelab, every step can be ticked off
+- **Services**: tested `compose.yaml` and `.env` files that adapt to the visitor's domain, paths and reverse proxy
 
-Deutsch ist die Ausgangssprache. Englisch wird bei jeder Änderung automatisch mit DeepL übersetzt und von Maintainern lokal mit Claude Code nachpoliert.
+German is the source language. English is machine-translated with DeepL on every change and polished by maintainers
+with Claude Code.
 
-## Mitmachen
+## Contributing
 
-Alles Inhaltliche liegt als einzelne Datei in [`content/`](content). Wie du Artikel schreibst, Guides ergänzt
-oder einen Dienst hinzufügst, steht in [CONTRIBUTING.md](CONTRIBUTING.md). Kurzfassung:
+All content lives as individual files in [`content/`](content). How to write articles, add guides or contribute a
+service is described in [CONTRIBUTING.md](CONTRIBUTING.md) (German – feel free to open issues and PRs in English).
+In short:
 
 ```bash
 npm install
 npm run dev                       # http://localhost:4321
-npm run new service jellyfin      # neuen Dienst anlegen
+npm run new service jellyfin      # scaffold a new service
 ```
 
-## Technik
+## How it works
 
-- [Astro](https://astro.build) erzeugt eine rein statische Seite (kein Node auf dem Server nötig).
-- Kein Tracking, keine Cookies, keine externen Requests: Schriften und Logos werden mit ausgeliefert.
-- Alle Dateien werden beim Build mit Brotli und Gzip vorkomprimiert; `public/.htaccess` liefert sie aus.
-- GitHub Actions: `ci.yml` baut jeden PR, `deploy.yml` lädt `main` per SFTP auf das Hetzner-Webhosting,
-  `translate.yml` übersetzt geänderte Inhalte mit DeepL und öffnet einen PR.
+- [Astro](https://astro.build) builds a fully static site – no Node.js needed on the server.
+- No cookies and no third-party requests: fonts and logos are served from the site itself. Cookieless, self-hosted
+  [Umami](https://umami.is) counts page views.
+- Every file is precompressed with Brotli and gzip at build time; [`public/.htaccess`](public/.htaccess) serves them
+  and sets caching and security headers.
+- GitHub Actions: `ci.yml` builds every pull request, `deploy.yml` uploads `main` to Hetzner web hosting via SFTP,
+  `translate.yml` translates changed content with DeepL and opens a pull request.
 
-| Befehl | Zweck |
+| Command | Purpose |
 | --- | --- |
-| `npm run dev` | Entwicklungsserver |
-| `npm run build` | Seite nach `dist/` bauen und vorkomprimieren |
-| `npm run new …` | Dienst, Artikel oder Guide anlegen |
-| `npm run translate status` | Zeigt fehlende, veraltete und maschinell übersetzte Dateien |
-| `npm run translate deepl` | Übersetzt fehlende/veraltete Dateien mit DeepL (braucht `DEEPL_API_KEY`) |
-| `npm run translate stamp <dateien> --by claude` | Markiert selbst übersetzte Dateien als aktuell |
+| `npm run dev` | Development server |
+| `npm run build` | Build the site into `dist/` and precompress it |
+| `npm run new …` | Scaffold a service, wiki article or guide |
+| `npm run translate status` | List missing, outdated and machine-translated files |
+| `npm run translate deepl` | Translate missing/outdated files with DeepL (needs `DEEPL_API_KEY`) |
+| `npm run translate stamp <files> --by claude` | Mark files you translated yourself as up to date |
 
-### Einrichtung für Maintainer
+### Maintainer setup
 
-Repository-Secrets (Settings → Secrets and variables → Actions):
+Secrets (Settings → Secrets and variables → Actions):
 
-| Name | Art | Inhalt |
+| Name | Where | Content |
 | --- | --- | --- |
-| `DEPLOY_HOST` | Secret | z. B. `wwwXXX.your-server.de` (konsoleH → Zugangsdaten) |
-| `DEPLOY_USER` | Secret | FTP/SSH-Benutzer |
-| `DEPLOY_PASSWORD` | Secret | Passwort des Benutzers |
-| `DEEPL_API_KEY` | Secret | DeepL API Free (endet auf `:fx`), für die automatische Übersetzung |
-| `DEPLOY_PATH` | Variable | Zielordner, Standard `public_html` |
-| `DEPLOY_PROTOCOL` | Variable | `sftp` (Standard) oder `ftp` (FTPS) |
+| `DEPLOY_HOST` | Environment `production` | e.g. `wwwXXX.your-server.de` (konsoleH → access data) |
+| `DEPLOY_USER` | Environment `production` | SFTP/FTP user |
+| `DEPLOY_PASSWORD` | Environment `production` | Password of that user |
+| `DEPLOY_PATH` | Environment `production` (optional) | Target folder, default `public_html` |
+| `DEPLOY_PROTOCOL` | Environment `production` (optional) | `sftp` (default) or `ftp` (FTPS) |
+| `DEEPL_API_KEY` | Repository | DeepL API key for automatic translations |
 
-Außerdem: Environment `production` anlegen (optional mit Schutzregeln), die [Renovate-App](https://github.com/apps/renovate)
-installieren (hält Image-Versionen in den Vorlagen aktuell) und Discussions aktivieren.
+Also: restrict the `production` environment to the `main` branch, allow GitHub Actions to create pull requests
+(organization and repository settings), install the [Renovate app](https://github.com/apps/renovate) to keep image
+versions in the templates up to date, and enable Discussions.
 
-## Lizenz
+## License
 
-Texte: [CC BY-SA 4.0](LICENSE-CONTENT.md) · Code und Vorlagen: [MIT](LICENSE)
+Texts: [CC BY-SA 4.0](LICENSE-CONTENT.md) · Code and templates: [MIT](LICENSE)
