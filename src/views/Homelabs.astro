@@ -31,7 +31,8 @@ const submit = `${site.repo}/issues/new?template=homelab.yml`;
       <a class="btn btn-primary" href={submit}>{t(lang, 'homelabs.submitCta')} ↗</a>
     </div>
 
-    <div class="filters card" data-lab-filters>
+    <div class="layout">
+    <aside class="filters" data-lab-filters>
       <div class="search-row">
       <label class="search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C8894" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5 20 20"></path></svg>
@@ -42,11 +43,11 @@ const submit = `${site.repo}/issues/new?template=homelab.yml`;
       {
         facets.map((f) => (
           <div class="facet" role="group" aria-label={t(lang, `homelabs.field.${f.id}`)}>
-            <span class="facet-l">{t(lang, `homelabs.field.${f.id}`)}</span>
+            <span class="eyebrow facet-l">{t(lang, `homelabs.field.${f.id}`)}</span>
             <div class="opts">
               {f.options.map((o) => (
                 <button type="button" class="opt" aria-pressed="false" data-facet={f.id} data-value={o.v}>
-                  {t(lang, `homelabs.${f.id}.${o.v}`)} <span>{o.n}</span>
+                  {t(lang, `homelabs.${f.id}.${o.v}`)} <span data-n>{o.n}</span>
                 </button>
               ))}
             </div>
@@ -57,8 +58,9 @@ const submit = `${site.repo}/issues/new?template=homelab.yml`;
         <span data-lab-count data-template={t(lang, 'homelabs.count')} data-total={labs.length}>{t(lang, 'homelabs.count', { n: labs.length, total: labs.length })}</span>
         <button type="button" class="link-btn" data-lab-reset hidden>{t(lang, 'homelabs.reset')}</button>
       </div>
-    </div>
+    </aside>
 
+    <div class="results">
     <div class="grid">
       {
         labs.map((l) => (
@@ -92,6 +94,8 @@ const submit = `${site.repo}/issues/new?template=homelab.yml`;
       </a>
     </div>
     <p class="muted" data-lab-none hidden>{t(lang, 'homelabs.none')}</p>
+    </div>
+    </div>
   </main>
 </Base>
 
@@ -103,20 +107,27 @@ const submit = `${site.repo}/issues/new?template=homelab.yml`;
   const reset = document.querySelector<HTMLButtonElement>('[data-lab-reset]')!;
 
   // Within a filter group any selected value matches (OR), across groups all must match (AND)
+  const has = (c: HTMLElement, f: string, v: string) => (c.getAttribute(`data-f-${f}`) ?? '').split(' ').includes(v);
+  function matches(c: HTMLElement, term: string, active: Map<string, string[]>, skip?: string) {
+    if (term && !c.dataset.text!.includes(term)) return false;
+    return [...active].every(([f, vals]) => f === skip || vals.some((v) => has(c, f, v)));
+  }
   function apply() {
     const term = q.value.trim().toLowerCase();
     const active = new Map<string, string[]>();
     for (const o of opts) if (o.getAttribute('aria-pressed') === 'true') active.set(o.dataset.facet!, [...(active.get(o.dataset.facet!) ?? []), o.dataset.value!]);
     let n = 0;
     for (const c of cards) {
-      const show =
-        (!term || c.dataset.text!.includes(term)) &&
-        [...active].every(([f, vals]) => {
-          const have = (c.getAttribute(`data-f-${f}`) ?? '').split(' ');
-          return vals.some((v) => have.includes(v));
-        });
+      const show = matches(c, term, active);
       c.hidden = !show;
       if (show) n++;
+    }
+    // Each option shows how many homelabs the list would have with it: the other groups stay as they are
+    for (const o of opts) {
+      const f = o.dataset.facet!;
+      const count = cards.filter((c) => matches(c, term, active, f) && has(c, f, o.dataset.value!)).length;
+      o.querySelector('[data-n]')!.textContent = String(count);
+      o.disabled = count === 0 && o.getAttribute('aria-pressed') !== 'true';
     }
     count.textContent = count.dataset.template!.replace('{n}', String(n)).replace('{total}', count.dataset.total!);
     document.querySelector<HTMLElement>('[data-lab-none]')!.hidden = n > 0;
@@ -148,24 +159,26 @@ const submit = `${site.repo}/issues/new?template=homelab.yml`;
   .labs { padding-top: 48px; padding-bottom: 88px; display: flex; flex-direction: column; gap: 24px; }
   .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
   .head-text { display: flex; flex-direction: column; gap: 10px; max-width: 680px; }
-  .filters { border-radius: 20px; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+  .layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 32px; align-items: start; }
+  .filters { position: sticky; top: calc(var(--header-h) + 20px); max-height: calc(100vh - var(--header-h) - 40px); overflow-y: auto; scrollbar-width: thin; display: flex; flex-direction: column; gap: 20px; padding: 2px; }
+  .results { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
   .search-row { display: flex; gap: 10px; align-items: center; }
   .toggle { display: none; -webkit-tap-highlight-color: transparent; height: 44px; flex: none; border: 1.5px solid var(--line-2); background: #fff; border-radius: 999px; padding: 0 16px; font-size: 14px; font-weight: 600; color: var(--text-2); }
   .toggle[aria-expanded='true'] { border-color: var(--accent); color: var(--accent-600); }
-  .search { flex: 1; height: 44px; max-width: 420px; border-radius: 999px; background: var(--bg); display: flex; align-items: center; gap: 10px; padding: 0 16px; }
-  .search:focus-within { box-shadow: 0 0 0 2px var(--accent); }
+  .search { flex: 1; min-width: 0; height: 44px; border-radius: 14px; background: var(--surface); border: 1.5px solid var(--line-2); display: flex; align-items: center; gap: 10px; padding: 0 16px; }
+  .search:focus-within { border-color: var(--accent); }
   .search input { flex: 1; border: none; background: none; font-size: 14.5px; min-width: 0; outline: none; }
-  .facet { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; align-items: baseline; }
-  .facet-l { font-size: 13px; font-weight: 600; color: var(--text-4); }
+  .facet { display: flex; flex-direction: column; gap: 8px; }
   .opts { display: flex; gap: 6px; flex-wrap: wrap; }
   .opt { -webkit-tap-highlight-color: transparent; border: 1.5px solid var(--line-2); background: #fff; color: var(--text-2); border-radius: 999px; padding: 5px 12px; font-size: 13.5px; }
-  .opt:hover { border-color: var(--accent); }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt:disabled { opacity: 0.45; cursor: default; }
   .opt span { color: var(--faint); font-size: 12.5px; }
   .opt[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
   .opt[aria-pressed='true'] span { color: #fff; opacity: 0.75; }
-  .status { display: flex; gap: 16px; align-items: center; font-size: 13.5px; color: var(--muted); padding-top: 4px; border-top: 1px solid var(--line-3); padding-top: 12px; }
+  .status { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-size: 13.5px; color: var(--muted); border-top: 1px solid var(--line-2); padding-top: 14px; }
   .status .link-btn { color: var(--accent-600); font-weight: 600; font-size: 13.5px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 16px; }
   .lab { padding: 22px; display: flex; flex-direction: column; gap: 10px; color: var(--text); }
   .lab:hover { box-shadow: var(--ring); text-decoration: none; color: var(--text); }
   .lab[hidden] { display: none; }
@@ -179,11 +192,14 @@ const submit = `${site.repo}/issues/new?template=homelab.yml`;
   .submit strong { font-size: 17px; }
   .submit span { font-size: 14.5px; line-height: 1.55; color: var(--text-4); }
   .submit .submit-cta { font-size: 14px; font-weight: 600; color: var(--accent-600); margin-top: 6px; }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .filters { position: static; max-height: none; overflow: visible; background: var(--surface); border-radius: 20px; padding: 16px; gap: 16px; }
+    .facet { display: none; }
+    .filters.is-open .facet { display: flex; }
+    .toggle { display: block; }
+  }
   @media (max-width: 720px) {
     .labs { padding-top: 32px; }
-    .facet { grid-template-columns: minmax(0, 1fr); gap: 6px; display: none; }
-    .filters.is-open .facet { display: grid; }
-    .search { max-width: none; }
-    .toggle { display: block; }
   }
 </style>

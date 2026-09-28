@@ -5,7 +5,7 @@ import OneWay from '../components/OneWay.astro';
 import ServiceLogo from '../components/ServiceLogo.astro';
 import GuidesData from '../components/GuidesData.astro';
 import { site } from '../config/site';
-import { getFaq, getServices, getSetupPath, getWiki } from '../lib/content';
+import { getFaq, getHomelabs, getServices, getSetupPath, getWiki } from '../lib/content';
 import { t, type Lang } from '../lib/i18n';
 import { url } from '../lib/routes';
 
@@ -13,7 +13,8 @@ interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
-const [{ stages, guides }, services, faq, wiki] = await Promise.all([getSetupPath(lang), getServices(lang), getFaq(lang), getWiki(lang)]);
+const [{ stages, guides }, services, faq, wiki, homelabs] = await Promise.all([getSetupPath(lang), getServices(lang), getFaq(lang), getWiki(lang), getHomelabs()]);
+const labs = homelabs.slice(0, 3);
 const faqRendered = await Promise.all(faq.map(async (f) => ({ q: f.entry.data.question, Content: (await render(f.entry)).Content })));
 const pad = (n: number) => String(n).padStart(2, '0');
 const popular = services.filter((s) => s.popular);
@@ -120,6 +121,31 @@ const doors = [
         }
       </div>
     </section>
+
+    {
+      labs.length > 0 && (
+        <section class="labs">
+          <div class="sec-head">
+            <div class="labs-intro">
+              <h2 class="h2">{t(lang, 'home.homelabsTitle')}</h2>
+              <p>{t(lang, 'home.homelabsLead')}</p>
+            </div>
+            <a class="link-btn" href={url.section(lang, 'homelabs')}>{t(lang, 'home.allHomelabs', { n: homelabs.length })} →</a>
+          </div>
+          <div class="lab-grid">
+            {labs.map((l) => (
+              <a class="lab card" href={url.homelab(lang, l.id)}>
+                <strong>{l.data.name}</strong>
+                <span class="lab-meta">
+                  {t(lang, 'homelabs.serversN', { n: l.data.servers })} · {l.data.platform.map((v) => t(lang, `homelabs.platform.${v}`)).join(', ')}
+                </span>
+                <p>{l.data.summary}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
 
     <section class="faq">
       <div class="faq-intro">
@@ -264,6 +290,16 @@ const doors = [
   .pop-logo { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
   .pop-name { font-size: 14.5px; font-weight: 600; }
   .pop-cat { font-size: 12.5px; color: var(--muted); }
+
+  .labs { display: flex; flex-direction: column; gap: 20px; }
+  .labs-intro { display: flex; flex-direction: column; gap: 8px; max-width: 640px; }
+  .labs-intro p { font-size: 16px; line-height: 1.6; color: var(--text-3); }
+  .lab-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+  .lab { padding: 22px; display: flex; flex-direction: column; gap: 8px; color: var(--text); }
+  .lab:hover { box-shadow: var(--ring); text-decoration: none; color: var(--text); }
+  .lab strong { font-size: 17px; font-weight: 700; }
+  .lab-meta { font-size: 13px; color: var(--muted); }
+  .lab p { font-size: 14.5px; line-height: 1.55; color: var(--text-3); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
   .faq { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 40px; align-items: start; }
   .faq-intro { display: flex; flex-direction: column; gap: 12px; max-width: 420px; }

@@ -447,6 +447,10 @@
     "hash": "f4124edec3ae7ebf",
     "by": "claude"
   },
+  "src/i18n/de.json#home.allHomelabs": {
+    "hash": "9bc5ee6383f22c89",
+    "by": "claude"
+  },
   "src/i18n/de.json#home.allServices": {
     "hash": "997a49303180c44c",
     "by": "claude"
@@ -549,6 +553,14 @@
   },
   "src/i18n/de.json#home.faqTitle": {
     "hash": "bb8f48ee26d70001",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.homelabsLead": {
+    "hash": "f766d3153a1acf15",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.homelabsTitle": {
+    "hash": "04f2e12641972f36",
     "by": "claude"
   },
   "src/i18n/de.json#home.lead": {

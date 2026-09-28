@@ -169,11 +169,41 @@ const alternates = article ? { de: url.wiki('de', article.slugs.de), en: url.wik
     });
     document.querySelector<HTMLElement>('[data-wiki-nohits]')!.hidden = any;
   });
+
+  // Keep the sidebar where it was when moving between articles (it has its own scroll area on wide screens)
+  const side = document.querySelector<HTMLElement>('.side');
+  const KEY = 'yhl-wiki-side';
+  if (side && getComputedStyle(side).position === 'sticky') {
+    try {
+      const y = sessionStorage.getItem(KEY);
+      if (y) side.scrollTop = Number(y);
+    } catch {}
+    const cur = side.querySelector<HTMLElement>('[aria-current="page"]');
+    if (cur) {
+      const r = cur.getBoundingClientRect();
+      const s = side.getBoundingClientRect();
+      if (r.top < s.top || r.bottom > s.bottom) side.scrollTop += r.top - s.top - s.height / 2;
+    }
+    addEventListener('pagehide', () => {
+      try {
+        sessionStorage.setItem(KEY, String(side.scrollTop));
+      } catch {}
+    });
+  }
 </script>
+
+<style is:global>
+  /* Cross-document transition between wiki pages: the content fades, the sidebar stays put */
+  @media (prefers-reduced-motion: no-preference) {
+    @view-transition {
+      navigation: auto;
+    }
+  }
+</style>
 
 <style>
   .wiki { display: grid; grid-template-columns: 260px minmax(0, 1fr) 240px; gap: 48px; align-items: start; }
-  .side { position: sticky; top: var(--header-h); max-height: calc(100vh - var(--header-h)); overflow-y: auto; padding: 32px 0 40px; display: flex; flex-direction: column; gap: 22px; scrollbar-width: thin; }
+  .side { position: sticky; top: var(--header-h); max-height: calc(100vh - var(--header-h)); overflow-y: auto; padding: 32px 0 40px; display: flex; flex-direction: column; gap: 22px; scrollbar-width: thin; view-transition-name: wiki-side; }
   .filter { height: 52px; flex: none; border-radius: 14px; background: var(--surface); border: 1.5px solid var(--line-2); display: flex; align-items: center; gap: 10px; padding: 0 12px 0 14px; cursor: text; }
   .filter:focus-within { border-color: var(--accent); }
   .filter svg { flex: none; }
