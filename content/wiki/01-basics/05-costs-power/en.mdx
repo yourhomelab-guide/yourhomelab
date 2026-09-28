@@ -1,5 +1,120 @@
 ---
-title: "Costs & power consumption"
+title: Costs & Electricity Consumption
+description: A home server runs 24/7, so electricity is the biggest recurring expense. Here, you'll learn how to calculate annual costs based on wattage, and what domains and VPS plans cost, roughly.
 level: 1
-status: stub
+related:
+  - hardware-overview
+  - is-it-worth-it
+  - cloud-hybrid-local
+  - dns-domains
+practice: choosing-hardware
 ---
+
+## Why Idling Matters
+
+A home lab server does almost nothing most of the time. It waits for requests and syncs a few files every now and then
+and performs a backup at night. Therefore, it is not the maximum power that determines the electricity bill, but rather the
+Fuel consumption at **idle**.
+
+A device that draws 60 watts under load but operates at 8 watts for 23 hours a day is more energy-efficient than one that, in the
+It uses 40 watts at idle. So when comparing models, always check the idle power consumption.
+
+## From Watts to Euros
+
+The math is simple. There are 8,760 hours in a year (24 × 365).
+
+1. **Watts × 8,760 = watt-hours per year**
+2. **÷ 1,000 = kilowatt-hours (kWh) per year**
+3. **× Electricity price per kWh = Annual cost**
+
+Or, in short: **Watts × 8.76 × electricity price = euros per year.**
+
+<Callout title="Assumptions for the examples">
+All examples on this page are based on a rate **of 0.35 € per kWh**. This is just an estimate. Your actual price
+It's listed on your electricity bill and may differ significantly from it. Just plug it into the formula.
+</Callout>
+
+### Sample calculation: 10 watts
+
+Let's say your mini PC uses an average of 10 watts:
+
+- 10 W × 8,760 h = 87,600 Wh
+- 87,600 Wh ÷ 1,000 = **87.6 kWh per year**
+- 87.6 kWh × 0.35 € = **about 31 € per year**, or about 2.50 € per month
+
+### Rule of thumb
+
+At 0.35 €/kWh, every watt of continuous power consumption costs about 3** € per year**. This makes it easy to compare devices in your head:
+
+| Average Fuel Consumption | kWh per year | Annual Cost (at 0.35 €/kWh) | Typical of                    |
+| ---------------------------- | ------------ | -------------------------------- | ------------------------------ |
+| 5 W                          | approx. 44       | about 15 €                         | Raspberry Pi, a very energy-efficient mini-PC |
+| 10 W                         | approx. 88       | about 31 €                         | N100/N150-Class Mini PC   |
+| 15 W                         | approx. 131      | approx. 46 €                         | Used Business Mini PC   |
+| 30 W                         | approx. 263      | approx. 92 €                         | NAS with hard drives            |
+| 50 W                         | approx. 438      | approx. 153 €                        | Old Desktop PC               |
+
+The list in the right column is a rough guide. The available devices are listed in the
+[Hardware Overview](/en/wiki/hardware-overview/).
+
+## Measure Instead of Estimate
+
+Manufacturer specifications and figures from forums are only a rough guide. Actual fuel consumption depends on your model, the
+It depends on the connected hard drives, the BIOS settings, and the running services.
+
+The easiest way to measure is with a **smart plug** (energy monitor). You plug it in between the outlet and
+power supply, and it displays the current power consumption and the total in kWh. You can find these devices at affordable prices at home improvement stores,
+Some public libraries and consumer advice centers also lend them out.
+
+Here's how to get a realistic value:
+
+1. Connect the server and let it run normally, with all services.
+2. Let the test outlet run for a few days—preferably a whole week.
+3. Divide the measured kWh by the number of hours and multiply by 1,000. This gives you the average in watts, including
+   Backups and peak loads.
+
+<Callout title="Small Adjustment Screws">
+Hard drives that are allowed to go to sleep, a monitor that’s turned off, and saving on USB-connected devices that aren’t needed
+often a few watts. On some computers, it also helps to check the power-saving options in the BIOS.
+</Callout>
+
+## Additional Costs
+
+Electricity is the largest recurring expense for a home server, but it's not the only one.
+
+### Hardware
+
+One-time payment upon purchase. New mini-PCs and used business computers typically range in price from the lower to
+in the mid three-digit range; an old computer you already have costs nothing. Hard drives for large amounts of data are available
+if necessary. Over the years, replacement parts may occasionally be needed.
+
+### Domain
+
+For your own addresses, such as , you need`cloud.__DOMAIN__` a domain. Common domain extensions, such as  or`.de` , cost`.com`
+Roughly 5 to 20 € per year. Pay attention to the renewal price: Some providers entice customers with
+a low price for the first year, and then charge significantly more. Read more about this in [DNS & Domains](/en/wiki/dns-domains/).
+
+### VPS
+
+As a rough estimate, a small virtual server costs about 4 to 5 € per month; larger packages cost accordingly
+more. It either replaces the home server or serves as a public gateway in a hybrid model. Which model is best for
+"Which one is right for you? [Cloud, hybrid, or on-premises?](/en/wiki/cloud-hybrid-local/)" asks [Cloud](/en/wiki/cloud-hybrid-local/).
+
+### Backup Storage
+
+At least one copy of your data should be stored off-site. This could be on an external hard drive at a friend's house or a
+Cloud storage that costs a monthly fee based on the amount of data. Plan for this from the start; see
+[Backup Strategies](/en/wiki/backup-strategies/).
+
+## An example for the whole year
+
+Based on the assumptions on this page, a typical starter setup might look like this:
+
+| Post                        | Annual Costs (Approximate) |
+| ----------------------------- | ---------------------- |
+| Mini PC with an average power consumption of 10 W | Approx. 31 € for electricity         |
+| Domain                        | approx. 5–20 €             |
+| Off-site backup storage    | depending on the provider and data allowance |
+
+On top of that, there's the one-time cost of the hardware. Compare that to the subscriptions you want to replace, and you'll quickly see whether
+Self-hosting can be financially worthwhile for you, too. Learn more in "[When Is It Worth It?](/en/wiki/is-it-worth-it/)".

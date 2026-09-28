@@ -1,6 +1,226 @@
 ---
-title: "CrowdSec"
+title: CrowdSec
+description: Ultimately, CrowdSec reads Traefik's access logs, detects attack patterns such as brute-force login attempts or vulnerability scans, and blocks the attackers' IP addresses directly in Traefik.
 level: 3
 minutes: 30
-status: stub
+requires:
+  - Reverse Proxy with Traefik
+  - Docker Compose
+services:
+  - traefik
 ---
+
+As soon as a service is publicly accessible, bots start knocking on the door. They try out passwords, look for known vulnerabilities in WordPress or phpMyAdmin, and scan for forgotten admin pages. A strong login keeps them at bay, but they still leave traces in the log and put a strain on the server. The smaller your [attack surface](/en/wiki/attack-surface/), the better.
+
+CrowdSec detects such patterns and blocks the senders. It consists of two parts:
+
+- The **Security Engine** reads logs, compares them to scenarios (e.g., "more than X failed login attempts in a short period of time"), and makes decisions, such as "block the IP address for 4 hours." It does not block anything itself.
+- A **bouncer** enforces the decisions. This can be a plugin in the reverse proxy or a rule in the firewall.
+
+In addition, CrowdSec shares anonymized information about detected attackers with the community and, in return, receives a blacklist of known malicious IP addresses. Details can be found in the [official documentation](https://docs.crowdsec.net/).
+
+<OneWay />
+
+This guide uses the Bouncer plugin for Traefik. It blocks requests before they reach a service. Nginx Proxy Manager and Caddy require different versions of Bouncer; see the [Bouncer overview](https://docs.crowdsec.net/u/bouncers/intro).
+
+<Steps>
+
+<Step title="Enable Traefik access logs">
+CrowdSec can only detect what's in the log. By default, Traefik does not write an access log. Add the following `__ROOT__/traefik/compose.yaml`under`command`:
+
+```yaml
+      - --accesslog=true
+      - --accesslog.filepath=/var/log/traefik/access.log
+```
+
+and under`volumes`:
+
+```yaml
+      - __DATA(traefik)__/logs:/var/log/traefik
+```
+
+Then restart Traefik and check whether the lines are coming through:
+
+```bash
+mkdir -p __DATA(traefik)__/logs
+cd __ROOT__/traefik
+docker compose up -d
+tail -f __DATA(traefik)__/logs/access.log
+```
+
+Open one of your services in your browser. The log will then show one line per request.
+</Step>
+
+<Step title="Create a CrowdSec stack">
+CrowdSec is not a service listed on this page, so you'll need to enter the files here manually.
+
+```bash
+mkdir -p __ROOT__/crowdsec __DATA(crowdsec)__
+cd __ROOT__/crowdsec
+```
+
+The file tells`acquis.yaml` CrowdSec which logs to read and which parser to use:
+
+```yaml
+filenames:
+  - /var/log/traefik/access.log
+labels:
+  type: traefik
+```
+
+The `compose.yaml`:
+
+```yaml
+services:
+  crowdsec:
+    image: crowdsecurity/crowdsec:v1.8.1
+    container_name: crowdsec
+    restart: unless-stopped
+    environment:
+      - TZ=__TZ__
+      # Parser and scenarios for Traefik logs, plus known CVE exploits
+      - COLLECTIONS=crowdsecurity/traefik crowdsecurity/http-cve
+    volumes:
+      - __DATA(crowdsec)__/config:/etc/crowdsec
+      - __DATA(crowdsec)__/db:/var/lib/crowdsec/data
+      - ./acquis.yaml:/etc/crowdsec/acquis.yaml:ro
+      # Traefik access logs, read-only
+      - __DATA(traefik)__/logs:/var/log/traefik:ro
+    networks:
+      - __NETWORK__
+
+networks:
+  __NETWORK__:
+    external: true
+```
+
+A few points on this:
+
+- **Collections** are packages of parsers and scenarios from the [CrowdSec Hub](https://app.crowdsec.net/hub).  They `crowdsecurity/traefik`interpret the Traefik log and include general web scenarios.
+- Both data folders (`config` and `db`) must be persistent; otherwise, CrowdSec will either fail to start or lose its database.
+- CrowdSec is embedded in the network `__NETWORK__`so that Traefik can access`crowdsec:8080` it later. The stack does not expose any ports to the outside world.
+
+You can find new versions in the [CrowdSec releases](https://github.com/crowdsecurity/crowdsec/releases).
+</Step>
+
+<Step title="Start the program and check whether logs are being read">
+
+```bash
+cd __ROOT__/crowdsec
+docker compose up -d
+docker compose logs -f crowdsec
+```
+
+When you start CrowdSec for the first time, it downloads the collections. After that, use ```cscli`, CrowdSec's command-line tool, to check whether it is reading the Traefik log:
+
+```bash
+docker exec crowdsec cscli metrics
+```
+
+In the section on data sources (Acquisition), `/var/log/traefik/access.log`"read" and "parsed" rows should appear. If there are only "unparsed" rows there, the log format does not match the parser. The installed collections are displayed here`docker exec crowdsec cscli collections list`.
+</Step>
+
+<Step title="Generate a Bouncer key">
+The Bouncer logs in to CrowdSec using an API key. You can generate it using:
+
+```bash
+docker exec crowdsec cscli bouncers add traefik-bouncer
+```
+
+The key will be displayed **only once**. Enter`__ROOT__/traefik/.env` it:
+
+```bash
+CROWDSEC_BOUNCER_KEY=DEIN_BOUNCER_KEY
+```
+
+With this, you'll be able to see`docker exec crowdsec cscli bouncers list` later whether the Bouncer has connected.
+</Step>
+
+<Step title="Enable the Bouncer plugin in Traefik">
+The [crowdsec-bouncer-traefik-plugin](https://github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin) is maintained by the community and [officially recommended](https://docs.crowdsec.net/u/bouncers/traefik) by CrowdSec. Traefik downloads it automatically upon startup.
+
+Add to  under`__ROOT__/traefik/compose.yaml``command`:
+
+```yaml
+      - --experimental.plugins.bouncer.modulename=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin
+      - --experimental.plugins.bouncer.version=v1.7.1
+```
+
+The current version is available on the plugin's project page.
+
+Under  you define`labels` the middleware`crowdsec`:
+
+```yaml
+      - traefik.http.middlewares.crowdsec.plugin.bouncer.enabled=true
+      - traefik.http.middlewares.crowdsec.plugin.bouncer.crowdseclapikey=${CROWDSEC_BOUNCER_KEY}
+      - traefik.http.middlewares.crowdsec.plugin.bouncer.crowdseclapihost=crowdsec:8080
+```
+
+To ensure that the middleware applies to **all** services, attach it directly to the entry point`websecure`. To do this, add the following under `command`:
+
+```yaml
+      - --entrypoints.websecure.http.middlewares=crowdsec@docker
+```
+
+If you only want to protect individual services, omit this line and attach the middleware to individual routers using labels, as described in the [Tinyauth](/en/setup/tinyauth/) [instructions](/en/setup/tinyauth/), e.g., `traefik.http.routers.uptime-kuma.middlewares=crowdsec@docker`. Separate multiple middleware entries with commas.
+
+Then restart Traefik:
+
+```bash
+cd __ROOT__/traefik
+docker compose up -d
+docker compose logs traefik
+```
+
+There should be no errors related to the plugin in the log.  It now `docker exec crowdsec cscli bouncers list`displays a timestamp for the last retrieval.
+</Step>
+
+<Step title="Test Lock">
+The easiest way to test this is by making a manual decision. To do this, use an IP address from which you're currently accessing the system—for example, your cell phone's IP address on the mobile network. You can see which IP address is being used in the Traefik log.
+
+```bash
+docker exec crowdsec cscli decisions add --ip 203.0.113.10 --duration 5m --reason "Test"
+docker exec crowdsec cscli decisions list
+```
+
+Replace  `203.0.113.10`with the actual IP address. If you access a service now, Traefik will respond with `403 Forbidden`. Then you can unblock it again:
+
+```bash
+docker exec crowdsec cscli decisions delete --ip 203.0.113.10
+```
+</Step>
+
+</Steps>
+
+## In everyday life
+
+The most important commands:
+
+| Command | Shows |
+| --- | --- |
+| `docker exec crowdsec cscli metrics` | Log entries read, scenarios triggered, Bouncer queries |
+| `docker exec crowdsec cscli decisions list` | Currently blocked IPs from your own detections |
+| `docker exec crowdsec cscli alerts list` | What CrowdSec Detected and Why |
+| `docker exec crowdsec cscli bouncers list` | Connected Bouncers |
+| `docker exec crowdsec cscli hub update` | Updates the list of parsers and scenarios |
+
+The Traefik access log is constantly growing. Rotate it, for example, using `logrotate`. Traefik `USR1`reopens the log file after receiving the signal. For more information, see the article [on logs](/en/wiki/logs/).
+
+<Callout type="warning" title="Behind Cloudflare or another proxy">
+If Traefik is running behind a [Cloudflare Tunnel](/en/setup/cloudflare-tunnel/) or another proxy, it does not see the visitor's IP address, but rather that of the proxy. In that case, CrowdSec would block the proxy if in doubt. In this case, Traefik and the plugin must trust the forwarded headers. The [plugin’s documentation](https://github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin) explains how to do this.
+</Callout>
+
+## Alternative: Firewall Bouncer on the host
+
+Instead of blocking traffic at the proxy, a bouncer can also block it at the server's firewall. This applies to all ports, including services that do not run through Traefik. To do this, install the [firewall bouncer](https://docs.crowdsec.net/u/bouncers/firewall) from the CrowdSec package repository directly on the host (package  `crowdsec-firewall-bouncer-iptables`or `crowdsec-firewall-bouncer-nftables`).
+
+To allow it to access the CrowdSec container, publish its API only locally. Add the following to `__ROOT__/crowdsec/compose.yaml`:
+
+```yaml
+    ports:
+      - "127.0.0.1:8080:8080"
+```
+
+In the Bouncer configuration, you then `/etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml`set  `api_url: http://127.0.0.1:8080/`and specify a`api_key` key from  as `docker exec crowdsec cscli bouncers add firewall-bouncer`.
+
+Important note regarding Docker: Traffic to containers does not pass through the firewall's normal ingress chain. With iptables, you must therefore add`iptables_chains` the chain `DOCKER-USER`to the list; otherwise, blocked IP addresses will still be able to reach your containers. The documentation explains the details.

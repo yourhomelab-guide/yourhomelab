@@ -1,5 +1,124 @@
 ---
-title: "Access methods compared"
+title: A Comparison of Access Methods
+description: "Port forwarding, VPN, tunneling, or your own VPS: There are several ways to access your services from outside your network. Which one is right for you depends on who needs access and what your Internet connection allows."
 level: 1
-status: stub
+related:
+  - port-forwarding
+  - vpn
+  - tunnels
+  - cgnat-ds-lite
 ---
+
+<OneWay />
+
+## Two questions to start with
+
+Before you decide on a path, clarify two things:
+
+1. **Who should have access?** Just you and your family, or also other people who simply open a link in their browser?
+2. **What capabilities does your connection have?** Do you have your own public IPv4 address, or are you behind [CGNAT or DS-Lite](/en/wiki/cgnat-ds-lite/)? Without a public IPv4 address, external requests won't reach your router.
+
+The first question determines whether to use **a private connection** (VPN) or **a public** **connection** (port forwarding, tunnel, VPS). The second question determines which public connections actually work.
+
+## An Overview of the Trails
+
+<Cards>
+  <Card title="Port Forwarding">
+    The router forwards ports 80 and 443 to your reverse proxy. This is done directly, without any third parties, but requires a public IPv4 address.
+  </Card>
+  <Card title="VPN">
+    Your devices connect to your home network using an encrypted connection. Nothing is public—only you can access it.
+  </Card>
+  <Card title="Tunnel">
+    Your server connects externally to a provider such as Cloudflare, which forwards the requests. No open port is required.
+  </Card>
+  <Card title="Your Own VPS">
+    A rented server with a static IP address serves as your public gateway, connected to your home server via WireGuard.
+  </Card>
+</Cards>
+
+## In comparison
+
+|                    | Port Forwarding                   | VPN (WireGuard, Tailscale)          | Tunnel (Cloudflare)              | Dedicated VPS (WireGuard, Pangolin)  |
+| ------------------ | ------------------------------ | ----------------------------------- | -------------------------------- | ---------------------------------- |
+| **Who gets in?** | All                           | Only your devices                    | All                             | All                               |
+| **Security**     | Well, it all depends on the proxy and the services | High, nothing is public | Method: Home IP Address Remains Hidden | Method: Home IP address remains hidden   |
+| **Effort**        | Low                         | Low (Tailscale) to medium (WireGuard) | Low                      | High, second server               |
+| **CGNAT-compatible** | No                           | Tailscale, yes; WireGuard itself, no | Yes                               | Yes                                 |
+| **Dependence**   | None                          | None (WireGuard) or provider (Tailscale) | Cloudflare               | VPS Providers                       |
+| **For whom**        | Public IPv4, Services for Others | Admin Access, Services Just for You | CGNAT, Quick Start      | CGNAT, Full Control             |
+
+A few notes on the table:
+
+- **Security** here refers to how much is visible from the outside. Port forwarding, tunnels, and VPS all make your services equally public. How secure this is depends on your reverse proxy, login protection, and up-to-date software updates.
+- **WireGuard itself** requires a UDP port to be opened and, therefore, also requires a public IPv4 address or a working IPv6 address.
+- **Cloudflare Tunnel** is not suitable for large uploads or media streaming. For more details, see [Tunnel](/en/wiki/tunnels/).
+
+## The usual combination
+
+Most home labs don't just use one method:
+
+- **Admin interfaces and SSH** are accessible **only via VPN.** Portainer, routers, Proxmox, and similar services are never publicly accessible.
+- **Services for others via port forwarding, tunnels, or VPS.** For example, Nextcloud for sharing or Vaultwarden for the family, protected by a reverse proxy and login.
+- **Everything else stays on the home network.** Not every service needs to be accessible from outside the network.
+
+## Decision-Making Guide
+
+<Quiz
+  questions={[
+    {
+      question: "Who should have access to your services?",
+      answers: [
+        { label: "Just me and my own devices", points: { vpn: 5 } },
+        { label: "Family and friends, too—just through your browser", points: { portfreigabe: 1, tunnel: 1, vps: 1 } },
+        { label: "Both, depending on the service", points: { vpn: 1, portfreigabe: 1, tunnel: 1 } },
+      ],
+    },
+    {
+      question: "Does your connection have a public IPv4 address?",
+      answers: [
+        { label: "Yes", points: { portfreigabe: 3 } },
+        { label: "No, DS-Lite or CGNAT", points: { tunnel: 2, vps: 2, vpn: 1 } },
+        { label: "I don't know", points: { tunnel: 1, vpn: 1 } },
+      ],
+    },
+    {
+      question: "How important is it to you that no service provider can see your traffic?",
+      answers: [
+        { label: "Very important", points: { portfreigabe: 1, vps: 2, vpn: 1 } },
+        { label: "It doesn't matter that much—the main thing is that it's simple", points: { tunnel: 2 } },
+      ],
+    },
+    {
+      question: "How much do you want to run?",
+      answers: [
+        { label: "As little as possible", points: { tunnel: 1, vpn: 1 } },
+        { label: "A second server is fine", points: { vps: 2 } },
+      ],
+    },
+  ]}
+  results={{
+    vpn: {
+      title: "VPN",
+      text: "You don't need to make anything public. With WireGuard (if you have a public IPv4 address) or Tailscale (even behind CGNAT), you can access everything while on the go just as if you were at home.",
+    },
+    portfreigabe: {
+      title: "Port Forwarding",
+      text: "Open ports 80 and 443 on your reverse proxy—and nothing else. For admin interfaces and SSH, use a VPN as well.",
+    },
+    tunnel: {
+      title: "Tunnel",
+      text: "Cloudflare Tunnel makes your services accessible without port forwarding, even behind CGNAT. Keep in mind the limitations for large uploads and streaming, and use a VPN for administrative access.",
+    },
+    vps: {
+      title: "Your Own VPS",
+      text: "A small VPS running WireGuard or Pangolin serves as your public gateway, without a tunnel provider monitoring your traffic. To do this, you'll need to maintain a second server.",
+    },
+  }}
+/>
+
+## Read more
+
+- [Port Forwarding](/en/wiki/port-forwarding/): What to Forward and What Never to Forward
+- [VPN](/en/wiki/vpn/): WireGuard, Tailscale, and Router VPN
+- [Tunnel](/en/wiki/tunnels/): Cloudflare Tunnel and a Dedicated VPS

@@ -1,6 +1,112 @@
 ---
-title: "Domain & DNS"
+title: Domain & DNS
+description: In the end, you'll have a domain whose subdomains all point to your server. If your IP address changes, DynDNS will automatically update the entry.
 level: 1
 minutes: 15
-status: stub
+requires:
+  - Access to the Router
+  - Server with a static IP address on the home network
 ---
+
+With your own domain, you can access your services using names such as  `fotos.__DOMAIN__`instead of an IP address and port. You also need it for valid TLS certificates from Let's Encrypt. The article "[DNS & Domains](/en/wiki/dns-domains/)" explains how DNS works behind the scenes.
+
+<OneWay />
+
+<Steps>
+
+<Step title="Check the connection">
+Before you spend any money: Check whether your server can even be accessed from the outside. Many connections (especially cable and fiber-optic) no longer have their own public IPv4 address but use DS-Lite or CGNAT instead. In that case, you share an IPv4 address with other customers, and incoming connections won’t reach you.
+
+Check your public address on the server:
+
+```bash
+curl -4 ifconfig.me
+curl -6 ifconfig.me
+```
+
+Compare the IPv4 address with the WAN or Internet address that your router displays in its interface. If both are the same, you have your own public IPv4 address. If the router displays an address in the range  `100.64.0.0/10`(i.e.,  to`100.64.x.x` `100.127.x.x`) or no IPv4 address at all, you are behind CGNAT or DS-Lite.
+
+In that case, the A records below won't be much help. Read up on [CGNAT & DS-Lite](/en/wiki/cgnat-ds-lite/) and use a [Cloudflare Tunnel](/en/setup/cloudflare-tunnel/) or a VPN like Tailscale to access it. You'll still need a domain, though.
+</Step>
+
+<Step title="Buy a Domain">
+You purchase a domain from a registrar—a provider that manages and sells domains. For common domain extensions such as  or`.de` , you usually pay`.com` anywhere from a few euros to about 20 euros per year.
+
+What you should keep in mind:
+
+- **Renewal price**—not just the price for the first year. Bait-and-switch offers often become significantly more expensive afterward.
+- **Manage your DNS using an API or DynDNS** if your IP address changes (see below).
+- **A short, neutral name.** It appears in every address. Your real name is not required.
+
+If you want to use a [Cloudflare Tunnel](/en/setup/cloudflare-tunnel/) later on, Cloudflare will need to manage your DNS. This is also possible with a domain from another registrar: You simply enter Cloudflare's nameservers there.
+</Step>
+
+<Step title="Create A and AAAA Records">
+A DNS record associates a name with an address. An **A record** points to an IPv4 address, and an **AAAA record** points to an IPv6 address.
+
+Open your provider's DNS management interface and create the following entries:
+
+| Type | Name | Value | TTL |
+| --- | --- | --- | --- |
+| A | `@` (the domain itself) | Your public IPv4 | 300 |
+| A | `*` | Your public IPv4 address | 300 |
+
+This entry is`*` a **wildcard record**: Any subdomain, such as  or`fotos.__DOMAIN__` , will point`passwort.__DOMAIN__` to your server. This means you don't have to create a separate entry for each new service. The reverse proxy will later determine which service responds based on the name.
+
+The **TTL** (Time to Live) specifies how many seconds other servers are allowed to cache an entry. 300 seconds is a good value while you're still experimenting.
+
+For IPv6, create the same two entries as AAAA records. Note: There is no NAT with IPv6. The value is the **server's** IPv6 address, not the router's:
+
+```bash
+ip -6 addr show scope global
+```
+
+Use the address that isn't marked`temporary` as . In the router, you'll also need to open the ports for that specific device for IPv6. If you're unsure, leave out the AAAA record for now. An incorrect AAAA record is worse than no AAAA record at all, because many devices prefer IPv6.
+</Step>
+
+<Step title="Set up DynDNS if your IP address changes">
+For most home internet connections, the public IP address changes occasionally—for example, after restarting the router. When that happens, your A record points to nowhere. **DynDNS** (dynamic DNS) solves this problem: A small program notifies your DNS provider of every new IP address.
+
+The easiest way is through the router. The FRITZ!Box, for example, has a form under “Internet → Sharing → DynDNS” where you can enter an update URL, username, and password. The values you need to enter there are listed in your DNS provider’s help section. Many registrars provide their own DynDNS login credentials for this purpose.
+
+If your router can't do that, or if your provider only supports an API, you can run a DynDNS client on the server. A popular choice is [ddclient](https://ddclient.net/), which is also available as a container. It supports many providers, including Cloudflare.
+
+Use DynDNS to update the entry for `@`. Your wildcard record `*`can then be`__DOMAIN__` a **CNAME** pointing to  instead of an A record. A CNAME is a reference to another name, so you only need to keep one entry up to date.
+
+If you have a static IP address—for example, on a rented server—skip this step.
+</Step>
+
+<Step title="Check entries">
+You can use  `dig`to query DNS records directly. On Debian and Ubuntu, it's included in the package`bind9-dnsutils`:
+
+```bash
+sudo apt install bind9-dnsutils
+dig +short __DOMAIN__ A
+dig +short test.__DOMAIN__ A
+dig +short __DOMAIN__ AAAA
+```
+
+All queries should return your IP addresses.  `test`stands for any subdomain; it is resolved via the wildcard record. If nothing is returned, query a public resolver directly. This bypasses your router's cache:
+
+```bash
+dig +short test.__DOMAIN__ A @1.1.1.1
+```
+
+On Windows and macOS, the following also works`nslookup`:
+
+```bash
+nslookup test.__DOMAIN__
+```
+
+New entries are often visible within a few minutes. If you've just changed the name servers, it may take a few hours.
+</Step>
+
+<Step title="Open ports 80 and 443">
+To ensure that requests from the Internet reach your server, the router forwards ports 80 (HTTP) and 443 (HTTPS) to your server's static IP address. The reverse proxy needs these two ports, and Let's Encrypt uses them to verify that you own the domain. For details on how this works and what it means for security, see [Port Forwarding](/en/wiki/port-forwarding/).
+
+Just open these two ports; do not open any ports for individual services. The reverse proxy handles everything else.
+
+Next up is the [reverse proxy using Traefik](/en/setup/reverse-proxy-traefik/) or the simpler [Nginx Proxy Manager](/en/setup/reverse-proxy-npm/).
+</Step>
+
+</Steps>

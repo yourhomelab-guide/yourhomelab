@@ -1,5 +1,118 @@
 ---
-title: "Hardware overview"
+title: Hardware Overview
+description: You don't need an expensive server to get started. An affordable mini-PC is sufficient for many services. Here's a look at the different device categories and what to consider when it comes to RAM, SSDs, and power consumption.
 level: 1
-status: stub
+related:
+  - costs-power
+  - cloud-hybrid-local
+  - truenas-unraid
+  - proxmox-ve
+practice: choosing-hardware
 ---
+
+<OneWay />
+
+## What Matters
+
+A home lab server runs 24/7, usually without much to do. That's why three things are especially important:
+
+- **Power consumption in idle mode.** The computer spends most of its time in idle mode. Whether it draws 8 or 50 watts makes little difference over a
+  It makes a noticeable difference each year. Sample calculations can be found in the "[Costs & Electricity Consumption" section](/en/wiki/costs-power/).
+- **Random Access Memory (RAM).** Every container uses memory. For many services, RAM is more of a bottleneck than the
+  Computing power.
+- **Quiet and compact.** The device is often placed in the hallway, on a shelf, or next to the router.
+
+Raw computing power, on the other hand, is rarely a deciding factor. A current entry-level processor is sufficient for password managers,
+It easily handles file synchronization, monitoring, and a reverse proxy.
+
+## Device Classes
+
+<Cards>
+  <Card title="Mini PC (N100/N150 class)">
+    New, compact computers with energy-efficient Intel processors. Low power consumption, quiet, and x86-based like a standard PC.
+    For most beginners, this is the obvious choice.
+  </Card>
+  <Card title="Used Business Mini PC">
+    Discontinued small-form-factor business computers, such as the Lenovo ThinkCentre Tiny, HP EliteDesk/ProDesk Mini, or Dell
+    OptiPlex Micro. Rugged, easily upgradeable, and often affordable when bought used.
+  </Card>
+  <Card title="Raspberry Pi">
+    Very energy-efficient and compact. It uses an ARM processor, so not every Docker image will run on it. Good for a small number of,
+    easy tasks.
+  </Card>
+  <Card title="NAS">
+    Ready-to-use storage devices with multiple hard drive bays, such as those from Synology or QNAP. Great for storage,
+    With Docker, this is often limited and comes with little RAM.
+  </Card>
+  <Card title="Old Desktop PC">
+    It doesn't cost anything if you already have it, and it offers plenty of space for hard drives. However, when idle, it usually uses significantly
+    more electricity.
+  </Card>
+  <Card title="VPS">
+    A rented virtual server in a data center. No hardware at home, a static IP address, but monthly costs and
+    not much storage space.
+  </Card>
+</Cards>
+
+## In comparison
+
+These figures are rough estimates. Actual power consumption depends heavily on the model, the hard drives installed, and
+depends on the BIOS settings.
+
+| Device                      | Idle (rough)          | Strengths                               | Weaknesses                                |
+| -------------------------- | ------------------------ | ------------------------------------- | ---------------------------------------- |
+| N100/N150 Mini PC          | about 5–10 W              | Economical, quiet, new with a warranty      | Usually only one RAM slot, limited space for hard drives |
+| Used Business Mini PC | about 8–15 W            | Rugged, upgradeable, affordable           | Older CPU, used, no warranty      |
+| Raspberry Pi               | about 3–5 W               | Very economical, tiny                  | ARM, SD Card as a Vulnerability          |
+| NAS (2–4 drive bays)        | about 15–40 W with panels | Plenty of storage, hard drive redundancy  | Docker is often limited; low RAM      |
+| Old Desktop PC           | about 30–70 W             | Available, plenty of space                 | High power consumption, loud               |
+| VPS                        | no electricity of their own       | Fixed IP, no device at home          | Monthly costs, limited storage        |
+
+## RAM
+
+As a rough guide:
+
+- **4 GB** is enough for a handful of lightweight services, such as a reverse proxy, a password manager, and monitoring.
+- **8–16 GB** is a good starting point for a typical home lab with databases and a file cloud.
+- **That's all** you need for storage-intensive services like photo archives with facial recognition, or if you also
+  want to run virtual machines, for example with [Proxmox VE](/en/wiki/proxmox-ve/).
+
+When making a purchase, check to see if the RAM can be upgraded. Many N100 mini PCs have only a single slot.
+
+## Storage: SSDs and Hard Drives
+
+Install the system on an **SSD**. It's fast, quiet, and energy-efficient. An NVMe SSD with 256–512 GB is sufficient for
+The operating system, containers, and the data for most services.
+
+For large amounts of data, such as photos or videos, **hard disk drives (HDDs)** are also used. They are less expensive per terabyte,
+But they also require additional power and make noise. There’s usually no room for them in a mini PC, so a
+An external enclosure connected via USB or a separate NAS.
+
+<Callout type="warning" title="Raspberry Pi and SD Cards">
+SD cards do not handle continuous write operations well and can fail without warning. Run a Pi as
+It's better to use an SSD for the server—either via USB or, in the case of the Raspberry Pi 5, via an NVMe adapter.
+</Callout>
+
+## ECC memory
+
+**ECC** (Error Correcting Code) is a type of memory that detects and corrects individual bit errors. In servers in the
+It's the standard in data centers. In forums, it's primarily discussed in connection with ZFS and
+[TrueNAS](/en/wiki/truenas-unraid/) is recommended.
+
+ECC is not a requirement to get started. Mini-PCs and most desktop systems don't support it at all. If
+If you plan to set up a large data repository containing valuable data in the future, it's worth taking a look at this. More important than ECC are
+In any case, make sure you have good backups.
+
+## And what about the architecture?
+
+Most mini-PCs, business computers, and desktops use **x86-64** (also known as amd64). There are practically all kinds of
+Docker image. The Raspberry Pi and some cloud servers use **ARM64**. Many well-known projects offer images for both
+Some architectures are supported, but not all. Check the project page beforehand if you're using ARM.
+
+## Recommendations for Getting Started
+
+An N100/N150-class mini PC or a used business mini PC with 16 GB of RAM and an NVMe SSD is suitable for the
+a good, affordable starting point for most beginners. If you just want to give it a try, even an old computer will do, one that
+that you already have lying around, or a small VPS. To figure out which model fits your plan,
+[Cloud, Hybrid](/en/wiki/cloud-hybrid-local/), [or On-Premises?](/en/wiki/cloud-hybrid-local/) The Guide's Specific Recommendations
+[Select hardware](/en/setup/choosing-hardware/).

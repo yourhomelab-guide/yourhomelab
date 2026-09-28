@@ -1,5 +1,70 @@
 ---
-title: "Port forwarding"
+title: Port Forwarding
+description: When you open a port, your router forwards requests from the Internet to a computer on your home network. This is the most direct route to the outside world—which is why you should open as few ports as possible, ideally just ports 80 and 443 to the reverse proxy.
 level: 1
-status: stub
+related:
+  - ip-ports-nat
+  - reverse-proxy-explained
+  - attack-surface
+  - access-methods-compared
+practice: reverse-proxy-traefik
 ---
+
+## Why You Need Port Forwarding
+
+Your router separates your home network from the Internet. Traffic flows from the inside out, but nothing comes in from the outside—at least not at first. When a request arrives from the Internet, the router doesn't know which device it's intended for, so it discards it.
+
+**Port*** ***forwarding** changes this for a specific port. You tell the router: "Send everything that comes in on port 443 to my server at 192.168.1.10." This makes your server accessible to the entire world on that port—not just to you, but also to any scanner searching the Internet for open ports.
+
+A **port** is a number that allows a computer to offer multiple services at the same time. For more information, see "[IP, Ports & NAT](/en/wiki/ip-ports-nat/)."
+
+## Only 80 and 443, and only to the reverse proxy
+
+The most important rule: Open exactly two ports—**80 (HTTP) and 443 (HTTPS)**—and forward both to your [reverse proxy](/en/wiki/reverse-proxy-explained/). The proxy receives all requests, checks the hostname, and forwards them to the appropriate container. It handles the TLS certificates and can incorporate login protection such as Tinyauth or Pocket ID.
+
+That way, you have exactly one entry point that you need to keep an eye on. Every additional service gets only a subdomain, but no separate open port.
+
+You mainly need port 80 for redirecting HTTP to HTTPS and, depending on the settings, for Let's Encrypt certificate validation. If your proxy retrieves certificates via the DNS challenge and you can do without the redirect, port 443 alone is sufficient.
+
+<Callout type="warning" title="Never share directly">
+Admin interfaces (Portainer, router, NAS, or Proxmox web interfaces), SSH (port 22), databases (such as 3306 or 5432), and dashboards should never be directly exposed to the Internet. These services are specifically targeted, and all it takes is a single weak password or an outdated version. Use a [VPN](/en/wiki/vpn/) for accessing them while on the go.
+</Callout>
+
+## Here's how to set them up
+
+The menu names vary from router to router, but the process is always similar:
+
+1. **Static IP for the server:** The router needs to know where to forward traffic. Assign your server a static address on your home network (see ["Static IP & Hostname"](/en/setup/static-ip-hostname/)).
+2. **Set up port forwarding:** Select the server in the router and forward ports 80 and 443 (TCP). On a FRITZ!Box, you'll find this under "Internet → Port Forwarding."
+3. **Firewall on the server:** Ports 80 and 443 must also be open there, for example using UFW (see "[Firewall with UFW](/en/setup/firewall-ufw/)").
+4. **Test from outside your network:** Access your domain via the cellular network, not Wi-Fi. With some routers, accessing the domain via its public address from your own network won't work, even though everything works fine from outside the network.
+
+To ensure that your domain always points to the correct address when your IPv4 address changes, you'll also need **DynDNS**. With DynDNS, your router or a small program automatically reports the new address to your DNS provider. Learn more in the [DNS & Domains](/en/wiki/dns-domains/) section.
+
+<Callout title="Docker and UFW">
+Ports that you expose`ports:` in a  `compose.yaml`with  are opened directly in the firewall by Docker, bypassing UFW. Therefore, only expose the reverse proxy's ports. All other services remain on`ports:` the proxy network without  `__NETWORK__`.
+</Callout>
+
+## IPv6: "Allow" means a firewall rule here
+
+With IPv4, all devices on the home network share a single public address, and the router uses NAT to translate the addresses. With **IPv6**, each device has its own globally unique address. There is nothing to forward. Instead, the router’s firewall blocks incoming connections, and “unblocking” is an exception to this firewall rule.
+
+This has two consequences:
+
+- You'll **also** need to enable IPv6. On many routers, this is a separate checkbox or a separate section next to the IPv4 setting.
+- The rule applies to a specific server address. If the prefix assigned to you by your provider changes, the router must update the rule accordingly. Good routers do this automatically if you set up the rule for the device rather than for a static address.
+
+After setting it up, check to see if your server is actually only accessible via IPv6 on ports 80 and 443. A common mistake is configuring IPv6 access for "all ports" on the device.
+
+## When Port Forwarding Doesn't Work
+
+Port forwarding requires that your connection have its **own public IPv4 address**. This isn’t the case with many cable and fiber-optic connections: With DS-Lite or CGNAT, you share the IPv4 address with other customers, and external requests don’t even reach your router. [The “CGNAT & DS-Lite” section](/en/wiki/cgnat-ds-lite/) explains what this means.
+
+Then your options are IPv6 (only for visitors who have IPv6 themselves), a [tunnel,](/en/wiki/tunnels/) or a small VPS as an entry point. For an overview, see ["Access Methods Compared](/en/wiki/access-methods-compared/)."
+
+## In a nutshell
+
+- Only open ports 80 and 443, both to the reverse proxy.
+- Never expose admin interfaces, SSH, or databases—that's what VPNs are for.
+- Enable IPv6 separately and check it thoroughly.
+- Traditional port forwarding does not work without a public IPv4 address.

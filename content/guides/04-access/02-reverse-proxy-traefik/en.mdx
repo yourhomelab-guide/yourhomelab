@@ -1,24 +1,31 @@
 ---
-title: Reverse proxy with Traefik
-description: A reverse proxy accepts all requests on ports 80 and 443 and forwards them to the right container based on the hostname. Traefik reads your containers' labels for this and fetches TLS certificates from Let's Encrypt on its own.
+title: Reverse Proxy with Traefik
+description: A reverse proxy receives all requests on ports 80 and 443 and forwards them to the correct container based on the hostname. To do this, Traefik reads the labels of your containers and retrieves the TLS certificates from Let's Encrypt itself.
 level: 2
 minutes: 25
-requires: [Docker Compose, Domain]
-services: [traefik]
+requires:
+  - Docker Compose
+  - Domain
+services:
+  - traefik
 ---
+
+<Callout title="Traefik or Nginx Proxy Manager?">
+Traefik is a bit more complicated at first, but it offers the most options: The configuration is available as labels directly within each`compose.yaml` service; you can enable middleware such as login protection by applying a label to it, and everything can be versioned as a file. If you want to keep things simple at first, use [Nginx Proxy Manager](/en/setup/reverse-proxy-npm/) with its web interface.
+</Callout>
 
 <Steps>
 
-<Step title="Create the proxy network">
-All services Traefik should reach share one Docker network. You create it once and reference it in every stack afterwards.
+<Step title="Create a proxy network">
+All services that Traefik is supposed to reach are connected to a shared Docker network. You create it once and then reference it in each stack.
 
 ```bash
 docker network create __NETWORK__
 ```
 </Step>
 
-<Step title="Create the directory">
-Every stack gets its own folder under `__ROOT__`. Persistent data lives in the `data/` subfolder, so backing up that path is enough.
+<Step title="Create a directory">
+Each stack gets its own folder under `__ROOT__`. Traefik's persistent data—that is, the certificates—is stored in `__DATA(traefik)__`.
 
 ```bash
 mkdir -p __ROOT__/traefik __DATA(traefik)__/letsencrypt
@@ -27,14 +34,14 @@ chmod 600 __DATA(traefik)__/letsencrypt/acme.json
 ```
 </Step>
 
-<Step title="Write compose.yaml and .env">
-The configuration lives in `compose.yaml`. Values that differ between servers go into `.env`.
+<Step title="Write the `compose.yaml` and `.env` files">
+The configuration is located in `compose.yaml`. Values that differ between servers are specified in the `.env`.
 
 <ServiceFiles id="traefik" />
 </Step>
 
-<Step title="Start and verify">
-On first start, Traefik requests the certificate. The log shows whether the TLS challenge succeeds.
+<Step title="Start and Check">
+When Traefik starts up for the first time, it retrieves the certificate. You can see in the log whether the TLS challenge is successful.
 
 ```bash
 cd __ROOT__/traefik
@@ -43,8 +50,8 @@ docker compose logs -f traefik
 ```
 </Step>
 
-<Step title="Connect your first service">
-A container is attached to Traefik via labels. After that it is reachable under its subdomain with a valid certificate.
+<Step title="Connect the first service">
+A container is attached to Traefik via labels. It can then be accessed at its subdomain with a valid certificate.
 
 ```yaml
 labels:

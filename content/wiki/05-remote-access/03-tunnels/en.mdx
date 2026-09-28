@@ -1,5 +1,76 @@
 ---
-title: "Tunnels"
+title: Tunnel
+description: A tunnel makes services publicly accessible without requiring you to open a port on your router. Your server establishes the connection to the outside world on its own—this works even without a public IPv4 address, such as behind CGNAT or DS-Lite.
 level: 2
-status: stub
+related:
+  - cgnat-ds-lite
+  - port-forwarding
+  - vpn
+  - access-methods-compared
+practice: cloudflare-tunnel
 ---
+
+<OneWay />
+
+## Why a Tunnel?
+
+[Port](/en/wiki/port-forwarding/) [forwarding](/en/wiki/port-forwarding/) only works if requests from the Internet can actually reach your router. With many Internet connections, this isn't the case: With [CGNAT or DS-Lite](/en/wiki/cgnat-ds-lite/), you share your IPv4 address with other customers of your Internet service provider. No one from outside can reach you.
+
+A **tunnel** reverses the direction of traffic. It's not the Internet connecting to your server; rather, your server connects to a computer on the Internet. Outbound connections are always allowed. Through this standing connection, the computer on the outside sends your visitors' requests to your home.
+
+Here's how it works:
+
+1. A small program, the tunnel client, is running on your server.
+2. It establishes an encrypted connection to a server on the Internet and keeps it open.
+3. Your domain points to this server, not to your connection.
+4. When someone accesses your domain, the request is routed there and is forwarded through the tunnel to your reverse proxy or directly to a container.
+
+Your home IP address doesn't appear anywhere, and no ports are open on the router.
+
+## Cloudflare Tunnel
+
+[Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) is the best-known service of its kind. The program runs on your server`cloudflared`, usually as a container. It connects to the Cloudflare network. In the Cloudflare dashboard, you specify which hostname belongs to which service.
+
+Advantages:
+
+- Free for personal use.
+- No port forwarding; works behind CGNAT.
+- Quick to set up; certificates are provided by Cloudflare.
+- With Cloudflare Access, you can require users to log in before accessing specific services.
+
+Here's what you should know:
+
+- **Your domain must be hosted with Cloudflare.** More specifically: Cloudflare must manage the DNS records. To do this, you need to change your domain's nameservers to Cloudflare.
+- **Cloudflare sees your traffic.** TLS encryption ends at Cloudflare. There, the traffic is unencrypted before it passes through the tunnel to you. It doesn't matter for a blog, but it's worth considering for a password manager.
+- **Large Files and Streaming:** Cloudflare limits the size of individual uploads, and its Terms of Service restrict the delivery of large amounts of video through the free plan. For Nextcloud uploads of large files or media streaming, the tunnel is therefore often not the best option. Check the current terms and conditions before relying on this method.
+- **Dependency:** If Cloudflare goes down or changes its rules, your services will be inaccessible from the outside.
+
+[Cloudflare Tunnel](/en/setup/cloudflare-tunnel/) shows you how to set up the tunnel.
+
+## Your Own VPS as an Entry Point
+
+If you don't want a large provider in the middle, rent a small **VPS** (virtual server) with a public IP address and set up the tunnel yourself. The VPS then serves as your public gateway, and the data stays at home.
+
+The basic idea is always the same: Your home server connects to the VPS via **WireGuard**. On the VPS, a reverse proxy receives requests on ports 80 and 443 and forwards them through the WireGuard tunnel to your home server. Since the connection originates from your home, this works even behind CGNAT.
+
+You can set this up manually or use a ready-made project. [Pangolin](https://github.com/fosrl/pangolin) is one such project: You install it on the VPS, run a small client on your home server, and Pangolin handles the WireGuard connection, reverse proxy, certificates, and—if desired—authentication for your services.
+
+Compared to Cloudflare:
+
+- **More control:** TLS can end with you—no size or streaming restrictions imposed by a tunnel provider.
+- **More work:** You have to maintain and update a second server that's directly connected to the Internet.
+- **Ongoing costs:** A small VPS costs a few euros per month.
+- **Bandwidth:** Everything runs through the VPS and via the upload speed of your home internet connection.
+
+<Callout type="warning" title="A tunnel is not a login protection">
+A tunnel hides your home IP address, but makes your services just as exposed as if you had set up port forwarding. Any login page at the end of the tunnel can be attacked from anywhere. Admin interfaces are no exception here, and you should provide additional protection for public services—for example, with [Tinyauth](/en/setup/tinyauth/) or [Pocket ID](/en/setup/pocket-id/).
+</Callout>
+
+## Tunnel or VPN?
+
+Both establish an encrypted connection, but their purposes are different:
+
+- A **tunnel** makes services accessible to **everyone** in a browser, without requiring the visitor to install any software.
+- A [VPN](/en/wiki/vpn/) makes your home network accessible only to **you**, using an app on your device.
+
+Many home labs combine both approaches: public services via tunnels or port forwarding, and all administrative tasks exclusively via VPN. [The "Access Methods Compared" section](/en/wiki/access-methods-compared/) provides an overview.

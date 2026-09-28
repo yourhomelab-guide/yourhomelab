@@ -1,5 +1,96 @@
 ---
-title: "CGNAT & DS-Lite"
+title: CGNAT & DS-Lite
+description: Many Internet connections no longer have their own public IPv4 address. In that case, traditional port forwarding won't work. Here's how to tell if that's the case and what workarounds are available.
 level: 2
-status: stub
+related:
+  - ip-ports-nat
+  - port-forwarding
+  - tunnels
+  - access-methods-compared
+practice: cloudflare-tunnel
 ---
+
+## Why It Exists
+
+IPv4 addresses are in short supply. There are only about 4.3 billion of them, and they’ve long since been allocated. Internet service providers therefore conserve these addresses by having multiple customers share a single public IPv4 address. You won’t notice this when browsing normally. But if you want to make a service at home **accessible from outside your network**, you’ll run into a problem: requests from the Internet don’t even reach your router.
+
+This applies in particular to cable and fiber-optic connections, cellular and LTE/5G routers, and some newer DSL contracts.
+
+## CGNAT
+
+Normally, your router performs a single NAT translation between your home network and the Internet (see [IP, Ports & NAT](/en/wiki/ip-ports-nat/)). With **CGNAT** (Carrier-Grade NAT), a second translation takes place at the ISP. Your router then does not receive a public address, but rather one from a range that the provider uses for this purpose, usually  `100.64.0.0/10`(that is,  to`100.64.x.x` `100.127.x.x`). Only the provider’s large-scale NAT converts your connections to a public IPv4 address, which you share with many others.
+
+Opening a port on your router won't help. The request gets stuck with the provider anyway, because the provider doesn't know which of its customers is being referred to.
+
+## DS Lite
+
+**DS-Lite** (Dual-Stack Lite) is a common variant of this. Your connection is assigned a full-fledged, public **IPv6** address, but not its own IPv4 address. IPv4 traffic is encapsulated in IPv6, tunneled to the provider, and then translated to the IPv4 Internet via CGNAT.
+
+The good news: Your connection is directly accessible via IPv6. The bad news: It isn't via IPv4. And some networks—such as those in hotels, with certain mobile plans, or in companies—don't support IPv6 yet.
+
+## Here's how to tell
+
+Compare two addresses:
+
+1. **The WAN address in the router.** This is the IPv4 address that the router receives from the provider. You can find it in the router's interface, usually under "Overview," "Internet," or "Online Monitor."
+2. **Your public IPv4** address, as seen by the Internet. You can find it, for example, using this command:
+
+```bash
+curl -4 https://ifconfig.me
+```
+
+In that case:
+
+| What You See | Meaning |
+| --- | --- |
+| Both addresses are the same | You have your own public IPv4 address. Port forwarding works. |
+| Router shows  `100.64.x.x`up to `100.127.x.x` | CGNAT |
+| The router displays a private address such as  or`10.x.x.x` `192.168.x.x` | Your router is connected behind another router or behind CGNAT |
+| The router does not show IPv4, but instead displays "DS-Lite" or only IPv6 | DS Lite |
+
+You can often find information about DS-Lite directly in the router's interface. If in doubt, check with your service provider to see if your connection has its own public IPv4 address.
+
+<Callout title="The private address in the router does not have to be CGNAT">
+If your router is connected behind a modem or a second router provided by your internet service provider, you'll also see a private WAN address. In that case, you can often enable bridge mode on the front-end device or set up port forwarding there.
+</Callout>
+
+## Solutions
+
+There are several ways to still access your services. Which one works best depends on who needs access.
+
+<Cards>
+  <Card title="Request Public IPv4 Addresses">
+    Many providers will switch to a dedicated IPv4 address or true dual-stack upon request. Sometimes this is free, sometimes there's an additional charge, or it's only available with business plans. It's worth giving them a call.
+  </Card>
+  <Card title="Use only IPv6">
+    With DS-Lite, your server is directly accessible via IPv6. You'll need an AAAA record and a rule in the router's IPv6 firewall. This only works for devices that support IPv6 themselves.
+  </Card>
+  <Card title="VPN with NAT Traversal">
+    Tailscale and similar services establish connections from the inside out, allowing them to get through CGNAT. This is ideal if only you and your family are accessing the internet.
+  </Card>
+  <Card title="Tunnel">
+    A service like Cloudflare Tunnel establishes an outbound connection from your server and handles public requests for you. No open port is required.
+  </Card>
+  <Card title="Your Own VPS as an Entry Point">
+    A small rented server with a static IPv4 address receives requests and routes them through a WireGuard tunnel to your home. It takes a little more effort, but you have full control.
+  </Card>
+</Cards>
+
+A few rules of thumb for choosing:
+
+- **Are you the only one accessing it?** A VPN is the easiest and most secure way. No services need to be public at all. See [VPN](/en/wiki/vpn/).
+- **Do you want others **to **be able to access** shared photos **without the app**? Then use a tunnel or a VPS. See [Tunnel](/en/wiki/tunnels/) and [Cloudflare Tunnel](/en/setup/cloudflare-tunnel/).
+- **Want to keep it as traditional as possible?** Ask your provider for a public IPv4 address.
+
+You can find a detailed comparison of the routes in ["Comparison of Access Routes](/en/wiki/access-methods-compared/)."
+
+<Callout title="Certificates Despite CGNAT">
+Even if your server is unreachable, you'll still receive valid certificates: The DNS-01 challenge only verifies a DNS record, not your server. See [TLS & Certificates](/en/wiki/tls-certificates/).
+</Callout>
+
+## In a nutshell
+
+- With **CGNAT**, you share a public IPv4 address with others, so port forwarding doesn't work.
+- **DS-Lite** gives you a real IPv6 address, but not your own IPv4 address.
+- Verify: Compare the WAN address in the router with the public IPv4 address.
+- Solutions: Request IPv4 from your provider, use IPv6, a VPN, a tunnel, or a VPS as an entry point.

@@ -1,5 +1,149 @@
 ---
-title: "Managing secrets"
+title: Manage Secrets
+description: Database passwords, API tokens, and client secrets are the keys to your home lab. Here, you'll learn where they belong, how to generate and store them securely, and what to do if one does end up being leaked.
 level: 2
-status: stub
+related:
+  - env-files
+  - backup-strategies
+  - directory-structure
+practice: env-secrets
 ---
+
+<OneWay />
+
+## What a Secret Is
+
+A "**secret"** is any piece of information that can be used to gain access: database passwords, API tokens,
+the client secret for [single sign-on](/en/wiki/single-sign-on/), the key for encrypted backups.
+
+The danger rarely lies in a sophisticated attack. Most of the time, a secret simply ends up in the wrong place: in a
+a public Git repository, in a screenshot on the forum, or in an unencrypted backup. That's why we're focusing on this here
+Above all, order and a few set routines.
+
+## The basic rule: Put secrets in the .env file
+
+The  describes`compose.yaml` **how** a service works. The  `.env`next to it contains information that's just for you. So
+You can safely`compose.yaml` split or version them.
+
+```text
+__ROOT__/nextcloud/
+├── compose.yaml    ← teilbar
+├── .env            ← Secrets, bleibt privat
+└── data/
+```
+
+In the  you simply refer`compose.yaml` to the variable:
+
+```yaml
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+```
+
+"How .env `.env`Files Work" explains exactly [how .env files](/en/wiki/env-files/) work.
+
+### Restrict rights
+
+Only your user should`.env` be able to read this:
+
+```bash
+chmod 600 __ROOT__/nextcloud/.env
+```
+
+`600` Meaning: The owner can read and write, but everyone else can't do anything. Docker Compose reads the file with your
+So, that's still working.
+
+### Not in Git
+
+If you manage your stacks as a Git repo, exclude .* `.env`files from the start. One in`.gitignore` the root folder is enough:
+
+```text
+.env
+*.env
+!.env.example
+```
+
+It contains`.env.example` all variables with empty or sample values. That way, when you start over, you'll know what you
+you have to fill out. Once a secret is committed, it remains in the Git history, even if you delete the file later.
+The only thing that will help is to change the secret (see below).
+
+## Generate Secrets Randomly
+
+Don't come up with passwords for services. You don't have to remember them, so they can be long and random:
+
+```bash
+openssl rand -hex 32
+```
+
+This generates 64 characters from  and`0-9` `a-f`. The variant  `openssl rand -base64 32`is shorter, but contains characters such as
+`/`,  and`+` `=`. These can cause problems in link URLs or with some images. Hex is the safe choice.
+
+Use a separate secret for each service and each database. If one becomes known, only one service is affected.
+
+## Where You Can Keep Track of Everything
+
+The  on`.env` the server is where the service reads the secret. However, it is not a good place to
+Take note of everything that's available. Two additions have proven useful:
+
+- **Password Manager:** Store important secrets in your password manager as well, for example in
+  [Vaultwarden](/en/services/vaultwarden/) or KeePassXC. This is especially important for anything you don't have a backup of
+  you can't recover, such as the passphrase for your Borg repository.
+- **Encrypted Backups:** Your backup of  `__ROOT__`contains all `.env`-files. It must therefore be encrypted.
+  borgmatic handles this automatically; see [Backup Strategies](/en/wiki/backup-strategies/).
+
+<Callout type="warning" title="Be Careful When Splitting Bills">
+  `docker compose config` shows the final configuration with all the values entered, including yours
+  Passwords. The same applies to `docker inspect`. Check such posts before you post them in a forum or chat room.
+</Callout>
+
+## Docker Secrets: Secrets as Files
+
+Environment variables are convenient, but they're visible to anyone who is authorized to run`docker inspect` the command. Docker Compose supports
+That's why we also use **secrets**: The secret is stored in a separate file and is located in the container under `/run/secrets/`
+integrated.
+
+```yaml
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+```
+
+This only works if the image can read the secret from a file. Many official images support this
+Variables ending in `_FILE`, such as Postgres here. Whether an image supports this is specified in its documentation. For the
+It's a perfectly`.env` fine starting point. You can find details in the
+[Docker documentation on secrets in Compose](https://docs.docker.com/compose/how-tos/use-secrets/).
+
+## For Advanced Users: SOPS and age
+
+Do you want to manage your entire Homelab in Git, including secrets? If so, you can store the secrets in encrypted form
+check in. A commonly used tool for this is [SOPS,](https://github.com/getsops/sops) along with
+[age](https://github.com/FiloSottile/age) for the keys. SOPS encrypts only the values; the variable names remain
+readable. Before deployment, decrypt the file on the server.
+
+This is especially worthwhile if you use [Git deployments](/en/setup/git-deployments-forgejo/) or have multiple servers
+run. You'll need to keep your private age key especially secure, because without it, you won't be able to access any of your
+More secrets.
+
+## Share secrets
+
+Sooner or later, you'll have to change a secret—perhaps because it ended up in a repo or because someone doesn't have access
+is supposed to have more. This is called **rotation**.
+
+1. Create a new secret.
+2. Modify it in the service, if the service has saved it.
+3. Enter`.env` it in the  and `docker compose up -d`restart the stack with .
+4. Update the entry in the password manager.
+
+Note regarding databases: Databases such as Postgres or MariaDB only retrieve the password from the environment variable when
+The very first time it starts up, when the database is created. If you change only the [...]`.env`, the password will no longer work.
+You must first change it in the database itself, and only then in the `.env`.

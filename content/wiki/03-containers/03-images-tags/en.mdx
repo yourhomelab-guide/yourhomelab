@@ -1,5 +1,102 @@
 ---
-title: "Images & tags"
+title: Images & Tags
+description: The number after the colon determines which version of a service you get. If you choose it intentionally, you'll be in control of updates instead of being caught off guard by them.
 level: 1
-status: stub
+related:
+  - what-is-docker
+  - docker-compose
+  - updates
+practice: updates-renovate
 ---
+
+## Structure of an image name
+
+Each one contains`compose.yaml` a line like this:
+
+```yaml
+image: ghcr.io/example/app:1.4.2
+```
+
+The name consists of three parts:
+
+| Part | Example | Meaning |
+| --- | --- | --- |
+| Registry | `ghcr.io` | The server from which the image is loaded |
+| Repository | `example/app` | Who publishes the image and what it's called |
+| Day | `1.4.2` | Which version |
+
+If the registry is missing, Docker automatically uses **Docker Hub** (`docker.io`). If the tag is missing, Docker uses `latest`. So  internally becomes`image: nginx` `docker.io/library/nginx:latest`. The namespace  `library`is reserved for official Docker Hub images.
+
+## Registries
+
+A registry is a server that stores and delivers images. The most important ones for self-hosting are:
+
+- **Docker Hub** (`docker.io`): the default registry with the most images. There is a limit on anonymous downloads per time period. You'll rarely notice this in a home lab, but it can come into play if you're downloading many updates at once.
+- **GitHub Container Registry** (`ghcr.io`): Many open-source projects publish their containers here, right alongside their source code.
+- **LinuxServer.io** (`lscr.io`): a community that bundles many popular programs into images with a consistent structure.
+- **Quay** (`quay.io`): primarily projects related to Red Hat.
+
+The documentation for each project specifies which registry it uses. Whenever possible, use the project's official image. Images from unknown sources may be outdated or, in the worst case, contain malicious code.
+
+## The problem with "latest"
+
+`latest` It sounds like "always the latest version." In reality, it's just a name the publisher assigns, usually to the latest stable release. This has two pitfalls:
+
+1. **You don't know which version is running.** The programs running today`latest` and `latest`in three months are different. If the file only says `latest`, you won't be able to tell when changes were made.
+2. **Major changes often go unnoticed.** With some updates, you also get`docker compose pull` versions that restructure data or change settings. This works well with some services, but often doesn't with databases.
+
+`latest` By the way, it doesn't update automatically. Docker only fetches a new version if you run`pull` the command or if a tool does it for you.
+
+## Version Tags
+
+Most projects assign tags according to **Semantic Versioning** (Semver for short): `MAJOR.MINOR.PATCH`, such as `2.1.3`.
+
+- **PATCH** (2.1.**3**): Bug fixes. Should always work without any problems.
+- **MINOR** (2.**1**.0): new features that don't break existing ones.
+- **MAJOR** (**2**.0.0): Major changes. It's worth taking a look at the release notes.
+
+The same image often appears under multiple tags. The shorter the tag, the more updates it includes:
+
+| Day | Will be available on the next pull |
+| --- | --- |
+| `2.1.3` | Nothing—this version remains fixed |
+| `2.1` | New patch versions (2.1.4, 2.1.5 …) |
+| `2` | New minor and patch versions (2.2, 2.3 …) |
+| `latest` | Everything, including Version 3 |
+
+A good middle ground for beginners is the major tag, such as  or`louislam/uptime-kuma:2` `mariadb:11`. You get bug fixes, but no version jumps that require manual intervention. Strictly fixed versions like  are`2.1.3` the most predictable, but you have to apply each update yourself.
+
+Not every project follows Semver, and some only provide  `latest`. The meaning of the tags is explained on the image's page in the registry or in the project documentation. Some tags also include suffixes such as  `-alpine`for a particularly small variant or  `-apache`for a specific configuration.
+
+## Digests: The Exact Version
+
+A day is just a label that the publisher can reassign to a different image at any time. The **digest**, on the other hand, is unique: it is a checksum of the image's contents that begins`sha256:` with . You can append it to the name:
+
+```yaml
+image: nginx:1.27@sha256:0123abc…
+```
+
+Docker will then load that exact image, even if the tag now points somewhere else. This  `…`represents the rest of the long checksum. You can view the digest of the images on your server using:
+
+```bash
+docker image ls --digests
+```
+
+Maintaining digests manually is tedious. They become useful when a tool like Renovate updates them automatically.
+
+## Staying on Top of Updates
+
+Fixed tags have one drawback: Someone has to increment them. That's where **Renovate** comes in. The tool regularly checks your Compose files in a Git repository, finds newer tags, and proposes the change as a pull request. You read the release notes, click “Merge,” and the update is documented. To learn how to set this up, see [Updates with Renovate](/en/setup/updates-renovate/). General information on update strategies can be found in [Updates](/en/wiki/updates/).
+
+Old images remain on the disk after an update. You can clean them up using:
+
+```bash
+docker image prune
+```
+
+This command deletes images that no longer have a name and are not being used by any container. It removes`-a` all images that are not currently being used by any container.
+
+## Read more
+
+- [Semantic Versioning](https://semver.org/lang/de/)
+- [Docker Documentation on Image Names and Tags](https://docs.docker.com/get-started/docker-concepts/building-images/build-tag-and-publish-an-image/)

@@ -1,5 +1,103 @@
 ---
-title: "TrueNAS & Unraid"
+title: TrueNAS & Unraid
+description: TrueNAS and Unraid are operating systems for home servers with multiple hard drives. They handle storage, file sharing, and redundancy, and can also run apps in Docker.
 level: 2
-status: stub
+related:
+  - bare-metal-linux
+  - proxmox-ve
+  - backup-strategies
+  - hardware-overview
 ---
+
+<OneWay />
+
+## What is a NAS operating system?
+
+A NAS (Network Attached Storage) is a data storage device on a network. A NAS operating system turns a
+A computer with multiple hard drives is exactly that kind of device: It combines the drives into a single storage unit and protects against
+the failure of individual disks and makes folders available on the network, for example via SMB for Windows and macOS or via NFS for
+Linux. Everything is set up through a web interface.
+
+The two best-known systems for building your own NAS are **TrueNAS** and **Unraid**. Both can now also
+They run containers and VMs, making them more than just storage.
+
+## TrueNAS
+
+TrueNAS is developed by iXsystems. The free, open-source version is called **TrueNAS Community Edition** (formerly
+"TrueNAS SCALE" and is based on Debian Linux. The older, FreeBSD-based version, TrueNAS CORE, is no longer
+further developed.
+
+At its core is **ZFS**, a file system with built-in volume aggregation:
+
+- **Checksums for all data.** ZFS detects when a disk is silently providing incorrect data (“bit rot”), and
+  It repairs them using redundancy.
+- **Snapshots.** A frozen state of a dataset that takes up very little space. Useful for preventing accidental
+  Wipe and Ransomware.
+- **RAIDZ.** Multiple disks form an array that can tolerate the failure of one (RAIDZ1), two (RAIDZ2), or three
+  (RAIDZ3) drives.
+- **Replication.** Snapshots can be efficiently transferred to a second ZFS system, for example, as a backup.
+
+ZFS is robust but not very flexible. Disks should be the same size, and expanding a
+The array's capacity is limited. Newer versions can expand a RAIDZ array by adding individual disks; previously, this was not possible.
+That's not the case at all. So plan your storage capacity from the very beginning. ZFS uses free RAM as a read cache; more RAM
+That's why it makes a noticeable difference.
+
+**Apps:** TrueNAS comes with an app catalog. Starting with version 24.10, apps run on Docker. You can set up your own services
+You can also save it as Compose-YAML.
+
+## Unraid
+
+Unraid by Lime Technology is **a commercial product**. It boots from a USB flash drive to which the license is tied, and
+Runs entirely in RAM. You purchase the license once. There are several tiers, based on the number of
+Drives. Depending on the tier, updates are included for a limited period (after which they can be optionally extended) or
+Lifetime. You can find the current terms and conditions on the [Unraid website](https://unraid.net/pricing).
+
+The unique feature is the **Unraid array**:
+
+- **Plates of different sizes** can be mixed. The parity plate just needs to be at least as large as
+  like the largest data disk.
+- **Each data disk has its own file system.** If more disks fail than the parity can cover, only
+  The data on the defective disks is gone—but not all of it.
+- **Expandable one by one.** Just add another panel, and you're done.
+- **Energy-efficient.** Drives that aren't currently in use can go to sleep.
+
+The downside: Writing is slower because every change also updates the parity, and reading is just as fast
+like a single drive. That's why people usually use a fast SSD "pool" as a cache and for apps. Newer versions
+They also support ZFS pools.
+
+**Apps:** Unraid has its own Docker interface. You can install apps using the “Community Applications” plugin
+Hundreds of ready-made templates at the click of a button. Docker Compose isn't built in, but it can be added via a community plugin
+Upgrade. VMs are also running.
+
+## In comparison
+
+| | TrueNAS Community Edition | Unraid |
+| --- | --- | --- |
+| **Costs** | Free, open source | Paid License |
+| **Storage** | ZFS, disks of equal size | Array with mixed drives, optional ZFS |
+| **Expand** | Limited; it's better to plan ahead | Simple, one plate at a time |
+| **Data Security** | Very high (checksums, self-healing) | Okay, an array without self-healing |
+| **Speed** | High | Array is rather slow, but the SSD cache helps |
+| **Good for** | Key Data, Performance | Media Collections, Expanding Storage |
+
+## And what about Docker according to this page?
+
+The instructions on this page assume a standard Linux system with Docker Compose. On TrueNAS and Unraid
+Much of this works, but not everything works exactly as intended: The systems manage Docker through their own interfaces,
+Paths are different, and changes to the operating system itself (packages, firewall) are not planned.
+
+A popular middle ground: The NAS handles only storage and file sharing, and the services run in a
+**A virtual machine running Debian or Ubuntu**, either on the NAS itself or on a second computer. There, you can
+Then follow the instructions step by step.
+
+<Callout title="RAID is not a backup">
+Parity and RAIDZ protect against disk failure, but not against accidental deletion, ransomware, or
+a fire. A NAS still needs to be backed up to another device, preferably one located off-site. See
+[Backup Strategies](/en/wiki/backup-strategies/).
+</Callout>
+
+## Read more
+
+- [TrueNAS: Documentation](https://www.truenas.com/docs/)
+- [Unraid: Documentation](https://docs.unraid.net/)
+- [Proxmox VE](/en/wiki/proxmox-ve/), when virtualization is the priority

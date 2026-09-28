@@ -1,6 +1,135 @@
 ---
-title: ".env & secrets"
+title: .env & Secrets
+description: In the end, your stack's settings and passwords are stored in a .env file alongside the compose.yaml, well protected and outside of Git. You generate secure random values and use `docker compose config` to check what Compose does with them.
 level: 2
 minutes: 15
-status: stub
+requires:
+  - First Stack with Compose
 ---
+
+A [document] describes`compose.yaml` **how** a service works. However, passwords, API keys, and values that vary from server to server do not belong there. Otherwise, they’ll end up in every backup diff, every screenshot, and, in the worst case, in a public Git repository.
+
+The solution is a file named  `.env`in the same folder. Docker Compose reads it automatically and substitutes its values wherever they appear`compose.yaml``${NAME}` in the . This keeps the  `compose.yaml`free of secrets, and you can share it or version control it. For more information, see the articles [“Managing](/en/wiki/managing-secrets/) [.env Files”](/en/wiki/env-files/) and [“Managing Secrets](/en/wiki/managing-secrets/).”
+
+In this guide, you'll continue working with the whoami stack from the [first stack](/en/setup/first-stack/).
+
+<Steps>
+
+<Step title="Create a .env file">
+Go to the "Stack" folder and create`.env` the following:
+
+```bash
+cd __ROOT__/whoami
+nano .env
+```
+
+Contents:
+
+```bash
+# Time zone for the container
+TZ=__TZ__
+# Name that whoami shows in its answer
+WHOAMI_NAME=homelab
+```
+
+The rules are simple: one variable per line`NAME=Wert`, no spaces around the variable name`=`. Lines beginning with  are`#` comments.
+</Step>
+
+<Step title="Using Variables in compose.yaml">
+Open the  `compose.yaml`and complete the block`environment:`:
+
+```yaml
+services:
+  whoami:
+    image: traefik/whoami:latest
+    container_name: whoami
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      - TZ=${TZ}
+      - WHOAMI_NAME=${WHOAMI_NAME}
+```
+
+It's important to understand that the  `.env`is **not** automatically passed in its entirety to the container. Compose only replaces the  `${…}`places in the `compose.yaml`. A value is`environment:` only passed to the container via . This is called interpolation.
+</Step>
+
+<Step title="Check with `docker compose config`">
+This command displays the text exactly`compose.yaml` as Compose sees it after inserting the variables. Typos are immediately noticeable here.
+
+```bash
+docker compose config
+```
+
+Your actual values should`environment:` now appear under , such as `WHOAMI_NAME: homelab`. If a variable is missing from `.env`, Compose will display a warning saying `variable is not set. Defaulting to a blank string.`
+
+<Callout type="warning" title="The output contains plain text">
+`docker compose config` It also displays all passwords in plain text. Do not copy the output into a forum or chat without verifying it first.
+</Callout>
+</Step>
+
+<Step title="Restart the stack and test it">
+Compose detects the changed configuration and recreates the container.
+
+```bash
+docker compose up -d
+curl http://localhost:8080
+```
+
+The response now contains the line `Name: homelab`. The value came from the  via`.env` the  `compose.yaml`into the container.
+
+By the way, simply restarting  `docker compose restart`isn't enough. It doesn't apply any changes to variables. After making changes to  or`.env` , always`compose.yaml` run `docker compose up -d`.
+</Step>
+
+<Step title="Generate Secure Secrets">
+For passwords and keys that you don't have to type in yourself, use long random strings.  `openssl`is preinstalled on Debian and Ubuntu:
+
+```bash
+openssl rand -hex 32
+```
+
+That results in 64 characters from  and`0-9` `a-f`. You can also append`.env` the value directly to  without it appearing in the terminal history:
+
+```bash
+echo "DB_PASSWORD=$(openssl rand -hex 32)" >> .env
+```
+
+`DB_PASSWORD` This is just an example name. The variables a service needs are listed on its service page`.env`. The random values are already pre-filled in your browser there.
+
+<Callout title="Why &quot;hex&quot;?">
+Hex values do not contain any special characters. This saves you trouble: Otherwise, Compose will try`.env` to interpret a  `$`in the value as a variable. If you do need to use a  `$`in the value, enclose the value in single quotes; Compose will then treat it as a literal.
+</Callout>
+</Step>
+
+<Step title="Protect File">
+Only your user should`.env` be able to read it. This means`chmod 600`: read and write access only for the owner; no access for anyone else.
+
+```bash
+chmod 600 .env
+ls -l .env
+```
+
+The output now reads `-rw-------`. Do this for each new `.env`.
+</Step>
+
+<Step title="Keep .env out of Git">
+If you're managing your Compose files in a Git repository, add`.gitignore`  `.env`and the data folders to the  . It's best to do this in the  `.gitignore`in the root directory of the repository; then it will apply to all stacks:
+
+```bash
+printf '.env\ndata/\n' >> .gitignore
+```
+
+So that others (or you yourself on a new server) know which variables are required, you can check in a file that `.env.example`uses placeholders instead of actual values.
+
+If you're not using Git, you can skip this step. Just remember: The  `.env`is part of your backup. The backup should therefore be encrypted. [borgmatic](/en/setup/backups-borgmatic/) does this automatically.
+</Step>
+
+</Steps>
+
+## Good to Know
+
+- **Passwords do not change retroactively.** Many databases read the password from the environment only when they are started for the very first time and use it to create the user. If you change it later in the `.env`, it will no longer match the database. Therefore, set secrets before the first startup.
+- **Enforce required variables.** If you use , Compose will terminate`${DB_PASSWORD:?fehlt in .env}` with this message instead of starting with an empty value. , on the other hand, sets`${TZ:-Europe/Berlin}` a default value if the variable is missing.
+- **Environment variables are not hidden.** Anyone in the group `docker`can view them, for example, using `docker inspect`. For beginners, the option `.env`with is `chmod 600`perfectly sufficient. For a more secure approach—such as using Compose secrets or variables ending in `_FILE`—see [“Managing Secrets](/en/wiki/managing-secrets/).”
+
+That wraps up the Docker phase. Next, you'll make your services accessible under their own names using [a domain and DNS](/en/setup/domain-dns/).

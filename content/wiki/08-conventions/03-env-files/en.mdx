@@ -1,5 +1,119 @@
 ---
-title: ".env files"
+title: .env files
+description: Passwords and settings don't belong directly in `compose.yaml`. Here, you'll learn how `.env`, `env_file`, and `environment` work together and where the common pitfalls lie.
 level: 1
-status: stub
+related:
+  - docker-compose
+  - managing-secrets
+  - directory-structure
+practice: env-secrets
 ---
+
+## Why a .env file?
+
+One describes`compose.yaml` *how* a service operates. Passwords, tokens, and values that vary from server to server
+Do not include files that do not fit this criteria. Otherwise, you won't be able to share the file, add it to Git, or simply upload it to
+copy to another computer.
+
+The solution: It contains`compose.yaml` only references such as `${DB_PASSWORD}`. The actual values are stored in a file
+named  `.env`in the same folder. Docker Compose reads them automatically at startup.
+
+## Three Paths, Three Purposes
+
+The terms sound similar, but they mean different things.
+
+| Way              | Where                        | What happens                                                   |
+| ---------------- | ------------------------- | -------------------------------------------------------------- |
+| `.env`           | File in the Stack folder     | Returns values for  `${…}`in the  `compose.yaml`(interpolation) |
+| `environment:`   | In the `compose.yaml`     | Sets environment variables **in the container**                      |
+| `env_file:`      | In the `compose.yaml`     | Loads all lines of a file into the container as environment variables |
+
+The most important point: It **doesn't** automatically end`.env` up in the container. Its sole purpose is to `compose.yaml`
+to be filled in. A value is only added to the container via  (`environment:`or `env_file:`).
+
+The templates on this page therefore follow this pattern:
+
+```yaml
+services:
+  nextcloud:
+    environment:
+      - TZ=${TZ}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+```
+
+```bash
+# .env
+TZ=__TZ__
+DB_PASSWORD=ein-langes-zufaelliges-passwort
+```
+
+This way, you can see exactly`compose.yaml` which variables a container receives. This is`env_file:` useful when a
+The service requires a great many variables. However, everything is then passed on from the file, including values that the container doesn't even
+doesn't need. If you substitute the same variable into  and`environment:` over `env_file:`,  wins`environment:`.
+
+## Interpolation and Default Values
+
+Interpolation means that Compose replaces  `${VAR}`with the value from the  (`.env`or from your shell) before it executes the
+The container starts. There are a few useful options:
+
+| Spelling       | Meaning                                                  |
+| ------------------ | ---------------------------------------------------------- |
+| `${VAR}`           | Value of `VAR`, empty if not set                   |
+| `${VAR:-standard}` | `standard`, if  is not`VAR` set or is empty         |
+| `${VAR-standard}`  | `standard` only if it is not set at all`VAR`           |
+| `${VAR:?Fehler}`   | Termination with an error message if  is missing`VAR` or empty  |
+
+`${VAR:?…}` It's worth doing for required fields like passwords. Then the stack won't start with an empty password, but rather
+tells you what's missing. All the details are in the
+[Official documentation on interpolation](https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/).
+
+If a variable is set`.env` both in your shell and in the , the shell takes precedence. This can sometimes be surprising,
+if you've set`export` something to  for testing purposes beforehand.
+
+## Pitfalls in Quoting
+
+Most problems with .`.env`files are caused by quotation marks and special characters.
+
+- **The dollar sign.** Compose also`$` replaces it in values`.env`. A password like  then `abc$def`becomes `abc`.
+  If you enclose such values in single quotes, they will be treated as literal values: `PASSWORD='abc$def'`. In the
+  `compose.yaml` You yourself write the dollar sign as `$$`.
+- **Quotation marks in `environment:`.** In the list format, the quotation marks are`- KEY="wert"` part of the value.
+  So the container is included along`"wert"` with the quotation marks. Just type `- KEY=wert`.
+- **Comments.** Lines that begin`#` with  are comments. A  in the middle`#` of a value without quotation marks
+  Can be treated as a comment if there is a space before it. If in doubt, enclose the value in quotation marks.
+- **Spaces around the period`=`.** Write it without`KEY=wert` spaces. This is unambiguous in all tools.
+
+The easiest way to get around all of this is to use passwords made up of letters and numbers, for example, such as
+`openssl rand -hex 32`. They're still long enough, though.
+
+## Testing with `docker compose config`
+
+Before you guess, see what Compose actually does with it:
+
+```bash
+cd __ROOT__/nextcloud
+docker compose config
+```
+
+The command displays the final configuration, including all the values used. If a variable is missing, you'll see a
+Warning. Caution: The output contains your passwords in plain text. Do not copy them into a forum without checking them first.
+
+## .env.example for Git
+
+It contains`.env` secrets and should never be placed in a public repository. Nevertheless, if someone were to access your
+`compose.yaml` who use it know which variables are needed. That's what the following are for`.env.example`: the same keys,
+but with placeholders instead of actual values.
+
+```bash
+# .env.example
+TZ=Europe/Berlin
+DB_PASSWORD=change-me
+```
+
+This one goes`.env.example` into Git, and that one goes into`.env` the `.gitignore`. The service templates on this page are exactly the same
+Set up. For more information on how to protect Secrets, see "[Manage Secrets](/en/wiki/managing-secrets/)."
+
+<Callout type="warning" title="Set Permissions">
+  This  should`.env` only be readable by you. Use  `chmod 600 .env`to make sure of that. And remember: Anyone who
+  If someone finds a file in your backup, they'll have your passwords. That's why you should always encrypt your backups.
+</Callout>

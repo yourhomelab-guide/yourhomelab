@@ -1,5 +1,131 @@
 ---
-title: "VMs or containers?"
+title: VMs or containers?
+description: Virtual machines and containers isolate services from one another, but in different ways. The difference lies primarily in the kernel, and it determines the level of isolation and resource requirements.
 level: 2
-status: stub
+related:
+  - what-is-docker
+  - proxmox-ve
+  - bare-metal-linux
+  - attack-surface
+practice: installing-docker
 ---
+
+<OneWay />
+
+## What's this about?
+
+Many services run side by side on a server. To prevent them from interfering with each other, they are separated.
+There are two techniques for this: **virtual machines** (VMs) and **containers**. From the outside, they look similar,
+But they work in fundamentally different ways.
+
+The key term is the **kernel**. It is the core of the operating system that communicates directly with the hardware.
+and manages memory, processes, and devices.
+
+## Virtual Machines
+
+A VM is a **simulated computer**. A hypervisor (such as KVM in Proxmox) makes it appear as though it has a CPU, RAM, hard drive, and
+Network adapter. A full-fledged operating system **with its own kernel** is running in the VM. It often doesn't even know that
+that it is virtualized.
+
+- **Strong isolation.** The hypervisor sits between the VM and the host, supported by the CPU (Intel VT-x, AMD-V).
+- **Any operating system:** Linux, Windows, Home Assistant OS, BSD.
+- **Fixed resource requirements.** Each VM boots its own system and reserves RAM. A lightweight Linux VM requires
+  Roughly a few hundred MB of RAM, even before any services are running.
+
+## Container
+
+A container is **not a separate computer**, but rather a group of processes on the host that is isolated.
+All containers **share the host's kernel**. This separation is handled by functions in the Linux kernel:
+
+- **Namespaces** ensure that a container runs only its own processes, its own file system, and its
+  sees its own network.
+- **cgroups** limit how much CPU and RAM a container can use.
+
+That's what makes containers so easy: They start up in seconds and require hardly any more resources than the program itself.
+The downside: Because the kernel is shared, only Linux programs can run, and a vulnerability in the kernel affects all containers
+at the same time.
+
+There are two types:
+
+- **Application containers** like [Docker](/en/wiki/what-is-docker/): one container per service, built from
+  a pre-built image. That's the standard for self-hosting.
+- **System containers** like LXC in Proxmox: an entire Linux system with package management and multiple services, almost
+  like a small VM, but without its own kernel.
+
+## In comparison
+
+| | VM | Container (Docker) |
+| --- | --- | --- |
+| **Kernel** | Own | Shared with the host |
+| **Isolation** | Strong | Good, but weaker |
+| **Home** | Seconds to minutes | Usually less than a second |
+| **Overhead** | A separate operating system for each VM | Hardly more than the program |
+| **Operating Systems** | Any | Linux only (on a Linux host) |
+| **Typical Applications** | Separate systems, different operating systems | Individual Services |
+
+## When do you take what?
+
+For a home lab, the question is rarely “either/or.” The usual combination is: **Docker containers for the
+Services**, and if necessary, **a VM as a container around them**.
+
+- **Docker only:** You have a computer and want to run a few services. Linux running directly on the hardware, on which
+  Docker. Here's how the [guides on this page](/en/setup/installing-docker/) work.
+- **VM with Docker inside:** You're using Proxmox or a NAS system and want to completely separate Docker from the host.
+- **Your Own VM:** For anything that requires its own operating system (Home Assistant OS, Windows, a firewall such as
+  (OPNsense), or for services that you want to isolate particularly strictly.
+- **LXC:** For small, individual Linux services on Proxmox when RAM is limited.
+
+<Callout title="Containers are still safe enough">
+The fact that they have weaker insulation doesn't mean that containers are unsafe. More important than the technology is how you use them
+Benefits: up-to-date images, no unnecessary permissions`privileged: true`, and as few open ports as possible. For more information, see
+[Keep the attack surface small](/en/wiki/attack-surface/).
+</Callout>
+
+## Decision-Making Guide
+
+<Quiz
+  questions={[
+    {
+      question: "What do you want to do?",
+      answers: [
+        { label: "A few web services, such as Vaultwarden or Immich", points: { docker: 2 } },
+        { label: "Another operating system, such as Home Assistant OS", points: { vm: 2 } },
+        { label: "Many Small Linux Services on Proxmox", points: { lxc: 2, vm: 1 } },
+      ],
+    },
+    {
+      question: "How much hardware do you have?",
+      answers: [
+        { label: "A small computer with 8 GB of RAM or less", points: { docker: 2, lxc: 1 } },
+        { label: "A computer with 16 GB of RAM or more", points: { vm: 1, docker: 1 } },
+      ],
+    },
+    {
+      question: "How important are full-system snapshots to you?",
+      answers: [
+        { label: "It's not that important; backing up the data is enough", points: { docker: 2 } },
+        { label: "Very important—I like to try new things", points: { vm: 2, lxc: 1 } },
+      ],
+    },
+  ]}
+  results={{
+    docker: {
+      title: "Docker Directly on Linux",
+      text: "Install Debian or Ubuntu directly on the hardware and run each service as a Docker container. This is the easiest way, and the approach this page follows.",
+    },
+    vm: {
+      title: "Proxmox with a Docker VM",
+      text: "Install Proxmox VE and create a VM running Debian or Ubuntu for Docker. There's room for additional VMs, and be sure to take a snapshot before performing any upgrades.",
+    },
+    lxc: {
+      title: "Proxmox with LXC Containers",
+      text: "LXC containers save RAM and are well-suited for individual, lightweight services. For Docker, though, you're better off using a VM.",
+    },
+  }}
+/>
+
+## Read more
+
+- [What is Docker?](/en/wiki/what-is-docker/)
+- [Proxmox VE](/en/wiki/proxmox-ve/)
+- [Docker Documentation: What Is a Container?](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/)
