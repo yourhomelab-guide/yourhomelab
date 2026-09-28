@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: ntfy
+category: monitoring
+level: 1
+port: 80
+hostPort: 8082
+subdomain: ntfy
+subdomainOnly: true
+links:
+  repo: binwiederhier/ntfy
+  website: https://ntfy.sh
+  docs: https://docs.ntfy.sh
+upstream:
+  label: docs/config.md
+  url: https://docs.ntfy.sh/config/
+resources:
+  ram: 30
+  gpu: no
+db:
+  type: sqlite
+  path: data/data/auth.db
+pairsWith: [uptime-kuma, beszel]

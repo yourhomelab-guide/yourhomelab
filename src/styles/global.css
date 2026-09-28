@@ -196,3 +196,4 @@ mark { background: var(--warn-bg); color: var(--warn-fg); border-radius: 4px; pa
 .prose td { padding: 13px 20px; border-bottom: 1px solid var(--line-3); vertical-align: top; }
 .prose tr:last-child td { border-bottom: none; }
 .prose td strong { color: var(--text-4); font-weight: 600; }
+.prose a.glossary-link { color: inherit; text-decoration-style: dotted; text-decoration-color: var(--accent-300); text-decoration-thickness: 1.5px; text-underline-offset: 4px; }

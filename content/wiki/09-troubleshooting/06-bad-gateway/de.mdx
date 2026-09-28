@@ -1,0 +1,149 @@
+---
+slug: bad-gateway
+title: "Bad Gateway und 404 vom Proxy"
+description: "Der Reverse Proxy läuft, aber statt deines Dienstes kommt 502 Bad Gateway, 504 Gateway Timeout oder 404. Dann findet der Proxy den Container nicht oder erreicht ihn nicht."
+level: 2
+related: [reverse-proxy-explained, docker-networks, dns-domains, first-steps]
+practice: reverse-proxy-traefik
+---
+
+## Symptom
+
+Im Browser steht einer dieser Fehler:
+
+```text
+404 page not found
+Bad Gateway
+Gateway Timeout
+```
+
+Die Meldung verrät schon viel:
+
+| Meldung | Bedeutung |
+| --- | --- |
+| `404 page not found` (Traefik) | Keine Regel passt zur Adresse. Traefik kennt den Dienst gar nicht. |
+| `502 Bad Gateway` | Der Proxy kennt den Dienst, bekommt vom Container aber keine Antwort. |
+| `504 Gateway Timeout` | Der Proxy versucht es, kommt aber nicht durch. Oft ein Netzwerkproblem. |
+
+Mehr zur Rolle des Proxys erklärt [Reverse Proxy erklärt](/de/nachschlagen/reverse-proxy-erklaert/).
+
+## Ursachen
+
+1. **Container läuft nicht.** Er ist abgestürzt oder hängt in einer [Neustart-Schleife](/de/nachschlagen/container-neustart-schleife/).
+2. **Container ist nicht im Netzwerk `__NETWORK__`.** Der Proxy kann nur Container erreichen, mit denen er ein
+   Netzwerk teilt.
+3. **Falscher Port.** Der Proxy spricht einen Port an, auf dem die App nicht lauscht.
+4. **`traefik.enable=true` fehlt (Traefik).** Traefik ignoriert auf dieser Seite alle Container ohne dieses Label.
+5. **Host-Regel oder DNS passt nicht.** Tippfehler in `Host(...)`, oder die Subdomain zeigt nicht auf den Server.
+6. **Container ist `unhealthy` (Traefik).** Traefik leitet nicht an Container weiter, deren Healthcheck fehlschlägt.
+7. **NPM: falscher Forward-Host oder Port.**
+
+## Prüfen
+
+**Läuft der Container?**
+
+```bash
+cd __ROOT__/myapp
+docker compose ps
+```
+
+**Hängt er im Proxy-Netzwerk?** Diese Ausgabe muss sowohl den Proxy als auch deinen Container enthalten:
+
+```bash
+docker network inspect __NETWORK__ --format '{{range .Containers}}{{.Name}} {{end}}'
+```
+
+**Auf welchem Port lauscht die App?** Das steht in der Doku des Images. Einen Hinweis gibt auch:
+
+```bash
+docker image inspect --format '{{json .Config.ExposedPorts}}' <image>
+```
+
+**Ist der Container aus dem Proxy-Netzwerk erreichbar?** Ein Wegwerf-Container im selben Netzwerk fragt direkt nach.
+Setz Containername und Port ein:
+
+```bash
+docker run --rm --network __NETWORK__ curlimages/curl -sI http://myapp:8080
+```
+
+Kommt eine Antwort mit `HTTP/1.1 200` oder einer Weiterleitung, stimmen Netzwerk und Port. Dann liegt es an der
+Proxy-Konfiguration.
+
+**Was sagt der Proxy?**
+
+```bash
+cd __ROOT__/traefik
+docker compose logs --tail 100 traefik | grep -i -E "error|myapp"
+```
+
+**DNS:** `dig +short myapp.__DOMAIN__` muss die IP deines Servers liefern.
+
+## Lösung
+
+### Netzwerk ergänzen
+
+Der Dienst, den der Proxy erreichen soll, braucht das externe Netzwerk:
+
+```yaml
+services:
+  myapp:
+    networks:
+      - __NETWORK__
+
+networks:
+  __NETWORK__:
+    external: true
+```
+
+Hängt der Container in mehreren Netzwerken, etwa zusätzlich in einem internen Netz zur Datenbank, sag Traefik, welches
+es nehmen soll. Sonst wählt es womöglich eine IP, die es nicht erreicht, und du bekommst `504`:
+
+```yaml
+labels:
+  - traefik.docker.network=__NETWORK__
+```
+
+### Port angeben (Traefik)
+
+Veröffentlicht das Image mehrere Ports oder keinen, weiß Traefik nicht, welchen es nehmen soll. Gib ihn an. Gemeint ist
+der Port **im** Container, nicht ein Port aus `ports:`:
+
+```yaml
+labels:
+  - traefik.enable=true
+  - traefik.http.routers.myapp.rule=Host(`myapp.__DOMAIN__`)
+  - traefik.http.routers.myapp.entrypoints=websecure
+  - traefik.http.routers.myapp.tls.certresolver=le
+  - traefik.http.services.myapp.loadbalancer.server.port=8080
+```
+
+Die passenden Labels für deinen Dienst erzeugt das Werkzeug [Proxy-Konfiguration](/de/werkzeuge/proxy-konfiguration/).
+Nach Änderungen an Labels:
+
+```bash
+cd __ROOT__/myapp
+docker compose up -d
+```
+
+### Nginx Proxy Manager
+
+Im Proxy-Host gilt:
+
+- **Forward Hostname / IP:** der Containername, zum Beispiel `myapp`. Nicht `localhost`, denn das wäre der NPM-Container
+  selbst.
+- **Forward Port:** der Port im Container, nicht der gemappte Host-Port.
+- **Scheme:** meist `http`. Nur `https`, wenn die App selbst TLS spricht.
+
+NPM und der Dienst müssen beide im Netzwerk `__NETWORK__` hängen.
+
+### Caddy
+
+Im Caddyfile steht das Ziel genauso als Containername und interner Port:
+
+```text
+myapp.__DOMAIN__ {
+    reverse_proxy myapp:8080
+}
+```
+
+Nach einer Änderung neu laden: `docker compose restart caddy` im Stack-Ordner von Caddy.

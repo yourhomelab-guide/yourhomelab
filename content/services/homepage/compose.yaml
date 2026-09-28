@@ -1,0 +1,26 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:v2
+    container_name: homepage
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - HOMEPAGE_ALLOWED_HOSTS=${HOMEPAGE_ALLOWED_HOSTS}
+    volumes:
+      # services.yaml, widgets.yaml, docker.yaml … are created here on first start
+      - ./data/config:/app/config
+    depends_on:
+      - socket-proxy
+
+  # Read-only access to the Docker API for container status and labels.
+  # Homepage never sees the Docker socket itself.
+  socket-proxy:
+    image: ghcr.io/tecnativa/docker-socket-proxy:v0.5.0
+    container_name: homepage-socket-proxy
+    restart: unless-stopped
+    environment:
+      - CONTAINERS=1 # allow listing containers
+      - POST=0 # no write access: nothing can be started, stopped or changed
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro

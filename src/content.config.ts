@@ -132,7 +132,10 @@ const services = defineCollection({
         service: z.string().optional(),
         user: z.string().optional(),
         name: z.string().optional(),
-        /** sqlite: path of the database file below the stack's data folder, e.g. `data/db.sqlite3` */
+        /**
+         * sqlite: path of the database file relative to the stack folder, as mounted in compose.yaml, e.g. `data/data/db.sqlite3`.
+         * A leading `data/` is the stack's data folder, so tools map it to `__DATA(<id>)__` for the central data mode.
+         */
         path: z.string().optional(),
       })
       .optional(),

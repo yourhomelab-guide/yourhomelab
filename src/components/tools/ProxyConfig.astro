@@ -1,10 +1,349 @@
 ---
-/** Placeholder – replaced by the real tool. */
+/** Traefik labels / Caddyfile block / NPM values for a self-hosted service that is not in the catalog. */
 import type { Lang } from '../../lib/i18n';
+import { t } from '../../lib/i18n';
+import { url } from '../../lib/routes';
+import { getWiki } from '../../lib/content';
+
 interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
+const P = 'tools.proxy-config.';
+const k = (key: string, vars?: Record<string, string | number>) => t(lang, P + key, vars);
+
+const rp = (await getWiki(lang)).items.find((a) => a.id === 'reverse-proxy-explained');
+const links = {
+  guide: url.guide(lang, 'tinyauth'),
+  wiki: rp ? url.wiki(lang, rp.slug) : url.section(lang, 'wiki'),
+  explainer: url.tool(lang, 'compose-explainer'),
+  tinyauthDocs: 'https://tinyauth.app/docs',
+  tinyauthNpm: 'https://tinyauth.app/docs/guides/nginx-proxy-manager',
+};
+
+// Strings the script needs (notes, checklist, NPM labels)
+const scriptKeys = [
+  'errId', 'errContainer', 'errPort', 'errSub',
+  'noteNoProxy', 'notePath', 'noteWsAuto', 'noteTraefikHttps', 'noteTraefikAuth', 'noteCaddyHttps', 'noteCaddyAuth', 'noteCaddyPath', 'noteCaddyReload',
+  'noteNpmHttps', 'noteNpmAuth', 'noteNpmPath',
+  'checkNet', 'checkPorts', 'checkDnsSub', 'checkDnsPath', 'checkTinyauth', 'checkStart', 'checkStartCaddy', 'checkStartNpm',
+  'npmTabDetails', 'npmTabLocations', 'npmTabSsl', 'npmDomain', 'npmScheme', 'npmHost', 'npmPort', 'npmCache', 'npmExploits', 'npmWs',
+  'npmLocation', 'npmCert', 'npmCertNew', 'npmForce', 'npmHttp2', 'npmHsts', 'on', 'off', 'optional',
+];
+const msgs = Object.fromEntries(scriptKeys.map((x) => [x, k(x)]));
+const copy = t(lang, 'code.copy');
+const proxyNames = { traefik: 'Traefik', caddy: 'Caddy', npm: 'Nginx Proxy Manager' };
 ---
 
-<p data-lang={lang}>…</p>
+<div class="pc" data-pc-tool>
+  <script type="application/json" data-pc-msgs set:html={JSON.stringify(msgs)} />
+  <script type="application/json" data-pc-links set:html={JSON.stringify(links)} />
+
+  <form class="card form" novalidate data-pc-form>
+    <fieldset>
+      <legend>{k('service')}</legend>
+      <div class="grid2">
+        <label>
+          {k('id')}
+          <input name="id" value="myapp" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="pc-id-hint pc-id-err" />
+          <span class="hint" id="pc-id-hint">{k('idHint')}</span>
+          <span class="err" id="pc-id-err" data-err="id" hidden></span>
+        </label>
+        <label>
+          {k('container')}
+          <input name="container" placeholder="myapp" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="pc-container-hint pc-container-err" />
+          <span class="hint" id="pc-container-hint">{k('containerHint')}</span>
+          <span class="err" id="pc-container-err" data-err="container" hidden></span>
+        </label>
+        <label>
+          {k('port')}
+          <input name="port" type="number" min="1" max="65535" value="8080" inputmode="numeric" aria-describedby="pc-port-hint pc-port-err" />
+          <span class="hint" id="pc-port-hint">{k('portHint')}</span>
+          <span class="err" id="pc-port-err" data-err="port" hidden></span>
+        </label>
+        <label>
+          <span data-sub-label>{k('sub')}</span>
+          <input name="sub" placeholder="myapp" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="pc-sub-hint pc-sub-err" />
+          <span class="hint" id="pc-sub-hint">{k('subHint')}</span>
+          <span class="err" id="pc-sub-err" data-err="sub" hidden></span>
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>{k('options')}</legend>
+      <div class="row" role="radiogroup" aria-labelledby="pc-mode-l">
+        <span class="lbl" id="pc-mode-l">{k('urlMode')}</span>
+        <label class="opt"><input type="radio" name="urlMode" value="sub" /><span>{k('modeSub')}</span></label>
+        <label class="opt"><input type="radio" name="urlMode" value="path" /><span>{k('modePath')}</span></label>
+      </div>
+      <div class="row" role="radiogroup" aria-labelledby="pc-proxy-l">
+        <span class="lbl" id="pc-proxy-l">{k('proxy')}</span>
+        {
+          Object.entries(proxyNames).map(([v, n]) => (
+            <label class="opt">
+              <input type="radio" name="proxy" value={v} />
+              <span>{n}</span>
+            </label>
+          ))
+        }
+      </div>
+      <div class="checks">
+        <label class="check"><input type="checkbox" name="https" /><span><b>{k('https')}</b><small>{k('httpsHint')}</small></span></label>
+        <label class="check"><input type="checkbox" name="tinyauth" /><span><b>{k('tinyauth')}</b><small>{k('tinyauthHint')}</small></span></label>
+        <label class="check"><input type="checkbox" name="websockets" /><span><b>{k('websockets')}</b><small>{k('websocketsHint')}</small></span></label>
+      </div>
+    </fieldset>
+
+    <p class="result">
+      <span class="lbl">{k('url')}</span>
+      <code data-url>https://myapp.example.com</code>
+    </p>
+  </form>
+
+  <section class="card block" data-out aria-live="polite">
+    <div class="block-head">
+      <h2 data-out-title>Traefik</h2>
+      <span class="tag" data-out-file>compose.yaml</span>
+    </div>
+    <p class="muted small" data-out-lead-traefik>{k('leadTraefik')}</p>
+    <p class="muted small" data-out-lead-caddy hidden>{k('leadCaddy')}</p>
+    <p class="muted small" data-out-lead-npm hidden>{k('leadNpm')}</p>
+
+    <div class="code" data-code-main><pre data-main></pre><button type="button" class="copy-btn" data-copy>{copy}</button></div>
+
+    <div class="npm" data-npm hidden></div>
+
+    <div data-net-wrap hidden>
+      <p class="muted small">{k('leadNet')}</p>
+      <div class="code"><pre data-net></pre><button type="button" class="copy-btn" data-copy>{copy}</button></div>
+    </div>
+
+    <ul class="notes" data-notes></ul>
+  </section>
+
+  <section class="card block">
+    <h2>{k('checklist')}</h2>
+    <ul class="checklist" data-checklist></ul>
+  </section>
+
+  <p class="more muted">
+    {k('moreText')}
+    <a href={links.explainer}>{k('linkExplainer')}</a> ·
+    <a href={links.wiki}>{k('linkWiki')}</a> ·
+    <a href={links.guide}>{k('linkGuide')}</a>
+  </p>
+</div>
+
+<script>
+  import { getSetup, fmt } from '../../client/store';
+  import { renderCode } from '../../lib/highlight';
+  import {
+    caddy, host, networkSnippet, npm, path, publicUrl, traefik,
+    validContainer, validId, validPort, validSub, type NpmRow, type ProxyInput, type ProxyKind,
+  } from '../../lib/tools/proxy-config';
+  import type { Setup } from '../../config/site';
+
+  const root = document.querySelector<HTMLElement>('[data-pc-tool]');
+  if (root) init(root);
+
+  function init(root: HTMLElement) {
+    const msgs: Record<string, string> = JSON.parse(root.querySelector('[data-pc-msgs]')!.textContent!);
+    const links: Record<string, string> = JSON.parse(root.querySelector('[data-pc-links]')!.textContent!);
+    const form = root.querySelector<HTMLFormElement>('[data-pc-form]')!;
+    const $ = <T extends Element = HTMLElement>(sel: string) => root.querySelector<T>(sel)!;
+    const field = (n: string) => form.elements.namedItem(n) as HTMLInputElement;
+    const radios = (n: string) => Array.from(form.querySelectorAll<HTMLInputElement>(`input[name="${n}"]`));
+    const touched = { urlMode: false, proxy: false };
+    let last: ProxyInput | null = null;
+
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    /** i18n text with `code` and [label](linkKey) markup, {vars} filled */
+    const md = (key: string, vars: Record<string, string | number> = {}) =>
+      esc(fmt(msgs[key] ?? key, vars))
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\[([^\]]+)\]\((\w+)\)/g, (_, label, lk) => `<a href="${esc(links[lk] ?? '#')}"${/^https?:/.test(links[lk] ?? '') ? ' rel="noopener"' : ''}>${label}</a>`);
+
+    const radioVal = (n: string) => radios(n).find((r) => r.checked)?.value;
+    const setRadio = (n: string, v: string) => radios(n).forEach((r) => (r.checked = r.value === v));
+
+    function applySetupDefaults(s: Setup) {
+      if (!touched.urlMode) setRadio('urlMode', s.urlMode);
+      if (!touched.proxy) setRadio('proxy', s.proxy === 'none' ? 'traefik' : s.proxy);
+    }
+
+    const setErr = (key: string, bad: boolean) => {
+      const el = $(`[data-err="${key}"]`);
+      el.hidden = !bad;
+      el.textContent = bad ? msgs[`err${key[0].toUpperCase()}${key.slice(1)}`] : '';
+      field(key).setAttribute('aria-invalid', String(bad));
+      return !bad;
+    };
+
+    function read(): ProxyInput | null {
+      const id = field('id').value.trim();
+      const idOk = setErr('id', !validId(id));
+      const container = field('container').value.trim() || id;
+      const sub = field('sub').value.trim() || id;
+      field('container').placeholder = id || 'myapp';
+      field('sub').placeholder = id || 'myapp';
+      const cOk = setErr('container', !!container && !validContainer(container));
+      const port = Number(field('port').value);
+      const pOk = setErr('port', !validPort(port));
+      const sOk = setErr('sub', !!sub && !validSub(sub));
+      if (!(idOk && cOk && pOk && sOk)) return null;
+      return {
+        id, container, port, sub,
+        urlMode: radioVal('urlMode') === 'path' ? 'path' : 'sub',
+        https: field('https').checked,
+        tinyauth: field('tinyauth').checked,
+        websockets: field('websockets').checked,
+      };
+    }
+
+    function render() {
+      const s = getSetup();
+      const values = { DOMAIN: s.domain, NETWORK: s.network, ROOT: s.root };
+      const fill = (x: string) => x.replaceAll('__DOMAIN__', s.domain).replaceAll('__NETWORK__', s.network);
+      const i = read() ?? last;
+      if (!i) return;
+      last = i;
+      const proxy = (radioVal('proxy') ?? 'traefik') as ProxyKind;
+      // `__NETWORK__:` as a YAML key isn't tokenized as a placeholder, so fill values before rendering
+      const code = (el: HTMLElement, text: string) => (el.innerHTML = renderCode(fill(text), { values }));
+
+      $('[data-url]').textContent = fill(publicUrl(i));
+      $('[data-out-title]').textContent = proxy === 'traefik' ? 'Traefik' : proxy === 'caddy' ? 'Caddy' : 'Nginx Proxy Manager';
+      $('[data-out-file]').textContent = proxy === 'traefik' ? 'compose.yaml' : proxy === 'caddy' ? 'Caddyfile' : 'Proxy Host';
+      (['traefik', 'caddy', 'npm'] as const).forEach((p) => ($(`[data-out-lead-${p}]`).hidden = p !== proxy));
+
+      const main = $('[data-code-main]');
+      const npmBox = $('[data-npm]');
+      main.hidden = false;
+      npmBox.hidden = proxy !== 'npm';
+      if (proxy === 'traefik') code($('[data-main]'), traefik(i));
+      else if (proxy === 'caddy') code($('[data-main]'), caddy(i));
+      else {
+        // NPM: values as a table (entered by hand in the web UI)
+        const label = (x: string) => msgs[x] ?? x;
+        const { details, location, ssl } = npm(i);
+        const table = (title: string, rows: NpmRow[]) =>
+          `<h3>${esc(title)}</h3><table><tbody>${rows
+            .map((r) => `<tr><th scope="row">${esc(label(r.key))}</th><td>${r.valueKey ? esc(label(r.valueKey)) : `<code>${esc(fill(r.value))}</code>`}</td></tr>`)
+            .join('')}</tbody></table>`;
+        npmBox.innerHTML =
+          table(label('npmTabDetails'), details) + (location ? table(label('npmTabLocations'), location) : '') + table(label('npmTabSsl'), ssl);
+        main.hidden = true;
+      }
+
+      $('[data-net-wrap]').hidden = proxy === 'traefik';
+      if (proxy !== 'traefik') code($('[data-net]'), networkSnippet(i));
+
+      // Notes
+      const v = { container: i.container, port: i.port, path: path(i), host: fill(host(i)), domain: s.domain, network: s.network, root: s.root };
+      const notes: string[] = [];
+      if (s.proxy === 'none') notes.push(md('noteNoProxy', v));
+      if (i.urlMode === 'path') notes.push(md('notePath', v));
+      if (proxy === 'traefik') {
+        if (i.https) notes.push(md('noteTraefikHttps', v));
+        if (i.tinyauth) notes.push(md('noteTraefikAuth', v));
+        if (i.websockets) notes.push(md('noteWsAuto', { ...v, proxy: 'Traefik' }));
+      } else if (proxy === 'caddy') {
+        if (i.urlMode === 'path') notes.push(md('noteCaddyPath', v));
+        if (i.https) notes.push(md('noteCaddyHttps', v));
+        if (i.tinyauth) notes.push(md('noteCaddyAuth', v));
+        if (i.websockets) notes.push(md('noteWsAuto', { ...v, proxy: 'Caddy' }));
+        notes.push(md('noteCaddyReload', v));
+      } else {
+        if (i.urlMode === 'path') notes.push(md('noteNpmPath', v));
+        if (i.https) notes.push(md('noteNpmHttps', v));
+        if (i.tinyauth) notes.push(md('noteNpmAuth', v));
+      }
+      const notesEl = $('[data-notes]');
+      notesEl.innerHTML = notes.map((n) => `<li>${n}</li>`).join('');
+      notesEl.hidden = !notes.length;
+
+      // Checklist
+      const checks = [
+        md('checkNet', v),
+        md('checkPorts', v),
+        md(i.urlMode === 'sub' ? 'checkDnsSub' : 'checkDnsPath', v),
+        ...(i.tinyauth ? [md('checkTinyauth', v)] : []),
+        md(proxy === 'traefik' ? 'checkStart' : proxy === 'caddy' ? 'checkStartCaddy' : 'checkStartNpm', { ...v, url: fill(publicUrl(i)) }),
+      ];
+      $('[data-checklist]').innerHTML = checks.map((c) => `<li>${c}</li>`).join('');
+    }
+
+    form.addEventListener('input', (e) => {
+      const n = (e.target as HTMLInputElement).name;
+      if (n === 'urlMode' || n === 'proxy') touched[n] = true;
+      render();
+    });
+    form.addEventListener('change', render);
+    form.addEventListener('submit', (e) => e.preventDefault());
+    document.addEventListener('yhl:setup', () => {
+      applySetupDefaults(getSetup());
+      render();
+    });
+
+    applySetupDefaults(getSetup());
+    render();
+  }
+</script>
+
+<style>
+  .pc { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .form { border-radius: 20px; padding: 22px 24px; display: flex; flex-direction: column; gap: 22px; }
+  fieldset { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  legend { padding: 0; margin-bottom: 12px; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+  label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text-4); min-width: 0; }
+  input:not([type='radio']):not([type='checkbox']) {
+    height: 42px; border: 1.5px solid var(--line-2); border-radius: 12px; padding: 0 14px; font-family: var(--mono); font-size: 13.5px;
+    color: var(--accent-600); background: #f7fafc; min-width: 0; width: 100%;
+  }
+  input:not([type='radio']):not([type='checkbox']):focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--ring, rgba(0, 150, 200, 0.2)); }
+  input[aria-invalid='true'] { border-color: var(--warn-fg) !important; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .hint { font-size: 12.5px; font-weight: 400; color: var(--muted); }
+  .err { font-size: 13px; font-weight: 500; color: var(--warn-fg); }
+  .row { display: flex; gap: 8px 10px; align-items: center; flex-wrap: wrap; }
+  .lbl { font-size: 13px; font-weight: 600; color: var(--text-4); margin-right: 4px; }
+  .opt { flex-direction: row; position: relative; }
+  .opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .opt span { border: 1.5px solid var(--line-2); background: #fff; color: var(--text-2); border-radius: 999px; padding: 7px 14px; font-size: 13.5px; font-weight: 400; cursor: pointer; }
+  .opt input:checked + span { border-color: var(--accent); background: var(--accent-50); color: var(--accent-600); font-weight: 600; }
+  .opt input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  .check { flex-direction: row; align-items: flex-start; gap: 10px; border: 1.5px solid var(--line-2); border-radius: 14px; padding: 12px 14px; cursor: pointer; background: #fff; }
+  .check:has(input:checked) { border-color: var(--accent); background: var(--accent-50); }
+  .check:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .check input { width: 18px; height: 18px; margin: 1px 0 0; flex: none; accent-color: var(--accent); }
+  .check span { display: flex; flex-direction: column; gap: 3px; }
+  .check b { font-size: 14px; color: var(--text); }
+  .check small { font-size: 12.5px; font-weight: 400; color: var(--muted); line-height: 1.4; }
+  .result { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+  .result code { font-family: var(--mono); font-size: 13.5px; color: var(--accent-600); background: var(--accent-50); padding: 3px 8px; border-radius: 8px; overflow-wrap: anywhere; }
+  .block { border-radius: 20px; padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .block [hidden] { display: none; }
+  .block-head { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .block h2 { font-size: 17px; font-weight: 700; }
+  .small { font-size: 13.5px; line-height: 1.5; }
+  .npm { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .npm :global(h3) { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); margin-top: 6px; }
+  .npm :global(table) { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .npm :global(th), .npm :global(td) { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line-2); vertical-align: top; }
+  .npm :global(th) { font-weight: 600; color: var(--text-2); width: 45%; }
+  .npm :global(code), .notes :global(code), .checklist :global(code) { font-family: var(--mono); font-size: 0.92em; color: var(--accent-600); overflow-wrap: anywhere; }
+  .notes { margin: 0; padding: 14px 18px 14px 34px; background: var(--bg); border-radius: 14px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; line-height: 1.55; color: var(--text-2); }
+  .checklist { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 14.5px; line-height: 1.55; color: var(--text-2); }
+  .checklist :global(li) { position: relative; padding-left: 30px; }
+  .checklist :global(li)::before {
+    content: '✓'; position: absolute; left: 0; top: 1px; width: 20px; height: 20px; border-radius: 50%; background: var(--accent-50); color: var(--accent-600);
+    font-size: 12px; font-weight: 700; display: grid; place-items: center;
+  }
+  .more { font-size: 14px; line-height: 1.6; }
+  @media (max-width: 600px) {
+    .form, .block { padding: 18px 16px; }
+    .npm :global(th) { width: auto; }
+  }
+</style>

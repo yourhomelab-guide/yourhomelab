@@ -1,0 +1,20 @@
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:12.1
+    container_name: jellyfin
+    restart: unless-stopped
+    # Run as your normal user so Jellyfin can read the media folder
+    user: "${PUID}:${PGID}"
+    environment:
+      - TZ=${TZ}
+    # Optional: hardware transcoding with an Intel/AMD iGPU (VA-API / Quick Sync).
+    # Remove the # in the next four lines and set RENDER_GID in .env.
+    # devices:
+    #   - /dev/dri/renderD128:/dev/dri/renderD128
+    # group_add:
+    #   - ${RENDER_GID}
+    volumes:
+      - ./data/config:/config
+      - ./data/cache:/cache
+      # Your movies and shows. Read-only: Jellyfin only needs to read them.
+      - ${MEDIA_DIR}:/media:ro

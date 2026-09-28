@@ -1,0 +1,50 @@
+services:
+  paperless-ngx:
+    image: ghcr.io/paperless-ngx/paperless-ngx:3.2
+    container_name: paperless-ngx
+    restart: unless-stopped
+    environment:
+      - PAPERLESS_URL=__URL__
+      - PAPERLESS_SECRET_KEY=${SECRET_KEY}
+      - PAPERLESS_TIME_ZONE=${TZ}
+      # OCR languages: German first, English as a fallback
+      - PAPERLESS_OCR_LANGUAGE=deu+eng
+      # Files in the consume folder are owned by this user
+      - USERMAP_UID=${PUID}
+      - USERMAP_GID=${PGID}
+      - PAPERLESS_REDIS=redis://redis:6379
+      - PAPERLESS_DBENGINE=postgresql
+      - PAPERLESS_DBHOST=db
+      - PAPERLESS_DBNAME=paperless
+      - PAPERLESS_DBUSER=paperless
+      - PAPERLESS_DBPASS=${DB_PASSWORD}
+    volumes:
+      - ./data/data:/usr/src/paperless/data
+      # Your documents (originals and archived PDFs)
+      - ./data/media:/usr/src/paperless/media
+      # Drop files here and Paperless imports them
+      - ./data/consume:/usr/src/paperless/consume
+      # Target of the document_exporter (backups)
+      - ./data/export:/usr/src/paperless/export
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:18
+    container_name: paperless-ngx-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=paperless
+      - POSTGRES_USER=paperless
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      # Postgres 18 keeps its data in a versioned subfolder below this path
+      - ./data/db:/var/lib/postgresql
+
+  redis:
+    image: valkey/valkey:9-alpine
+    container_name: paperless-ngx-redis
+    restart: unless-stopped
+    volumes:
+      - ./data/redis:/data

@@ -7,7 +7,7 @@ import ServiceFiles from '../components/ServiceFiles.astro';
 import SetupSummary from '../components/SetupSummary.astro';
 import { mdxComponents } from '../components/mdx';
 import { defaultSetup as ds, site } from '../config/site';
-import { getSetupPath, getVariants, type Service } from '../lib/content';
+import { getServices, getSetupPath, getVariants, type Service } from '../lib/content';
 import { renderCode } from '../lib/highlight';
 import { formatDate, placeholderDefaults, t, type Lang } from '../lib/i18n';
 import { url } from '../lib/routes';
@@ -27,6 +27,18 @@ const { guides } = await getSetupPath(lang);
 const related = guides.filter((g) => g.entry.data.services.includes(s.id) || g.source.data.services.includes(s.id));
 const catLabel = t(lang, `category.${s.category}`);
 const issueUrl = `${site.repo}/issues/new?template=fehler.yml&title=${encodeURIComponent(`${s.name}: `)}`;
+const allServices = await getServices(lang);
+const pairs = s.pairsWith.map((id) => allServices.find((o) => o.id === id)).filter((o): o is Service => !!o && o.id !== s.id);
+/** Templates not tested for this many days get a hint */
+const STALE_DAYS = 180;
+const stale = !s.reviewed || Date.now() - s.reviewed.getTime() > STALE_DAYS * 86_400_000;
+const ramLabel = (mb: number) => (mb >= 1000 ? `~${(mb / 1000).toLocaleString(lang === 'de' ? 'de-DE' : 'en-US', { maximumFractionDigits: 1 })} GB` : `~${mb} MB`);
+const dbLabel = { postgres: 'PostgreSQL', mariadb: 'MariaDB', mysql: 'MySQL', sqlite: 'SQLite' } as const;
+const toolLinks = [
+  { id: 'ram-planner', show: true },
+  { id: 'stack-builder', show: true },
+  { id: 'borgmatic', show: !!s.db },
+] as const;
 ---
 
 <Base lang={lang} title={s.name} description={s.description} alternates={{ de: url.service('de', s.id), en: url.service('en', s.id) }} nav="services">
@@ -153,7 +165,39 @@ const issueUrl = `${site.repo}/issues/new?template=fehler.yml&title=${encodeURIC
             <dd>{s.image}</dd>
             <dt>{t(lang, 'service.port')}</dt>
             <dd>{s.port}</dd>
+            {
+              s.resources && (
+                <>
+                  <dt>{t(lang, 'service.ram')}</dt>
+                  <dd>{ramLabel(s.resources.ram)}</dd>
+                </>
+              )
+            }
+            {
+              s.resources && s.resources.gpu !== 'no' && (
+                <>
+                  <dt>{t(lang, 'service.gpu')}</dt>
+                  <dd>{t(lang, `service.gpu.${s.resources.gpu}`)}</dd>
+                </>
+              )
+            }
+            {
+              s.db && (
+                <>
+                  <dt>{t(lang, 'service.db')}</dt>
+                  <dd>{dbLabel[s.db.type]}</dd>
+                </>
+              )
+            }
           </dl>
+          {
+            stale && (
+              <p class="stale">
+                {s.reviewed ? t(lang, 'service.staleSince', { date: formatDate(lang, s.reviewed) }) : t(lang, 'service.untested')}{' '}
+                <a href={issueUrl}>{t(lang, 'service.staleReport')} ↗</a>
+              </p>
+            )
+          }
         </div>
         {
           s.notes.length > 0 && (
@@ -179,6 +223,34 @@ const issueUrl = `${site.repo}/issues/new?template=fehler.yml&title=${encodeURIC
             </div>
           )
         }
+        {
+          pairs.length > 0 && (
+            <div class="box card">
+              <strong>{t(lang, 'service.pairsWith')}</strong>
+              <div class="pairs">
+                {pairs.map((o) => (
+                  <a class="pair" href={url.service(lang, o.id)}>
+                    <span class="pair-logo">
+                      <ServiceLogo name={o.name} logo={o.logo} size={22} />
+                    </span>
+                    <span>{o.name}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )
+        }
+        <div class="box card">
+          <strong>{t(lang, 'service.tools')}</strong>
+          {toolLinks
+            .filter((x) => x.show)
+            .map((x) => (
+              <a class="rel" href={url.tool(lang, x.id)} data-stack-add={s.id}>
+                {t(lang, `tools.${x.id}.title`)} →
+              </a>
+            ))}
+          <span class="tools-hint">{t(lang, 'service.toolsHint', { name: s.name })}</span>
+        </div>
         <div class="box contrib">
           <strong>{t(lang, 'service.contributeTitle')}</strong>
           <span>{t(lang, 'service.contributeText')}</span>
@@ -194,6 +266,17 @@ const issueUrl = `${site.repo}/issues/new?template=fehler.yml&title=${encodeURIC
 </Base>
 
 <script>
+  import { getStack, setStack } from '../client/stack';
+
+  // Opening a tool from here puts this service into "Mein Stack", so the tool starts with it selected.
+  document.querySelectorAll<HTMLAnchorElement>('[data-stack-add]').forEach((a) =>
+    a.addEventListener('click', () => {
+      const id = a.dataset.stackAdd!;
+      const stack = getStack();
+      if (!stack.includes(id)) setStack([...stack, id]);
+    }),
+  );
+
   document.querySelectorAll<HTMLButtonElement>('[data-source]').forEach((btn) =>
     btn.addEventListener('click', () => {
       const src = btn.dataset.source!;
@@ -249,6 +332,13 @@ const issueUrl = `${site.repo}/issues/new?template=fehler.yml&title=${encodeURIC
   .notes li { display: grid; grid-template-columns: 8px minmax(0, 1fr); gap: 10px; color: var(--text-3); }
   .notes li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-top: 7px; }
   .rel { font-size: 14px; }
+  .stale { margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--bg); font-size: 13px; color: var(--text-4); }
+  .box .stale a { display: inline; margin: 0; font-family: inherit; font-size: inherit; }
+  .pairs { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pair { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px; background: var(--bg); color: var(--text-2); font-size: 13.5px; font-weight: 600; }
+  .pair:hover { background: var(--accent-50); color: var(--accent-600); text-decoration: none; }
+  .pair-logo { width: 28px; height: 28px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; flex: none; }
+  .tools-hint { font-size: 12.5px; color: var(--muted); }
   .contrib { border: 2px dashed var(--dash); border-radius: 20px; }
   .contrib-links { display: flex; gap: 14px; font-weight: 600; flex-wrap: wrap; }
   @media (max-width: 1000px) {

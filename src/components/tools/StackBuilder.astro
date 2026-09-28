@@ -1,10 +1,341 @@
 ---
-/** Placeholder – replaced by the real tool. */
-import type { Lang } from '../../lib/i18n';
+/**
+ * Stack builder: pick services, see the RAM sum and download everything as a ZIP
+ * (compose.yaml + .env with fresh secrets per service, extra files, PROXY.txt, setup.sh, README.md).
+ * Everything is generated in the browser, see src/lib/tools/stack.ts and src/lib/tools/zip.ts.
+ */
+import ServicePicker from './ServicePicker.astro';
+import { site } from '../../config/site';
+import { getServices, getVariants } from '../../lib/content';
+import { readServiceFile } from '../../lib/compose';
+import { t, type Lang } from '../../lib/i18n';
+import { url } from '../../lib/routes';
+
 interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
+const services = await getServices(lang);
+
+// Variant strings repeat a lot (e.g. .env files), so they go into a pool and are referenced by index
+const pool: string[] = [];
+const poolIdx = new Map<string, number>();
+const ref = (s: string) => {
+  if (!poolIdx.has(s)) poolIdx.set(s, pool.push(s) - 1);
+  return poolIdx.get(s)!;
+};
+const data = services.map((s) => {
+  const variants = getVariants(s);
+  return {
+    id: s.id,
+    name: s.name,
+    isProxy: s.category === 'proxy',
+    ram: s.resources?.ram ?? null,
+    page: site.url + url.service(lang, s.id),
+    files: s.files.map((f) => ({ name: f, content: ref(readServiceFile(s.id, f) ?? '') })),
+    v: Object.fromEntries(
+      Object.entries(variants).map(([k, v]) => [
+        k,
+        [ref(v.compose), ref(v.env), v.proxy === null ? -1 : ref(v.proxy), v.proxyKind, v.net ? 1 : 0, v.mkdir.includes('__DATA_ROOT__') ? 1 : 0, ref(v.url)],
+      ]),
+    ),
+  };
+});
+/** Service id of the reverse proxy per "Mein Setup" choice */
+const proxyServices: Record<string, string> = { traefik: 'traefik', caddy: 'caddy', npm: 'nginx-proxy-manager' };
+const k = (key: string) => t(lang, `tools.stack-builder.${key}`);
+const texts = {
+  missingRam: k('missingRam'),
+  proxySuggest: k('proxySuggest'),
+  proxyIncluded: k('proxyIncluded'),
+  proxyMulti: k('proxyMulti'),
+  proxyMismatch: k('proxyMismatch'),
+  proxyNone: t(lang, 'proxy.none'),
+  add: k('add'),
+  remove: k('remove'),
+  proxyNames: { traefik: t(lang, 'proxy.traefik'), caddy: t(lang, 'proxy.caddy'), npm: t(lang, 'proxy.npm'), none: t(lang, 'proxy.none') },
+  zip: {
+    readmeTitle: k('readme.title'),
+    readmeIntro: k('readme.intro'),
+    readmeSteps: k('readme.steps'),
+    readmeStep1: k('readme.step1'),
+    readmeStep2: k('readme.step2'),
+    readmeStep3: k('readme.step3'),
+    readmeStep4: k('readme.step4'),
+    readmeServices: k('readme.services'),
+    readmeService: k('readme.service'),
+    readmeMore: k('readme.more'),
+    proxyCaddy: k('proxyFile.caddy'),
+    proxyNpm: k('proxyFile.npm'),
+  },
+};
+const payload = { lang, pool, services: data, proxyServices, texts, toolUrl: site.url + url.tool(lang, 'stack-builder') };
 ---
 
-<p data-lang={lang}>…</p>
+<div class="sb" data-stack-builder>
+  <section class="card box">
+    <div class="box-head">
+      <h2>{k('pickTitle')}</h2>
+      <p class="muted">{k('pickText')}</p>
+    </div>
+    <div class="note" data-proxy-hint hidden>
+      <span data-proxy-hint-text></span>
+      <button type="button" class="btn btn-soft btn-sm" data-proxy-add hidden>{k('add')}</button>
+    </div>
+    <div class="warn" data-proxy-warn hidden role="status"></div>
+    <ServicePicker lang={lang} />
+  </section>
+
+  <section class="card box" aria-live="polite">
+    <div class="box-head row">
+      <h2>{k('yourStack')}</h2>
+      <a class="link-btn" href={url.tool(lang, 'ram-planner')}>{k('ramPlanner')} →</a>
+    </div>
+    <p class="muted" data-empty>{k('empty')}</p>
+    <div data-filled hidden>
+      <ul class="sel" data-sel></ul>
+      <div class="total">
+        <span>{k('ramTotal')}</span>
+        <b data-ram-total></b>
+      </div>
+      <p class="hint" data-ram-missing hidden></p>
+    </div>
+  </section>
+
+  <section class="card box" data-filled hidden>
+    <div class="box-head">
+      <h2>{k('downloadTitle')}</h2>
+      <p class="muted">{k('downloadText')}</p>
+    </div>
+    <div class="warn secrets">{k('secretsNote')}</div>
+    <div class="actions">
+      <button type="button" class="btn btn-primary" data-zip>{k('download')}</button>
+      <button type="button" class="btn btn-outline btn-sm" data-regen>{k('regen')}</button>
+    </div>
+    <h3>{k('preview')}</h3>
+    <div class="files">
+      <div class="files-bar" role="tablist" aria-label={k('preview')} data-tabs></div>
+      <div class="file-body">
+        <pre data-numbers data-preview role="tabpanel"></pre>
+      </div>
+      <div class="files-bar end">
+        <button type="button" class="copy-btn" data-copy>{t(lang, 'code.copy')}</button>
+      </div>
+    </div>
+  </section>
+
+  <script type="application/json" data-stack-data set:html={JSON.stringify(payload)} />
+</div>
+
+<script>
+  import { getSetup } from '../../client/store';
+  import { download, getStack, setStack } from '../../client/stack';
+  import { renderCode } from '../../lib/highlight';
+  import { buildStack, rootName, type StackFile, type StackService, type StackTexts } from '../../lib/tools/stack';
+  import { createZip } from '../../lib/tools/zip';
+
+  type Raw = [number, number, number, 'caddy' | 'npm' | null, number, number, number];
+  interface Data {
+    lang: 'de' | 'en';
+    pool: string[];
+    services: { id: string; name: string; isProxy: boolean; ram: number | null; page: string; files: { name: string; content: number }[]; v: Record<string, Raw> }[];
+    proxyServices: Record<string, string>;
+    texts: Record<string, string> & { proxyNames: Record<string, string>; zip: StackTexts };
+    toolUrl: string;
+  }
+
+  const root = document.querySelector<HTMLElement>('[data-stack-builder]');
+  if (root) init(root);
+
+  function init(root: HTMLElement) {
+    const D: Data = JSON.parse(root.querySelector('[data-stack-data]')!.textContent!);
+    const T = D.texts;
+    const fmt = (s: string, v: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (_, k) => String(v[k] ?? ''));
+    const byId = new Map(D.services.map((s) => [s.id, s]));
+    const $ = <E extends Element = HTMLElement>(sel: string) => root.querySelector<E>(sel)!;
+    const PROXY_KEY = 'yhl-stack-proxy';
+    let files: StackFile[] = [];
+    let active = 0;
+
+    const ramText = (mb: number) =>
+      mb >= 1000 ? `~${(mb / 1000).toLocaleString(D.lang === 'de' ? 'de-DE' : 'en-US', { maximumFractionDigits: 1 })} GB` : `~${mb} MB`;
+
+    const picked = () => getStack().filter((id) => byId.has(id)).map((id) => byId.get(id)!);
+
+    /** Adds the reverse proxy of "Mein Setup" once per proxy choice; the visitor can remove it again. */
+    function autoProxy() {
+      const s = getSetup();
+      const pid = D.proxyServices[s.proxy];
+      let last: string | null = null;
+      try {
+        last = localStorage.getItem(PROXY_KEY);
+      } catch {}
+      if (last === s.proxy) return;
+      try {
+        localStorage.setItem(PROXY_KEY, s.proxy);
+      } catch {}
+      const stack = getStack();
+      if (pid && !stack.includes(pid)) setStack([pid, ...stack]);
+    }
+
+    function renderHints() {
+      const s = getSetup();
+      const list = picked();
+      const pid = D.proxyServices[s.proxy];
+      const hint = $('[data-proxy-hint]');
+      const add = $<HTMLButtonElement>('[data-proxy-add]');
+      if (pid && byId.has(pid)) {
+        const inStack = list.some((x) => x.id === pid);
+        hint.hidden = false;
+        $('[data-proxy-hint-text]').textContent = fmt(inStack ? T.proxyIncluded : T.proxySuggest, { name: byId.get(pid)!.name });
+        add.hidden = inStack;
+        add.dataset.id = pid;
+      } else hint.hidden = true;
+
+      const proxies = list.filter((x) => x.isProxy);
+      const warn = $('[data-proxy-warn]');
+      if (proxies.length > 1) {
+        warn.hidden = false;
+        warn.textContent = fmt(T.proxyMulti, { names: proxies.map((x) => x.name).join(', ') });
+      } else if (proxies.length === 1 && proxies[0].id !== pid) {
+        warn.hidden = false;
+        warn.textContent = fmt(T.proxyMismatch, { setup: T.proxyNames[s.proxy] ?? s.proxy, name: proxies[0].name });
+      } else warn.hidden = true;
+    }
+
+    function renderList() {
+      const list = picked();
+      root.querySelectorAll<HTMLElement>('[data-filled]').forEach((el) => (el.hidden = !list.length));
+      $('[data-empty]').hidden = list.length > 0;
+      const ul = $('[data-sel]');
+      ul.replaceChildren(
+        ...list.map((x) => {
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = x.page.replace(/^https?:\/\/[^/]+/, '');
+          a.textContent = x.name;
+          const ram = document.createElement('span');
+          ram.className = 'ram';
+          ram.textContent = x.ram === null ? '?' : ramText(x.ram);
+          const rm = document.createElement('button');
+          rm.type = 'button';
+          rm.className = 'rm';
+          rm.textContent = '×';
+          rm.setAttribute('aria-label', fmt(T.remove, { name: x.name }));
+          rm.addEventListener('click', () => setStack(getStack().filter((id) => id !== x.id)));
+          li.append(a, ram, rm);
+          return li;
+        }),
+      );
+      const sum = list.reduce((a, x) => a + (x.ram ?? 0), 0);
+      const missing = list.filter((x) => x.ram === null);
+      $('[data-ram-total]').textContent = ramText(sum) + (missing.length ? ' + ?' : '');
+      const m = $('[data-ram-missing]');
+      m.hidden = !missing.length;
+      m.textContent = fmt(T.missingRam, { names: missing.map((x) => x.name).join(', ') });
+    }
+
+    function build() {
+      const s = getSetup();
+      const key = `${s.proxy}.${s.urlMode}.${s.dataMode}`;
+      const P = D.pool;
+      const list: StackService[] = picked().map((x) => {
+        const [compose, env, proxy, proxyKind, net, central, url] = x.v[key];
+        return {
+          id: x.id,
+          name: x.name,
+          isProxy: x.isProxy,
+          compose: P[compose],
+          env: P[env],
+          proxy: proxy === -1 ? null : P[proxy],
+          proxyKind,
+          net: !!net,
+          centralData: !!central,
+          url: P[url],
+          page: x.page,
+          files: x.files.map((f) => ({ name: f.name, content: P[f.content] })),
+        };
+      });
+      const date = new Date().toLocaleDateString(D.lang === 'de' ? 'de-DE' : 'en-US', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const prev = files[active]?.path;
+      files = list.length ? buildStack(list, s, T.zip, { date, toolUrl: D.toolUrl }) : [];
+      active = Math.max(0, files.findIndex((f) => f.path === prev));
+      renderTabs();
+    }
+
+    function renderTabs() {
+      const bar = $('[data-tabs]');
+      const folder = rootName(getSetup());
+      bar.replaceChildren(
+        ...files.map((f, i) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'file-tab';
+          b.setAttribute('role', 'tab');
+          b.setAttribute('aria-selected', String(i === active));
+          b.textContent = f.path.slice(folder.length + 1);
+          b.addEventListener('click', () => {
+            active = i;
+            renderTabs();
+          });
+          return b;
+        }),
+      );
+      $('[data-preview]').innerHTML = files[active] ? renderCode(files[active].content, { numbers: true, values: {} }) : '';
+    }
+
+    function refresh() {
+      renderHints();
+      renderList();
+      build();
+    }
+
+    $('[data-proxy-add]').addEventListener('click', (e) => {
+      const id = (e.currentTarget as HTMLElement).dataset.id!;
+      if (!getStack().includes(id)) setStack([id, ...getStack()]);
+    });
+    $('[data-regen]').addEventListener('click', build);
+    $('[data-zip]').addEventListener('click', () => {
+      if (!files.length) return;
+      download('homelab-stack.zip', createZip(files.map((f) => ({ path: f.path, data: f.content, mode: f.mode }))), 'application/zip');
+    });
+    document.addEventListener('yhl:stack', refresh);
+    document.addEventListener('yhl:setup', () => {
+      autoProxy();
+      refresh();
+    });
+    autoProxy();
+    refresh();
+  }
+</script>
+
+<style>
+  .sb { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .box { padding: 24px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .box-head { display: flex; flex-direction: column; gap: 6px; }
+  .box-head.row { flex-direction: row; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px 16px; }
+  h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+  h3 { font-size: 15px; font-weight: 700; margin: 6px 0 0; }
+  .box-head p { font-size: 14.5px; line-height: 1.5; margin: 0; }
+  .note { background: var(--accent-50); color: var(--accent-700); border-radius: 14px; padding: 12px 16px; font-size: 14px; line-height: 1.5; display: flex; gap: 10px 14px; align-items: center; flex-wrap: wrap; }
+  .note span { flex: 1 1 220px; }
+  .warn { background: var(--warn-bg); color: var(--warn-fg); border-radius: 14px; padding: 12px 16px; font-size: 14px; line-height: 1.5; }
+  [hidden] { display: none !important; }
+  .sel { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .sel :global(li) { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line-3); font-size: 15px; }
+  .sel :global(a) { flex: 1; min-width: 0; color: var(--text); font-weight: 600; overflow-wrap: anywhere; }
+  .sel :global(.ram) { font-family: var(--mono); font-size: 13px; color: var(--text-4); white-space: nowrap; }
+  .sel :global(.rm) { border: none; background: var(--bg); width: 28px; height: 28px; border-radius: 50%; color: var(--text-4); font-size: 16px; line-height: 1; flex: none; }
+  .sel :global(.rm:hover) { background: var(--accent-50); color: var(--accent-600); }
+  .sel :global(.rm:focus-visible), .note .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .total { display: flex; justify-content: space-between; gap: 12px; padding-top: 12px; font-weight: 700; font-size: 15px; }
+  .total b { font-family: var(--mono); color: var(--accent-600); }
+  .hint { font-size: 13.5px; color: var(--muted); margin: 6px 0 0; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .files-bar.end { justify-content: flex-end; }
+  .file-body { max-height: 520px; overflow: auto; }
+  .file-tab { max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+  @media (max-width: 600px) {
+    .box { padding: 18px 16px; }
+  }
+</style>

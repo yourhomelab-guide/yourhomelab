@@ -1,0 +1,65 @@
+name: Link check
+
+# Weekly check of all external links in the built site. Broken links end up in one issue (label "linkcheck"),
+# which is updated on later runs instead of opening a new one. Exceptions: .lycheeignore.
+on:
+  schedule:
+    - cron: '17 4 * * 1' # Mondays, 04:17 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: linkcheck
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  linkcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+      - name: Check external links
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Only http(s) links: internal links are relative and are already checked by the build.
+          args: >-
+            --no-progress
+            --scheme https --scheme http
+            --exclude-all-private
+            --max-concurrency 8
+            --max-retries 3
+            --timeout 30
+            --accept '100..=103,200..=299,403,429'
+            'dist/**/*.html'
+          output: lychee/out.md
+          format: markdown
+          fail: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Find open link check issue
+        id: issue
+        if: steps.lychee.outputs.exit_code != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "number=$(gh issue list --repo "$GITHUB_REPOSITORY" --label linkcheck --state open --limit 1 --json number --jq '.[0].number // empty')" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update issue
+        if: steps.lychee.outputs.exit_code != '0'
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: 'Defekte Links gefunden'
+          content-filepath: lychee/out.md
+          issue-number: ${{ steps.issue.outputs.number }}
+          labels: linkcheck

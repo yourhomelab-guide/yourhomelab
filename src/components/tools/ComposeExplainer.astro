@@ -1,10 +1,337 @@
 ---
-/** Placeholder – replaced by the real tool. */
-import type { Lang } from '../../lib/i18n';
+/**
+ * Compose explainer: paste a compose.yaml, get every service explained and common problems flagged (with line numbers).
+ * Parsing and rules live in src/lib/tools/compose-explain.ts; everything runs in the browser.
+ */
+import de from '../../i18n/de.json';
+import { getWiki } from '../../lib/content';
+import { t, type Lang } from '../../lib/i18n';
+import { url } from '../../lib/routes';
+import { RULE_LINKS } from '../../lib/tools/compose-explain';
+
 interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
+const P = 'tools.compose-explainer.';
+const tx = (k: string) => t(lang, P + k);
+
+const msgs = Object.fromEntries(
+  Object.keys(de)
+    .filter((k) => k.startsWith(P))
+    .map((k) => [k.slice(P.length), t(lang, k)]),
+);
+
+/** Wiki articles linked from findings: id → { title, url } in this language */
+const { items } = await getWiki(lang);
+const fallbackSlugs: Record<string, Record<Lang, string>> = { 'database-version': { de: 'datenbank-version', en: 'database-version' } };
+const ids = [...new Set(Object.values(RULE_LINKS).flat())];
+const links = Object.fromEntries(
+  ids.map((id) => {
+    const w = items.find((i) => i.id === id);
+    if (w) return [id, { title: w.entry.data.title, url: url.wiki(lang, w.slugs[lang]) }];
+    return [id, { title: msgs[`link.${id}`] ?? id, url: url.wiki(lang, fallbackSlugs[id]?.[lang] ?? id) }];
+  }),
+);
 ---
 
-<p data-lang={lang}>…</p>
+<div class="cx" data-cx>
+  <script type="application/json" data-cx-data set:html={JSON.stringify({ msgs, links })} />
+
+  <div class="cx-input card">
+    <div class="cx-bar">
+      <label class="cx-label" for="cx-src">{tx('input')}</label>
+      <div class="cx-actions">
+        <button type="button" class="btn btn-soft btn-sm" data-cx-example>{tx('example')}</button>
+        <button type="button" class="btn btn-outline btn-sm" data-cx-clear>{tx('clear')}</button>
+        <button type="button" class="btn btn-primary btn-sm" data-cx-run>{tx('explain')}</button>
+      </div>
+    </div>
+    <div class="cx-editor">
+      <div class="cx-gutter" aria-hidden="true"><div class="cx-gutter-in" data-cx-gutter></div></div>
+      <textarea id="cx-src" data-cx-src wrap="off" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder={tx('placeholder')}></textarea>
+    </div>
+    <p class="cx-hint muted">{tx('autoHint')}</p>
+  </div>
+
+  <div class="cx-out" data-cx-out aria-live="polite">
+    <p class="cx-empty card">{tx('empty')}</p>
+  </div>
+</div>
+
+<script>
+  import { explain, EXAMPLE, RULE_LINKS, type Finding, type Result, type Vars } from '../../lib/tools/compose-explain';
+
+  interface Data {
+    msgs: Record<string, string>;
+    links: Record<string, { title: string; url: string }>;
+  }
+
+  const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+
+  function setup(root: HTMLElement) {
+    if (root.dataset.ready) return;
+    root.dataset.ready = '1';
+    const data: Data = JSON.parse(root.querySelector('[data-cx-data]')!.textContent || '{}');
+    const src = root.querySelector<HTMLTextAreaElement>('[data-cx-src]')!;
+    const gutter = root.querySelector<HTMLElement>('[data-cx-gutter]')!;
+    const out = root.querySelector<HTMLElement>('[data-cx-out]')!;
+    const emptyHtml = out.innerHTML;
+
+    const has = (k: string) => k in data.msgs;
+    /** Text with vars; `backticks` become <code>. Everything is escaped. */
+    const rich = (k: string, v: Vars = {}) => {
+      const tpl = data.msgs[k] ?? k;
+      return tpl
+        .split('`')
+        .map((part, i) => {
+          const s = esc(part).replace(/\{(\w+)\}/g, (_, n) => esc(String(v[n] ?? '')));
+          return i % 2 ? `<code>${s}</code>` : s;
+        })
+        .join('');
+    };
+    const plain = (k: string, v: Vars = {}) => (data.msgs[k] ?? k).replace(/\{(\w+)\}/g, (_, n) => String(v[n] ?? '')).replace(/`/g, '');
+    const count = (sev: string, n: number) => plain(`count.${sev}.${n === 1 ? 'one' : 'other'}`, { n });
+    const lineBtn = (n?: number) =>
+      n ? `<button type="button" class="cx-ln" data-line="${n}" aria-label="${esc(plain('jump', { n }))}">${esc(plain('line', { n }))}</button>` : '';
+
+    let lineSev: Record<number, string> = {};
+    function renderGutter() {
+      const n = src.value.split('\n').length;
+      let html = '';
+      for (let i = 1; i <= n; i++) html += `<span class="${lineSev[i] ? 'm-' + lineSev[i] : ''}">${i}</span>`;
+      gutter.innerHTML = html;
+      syncScroll();
+    }
+    function syncScroll() {
+      gutter.style.transform = `translateY(${-src.scrollTop}px)`;
+    }
+
+    function renderFinding(f: Finding) {
+      const why = `f.${f.rule}.why`;
+      const fix = `f.${f.rule}.fix`;
+      const ls = (RULE_LINKS[f.rule] as string[]).map((id) => data.links[id]).filter(Boolean);
+      return `<li class="cx-f s-${f.sev}">
+        <div class="cx-f-head"><span class="cx-sev">${esc(plain('sev.' + f.sev))}</span>${lineBtn(f.line)}</div>
+        <p class="cx-f-t">${rich(`f.${f.rule}.t`, f.v)}</p>
+        ${has(why) ? `<p>${f.sev === 'good' ? '' : `<b>${esc(plain('why'))}</b> `}${rich(why, f.v)}</p>` : ''}
+        ${has(fix) ? `<p><b>${esc(plain('fix'))}</b> ${rich(fix, f.v)}</p>` : ''}
+        ${ls.length && f.sev !== 'good' ? `<p class="cx-f-links">${esc(plain('more'))} ${ls.map((l) => `<a href="${esc(l.url)}">${esc(l.title)}</a>`).join(', ')}</p>` : ''}
+      </li>`;
+    }
+
+    function render(r: Result) {
+      if (r.empty) {
+        out.innerHTML = emptyHtml;
+        return;
+      }
+      const findings = r.findings;
+      const n = (sev: string) => findings.filter((f) => f.sev === sev).length;
+      const errs = r.problems;
+      let html = '';
+
+      // 1. overview
+      const nets = r.networks.map((x) => `<code>${esc(x.name)}</code>${x.external ? ` <span class="cx-mini">${esc(plain('external'))}</span>` : ''}`).join(', ');
+      html += `<section class="cx-sum card"><h2 class="cx-h">${esc(plain('overview'))}</h2>
+        <div class="cx-stats">
+          <div><b>${r.services.length}</b><span>${esc(plain('services'))}</span></div>
+          <div><b>${r.networks.length}</b><span>${esc(plain('networks'))}</span></div>
+          <div><b>${r.volumes.length}</b><span>${esc(plain('volumes'))}</span></div>
+        </div>
+        <dl class="cx-facts">
+          ${r.name ? `<dt>${esc(plain('name'))}</dt><dd><code>${esc(r.name)}</code></dd>` : ''}
+          ${r.services.length ? `<dt>${esc(plain('services'))}</dt><dd>${r.services.map((s) => `<a href="#cx-svc-${esc(s.name)}"><code>${esc(s.name)}</code></a>`).join(', ')}</dd>` : ''}
+          <dt>${esc(plain('networks'))}</dt><dd>${nets || esc(plain('none'))}</dd>
+          <dt>${esc(plain('volumes'))}</dt><dd>${r.volumes.map((v) => `<code>${esc(v)}</code>`).join(', ') || esc(plain('none'))}</dd>
+          ${r.envRefs.length ? `<dt>${esc(plain('refs'))}</dt><dd>${r.envRefs.map((v) => `<code>${esc(v)}</code>`).join(', ')}</dd>` : ''}
+        </dl>
+        <div class="cx-badges">
+          <span class="cx-badge ${errs.length ? 's-err' : 's-good'}">${esc(plain(errs.length ? 'syntaxErr' : 'syntaxOk'))}${errs.length ? ': ' + errs.length : ''}</span>
+          ${n('warn') ? `<span class="cx-badge s-warn">${esc(count('warn', n('warn')))}</span>` : ''}
+          ${n('info') ? `<span class="cx-badge s-info">${esc(count('info', n('info')))}</span>` : ''}
+          ${n('good') ? `<span class="cx-badge s-good">${esc(count('good', n('good')))}</span>` : ''}
+        </div>
+        ${
+          errs.length
+            ? `<ul class="cx-errs">${errs
+                .slice(0, 6)
+                .map((e) => `<li class="cx-f s-err"><div class="cx-f-head"><span class="cx-sev">${esc(plain('sev.err'))}</span>${lineBtn(e.line)}</div><p>${has(e.k) ? rich(e.k, e.v) : rich('err.generic', e.v)}</p></li>`)
+                .join('')}</ul><p class="muted cx-partial">${esc(plain('partial'))}</p>`
+            : ''
+        }
+      </section>`;
+
+      // 2. findings
+      html += `<section class="cx-block"><h2 class="cx-h">${esc(plain('findings'))}</h2>${
+        findings.length ? `<ul class="cx-list">${findings.map(renderFinding).join('')}</ul>` : `<p class="muted">${esc(plain('noFindings'))}</p>`
+      }</section>`;
+
+      // 3. services
+      if (r.services.length) {
+        html += `<section class="cx-block"><h2 class="cx-h">${esc(plain('details'))}</h2><div class="cx-svcs">`;
+        for (const s of r.services) {
+          const own = findings.filter((f) => f.service === s.name);
+          const badges = (['warn', 'info', 'good'] as const)
+            .map((sev) => own.filter((f) => f.sev === sev).length && `<span class="cx-badge s-${sev}">${esc(count(sev, own.filter((f) => f.sev === sev).length))}</span>`)
+            .filter(Boolean)
+            .join('');
+          html += `<article class="cx-svc card" id="cx-svc-${esc(s.name)}">
+            <header><h3><code>${esc(s.name)}</code></h3>${lineBtn(s.line)}<div class="cx-badges">${badges}</div></header>
+            <dl>${s.items
+              .map(
+                (it) => `<div class="cx-row"><dt><button type="button" class="cx-key" data-line="${it.line}" aria-label="${esc(plain('jump', { n: it.line }))}">${esc(it.key)}</button></dt><dd>${it.entries
+                  .map(
+                    (e) =>
+                      `<div class="cx-entry${lineSev[e.line] ? ' m-' + lineSev[e.line] : ''}">${e.text ? `<code class="cx-val">${esc(e.text)}</code>` : ''}<ul>${e.notes.map((nt) => `<li>${rich(nt.k, nt.v)}</li>`).join('')}</ul></div>`,
+                  )
+                  .join('')}</dd></div>`,
+              )
+              .join('')}</dl>
+          </article>`;
+        }
+        html += `</div></section>`;
+      }
+      out.innerHTML = html;
+    }
+
+    function run() {
+      const r = explain(src.value);
+      lineSev = {};
+      for (const [l, s] of Object.entries(r.lines)) lineSev[+l] = s;
+      for (const p of r.problems) if (p.line) lineSev[p.line] = 'err';
+      renderGutter();
+      render(r);
+    }
+
+    function jump(line: number) {
+      const lines = src.value.split('\n');
+      const start = lines.slice(0, line - 1).reduce((a, l) => a + l.length + 1, 0);
+      const end = start + (lines[line - 1]?.length ?? 0);
+      src.focus({ preventScroll: true });
+      src.setSelectionRange(start, end);
+      const lh = parseFloat(getComputedStyle(src).lineHeight) || 21;
+      src.scrollTop = Math.max(0, (line - 4) * lh);
+      syncScroll();
+      src.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
+    let timer: number | undefined;
+    src.addEventListener('input', () => {
+      renderGutter();
+      clearTimeout(timer);
+      timer = window.setTimeout(run, 400);
+    });
+    src.addEventListener('scroll', syncScroll);
+    src.addEventListener('keydown', (e) => {
+      // Tab inserts two spaces (YAML forbids tabs); Shift+Tab / Esc keep normal focus navigation
+      if (e.key === 'Tab' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && src.selectionStart === src.selectionEnd) {
+        e.preventDefault();
+        src.setRangeText('  ', src.selectionStart, src.selectionEnd, 'end');
+        src.dispatchEvent(new Event('input'));
+      }
+    });
+    root.querySelector('[data-cx-run]')!.addEventListener('click', () => {
+      clearTimeout(timer);
+      run();
+    });
+    root.querySelector('[data-cx-example]')!.addEventListener('click', () => {
+      src.value = EXAMPLE;
+      src.scrollTop = 0;
+      run();
+    });
+    root.querySelector('[data-cx-clear]')!.addEventListener('click', () => {
+      src.value = '';
+      run();
+      src.focus();
+    });
+    out.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-line]');
+      if (b) jump(Number(b.dataset.line));
+    });
+    renderGutter();
+    if (src.value.trim()) run();
+  }
+
+  const init = () => document.querySelectorAll<HTMLElement>('[data-cx]').forEach(setup);
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>
+
+<style is:global>
+  .cx { display: flex; flex-direction: column; gap: 20px; min-width: 0; --cx-lh: 21px; }
+  .cx code { font-family: var(--mono); font-size: 0.9em; background: var(--code-bg); border-radius: 5px; padding: 1px 5px; overflow-wrap: anywhere; font-variant-ligatures: none; }
+  .cx .s-warn { --sev-bg: var(--lvl3-bg); --sev-fg: var(--lvl3-fg); }
+  .cx .s-err { --sev-bg: var(--lvl3-bg); --sev-fg: var(--lvl3-fg); }
+  .cx .s-info { --sev-bg: var(--lvl2-bg); --sev-fg: var(--lvl2-fg); }
+  .cx .s-good { --sev-bg: var(--lvl1-bg); --sev-fg: var(--lvl1-fg); }
+
+  .cx-input { padding: 18px; display: flex; flex-direction: column; gap: 12px; border-radius: 20px; min-width: 0; }
+  .cx-bar { display: flex; gap: 10px 16px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .cx-label { font-weight: 600; font-size: 15px; }
+  .cx-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cx-editor { display: flex; border: 1.5px solid var(--line-2); border-radius: 12px; background: var(--surface-2); overflow: hidden; min-width: 0; }
+  .cx-editor:focus-within { border-color: var(--accent); box-shadow: var(--ring); }
+  .cx-gutter { flex: none; width: 46px; overflow: hidden; background: var(--bg); border-right: 1px solid var(--line-2); position: relative; }
+  .cx-gutter-in { padding: 12px 0; font-family: var(--mono); font-size: 13px; line-height: var(--cx-lh); color: var(--faint); text-align: right; will-change: transform; }
+  .cx-gutter-in span { display: block; padding-right: 8px; border-left: 4px solid transparent; }
+  .cx-gutter-in .m-warn, .cx-gutter-in .m-err { border-left-color: var(--lvl3-fg); background: var(--lvl3-bg); color: var(--lvl3-fg); }
+  .cx-gutter-in .m-info { border-left-color: #d08a1e; background: var(--lvl2-bg); color: var(--lvl2-fg); }
+  .cx-gutter-in .m-good { border-left-color: var(--lvl1-fg); background: var(--lvl1-bg); color: var(--lvl1-fg); }
+  .cx-editor textarea {
+    flex: 1; min-width: 0; min-height: 420px; resize: vertical; border: 0; outline: none; background: transparent; padding: 12px 14px;
+    font-family: var(--mono); font-size: 13px; line-height: var(--cx-lh); color: var(--text); tab-size: 2; font-variant-ligatures: none; white-space: pre; overflow: auto;
+  }
+  .cx-hint { font-size: 13.5px; }
+
+  .cx-out { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+  .cx-empty { padding: 22px; color: var(--muted); }
+  .cx-h { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  .cx-block { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .cx-sum { padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .cx-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 150px)); gap: 10px; }
+  .cx-stats div { display: flex; flex-direction: column; background: var(--bg); border-radius: 14px; padding: 10px 14px; min-width: 0; }
+  .cx-stats b { font-size: 24px; line-height: 1.1; }
+  .cx-stats span { font-size: 13px; color: var(--muted); }
+  .cx-facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: 14.5px; }
+  .cx-facts dt { color: var(--muted); }
+  .cx-facts dd { margin: 0; min-width: 0; }
+  .cx-mini { font-size: 12px; color: var(--muted); }
+  .cx-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .cx-badge { font-size: 12.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--sev-bg); color: var(--sev-fg); white-space: nowrap; }
+  .cx-partial { font-size: 13.5px; }
+
+  .cx-list, .cx-errs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .cx-f { background: var(--surface); border-radius: 16px; padding: 14px 16px 14px 18px; border-left: 5px solid var(--sev-fg); display: flex; flex-direction: column; gap: 6px; font-size: 14.5px; line-height: 1.55; color: var(--text-3); min-width: 0; }
+  .cx-errs .cx-f { background: var(--sev-bg); }
+  .cx-f-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .cx-sev { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--sev-fg); }
+  .cx-f-t { font-weight: 600; color: var(--text); font-size: 15px; }
+  .cx-f b { color: var(--text-2); }
+  .cx-f-links { font-size: 13.5px; }
+  .cx-ln { border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px; padding: 2px 9px; font-size: 12px; font-family: var(--mono); color: var(--text-4); }
+  .cx-ln:hover { border-color: var(--accent); color: var(--accent-600); }
+
+  .cx-svcs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr)); gap: 14px; }
+  .cx-svc { padding: 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .cx-svc header { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .cx-svc h3 { font-size: 17px; }
+  .cx-svc h3 code { font-size: 1em; background: none; padding: 0; }
+  .cx-svc dl { margin: 0; display: flex; flex-direction: column; }
+  .cx-row { display: grid; grid-template-columns: 124px 1fr; gap: 4px 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .cx-row dt { min-width: 0; }
+  .cx-row dd { margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .cx-key { border: 0; background: none; padding: 0; font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--accent-600); text-align: left; overflow-wrap: anywhere; }
+  .cx-key:hover { text-decoration: underline; }
+  .cx-entry { display: flex; flex-direction: column; gap: 3px; padding-left: 10px; border-left: 3px solid var(--line-2); }
+  .cx-entry.m-warn { border-left-color: var(--lvl3-fg); }
+  .cx-entry.m-info { border-left-color: #d08a1e; }
+  .cx-entry.m-good { border-left-color: var(--lvl1-fg); }
+  .cx-val { align-self: flex-start; max-width: 100%; }
+  .cx-entry ul { margin: 0; padding-left: 16px; font-size: 13.5px; line-height: 1.5; color: var(--text-3); }
+  @media (max-width: 560px) {
+    .cx-input { padding: 12px; }
+    .cx-row { grid-template-columns: 1fr; }
+    .cx-editor textarea { min-height: 320px; }
+    .cx-gutter { width: 40px; }
+  }
+</style>

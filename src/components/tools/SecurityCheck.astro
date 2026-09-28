@@ -1,10 +1,225 @@
 ---
-/** Placeholder – replaced by the real tool. */
-import type { Lang } from '../../lib/i18n';
+/**
+ * Security check: grouped checklist with yes / partly / no / don't know, weighted score,
+ * traffic light and the most important next steps. Logic: src/lib/tools/security-check.ts.
+ */
+import { answers, groups, items } from '../../lib/tools/security-check';
+import { linkMap, type Ref } from '../../lib/tools/refs';
+import { t, type Lang } from '../../lib/i18n';
+
 interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
+const k = (key: string, vars?: Record<string, string | number>) => t(lang, `tools.security-check.${key}`, vars);
+
+const all = await linkMap(lang);
+const links: Record<string, Ref> = {};
+for (const it of items) {
+  const r = all[it.link] ?? (it.fallback ? all[it.fallback] : undefined);
+  if (r) links[it.id] = r;
+}
+const texts = Object.fromEntries(
+  [
+    'answered', 'light.green', 'light.yellow', 'light.red', 'light.none', 'nextEmpty',
+    ...items.map((it) => `i.${it.id}`),
+  ].map((key) => [key, k(key)]),
+);
 ---
 
-<p data-lang={lang}>…</p>
+<div class="sc" data-security-check>
+  <script type="application/json" data-sc-data set:html={JSON.stringify({ texts, links })} />
+
+  <form class="groups" data-form>
+    {
+      groups.map((g) => (
+        <fieldset class="card group">
+          <legend class="g-title">{k(`group.${g}`)}</legend>
+          {items
+            .filter((it) => it.group === g)
+            .map((it) => (
+              <div class="item" role="radiogroup" aria-labelledby={`sc-${it.id}`} data-item={it.id}>
+                <div class="i-text">
+                  <p class="i-title" id={`sc-${it.id}`}>
+                    {k(`i.${it.id}`)}
+                    {it.weight > 1 && <span class={`tag w${it.weight}`}>{k(`weight.${it.weight}`)}</span>}
+                  </p>
+                  <p class="i-hint">
+                    {k(`h.${it.id}`)}
+                    {links[it.id] && (
+                      <>
+                        {' '}
+                        <a href={links[it.id].href}>{k('how')}</a>
+                      </>
+                    )}
+                  </p>
+                </div>
+                <div class="opts">
+                  {answers.map((a) => (
+                    <label class="opt">
+                      <input type="radio" name={it.id} value={a} />
+                      <span>{k(`a.${a}`)}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+        </fieldset>
+      ))
+    }
+  </form>
+
+  <section class="card result" aria-labelledby="sc-result-title" data-result>
+    <div class="r-top">
+      <div class="gauge" data-light="none">
+        <span class="light" aria-hidden="true"></span>
+        <div>
+          <h2 id="sc-result-title" class="r-title">{k('resultTitle')}</h2>
+          <p class="r-score" aria-live="polite"><b data-score>0 %</b> <span data-verdict>{k('light.none')}</span></p>
+          <p class="r-answered muted" data-answered></p>
+        </div>
+      </div>
+      <button type="button" class="btn btn-outline btn-sm" data-reset>{k('reset')}</button>
+    </div>
+    <div class="meter" aria-hidden="true"><span data-meter></span></div>
+    <div class="next" data-next-wrap>
+      <h3>{k('next')}</h3>
+      <ol data-next></ol>
+    </div>
+    <p class="r-note muted">{k('note')}</p>
+  </section>
+</div>
+
+<script>
+  import { evaluate, type Answer } from '../../lib/tools/security-check';
+
+  const KEY = 'yhl-security-check';
+  type Ref = { href: string; title: string };
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-security-check]')) {
+    const data = JSON.parse(root.querySelector('[data-sc-data]')!.textContent!) as { texts: Record<string, string>; links: Record<string, Ref> };
+    const tx = (key: string) => data.texts[key] ?? key;
+    const form = root.querySelector<HTMLFormElement>('[data-form]')!;
+
+    let state: Record<string, Answer> = {};
+    try {
+      const saved = JSON.parse(localStorage.getItem(KEY) ?? 'null');
+      if (saved && typeof saved === 'object') state = saved;
+    } catch {}
+    for (const [id, v] of Object.entries(state)) {
+      const el = form.elements.namedItem(id);
+      if (el instanceof RadioNodeList) el.value = v;
+    }
+
+    function update() {
+      const r = evaluate(state);
+      const gauge = root.querySelector<HTMLElement>('.gauge')!;
+      const light = r.answered ? r.light : 'none';
+      gauge.dataset.light = light;
+      root.querySelector('[data-score]')!.textContent = r.answered ? `${r.score} %` : '– %';
+      root.querySelector('[data-verdict]')!.textContent = tx(`light.${light}`);
+      root.querySelector('[data-answered]')!.textContent = tx('answered').replace('{n}', String(r.answered)).replace('{total}', String(form.querySelectorAll('[data-item]').length));
+      root.querySelector<HTMLElement>('[data-meter]')!.style.width = `${r.answered ? r.score : 0}%`;
+      root.querySelector<HTMLElement>('.meter')!.dataset.light = light;
+
+      const ol = root.querySelector<HTMLOListElement>('[data-next]')!;
+      ol.replaceChildren();
+      const wrap = root.querySelector<HTMLElement>('[data-next-wrap]')!;
+      wrap.hidden = !r.answered;
+      if (r.answered && !r.next.length) {
+        const li = document.createElement('li');
+        li.textContent = tx('nextEmpty');
+        ol.append(li);
+      }
+      for (const it of r.next) {
+        const li = document.createElement('li');
+        const b = document.createElement('span');
+        b.className = 'n-title';
+        b.textContent = tx(`i.${it.id}`);
+        li.append(b);
+        const ref = data.links[it.id];
+        if (ref) {
+          const a = document.createElement('a');
+          a.href = ref.href;
+          a.textContent = `${ref.title} →`;
+          li.append(a);
+        }
+        ol.append(li);
+      }
+    }
+
+    form.addEventListener('change', (e) => {
+      const input = e.target as HTMLInputElement;
+      state[input.name] = input.value as Answer;
+      try {
+        localStorage.setItem(KEY, JSON.stringify(state));
+      } catch {}
+      update();
+    });
+    root.querySelector('[data-reset]')!.addEventListener('click', () => {
+      state = {};
+      form.reset();
+      try {
+        localStorage.removeItem(KEY);
+      } catch {}
+      update();
+    });
+    update();
+  }
+</script>
+
+<style>
+  .sc { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+  .groups { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .group { border: none; margin: 0; padding: 20px 22px 8px; min-width: 0; }
+  .g-title { float: left; width: 100%; padding: 0; margin-bottom: 4px; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+  .item { clear: both; display: flex; flex-direction: column; gap: 10px; padding: 14px 0; border-top: 1px solid var(--line-3); }
+  .g-title + .item { border-top: none; }
+  .i-text { display: flex; flex-direction: column; gap: 4px; }
+  .i-title { font-size: 15.5px; font-weight: 600; line-height: 1.4; }
+  .i-title .tag { margin-left: 8px; vertical-align: 1px; font-size: 11px; padding: 2px 7px; }
+  .tag.w3 { background: var(--lvl3-bg); color: var(--lvl3-fg); }
+  .tag.w2 { background: var(--lvl2-bg); color: var(--lvl2-fg); }
+  .i-hint { font-size: 14px; line-height: 1.5; color: var(--text-4); }
+  .i-hint a { white-space: nowrap; font-weight: 600; }
+  .opts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opt { display: flex; position: relative; }
+  .opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .opt span { border: 1.5px solid var(--line-2); background: #fff; color: var(--text-2); border-radius: 999px; padding: 6px 13px; font-size: 13.5px; cursor: pointer; }
+  .opt span:hover { border-color: var(--accent-300); }
+  .opt input:checked + span { border-color: var(--accent); background: var(--accent-50); color: var(--accent-600); font-weight: 600; }
+  .opt input[value='yes']:checked + span { border-color: var(--lvl1-fg); background: var(--lvl1-bg); color: var(--lvl1-fg); }
+  .opt input[value='partial']:checked + span { border-color: var(--lvl2-fg); background: var(--lvl2-bg); color: var(--lvl2-fg); }
+  .opt input[value='no']:checked + span { border-color: var(--lvl3-fg); background: var(--lvl3-bg); color: var(--lvl3-fg); }
+  .opt input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .result { position: sticky; top: calc(var(--header-h) + 16px); padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+  .r-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+  .gauge { display: flex; gap: 14px; align-items: center; }
+  .light { width: 18px; height: 18px; border-radius: 50%; background: var(--line-2); flex: none; box-shadow: 0 0 0 5px var(--bg); }
+  .gauge[data-light='green'] .light, .meter[data-light='green'] span { background: #2e9e5b; }
+  .gauge[data-light='yellow'] .light, .meter[data-light='yellow'] span { background: #e0a100; }
+  .gauge[data-light='red'] .light, .meter[data-light='red'] span { background: #d0463b; }
+  .r-title { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .r-score { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; font-size: 15px; font-weight: 600; }
+  .r-score b { font-size: 30px; letter-spacing: -0.02em; }
+  .r-answered { font-size: 13px; }
+  .meter { height: 8px; border-radius: 999px; background: var(--bg); overflow: hidden; }
+  .meter span { display: block; height: 100%; width: 0; background: var(--line-2); transition: width 0.2s; }
+  .next { display: flex; flex-direction: column; gap: 8px; }
+  .next[hidden] { display: none; }
+  .next h3 { font-size: 15px; font-weight: 700; }
+  .next ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; line-height: 1.45; }
+  .next :global(li) { display: list-item; }
+  .next :global(.n-title) { display: block; color: var(--text-2); }
+  .next :global(a) { font-size: 13.5px; font-weight: 600; }
+  .r-note { font-size: 12.5px; line-height: 1.5; }
+  @media (max-width: 960px) {
+    .sc { grid-template-columns: 1fr; }
+    .result { position: static; }
+  }
+  @media (max-width: 600px) {
+    .group { padding: 16px 16px 4px; }
+    .result { padding: 18px; }
+  }
+</style>

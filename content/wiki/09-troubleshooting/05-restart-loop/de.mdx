@@ -1,0 +1,143 @@
+---
+slug: container-neustart-schleife
+title: "Container in der Neustart-Schleife"
+description: "Ein Container startet, stürzt ab und wird von Docker sofort wieder gestartet, immer wieder. Der Grund steht fast immer in den letzten Zeilen seines Logs."
+level: 2
+related: [logs, images-tags, env-files, first-steps]
+practice: first-stack
+---
+
+## Symptom
+
+`docker compose ps` zeigt statt `Up` einen dieser Zustände, und der Dienst ist nicht erreichbar:
+
+```text
+NAME        IMAGE              STATUS
+myapp       myapp:latest       Restarting (1) 8 seconds ago
+myapp-db    postgres:17        Up 2 minutes (unhealthy)
+```
+
+Wegen `restart: unless-stopped` startet Docker einen abgestürzten Container immer wieder neu. Die Wartezeit wird
+dabei länger. Die Zahl in Klammern ist der Exit-Code des letzten Laufs.
+
+## Zuerst: das Log
+
+```bash
+cd __ROOT__/myapp
+docker compose logs --tail 50 <service>
+```
+
+`myapp` steht für deinen Stack, `<service>` für den Dienstnamen aus der `compose.yaml`. Such die erste Fehlerzeile.
+Die folgenden Ursachen sind nach Häufigkeit sortiert.
+
+## Ursachen und Lösungen
+
+### Fehlende oder falsche Variable in der .env
+
+Das Log sagt zum Beispiel:
+
+```text
+Error: Database is uninitialized and superuser password is not specified.
+```
+
+Beim Start warnt Compose außerdem:
+
+```text
+WARN[0000] The "POSTGRES_PASSWORD" variable is not set. Defaulting to a blank string.
+```
+
+Prüfe, ob die `.env` im Stack-Ordner liegt und alle Variablen enthält, die die `compose.yaml` nutzt. Die fertig
+eingesetzten Werte zeigt `docker compose config`. Achte auf Tippfehler im Variablennamen und darauf, dass Werte mit
+Sonderzeichen wie `$` oder `#` in einfache Anführungszeichen gehören. Mehr unter [.env-Dateien](/de/nachschlagen/env-dateien/).
+Nach einer Änderung an der `.env`:
+
+```bash
+docker compose up -d
+```
+
+`restart` reicht nicht, weil es die neuen Werte nicht übernimmt.
+
+### Falsches Image oder falsche Architektur
+
+```text
+exec /usr/local/bin/docker-entrypoint.sh: exec format error
+```
+
+Das Image ist für eine andere Prozessorarchitektur gebaut, etwa für `amd64`, während dein Server ein Raspberry Pi mit
+`arm64` ist. Vergleiche:
+
+```bash
+uname -m
+docker image inspect --format '{{.Architecture}}' <image>
+```
+
+`x86_64` entspricht `amd64`, `aarch64` entspricht `arm64`. Such auf Docker Hub oder in der Doku des Projekts ein Image
+bzw. einen Tag für deine Architektur. Siehe auch [Images & Tags](/de/nachschlagen/images-tags/).
+
+### Datenbank noch nicht bereit
+
+Die App startet schneller als ihre Datenbank und bricht ab:
+
+```text
+Connection refused ... could not connect to server
+```
+
+Oft löst sich das nach ein, zwei Neustarts von selbst. Sauberer ist ein Healthcheck an der Datenbank, auf den die App
+wartet:
+
+```yaml
+services:
+  app:
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:17
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 10s
+      retries: 5
+```
+
+Das doppelte `$$` sorgt dafür, dass die Variable erst im Container ausgewertet wird. Für MariaDB gibt es im offiziellen
+Image das Skript `healthcheck.sh`, etwa `test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]`.
+
+### Healthcheck schlägt fehl
+
+`(unhealthy)` bedeutet: Der Container läuft, aber sein eingebauter Test sagt, dass etwas nicht stimmt. Docker startet
+ihn deshalb **nicht** neu. Allerdings starten abhängige Dienste mit `condition: service_healthy` dann nicht, und Traefik
+leitet keinen Verkehr an ihn weiter. Was der Test ausgibt, zeigt:
+
+```bash
+docker inspect --format '{{json .State.Health}}' <container>
+```
+
+### Speicher voll (OOM)
+
+Der Kernel beendet den Prozess, wenn der Arbeitsspeicher ausgeht (Out of Memory, OOM). Typisch ist Exit-Code `137`
+ohne Fehlermeldung im Log.
+
+```bash
+docker inspect --format '{{.State.OOMKilled}} {{.State.ExitCode}}' <container>
+sudo dmesg -T | grep -i -E "out of memory|oom-kill"
+```
+
+Steht dort `true` oder eine OOM-Meldung, gib dem Dienst mehr RAM, entferne ein gesetztes `mem_limit` bzw. erhöhe es,
+oder stoppe andere Dienste. Wie viel RAM deine Dienste brauchen, schätzt der [RAM-Planer](/de/werkzeuge/ram-planer/).
+
+### Keine Schreibrechte
+
+`Permission denied` im Log? Dann weiter bei [Permission denied](/de/nachschlagen/permission-denied/).
+
+### Nach einem Update
+
+Startet eine Datenbank nach einem Update nicht mehr, siehe [Datenbank-Version passt nicht](/de/nachschlagen/datenbank-version/).
+Bei Apps hilft es, in den Release Notes nach Breaking Changes zu suchen oder vorübergehend den alten Tag einzutragen.
+
+## Die Schleife anhalten
+
+Während du suchst, kannst du den Container stoppen, damit er das Log nicht weiter füllt:
+
+```bash
+docker compose stop <service>
+```

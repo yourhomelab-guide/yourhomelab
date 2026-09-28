@@ -25,3 +25,16 @@ upstream:
   url: https://github.com/owner/myservice/blob/main/docker-compose.yml
 # Date you last tested this template (YYYY-MM-DD)
 reviewed: 2026-01-01
+# Rough needs, used by the service page, the RAM planner and the stack builder
+# resources:
+#   ram: 300          # typical RAM use of the whole stack in MB, normal use (not peak)
+#   gpu: no           # no | optional | recommended
+# Database of the stack, used for backup dumps (borgmatic tool)
+# db:
+#   type: postgres    # postgres | mariadb | mysql | sqlite
+#   service: myservice-db   # service name of the database container in compose.yaml (not for sqlite)
+#   user: ${POSTGRES_USER}  # literal or ${VAR} from .env
+#   name: ${POSTGRES_DB}
+#   path: data/data/db.sqlite3   # sqlite only: path of the database file below the stack folder
+# Ids of other services that go well with this one ("Passt gut zu")
+# pairsWith: [pocket-id, tinyauth]

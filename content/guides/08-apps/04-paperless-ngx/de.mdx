@@ -1,0 +1,152 @@
+---
+slug: paperless-ngx
+title: "Paperless-ngx"
+description: "Am Ende landet jeder Brief, jede Rechnung und jeder Vertrag als durchsuchbares PDF in Paperless-ngx: per Scanner, Netzwerkordner oder Upload, automatisch verschlagwortet und mit Datenbank-Dump und Export im Backup."
+level: 2
+minutes: 45
+requires: [Docker Compose, Reverse Proxy, Backups mit borgmatic]
+services: [paperless-ngx]
+---
+
+Paperless-ngx ist ein Dokumentenarchiv. Du gibst ihm einen Scan oder ein PDF, es erkennt den Text darin per **OCR** (Optical Character Recognition, also Texterkennung auf Bildern), legt eine durchsuchbare Fassung an und sortiert das Dokument nach Absender, Art und Schlagworten. Danach findest du die Nebenkostenabrechnung von vor drei Jahren in Sekunden, statt Ordner im Regal durchzublättern.
+
+Weil in Paperless schnell sehr persönliche Unterlagen liegen, gehört ein sauberes Backup von Anfang an dazu. Es ist deshalb der letzte Schritt dieses Guides und nicht optional.
+
+<Steps>
+
+<Step title="Verzeichnis anlegen">
+Paperless besteht aus drei Containern: der Anwendung selbst, einer PostgreSQL-Datenbank und Redis (hier in der kompatiblen Variante Valkey) als Warteschlange für Aufgaben wie die Texterkennung.
+
+Zwei Ordner sind für dich besonders wichtig:
+
+- **consume**: der Eingangskorb. Alles, was hier landet, importiert Paperless und entfernt es danach aus dem Ordner.
+- **export**: das Ziel für den Export, den du später fürs Backup nutzt.
+
+Leg beide vor dem ersten Start als dein Benutzer an, damit du selbst hineinschreiben kannst:
+
+```bash
+mkdir -p __ROOT__/paperless-ngx __DATA(paperless-ngx)__/consume __DATA(paperless-ngx)__/export
+```
+</Step>
+
+<Step title="compose.yaml und .env schreiben">
+<ServiceFiles id="paperless-ngx" />
+
+Ein paar Einstellungen in der Vorlage kurz erklärt:
+
+- `PAPERLESS_OCR_LANGUAGE=deu+eng` erkennt deutsche und englische Texte. Beide Sprachen bringt das Image schon mit. Jede weitere Sprache macht die Texterkennung langsamer, nimm also nur, was du brauchst.
+- `USERMAP_UID` und `USERMAP_GID` legen fest, mit welcher Benutzer-ID Paperless arbeitet. Setz sie auf deine eigene (`id` zeigt sie an), dann gehören dir auch die Dateien in `consume` und `export`.
+- `PAPERLESS_URL` ist die Adresse, unter der du Paperless aufrufst. Aus Sicherheitsgründen nimmt Paperless dann nur noch Anfragen an diese Adresse an. Rufst du es unter einer anderen Adresse auf, bekommst du einen Fehler 400 oder eine CSRF-Meldung beim Anmelden.
+- `PAPERLESS_SECRET_KEY` signiert Sitzungen. Der Wert muss geheim bleiben und darf sich nach dem ersten Start nicht mehr ändern, sonst bist du überall abgemeldet.
+</Step>
+
+<Step title="Starten und Admin anlegen">
+```bash
+cd __ROOT__/paperless-ngx
+docker compose up -d
+docker compose logs -f paperless-ngx
+```
+
+Beim ersten Start richtet Paperless die Datenbank ein. Das dauert ein bis zwei Minuten. Sobald das Log ruhig ist, legst du den ersten Benutzer an. Er bekommt alle Rechte:
+
+```bash
+docker compose exec paperless-ngx createsuperuser
+```
+
+Du wirst nach Benutzername, E-Mail-Adresse und Passwort gefragt. Danach meldest du dich im Browser an. Weitere Konten, etwa für deine Partnerin oder deinen Partner, legst du in der Oberfläche unter **Benutzer & Gruppen** an. Gib ihnen keine Admin-Rechte, wenn sie nur Dokumente ablegen sollen.
+</Step>
+
+<Step title="Dokumente hineinbringen">
+Es gibt mehrere Wege, die du beliebig kombinieren kannst:
+
+- **Hochladen im Browser:** Dateien auf die Startseite ziehen. Am Handy geht das auch, dort ist die Kamera dann dein Scanner.
+- **consume-Ordner:** Jede Datei, die in `__DATA(paperless-ngx)__/consume` landet, wird importiert. Das ist der Weg für Scanner und für alles, was automatisch passieren soll.
+- **E-Mail:** Paperless kann ein Postfach abrufen und Anhänge importieren. Das richtest du unter **E-Mail** in der Oberfläche ein.
+
+Paperless verarbeitet PDFs, Bilder wie JPG und PNG sowie reine Textdateien. Bei gescannten Dokumenten lohnen sich 300 dpi und Graustufen. Das reicht für eine gute Texterkennung und hält die Dateien klein.
+
+Beim Import bleibt das Original unverändert erhalten. Daneben legt Paperless ein **Archiv-PDF** mit dem erkannten Text an. Über das Suchfeld oben findest du danach jedes Wort aus deinen Dokumenten.
+</Step>
+
+<Step title="Scanner und PC per Samba anbinden (optional)">
+Die meisten Netzwerkscanner und Multifunktionsgeräte können direkt in eine Windows-Freigabe scannen („Scan to SMB“ oder „Scan to Folder“). Eine solche Freigabe stellst du mit **Samba** bereit, dem Windows-Dateifreigabe-Dienst für Linux. Samba läuft hier direkt auf dem Server, nicht im Container.
+
+```bash
+sudo apt install samba
+```
+
+Hänge am Ende von `/etc/samba/smb.conf` einen Abschnitt für den Eingangskorb an. Ersetze `dein-benutzer` durch deinen Linux-Benutzernamen:
+
+```ini
+[paperless]
+   path = __DATA(paperless-ngx)__/consume
+   valid users = dein-benutzer
+   writable = yes
+   browseable = yes
+   create mask = 0664
+   directory mask = 0775
+```
+
+Samba hat eigene Passwörter. Leg für deinen Benutzer eines fest und lade die Konfiguration neu:
+
+```bash
+sudo smbpasswd -a $USER
+sudo systemctl restart smbd
+```
+
+Die Firewall muss Samba aus dem Heimnetz durchlassen, aber nicht aus dem Internet:
+
+```bash
+sudo ufw allow from 192.168.1.0/24 to any port 445 proto tcp
+```
+
+Passe das Netz an deins an. Aktuelle Geräte brauchen nur Port 445. Im Scanner trägst du dann als Ziel `\\<Server-IP>\paperless` mit Benutzer und Samba-Passwort ein. Auf dem PC öffnest du dieselbe Adresse im Explorer und ziehst Dateien einfach hinein.
+
+<Callout title="Alte Scanner und SMB1">
+Manche ältere Geräte können nur SMB1, eine veraltete und unsichere Version des Protokolls. Aktuelles Samba schaltet sie zu Recht ab. Dann ist oft ein Firmware-Update, „Scan to FTP“ oder „Scan to E-Mail“ der bessere Weg, statt SMB1 wieder einzuschalten.
+</Callout>
+</Step>
+
+<Step title="Ordnung schaffen: Tags, Korrespondenten, Dokumenttypen">
+Paperless sortiert Dokumente mit drei Arten von Merkmalen:
+
+| Merkmal | Beispiel | Frage |
+|---|---|---|
+| **Korrespondent** | Stadtwerke, Krankenkasse, Arbeitgeber | Von wem kommt es? |
+| **Dokumenttyp** | Rechnung, Vertrag, Bescheid | Was ist es? |
+| **Tag** | Steuer 2026, Auto, Wohnung | Wozu gehört es? |
+
+Ein Dokument hat einen Korrespondenten und einen Typ, aber beliebig viele Tags. Leg am Anfang nur eine Handvoll an und erweitere sie, wenn dir beim Ablegen etwas fehlt.
+
+Für die automatische Zuordnung hat jedes Merkmal einen **Zuweisungsalgorithmus**. Die Voreinstellung **Automatisch** lernt aus deinen bisherigen Zuordnungen. Sortierst du also die ersten zwanzig, dreißig Dokumente von Hand, schlägt Paperless danach meist selbst das Richtige vor. Für Fälle mit klarem Merkmal, etwa einer Kundennummer, kannst du stattdessen ein festes Wort vorgeben. Noch mehr Automatik bieten **Workflows**, die zum Beispiel allen Dokumenten aus dem Scanner einen Tag „Posteingang“ geben. Alles Weitere steht in der [Paperless-Doku zur Nutzung](https://docs.paperless-ngx.com/usage/).
+</Step>
+
+<Step title="Backup: Datenbank-Dump und Export">
+Für Paperless brauchst du zwei Dinge im Backup:
+
+1. **Einen Dump der Datenbank.** Darin stehen alle Zuordnungen, Tags und Notizen. Die Dateien in `media` allein reichen nicht, weil sie ohne Datenbank nur ein Haufen PDFs sind.
+2. **Einen Export mit dem `document_exporter`.** Er schreibt alle Dokumente samt einer `manifest.json` mit allen Metadaten in den Ordner `export`. Das ist das offizielle, versionsunabhängige Format, mit dem du Paperless auch auf einem neuen Server oder nach einem großen Update sauber wiederherstellst.
+
+Beides erledigt borgmatic vor jedem Backup. Hast du [Backups mit borgmatic](/de/einrichten/backups-borgmatic/) eingerichtet, ergänzt du im `commands:`-Block diese Zeilen:
+
+```yaml
+commands:
+    - before: action
+      when: [create]
+      run:
+          # Paperless-ngx: database dump and document export
+          - mkdir -p -m 700 __DATA(paperless-ngx)__/db-dump
+          - docker compose -f __ROOT__/paperless-ngx/compose.yaml exec -T db pg_dump -U paperless -d paperless > __DATA(paperless-ngx)__/db-dump/paperless.sql
+          - docker compose -f __ROOT__/paperless-ngx/compose.yaml exec -T paperless-ngx document_exporter ../export --delete
+```
+
+`../export` ist der Pfad im Container, er zeigt auf deinen Ordner `export`. Der Exporter schreibt beim nächsten Mal nur neue und geänderte Dateien, und `--delete` räumt Dateien gelöschter Dokumente weg. Gibt es bei dir schon einen `commands:`-Block, kommen die Zeilen dort mit hinein. Wenn du die Konfiguration lieber zusammenklickst, nimm das Werkzeug [borgmatic-Konfiguration](/de/werkzeuge/borgmatic-konfiguration/).
+
+Prüfe danach mit `sudo borgmatic config validate` und lass einmal ein Backup laufen. Liegen danach `paperless.sql` und eine `manifest.json` in deinen Ordnern, passt alles. Wie du einen Dump und einzelne Dateien zurückholst, zeigt [Restore testen](/de/einrichten/restore-testen/).
+
+<Callout type="warning" title="Sensible Daten">
+In Paperless liegen Kontoauszüge, Verträge und Ausweiskopien. Das Backup muss deshalb verschlüsselt sein, was borgmatic erledigt. Und Paperless selbst sollte nicht offen im Internet hängen: Nutze ein [VPN](/de/einrichten/vpn-wireguard/) oder schalte zumindest [Tinyauth](/de/einrichten/tinyauth/) oder [Pocket ID](/de/einrichten/pocket-id/) davor.
+</Callout>
+</Step>
+
+</Steps>

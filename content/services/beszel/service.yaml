@@ -12,3 +12,10 @@ upstream:
   label: supplemental/docker/hub/docker-compose.yml
   url: https://github.com/henrygd/beszel/blob/main/supplemental/docker/hub/docker-compose.yml
 reviewed: 2026-09-12
+resources:
+  ram: 30
+  gpu: no
+db:
+  type: sqlite
+  path: data/data/data.db
+pairsWith: [uptime-kuma, ntfy, dockhand]

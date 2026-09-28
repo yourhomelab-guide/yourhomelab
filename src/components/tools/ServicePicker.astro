@@ -1,0 +1,150 @@
+---
+/**
+ * Service selection shared by the tools ("Mein Stack", see src/client/stack.ts): checkbox cards with logo,
+ * grouped by category. Every picker on the page stays in sync with getStack()/setStack().
+ * `compact`: shows the picked services as chips with a link to the stack builder; the full list folds out.
+ */
+import ServiceLogo from '../ServiceLogo.astro';
+import { categories } from '../../config/site';
+import { getServices } from '../../lib/content';
+import { t, type Lang } from '../../lib/i18n';
+import { url } from '../../lib/routes';
+
+interface Props {
+  lang: Lang;
+  compact?: boolean;
+}
+const { lang, compact = false } = Astro.props;
+const services = await getServices(lang);
+const groups = categories.map((c) => ({ id: c, items: services.filter((s) => s.category === c) })).filter((g) => g.items.length);
+const ram = (mb?: number) => (mb === undefined ? '' : mb >= 1000 ? `~${(mb / 1000).toLocaleString(lang === 'de' ? 'de-DE' : 'en-US', { maximumFractionDigits: 1 })} GB` : `~${mb} MB`);
+const Wrap = compact ? 'details' : 'div';
+const uid = `sp-${Math.random().toString(36).slice(2, 7)}`;
+---
+
+<div class:list={['picker', { compact }]} data-picker>
+  {
+    compact && (
+      <div class="picked-row">
+        <div class="chips" data-picked aria-live="polite" />
+        <p class="muted none" data-picked-none>{t(lang, 'tools.picker.none')}</p>
+        <a class="link-btn" href={url.tool(lang, 'stack-builder')}>{t(lang, 'tools.picker.changeInBuilder')}</a>
+      </div>
+    )
+  }
+  <Wrap class="pick-wrap">
+    {compact && <summary>{t(lang, 'tools.picker.toggle')}</summary>}
+    <div class="groups">
+      {
+        groups.map((g) => (
+          <fieldset class="group">
+            <legend>{t(lang, `category.${g.id}`)}</legend>
+            <div class="grid">
+              {g.items.map((s) => (
+                <label class="pick" for={`${uid}-${s.id}`}>
+                  <input type="checkbox" id={`${uid}-${s.id}`} value={s.id} data-pick data-name={s.name} />
+                  <span class="pick-card">
+                    <span class="logo">
+                      <ServiceLogo name={s.name} logo={s.logo} size={34} />
+                    </span>
+                    <span class="pick-t">
+                      <b>{s.name}</b>
+                      <span class="meta">{s.resources ? ram(s.resources.ram) : t(lang, 'tools.picker.ramUnknown')}</span>
+                    </span>
+                    <span class="tick" aria-hidden="true">✓</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        ))
+      }
+    </div>
+    <div class="pick-foot">
+      <button type="button" class="link-btn" data-pick-clear>{t(lang, 'tools.picker.clear')}</button>
+    </div>
+  </Wrap>
+</div>
+
+<script>
+  import { getStack, setStack } from '../../client/stack';
+
+  function sync() {
+    const stack = getStack();
+    const set = new Set(stack);
+    document.querySelectorAll<HTMLElement>('[data-picker]').forEach((p) => {
+      const names = new Map<string, string>();
+      p.querySelectorAll<HTMLInputElement>('input[data-pick]').forEach((i) => {
+        i.checked = set.has(i.value);
+        names.set(i.value, i.dataset.name!);
+      });
+      const chips = p.querySelector<HTMLElement>('[data-picked]');
+      if (chips) {
+        chips.replaceChildren(
+          ...stack
+            .filter((id) => names.has(id))
+            .map((id) => {
+              const c = document.createElement('span');
+              c.className = 'tag';
+              c.textContent = names.get(id)!;
+              return c;
+            }),
+        );
+        const none = p.querySelector<HTMLElement>('[data-picked-none]');
+        if (none) none.hidden = chips.childElementCount > 0;
+      }
+    });
+  }
+
+  document.addEventListener('change', (e) => {
+    const input = (e.target as Element).closest<HTMLInputElement>('input[data-pick]');
+    if (!input) return;
+    const stack = getStack().filter((id) => id !== input.value);
+    setStack(input.checked ? [...stack, input.value] : stack);
+  });
+  document.addEventListener('click', (e) => {
+    const btn = (e.target as Element).closest('[data-pick-clear]');
+    if (btn) setStack([]);
+  });
+  document.addEventListener('yhl:stack', sync);
+  sync();
+</script>
+
+<style>
+  .picker { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .picked-row { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+  .picked-row .chips { flex: 1 1 240px; }
+  .none { font-size: 14px; flex: 1 1 240px; margin: 0; }
+  .pick-wrap > summary { cursor: pointer; font-size: 14.5px; font-weight: 600; color: var(--accent-600); width: fit-content; }
+  .pick-wrap > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+  .compact .groups { margin-top: 14px; }
+  .groups { display: flex; flex-direction: column; gap: 20px; }
+  fieldset { border: none; margin: 0; padding: 0; min-width: 0; }
+  legend { padding: 0; margin-bottom: 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+  .pick { position: relative; display: block; min-width: 0; }
+  .pick input { position: absolute; opacity: 0; pointer-events: none; }
+  .pick-card {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1.5px solid var(--line-2); border-radius: 14px;
+    background: var(--surface); cursor: pointer; height: 100%;
+  }
+  .pick-card:hover { border-color: var(--accent-300); }
+  .pick input:checked + .pick-card { border-color: var(--accent); background: var(--accent-50); }
+  .pick input:focus-visible + .pick-card { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .logo { width: 34px; height: 34px; flex: none; display: flex; align-items: center; justify-content: center; }
+  .pick-t { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .pick-t b { font-size: 14.5px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .meta { font-size: 12.5px; color: var(--muted); }
+  .tick {
+    width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line-2); flex: none; display: flex; align-items: center;
+    justify-content: center; font-size: 12px; color: transparent;
+  }
+  .pick input:checked + .pick-card .tick { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .pick-foot { display: flex; justify-content: flex-end; margin-top: 10px; }
+  .pick-foot .link-btn { font-size: 13.5px; font-weight: 500; color: var(--muted); }
+  @media (max-width: 420px) {
+    .grid { grid-template-columns: 1fr 1fr; }
+    .pick-card { padding: 8px 10px; gap: 8px; }
+    .tick { display: none; }
+  }
+</style>

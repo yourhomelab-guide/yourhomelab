@@ -1,10 +1,587 @@
 ---
-/** Placeholder – replaced by the real tool. */
-import type { Lang } from '../../lib/i18n';
+/**
+ * borgmatic config generator: builds /etc/borgmatic/config.yaml from "Mein Setup", the shared service
+ * selection (getStack/setStack) and the form below. Logic: src/lib/tools/borgmatic.ts.
+ */
+import ServiceLogo from '../ServiceLogo.astro';
+import { getServices } from '../../lib/content';
+import { t, type Lang } from '../../lib/i18n';
+import { url } from '../../lib/routes';
+import { modesFor } from '../../lib/tools/borgmatic';
+
 interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
+const k = (key: string, vars?: Record<string, string | number>) => t(lang, `tools.borgmatic.${key}`, vars);
+
+const services = (await getServices(lang)).filter((s) => s.db).sort((a, b) => a.name.localeCompare(b.name));
+const data = services.map((s) => ({ id: s.id, name: s.name, db: s.db }));
+const dbLabel = { postgres: 'PostgreSQL', mariadb: 'MariaDB', mysql: 'MySQL', sqlite: 'SQLite' } as const;
+
+const backupGuide = url.guide(lang, 'backups-borgmatic');
+const restoreGuide = url.guide(lang, lang === 'de' ? 'restore-testen' : 'testing-restores');
+
+const texts = {
+  dataRoot: k('src.dataRoot'),
+  kumaDefault: 'https://status.__DOMAIN__/api/push/YOUR-PUSH-TOKEN',
+  ntfyDefault: 'https://ntfy.__DOMAIN__',
+};
+const freqs = ['1 week', '2 weeks', '1 month'];
+const dataFreqs = ['1 month', '3 months', '6 months'];
+const compressions = ['zstd', 'auto,zstd', 'zstd,10', 'lz4', 'none'];
 ---
 
-<p data-lang={lang}>…</p>
+<div class="borg" data-borg>
+  <script type="application/json" data-borg-services set:html={JSON.stringify(data)} />
+  <script type="application/json" data-borg-texts set:html={JSON.stringify(texts)} />
+
+  <form class="form" data-borg-form autocomplete="off">
+    <!-- Sources -->
+    <fieldset class="card sec">
+      <legend>{k('src.title')}</legend>
+      <p class="hint">{k('src.lead')}</p>
+      <div class="chips" data-borg-sources></div>
+      <label>
+        {k('src.extra')}
+        <textarea name="extraSources" rows="2" placeholder="/mnt/media" spellcheck="false"></textarea>
+        <span class="hint">{k('src.extraHint')}</span>
+      </label>
+      <label class="check">
+        <input type="checkbox" name="excludeCaches" checked />
+        <span>{k('src.excludeCaches')}</span>
+      </label>
+      <label>
+        {k('src.excludes')}
+        <textarea name="excludes" rows="3" spellcheck="false">{'*/.cache\n*.tmp'}</textarea>
+        <span class="hint">{k('src.excludesHint')}</span>
+      </label>
+      <div class="immich" data-borg-immich hidden>
+        <span class="lbl">{k('src.immich')}</span>
+        <label class="check"><input type="checkbox" name="immichThumbs" /><span>{k('src.immichThumbs')}</span></label>
+        <label class="check"><input type="checkbox" name="immichVideo" /><span>{k('src.immichVideo')}</span></label>
+      </div>
+    </fieldset>
+
+    <!-- Repositories -->
+    <fieldset class="card sec">
+      <legend>{k('repo.title')}</legend>
+      <p class="hint">{k('repo.lead')}</p>
+      <div class="repos" data-borg-repos></div>
+      <div><button type="button" class="btn btn-soft btn-sm" data-borg-add-repo>+ {k('repo.add')}</button></div>
+    </fieldset>
+
+    <!-- Encryption, compression -->
+    <fieldset class="card sec">
+      <legend>{k('enc.title')}</legend>
+      <div class="grid2">
+        <label>
+          {k('enc.passphrase')}
+          <input name="passphraseFile" value="/etc/borgmatic/passphrase" spellcheck="false" />
+        </label>
+        <label>
+          {k('enc.compression')}
+          <select name="compression">
+            {compressions.map((c) => <option value={c}>{c === 'zstd' ? `${c} (${k('default')})` : c}</option>)}
+          </select>
+        </label>
+      </div>
+      <p class="note">{k('enc.keyHint')}</p>
+      <label>
+        {k('enc.archiveName')}
+        <input name="archiveNameFormat" placeholder="{hostname}-{now:%Y-%m-%dT%H:%M:%S.%f}" spellcheck="false" />
+        <span class="hint">{k('enc.archiveNameHint')}</span>
+      </label>
+    </fieldset>
+
+    <!-- Retention & checks -->
+    <fieldset class="card sec">
+      <legend>{k('keep.title')}</legend>
+      <p class="hint">{k('keep.lead')}</p>
+      <div class="grid4">
+        {
+          (
+            [
+              ['daily', 7],
+              ['weekly', 4],
+              ['monthly', 6],
+              ['yearly', 0],
+            ] as const
+          ).map(([n, v]) => (
+            <label>
+              {k(`keep.${n}`)}
+              <input type="number" name={`keep_${n}`} value={v} min="0" max="999" inputmode="numeric" />
+            </label>
+          ))
+        }
+      </div>
+      <div class="grid2">
+        <label>
+          {k('check.repo')}
+          <select name="checkFrequency">
+            {freqs.map((f) => <option value={f} selected={f === '2 weeks'}>{k(`freq.${f.replace(' ', '')}`)}</option>)}
+            <option value="">{k('freq.always')}</option>
+          </select>
+        </label>
+        <label>
+          {k('check.data')}
+          <select name="dataCheckFrequency">
+            {dataFreqs.map((f) => <option value={f} selected={f === '3 months'}>{k(`freq.${f.replace(' ', '')}`)}</option>)}
+            <option value="">{k('freq.off')}</option>
+          </select>
+        </label>
+      </div>
+    </fieldset>
+
+    <!-- Databases -->
+    <fieldset class="card sec">
+      <legend>{k('db.title')}</legend>
+      <p class="hint">{k('db.lead')}</p>
+      <ul class="svcs">
+        {
+          services.map((s) => (
+            <li class="svc" data-svc={s.id}>
+              <label class="svc-pick">
+                <input type="checkbox" name="svc" value={s.id} />
+                <ServiceLogo name={s.name} logo={s.logo} size={34} />
+                <span class="svc-name">{s.name}</span>
+                <span class="tag">{dbLabel[s.db!.type]}</span>
+              </label>
+              <label class="svc-mode" hidden>
+                <span class="sr">{k('db.mode', { name: s.name })}</span>
+                <select name={`mode_${s.id}`}>
+                  {modesFor(s.db).map((m) => (
+                    <option value={m}>{k(`mode.${m}`)}</option>
+                  ))}
+                </select>
+              </label>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="note" data-borg-mode-note hidden></p>
+      <template data-borg-mode-notes>
+        <span data-m="dump">{k('modeHint.dump')}</span>
+        <span data-m="sqlite">{k('modeHint.sqlite')}</span>
+        <span data-m="stop">{k('modeHint.stop')}</span>
+        <span data-m="none">{k('modeHint.none')}</span>
+        <span data-m="notify">{k('modeHint.stopNotify')}</span>
+      </template>
+      <p class="hint">{k('db.more')}</p>
+    </fieldset>
+
+    <!-- Notifications -->
+    <fieldset class="card sec">
+      <legend>{k('notify.title')}</legend>
+      <p class="hint">{k('notify.lead')}</p>
+      <label class="check"><input type="checkbox" name="kuma" data-toggle="kuma" /><span>Uptime Kuma</span></label>
+      <div class="sub" data-sub="kuma" hidden>
+        <label>
+          {k('notify.kumaUrl')}
+          <input name="kumaUrl" placeholder="https://status.example.com/api/push/…" spellcheck="false" />
+          <span class="hint">{k('notify.kumaHint')}</span>
+        </label>
+      </div>
+      <label class="check"><input type="checkbox" name="ntfy" data-toggle="ntfy" /><span>ntfy</span></label>
+      <div class="sub" data-sub="ntfy" hidden>
+        <div class="grid2">
+          <label>
+            {k('notify.ntfyServer')}
+            <input name="ntfyServer" placeholder="https://ntfy.example.com" spellcheck="false" />
+          </label>
+          <label>
+            {k('notify.ntfyTopic')}
+            <input name="ntfyTopic" value="backups" spellcheck="false" />
+          </label>
+        </div>
+        <label>
+          {k('notify.ntfyToken')}
+          <input name="ntfyToken" placeholder="tk_…" spellcheck="false" />
+        </label>
+        <label class="check"><input type="checkbox" name="ntfySuccess" /><span>{k('notify.ntfySuccess')}</span></label>
+      </div>
+      <label class="check"><input type="checkbox" name="hc" data-toggle="hc" /><span>Healthchecks</span></label>
+      <div class="sub" data-sub="hc" hidden>
+        <label>
+          {k('notify.hcUrl')}
+          <input name="hcUrl" placeholder="https://hc-ping.com/…" spellcheck="false" />
+        </label>
+      </div>
+    </fieldset>
+  </form>
+
+  <template data-borg-repo-tpl>
+    <div class="repo">
+      <div class="repo-head">
+        <div class="kinds" role="radiogroup" aria-label={k('repo.kind')}>
+          <label class="opt"><input type="radio" value="local" /><span>{k('repo.local')}</span></label>
+          <label class="opt"><input type="radio" value="ssh" /><span>{k('repo.ssh')}</span></label>
+          <label class="opt"><input type="radio" value="url" /><span>{k('repo.url')}</span></label>
+        </div>
+        <button type="button" class="link-btn rm" data-rm>{k('repo.remove')}</button>
+      </div>
+      <div class="repo-fields">
+        <label class="f-label">{k('repo.label')}<input data-f="label" spellcheck="false" /></label>
+        <label class="f-path" data-for="local">{k('repo.path')}<input data-f="path" placeholder="/mnt/backup/borg" spellcheck="false" /></label>
+        <label data-for="ssh">{k('repo.user')}<input data-f="user" placeholder="backup" spellcheck="false" /></label>
+        <label data-for="ssh">{k('repo.host')}<input data-f="host" placeholder="192.168.1.20" spellcheck="false" /></label>
+        <label data-for="ssh">{k('repo.port')}<input data-f="port" placeholder="22" inputmode="numeric" spellcheck="false" /></label>
+        <label data-for="ssh">{k('repo.remotePath')}<input data-f="rpath" placeholder="./borg" spellcheck="false" /></label>
+        <label class="f-wide" data-for="url">{k('repo.urlField')}<input data-f="url" placeholder="ssh://u123456@u123456.your-storagebox.de:23/./borg" spellcheck="false" /></label>
+      </div>
+      <p class="hint" data-for="local">{k('repo.localHint')}</p>
+      <p class="hint" data-for="ssh">{k('repo.sshHint')}</p>
+      <p class="hint" data-for="url">{k('repo.urlHint')}</p>
+    </div>
+  </template>
+
+  <section class="card out" aria-labelledby="borg-out">
+    <div class="out-head">
+      <h2 id="borg-out" class="h-out">/etc/borgmatic/config.yaml</h2>
+      <button type="button" class="btn btn-primary btn-sm" data-borg-download>{k('download')}</button>
+    </div>
+    <div class="code">
+      <pre data-borg-yaml></pre>
+      <button type="button" class="copy-btn" data-copy>{t(lang, 'code.copy')}</button>
+    </div>
+
+    <h3 class="h-steps">{k('steps.title')}</h3>
+    <ol class="steps">
+      <li>
+        <p>{k('steps.passphrase')}</p>
+        <div class="code"><pre data-borg-cmd="passphrase"></pre><button type="button" class="copy-btn" data-copy>{t(lang, 'code.copy')}</button></div>
+      </li>
+      <li data-borg-sqlite-step hidden>
+        <p>{k('steps.sqlite')}</p>
+        <div class="code"><pre data-borg-cmd="sqlite"></pre><button type="button" class="copy-btn" data-copy>{t(lang, 'code.copy')}</button></div>
+      </li>
+      <li>
+        <p>{k('steps.install')}</p>
+        <div class="code"><pre data-borg-cmd="install"></pre><button type="button" class="copy-btn" data-copy>{t(lang, 'code.copy')}</button></div>
+      </li>
+      <li>
+        <p>{k('steps.init')}</p>
+        <div class="code"><pre data-borg-cmd="init"></pre><button type="button" class="copy-btn" data-copy>{t(lang, 'code.copy')}</button></div>
+      </li>
+      <li>
+        <p>{k('steps.test')}</p>
+        <div class="code"><pre data-borg-cmd="test"></pre><button type="button" class="copy-btn" data-copy>{t(lang, 'code.copy')}</button></div>
+      </li>
+    </ol>
+    <p class="links">
+      <a href={backupGuide}>{k('link.backup')}</a>
+      <a href={restoreGuide}>{k('link.restore')}</a>
+    </p>
+  </section>
+</div>
+
+<script>
+  import { appDataDir, placeholders, type Setup } from '../../config/site';
+  import { renderCode, PH_RE } from '../../lib/highlight';
+  import { applyPlaceholders, getSetup } from '../../client/store';
+  import { download, getStack, setStack } from '../../client/stack';
+  import { defaultOptions, generate, needsSqlite, type BorgOptions, type BorgRepo, type BorgService, type DbInfo, type DbMode } from '../../lib/tools/borgmatic';
+
+  const root = document.querySelector<HTMLElement>('[data-borg]');
+  if (root) init(root);
+
+  function init(root: HTMLElement) {
+    const form = root.querySelector<HTMLFormElement>('[data-borg-form]')!;
+    const services: { id: string; name: string; db: DbInfo }[] = JSON.parse(root.querySelector('[data-borg-services]')!.textContent!);
+    const texts: Record<string, string> = JSON.parse(root.querySelector('[data-borg-texts]')!.textContent!);
+    const repoBox = root.querySelector<HTMLElement>('[data-borg-repos]')!;
+    const repoTpl = root.querySelector<HTMLTemplateElement>('[data-borg-repo-tpl]')!;
+    const modeNotes = root.querySelector<HTMLTemplateElement>('[data-borg-mode-notes]')!;
+    const modeNote = root.querySelector<HTMLElement>('[data-borg-mode-note]')!;
+    const STORE = 'yhl-borgmatic';
+    const dbIds = services.map((s) => s.id);
+    let yamlText = '';
+    let repoSeq = 0;
+
+    const field = <T extends HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(name: string) => form.elements.namedItem(name) as T | null;
+    const val = (name: string) => field(name)?.value ?? '';
+    const checked = (name: string) => (field<HTMLInputElement>(name) as HTMLInputElement | null)?.checked ?? false;
+    const lines = (s: string) => s.split('\n').map((x) => x.trim()).filter(Boolean);
+
+    // ---------- Placeholders ----------
+    const values = (s: Setup) => {
+      const v: Record<string, string> = {};
+      for (const [ph, key] of Object.entries(placeholders)) v[ph] = String(s[key as keyof Setup]);
+      return v;
+    };
+    const fill = (text: string, s: Setup) =>
+      text.replace(PH_RE, (m, ph: string, arg?: string) => (arg !== undefined ? appDataDir(s, arg) : ((values(s) as Record<string, string>)[ph] ?? m)));
+    const show = (pre: HTMLElement, code: string, s: Setup) => {
+      pre.innerHTML = renderCode(code, { values: values(s) });
+      applyPlaceholders(pre, s);
+    };
+    const dataRootOutside = (s: Setup) => {
+      if (s.dataMode !== 'central') return false;
+      const r = s.root.replace(/\/+$/, '');
+      const d = s.dataRoot.replace(/\/+$/, '');
+      return d !== r && !d.startsWith(r + '/');
+    };
+
+    // ---------- Repositories ----------
+    function addRepo(r: BorgRepo) {
+      const node = repoTpl.content.firstElementChild!.cloneNode(true) as HTMLElement;
+      const group = `repo-kind-${repoSeq++}`;
+      node.querySelectorAll<HTMLInputElement>('input[type=radio]').forEach((i) => {
+        i.name = group;
+        i.checked = i.value === r.kind;
+      });
+      node.querySelectorAll<HTMLInputElement>('[data-f]').forEach((i) => {
+        const f = i.dataset.f!;
+        i.value = (f === 'rpath' ? (r.kind === 'ssh' ? r.path : '') : f === 'path' ? (r.kind === 'local' ? r.path : '') : (r as unknown as Record<string, string>)[f]) ?? '';
+      });
+      repoBox.append(node);
+      syncRepos();
+    }
+    function readRepos(): BorgRepo[] {
+      return Array.from(repoBox.querySelectorAll<HTMLElement>('.repo'), (el) => {
+        const g = (f: string) => el.querySelector<HTMLInputElement>(`[data-f="${f}"]`)!.value;
+        const kind = (el.querySelector<HTMLInputElement>('input[type=radio]:checked')?.value ?? 'local') as BorgRepo['kind'];
+        return { kind, label: g('label'), path: kind === 'ssh' ? g('rpath') : g('path'), user: g('user'), host: g('host'), port: g('port'), url: g('url') };
+      });
+    }
+    function syncRepos() {
+      const all = repoBox.querySelectorAll<HTMLElement>('.repo');
+      all.forEach((el) => {
+        const kind = el.querySelector<HTMLInputElement>('input[type=radio]:checked')?.value ?? 'local';
+        el.querySelectorAll<HTMLElement>('[data-for]').forEach((x) => (x.hidden = x.dataset.for !== kind));
+        el.querySelector<HTMLElement>('[data-rm]')!.hidden = all.length < 2;
+      });
+    }
+    repoBox.addEventListener('click', (e) => {
+      const rm = (e.target as Element).closest('[data-rm]');
+      if (!rm) return;
+      rm.closest('.repo')!.remove();
+      syncRepos();
+      update();
+    });
+    root.querySelector('[data-borg-add-repo]')!.addEventListener('click', () => {
+      addRepo({ kind: 'ssh', label: `remote${repoBox.children.length > 1 ? repoBox.children.length : ''}`, path: './borg', user: 'backup', host: '' });
+      update();
+      repoBox.querySelector<HTMLInputElement>('.repo:last-child [data-f="host"]')?.focus();
+    });
+
+    // ---------- Services ----------
+    function syncServices() {
+      let note = '';
+      root.querySelectorAll<HTMLElement>('[data-svc]').forEach((li) => {
+        const on = li.querySelector<HTMLInputElement>('input[name=svc]')!.checked;
+        const mode = li.querySelector<HTMLElement>('.svc-mode')!;
+        mode.hidden = !on;
+        li.classList.toggle('on', on);
+      });
+      const modes = new Set(readServices().map((s) => s.mode));
+      const hint = (m: string) => (modeNotes.content.querySelector(`[data-m="${m}"]`)?.textContent ?? '') + ' ';
+      for (const m of ['stop', 'sqlite', 'none'] as DbMode[]) if (modes.has(m)) note += hint(m);
+      // Stopping the notification or proxy stack can make the "finish" ping fail
+      const notifyStacks = ['uptime-kuma', 'ntfy', 'nginx-proxy-manager', 'traefik', 'caddy'];
+      if ((checked('kuma') || checked('ntfy')) && readServices().some((s) => s.mode === 'stop' && notifyStacks.includes(s.id))) note += hint('notify');
+      modeNote.textContent = note.trim();
+      modeNote.hidden = !note.trim();
+      root.querySelector<HTMLElement>('[data-borg-immich]')!.hidden = !(checkedIds().includes('immich') || getStack().includes('immich'));
+    }
+    const checkedIds = () => Array.from(form.querySelectorAll<HTMLInputElement>('input[name=svc]:checked'), (i) => i.value);
+    const readServices = (): BorgService[] =>
+      services.filter((s) => checkedIds().includes(s.id)).map((s) => ({ id: s.id, name: s.name, db: s.db, mode: val(`mode_${s.id}`) as DbMode }));
+    function applyStack() {
+      const stack = getStack();
+      const pick = stack.filter((id) => dbIds.includes(id));
+      // No DB service in the shared selection: preselect all services with a database
+      const sel = pick.length || stack.length ? pick : dbIds;
+      form.querySelectorAll<HTMLInputElement>('input[name=svc]').forEach((i) => (i.checked = sel.includes(i.value)));
+    }
+
+    // ---------- Options ----------
+    function readOptions(s: Setup): BorgOptions {
+      const excludes = lines(val('excludes'));
+      if (checked('immichThumbs') && !root.querySelector<HTMLElement>('[data-borg-immich]')!.hidden) excludes.push('__DATA(immich)__/upload/thumbs');
+      if (checked('immichVideo') && !root.querySelector<HTMLElement>('[data-borg-immich]')!.hidden) excludes.push('__DATA(immich)__/upload/encoded-video');
+      const num = (n: string) => Math.max(0, Math.min(999, parseInt(val(n), 10) || 0));
+      return {
+        ...defaultOptions(),
+        dataRoot: dataRootOutside(s),
+        extraSources: lines(val('extraSources')),
+        excludeCaches: checked('excludeCaches'),
+        excludes,
+        repos: readRepos(),
+        passphraseFile: val('passphraseFile'),
+        compression: val('compression'),
+        archiveNameFormat: val('archiveNameFormat'),
+        keep: { daily: num('keep_daily'), weekly: num('keep_weekly'), monthly: num('keep_monthly'), yearly: num('keep_yearly') },
+        checkFrequency: val('checkFrequency'),
+        dataCheckFrequency: val('dataCheckFrequency'),
+        services: readServices(),
+        uptimeKuma: checked('kuma') ? val('kumaUrl').trim() || texts.kumaDefault : '',
+        ntfy: checked('ntfy') ? { server: val('ntfyServer').trim() || texts.ntfyDefault, topic: val('ntfyTopic').trim() || 'backups', token: val('ntfyToken'), onSuccess: checked('ntfySuccess') } : null,
+        healthchecks: checked('hc') ? val('hcUrl').trim() || 'https://hc-ping.com/YOUR-UUID' : '',
+      };
+    }
+
+    // ---------- Persistence (per browser, convenience only) ----------
+    function save() {
+      const d: Record<string, unknown> = { repos: readRepos() };
+      for (const el of Array.from(form.elements) as HTMLInputElement[]) {
+        if (!el.name || el.name === 'svc' || el.type === 'radio') continue;
+        d[el.name] = el.type === 'checkbox' ? el.checked : el.value;
+      }
+      try {
+        localStorage.setItem(STORE, JSON.stringify(d));
+      } catch {}
+    }
+    function load() {
+      let d: Record<string, unknown> = {};
+      try {
+        d = JSON.parse(localStorage.getItem(STORE) ?? '{}') ?? {};
+      } catch {}
+      for (const el of Array.from(form.elements) as HTMLInputElement[]) {
+        if (!el.name || !(el.name in d)) continue;
+        if (el.type === 'checkbox') el.checked = !!d[el.name];
+        else if (el.tagName === 'SELECT') {
+          if (Array.from((el as unknown as HTMLSelectElement).options).some((o) => o.value === d[el.name])) el.value = String(d[el.name]);
+        } else el.value = String(d[el.name] ?? '');
+      }
+      const repos = Array.isArray(d.repos) && d.repos.length ? (d.repos as BorgRepo[]) : defaultOptions().repos;
+      repos.forEach(addRepo);
+    }
+
+    // ---------- Render ----------
+    function update() {
+      const s = getSetup();
+      syncServices();
+      root.querySelectorAll<HTMLElement>('[data-sub]').forEach((el) => (el.hidden = !checked(el.dataset.sub!)));
+      const o = readOptions(s);
+      yamlText = generate(o);
+      show(root.querySelector('[data-borg-yaml]')!, yamlText, s);
+
+      const src = root.querySelector<HTMLElement>('[data-borg-sources]')!;
+      src.innerHTML = '';
+      const chip = (ph: string, title?: string) => {
+        const c = document.createElement('span');
+        c.className = 'chip';
+        const b = document.createElement('b');
+        b.textContent = ph;
+        b.dataset.ph = ph.replace(/^__|__$/g, '');
+        c.append(b);
+        if (title) c.append(' ' + title);
+        src.append(c);
+      };
+      chip('__ROOT__');
+      if (o.dataRoot) chip('__DATA_ROOT__', texts.dataRoot);
+      applyPlaceholders(src, s);
+
+      const pass = o.passphraseFile.trim() || '/etc/borgmatic/passphrase';
+      const dir = pass.replace(/\/[^/]*$/, '') || '/etc/borgmatic';
+      const cmds: Record<string, string> = {
+        passphrase: `sudo mkdir -p ${dir}\nsudo chmod 700 ${dir}\nopenssl rand -base64 32 | sudo tee ${pass} > /dev/null\nsudo chmod 600 ${pass}`,
+        sqlite: 'sudo apt install sqlite3',
+        install: 'sudo mkdir -p /etc/borgmatic\nsudo install -m 600 config.yaml /etc/borgmatic/config.yaml\nsudo borgmatic config validate',
+        init: 'sudo borgmatic repo-create --encryption repokey\nsudo borgmatic key export',
+        test: 'sudo borgmatic create --verbosity 1 --list --stats\nsudo borgmatic repo-list',
+      };
+      for (const [key, code] of Object.entries(cmds)) show(root.querySelector(`[data-borg-cmd="${key}"]`)!, code, s);
+      root.querySelector<HTMLElement>('[data-borg-sqlite-step]')!.hidden = !needsSqlite(o);
+      save();
+    }
+
+    let ownStack = false;
+    form.addEventListener('submit', (e) => e.preventDefault());
+    form.addEventListener('input', update);
+    form.addEventListener('change', (e) => {
+      const t = e.target as HTMLInputElement;
+      if (t.name === 'svc') {
+        const others = getStack().filter((id) => !dbIds.includes(id));
+        ownStack = true;
+        setStack([...others, ...checkedIds()]);
+        ownStack = false;
+      }
+      if (t.type === 'radio') syncRepos();
+      update();
+    });
+    root.querySelector('[data-borg-download]')!.addEventListener('click', () => download('config.yaml', fill(yamlText, getSetup()), 'application/yaml'));
+    document.addEventListener('yhl:setup', update);
+    document.addEventListener('yhl:stack', () => {
+      if (ownStack) return;
+      applyStack();
+      update();
+    });
+
+    load();
+    applyStack();
+    update();
+  }
+</script>
+
+<style>
+  .borg { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .form { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .sec { border: none; margin: 0; padding: 22px 24px 24px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  legend { float: left; width: 100%; padding: 0; margin-bottom: 2px; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+  legend + * { clear: both; }
+  label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text-4); min-width: 0; overflow-wrap: anywhere; }
+  input:not([type='radio'], [type='checkbox']), select, textarea {
+    border: 1.5px solid var(--line-2); border-radius: 12px; padding: 0 14px; font-family: var(--mono); font-size: 13.5px;
+    color: var(--accent-600); background: #f7fafc; min-width: 0; width: 100%;
+  }
+  input:not([type='radio'], [type='checkbox']), select { height: 42px; }
+  textarea { padding: 10px 14px; line-height: 1.5; resize: vertical; }
+  input:focus-visible, select:focus-visible, textarea:focus-visible { border-color: var(--accent); outline: 2px solid var(--ring, var(--accent)); outline-offset: 1px; }
+  .hint { font-size: 13px; font-weight: 400; color: var(--muted); line-height: 1.5; }
+  .note { font-size: 13.5px; line-height: 1.5; padding: 10px 14px; border-radius: 12px; background: var(--warn-bg); color: var(--warn-fg); }
+  .lbl { font-size: 13px; font-weight: 600; color: var(--text-4); }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chips :global(.chip) { overflow-wrap: anywhere; }
+  .check { flex-direction: row; align-items: center; gap: 10px; font-weight: 500; color: var(--text-2); font-size: 14px; cursor: pointer; }
+  .check input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; margin: 0; }
+  .check input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .immich { display: flex; flex-direction: column; gap: 8px; }
+  .immich[hidden], .sub[hidden], [data-for][hidden], .svc-mode[hidden], .rm[hidden] { display: none; }
+  .sub { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 6px 28px; }
+
+  .repos { display: flex; flex-direction: column; gap: 12px; }
+  .repo { border: 1.5px solid var(--line-2); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .repo-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .kinds { display: flex; gap: 8px; flex-wrap: wrap; }
+  .opt { flex-direction: row; position: relative; }
+  .opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .opt span { border: 1.5px solid var(--line-2); background: #fff; color: var(--text-2); border-radius: 999px; padding: 7px 14px; font-size: 13.5px; font-weight: 400; cursor: pointer; }
+  .opt input:checked + span { border-color: var(--accent); background: var(--accent-50); color: var(--accent-600); font-weight: 600; }
+  .opt input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .rm { font-size: 13.5px; }
+  .repo-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .f-path, .f-wide { grid-column: span 2; }
+
+  .svcs { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+  .svc { border: 1.5px solid var(--line-2); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; background: #fff; }
+  .svc.on { border-color: var(--accent); background: var(--accent-50); }
+  .svc-pick { flex-direction: row; align-items: center; gap: 10px; cursor: pointer; color: var(--text); font-size: 14.5px; }
+  .svc-pick input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; margin: 0; }
+  .svc-pick input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .svc-pick :global(.svc-logo) { width: 28px; height: 28px; flex: none; }
+  .svc-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .svc-mode select { height: 38px; font-family: inherit; font-size: 13.5px; background: #fff; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  .out { padding: 22px 24px 24px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .out-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .h-out { font-family: var(--mono); font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+  .h-steps { font-size: 17px; font-weight: 700; margin-top: 8px; }
+  .steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 14px; }
+  .steps li { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .steps li[hidden] { display: none; }
+  .steps p { font-size: 14.5px; line-height: 1.55; }
+  .links { display: flex; gap: 8px 20px; flex-wrap: wrap; font-size: 14.5px; font-weight: 600; }
+
+  @media (max-width: 600px) {
+    .sec, .out { padding: 18px 16px 20px; }
+    .grid4 { grid-template-columns: 1fr 1fr; }
+    .f-path, .f-wide { grid-column: 1 / -1; }
+    .sub { padding-left: 0; }
+    .svcs { grid-template-columns: 1fr; }
+  }
+</style>

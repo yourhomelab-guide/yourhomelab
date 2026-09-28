@@ -1,0 +1,93 @@
+---
+slug: die-ersten-30-tage
+title: "Die ersten 30 Tage"
+description: "Ein Fahrplan für deinen ersten Monat: in vier Wochen vom leeren Rechner zu einem abgesicherten Server mit Docker, eigener Domain und getestetem Backup. Dazu die Dinge, die du getrost auf später verschieben kannst."
+level: 1
+related: [what-is-self-hosting, is-it-worth-it, operating-models, backup-strategies]
+practice: choosing-hardware
+---
+
+## Warum ein Fahrplan hilft
+
+Am Anfang ist alles spannend. Du siehst Screenshots von Dashboards mit zwanzig Diensten, liest von Proxmox-Clustern und Kubernetes und willst am liebsten alles auf einmal. Genau das ist der häufigste Grund, warum Homelabs nach ein paar Wochen wieder im Schrank landen: zu viel gleichzeitig, nichts richtig verstanden, und beim ersten Fehler weiß man nicht, wo man suchen soll.
+
+Der Fahrplan hier ist bewusst langsam. Jede Woche baut auf der vorherigen auf, und am Ende des Monats hast du ein Fundament, auf dem du jahrelang weiterbauen kannst. Plane pro Woche zwei bis drei Abende oder einen halben Tag am Wochenende ein. Brauchst du länger, ist das völlig in Ordnung.
+
+Noch unsicher, wo du überhaupt anfangen sollst? Der [Einstiegs-Assistent](/de/werkzeuge/einstiegs-assistent/) stellt dir ein paar Fragen und schlägt dir einen passenden Weg vor.
+
+## Vor dem Start: eine Entscheidung
+
+Bevor die erste Woche beginnt, klärst du, **wo** dein Server läuft: zuhause, gemietet oder beides. Hilfe dabei geben [Cloud, Hybrid oder Lokal?](/de/nachschlagen/cloud-hybrid-lokal/) und die [Hardware-Übersicht](/de/nachschlagen/hardware-uebersicht/). Für den Einstieg reicht oft ein gebrauchter Mini-PC oder ein alter Laptop. Kaufe noch nichts Großes. Was du wirklich brauchst, weißt du erst nach ein paar Monaten.
+
+## Woche 1: das Fundament
+
+Ziel dieser Woche: Ein Linux-Server läuft, hat eine feste Adresse im Heimnetz, und nur du kommst per SSH-Schlüssel darauf.
+
+1. [Hardware auswählen](/de/einrichten/hardware-auswaehlen/)
+2. [Betriebssystem installieren](/de/einrichten/betriebssystem-installieren/)
+3. [Feste IP & Hostname](/de/einrichten/feste-ip-hostname/)
+4. [SSH-Schlüssel einrichten](/de/einrichten/ssh-schluessel/)
+5. [Benutzer & sudo](/de/einrichten/benutzer-sudo/)
+6. [SSH härten](/de/einrichten/ssh-haerten/)
+7. [Firewall mit UFW](/de/einrichten/firewall-ufw/)
+8. [Automatische Updates](/de/einrichten/automatische-updates/)
+
+Das klingt nach wenig Homelab und viel Pflicht. Aber diese Schritte machst du genau einmal, und danach musst du dir um die Basis kaum noch Gedanken machen.
+
+## Woche 2: Docker und der erste Dienst
+
+Ziel: Docker läuft, deine Ordnerstruktur steht, und ein erster Dienst ist im Heimnetz erreichbar.
+
+1. [Docker installieren](/de/einrichten/docker-installieren/)
+2. [Verzeichnisstruktur anlegen](/de/einrichten/verzeichnisstruktur-anlegen/)
+3. [Erster Stack mit Compose](/de/einrichten/erster-stack/)
+4. [.env & Secrets](/de/einrichten/env-secrets/)
+
+Nimm als ersten Dienst etwas, das nicht wehtut, wenn es kaputtgeht, zum Beispiel [Uptime Kuma](/de/dienste/uptime-kuma/). Starte ihn, stoppe ihn, lösch den Container und starte ihn neu. So lernst du, dass deine Daten den Container überleben, weil sie im Stack-Ordner liegen. Zum Nachlesen passen [Was ist Docker?](/de/nachschlagen/was-ist-docker/) und [Docker Compose](/de/nachschlagen/docker-compose/).
+
+## Woche 3: Zugriff mit Domain und HTTPS
+
+Ziel: Deine Dienste haben schöne Namen wie `status.__DOMAIN__`, ein gültiges Zertifikat, und du erreichst sie auch unterwegs.
+
+1. [Domain & DNS](/de/einrichten/domain-dns/)
+2. [Reverse Proxy mit Traefik](/de/einrichten/reverse-proxy-traefik/) oder, wenn du lieber klickst, [mit Nginx Proxy Manager](/de/einrichten/reverse-proxy-npm/)
+3. [VPN mit WireGuard](/de/einrichten/vpn-wireguard/) für den Zugriff von unterwegs
+
+Öffne am Anfang möglichst wenig ins Internet. Ein VPN ist für den Start der sicherste Weg: Deine Dienste bleiben privat, und nur der VPN-Zugang ist von außen erreichbar. Welcher Weg zu deinem Anschluss passt, zeigt der [Vergleich der Zugriffswege](/de/nachschlagen/zugriffswege-vergleich/). Hast du keine eigene öffentliche IPv4-Adresse, lies vorher [CGNAT & DS-Lite](/de/nachschlagen/cgnat-ds-lite/).
+
+## Woche 4: Backup, Restore und Überblick
+
+Ziel: Dein Homelab-Ordner wird jede Nacht gesichert, du hast einmal erfolgreich wiederhergestellt, und du merkst, wenn etwas ausfällt.
+
+1. [Backups mit borgmatic](/de/einrichten/backups-borgmatic/)
+2. [Restore testen](/de/einrichten/restore-testen/)
+3. [Uptime Kuma](/de/einrichten/uptime-kuma/) oder [Monitoring mit Beszel](/de/einrichten/monitoring-beszel/)
+4. [Notfallplan](/de/einrichten/notfallplan/): das Notfall-Blatt ausfüllen
+
+<Callout type="warning" title="Erst das Backup, dann die wichtigen Daten">
+Zieh Passwörter, Fotos oder Dokumente erst auf den Server, wenn dein Backup läuft und du einen Restore ausprobiert hast. Vorher ist dein Homelab ein Spielplatz, danach darf es wichtig werden.
+</Callout>
+
+Schreib dir außerdem auf, was du gebaut hast. Das [Doku-Export-Werkzeug](/de/werkzeuge/doku-export/) nimmt dir dabei einen Teil der Arbeit ab. Warum sich das lohnt, steht unter [Dokumentation](/de/nachschlagen/dokumentation/).
+
+## Was du erst mal weglassen kannst
+
+Vieles ist spannend, aber im ersten Monat überflüssig. Nichts davon ist schlecht. Es ist nur zu früh.
+
+- **Proxmox, Cluster und mehrere Server.** Ein Rechner mit Linux und Docker reicht für Dutzende Dienste. Virtualisierung lohnt sich, wenn du weißt, wofür du sie brauchst. Mehr unter [Betriebsmodelle](/de/nachschlagen/betriebsmodelle/).
+- **Kubernetes.** Für ein Homelab mit einem Server bringt es viel Komplexität und kaum Vorteile.
+- **Single Sign-On und CrowdSec.** Login-Schutz mit [Pocket ID](/de/einrichten/pocket-id/) oder [Tinyauth](/de/einrichten/tinyauth/) wird wichtig, sobald du Dienste öffentlich erreichbar machst. Vorher reicht das VPN.
+- **Automatische Deployments.** [Portainer](/de/einrichten/portainer-dockhand/), [Git-Deployments](/de/einrichten/git-deployments-forgejo/) und [Renovate](/de/einrichten/updates-renovate/) sind praktisch, wenn du viele Stacks pflegst. Mit drei Diensten ist `docker compose pull` schneller erklärt.
+- **Teure Hardware, RAID und 10-Gigabit-Netz.** Ein RAID ersetzt kein Backup, und für die ersten Dienste reicht fast jeder Rechner aus den letzten zehn Jahren.
+- **Zwanzig Dienste auf einmal.** Nimm dir einen neuen Dienst pro Woche vor und lerne ihn richtig kennen.
+
+## Ein paar Faustregeln
+
+- **Eine Änderung nach der anderen.** Geht etwas schief, weißt du dann genau, woran es lag.
+- **Notizen machen.** Welche Befehle hast du ausgeführt, was hat nicht geklappt? In drei Monaten weißt du es sonst nicht mehr.
+- **Nicht alles verstehen müssen.** Kopiere keine Befehle blind, aber du musst auch nicht jedes Detail kennen, bevor du weitermachst. Das [Glossar](/de/nachschlagen/glossar/) hilft bei unbekannten Begriffen.
+- **Pausen sind erlaubt.** Ein Server, der eine Woche einfach läuft, ist ein gutes Zeichen.
+
+## Und nach den 30 Tagen?
+
+Jetzt kommt der Teil, für den du das alles gebaut hast. Unter [Erste Anwendungen](/de/einrichten/#anwendungen) findest du Guides für Dienste wie Werbeblocker, Dashboard oder Fotoverwaltung, und im [Dienste-Katalog](/de/dienste/) fertige Vorlagen. Du willst sehen, was andere gebaut haben? Dann schau bei den [Homelabs](/de/homelabs/) vorbei.

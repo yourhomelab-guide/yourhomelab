@@ -1,0 +1,163 @@
+---
+slug: adguard-home
+title: "Werbeblocker mit AdGuard Home"
+description: "AdGuard Home läuft als DNS-Server in deinem Heimnetz und blockiert Werbung und Tracker für alle Geräte gleichzeitig: Handy, Laptop, Smart-TV. Am Ende verteilt dein Router den Server als DNS, und du weißt, wie du Ausfälle abfängst."
+level: 2
+minutes: 30
+requires: [Feste IP, Docker Compose, Reverse Proxy, Zugang zum Router]
+services: [adguard-home]
+---
+
+Jedes Gerät fragt ständig nach Adressen: Wo liegt `example.com`, wo `ads.irgendwas.net`? Diese Fragen beantwortet ein **DNS-Server** (Domain Name System, das „Telefonbuch“ des Internets, siehe [DNS & Domains](/de/nachschlagen/dns-domains/)). Normalerweise ist das dein Router oder dein Internetanbieter.
+
+[AdGuard Home](https://github.com/AdguardTeam/AdGuardHome) übernimmt diese Rolle in deinem Heimnetz. Fragt ein Gerät nach einer bekannten Werbe- oder Tracking-Adresse, antwortet AdGuard Home mit „gibt es nicht“. Die Werbung wird gar nicht erst geladen. Das wirkt auf allen Geräten, auch dort, wo du keinen Werbeblocker installieren kannst, etwa auf dem Smart-TV oder in Apps. Nebenbei siehst du, welches Gerät wann wohin telefoniert.
+
+<Callout title="Was AdGuard Home nicht kann">
+Ein DNS-Blocker sieht nur Domainnamen, nicht den Inhalt einer Seite. Werbung, die von derselben Adresse kommt wie der eigentliche Inhalt (zum Beispiel bei YouTube), rutscht durch. Für den Browser ist ein zusätzlicher Blocker wie uBlock Origin deshalb weiterhin sinnvoll.
+</Callout>
+
+<OneWay />
+
+Die bekannteste Alternative ist [Pi-hole](https://pi-hole.net). Es macht im Kern dasselbe und hat eine große Community. AdGuard Home bringt verschlüsseltes DNS (DNS-over-HTTPS) und eine moderne Oberfläche ohne Zusatzpakete mit und läuft als ein einziger Container. Beide sind eine gute Wahl, die Schritte hier gelten für AdGuard Home.
+
+<Steps>
+
+<Step title="Port 53 freimachen (nur Ubuntu)">
+DNS läuft über **Port 53**, per UDP und TCP. Diesen Port muss der Container auf dem Server belegen, damit andere Geräte ihn erreichen. Unter Ubuntu lauscht dort aber schon **systemd-resolved**: Das ist der Dienst, der für den Server selbst Namen auflöst. Er startet einen kleinen lokalen DNS-Server, den **Stub-Listener**, auf der Adresse `127.0.0.53:53`. Docker kann Port 53 dann nicht veröffentlichen und bricht mit `address already in use` ab.
+
+Prüfe zuerst, ob der Port belegt ist:
+
+```bash
+sudo ss -tulpn | grep ':53 '
+```
+
+Kommt keine Ausgabe, ist der Port frei und du springst zum nächsten Schritt. Unter Debian ist das der Normalfall, weil systemd-resolved dort meist gar nicht installiert ist. Siehst du `systemd-resolve`, schaltest du nur den Stub-Listener ab. systemd-resolved selbst läuft weiter.
+
+```bash
+sudo mkdir -p /etc/systemd/resolved.conf.d
+printf '[Resolve]\nDNSStubListener=no\n' | sudo tee /etc/systemd/resolved.conf.d/no-stub.conf
+sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+sudo systemctl restart systemd-resolved
+```
+
+Was die drei Befehle tun:
+
+- Die Datei in `/etc/systemd/resolved.conf.d/` setzt `DNSStubListener=no`. systemd-resolved öffnet `127.0.0.53:53` dann nicht mehr. Eine eigene Datei in diesem Ordner ist besser als die Hauptdatei zu ändern, weil Paket-Updates sie nicht überschreiben.
+- `/etc/resolv.conf` sagt allen Programmen, welchen DNS-Server sie fragen sollen. Unter Ubuntu zeigt sie standardmäßig auf den Stub (`nameserver 127.0.0.53`). Ohne Stub würde das ins Leere laufen. Der Link auf `/run/systemd/resolve/resolv.conf` trägt stattdessen direkt die echten DNS-Server ein, die du beim [Einrichten der festen IP](/de/einrichten/feste-ip-hostname/) festgelegt hast, meist deinen Router.
+- Der Neustart übernimmt die Einstellung.
+
+Prüfe danach, dass Port 53 frei ist und der Server weiterhin Namen auflöst:
+
+```bash
+sudo ss -tulpn | grep ':53 '
+ping -c1 debian.org
+```
+
+Der Server selbst fragt also weiter deinen Router oder einen öffentlichen DNS-Server, nicht AdGuard Home. Das ist Absicht: Läuft der Container einmal nicht, kann der Server trotzdem Updates und Images laden. Mehr zu belegten Ports steht unter [Port belegt](/de/nachschlagen/port-belegt/).
+</Step>
+
+<Step title="AdGuard Home starten">
+Lege den Ordner an und darin `compose.yaml` und `.env`:
+
+```bash
+mkdir -p __ROOT__/adguard-home
+cd __ROOT__/adguard-home
+```
+
+<ServiceFiles id="adguard-home" />
+
+In `data/conf` landet die Konfigurationsdatei `AdGuardHome.yaml`, in `data/work` Statistiken und das Abfrageprotokoll. Starte den Container:
+
+```bash
+docker compose up -d
+docker compose logs -f adguard-home
+```
+
+Mit `Strg+C` beendest du die Log-Anzeige.
+
+Port 53 ist jetzt im ganzen Netz erreichbar, an der Firewall vorbei (siehe [Firewall mit UFW](/de/einrichten/firewall-ufw/)). Im Heimnetz hinter dem Router ist das gewollt. **Gib Port 53 aber nie im Router frei** und betreibe AdGuard Home nicht so auf einem Server mit öffentlicher IP. Ein offener DNS-Server im Internet wird schnell für Angriffe auf Dritte missbraucht.
+</Step>
+
+<Step title="Einrichtungsassistent durchlaufen">
+Beim ersten Start zeigt AdGuard Home einen Einrichtungsassistenten auf Port 3000. Öffne `https://adguard.__DOMAIN__`. Ohne Reverse Proxy erreichst du ihn unter der IP deines Servers und dem Port aus der `compose.yaml`.
+
+Der wichtigste Punkt kommt auf der zweiten Seite:
+
+| Feld | Wert |
+| --- | --- |
+| Admin-Weboberfläche: Netzwerkschnittstelle | Alle Schnittstellen |
+| Admin-Weboberfläche: Port | **3000** (vorgeschlagen ist 80) |
+| DNS-Server: Netzwerkschnittstelle | Alle Schnittstellen |
+| DNS-Server: Port | 53 |
+
+Warum 3000? Der Assistent läuft auf Port 3000, die fertige Oberfläche standardmäßig auf Port 80. Dein Reverse Proxy leitet aber fest auf Port 3000 weiter. Bleibt die Oberfläche auf 3000, funktioniert dieselbe Adresse vor und nach der Einrichtung. „Alle Schnittstellen“ bezieht sich auf das Innere des Containers. Welche Ports von außen erreichbar sind, legt die `compose.yaml` fest.
+
+Danach legst du Benutzername und Passwort an. Nimm ein langes Passwort aus deinem Passwortmanager. Die letzte Seite erklärt, wie du Geräte einrichtest. Das machst du gleich über den Router.
+
+Hast du aus Versehen Port 80 gewählt, ist die Oberfläche nicht mehr erreichbar. Dann stoppst du den Container, änderst in `__DATA(adguard-home)__/conf/AdGuardHome.yaml` unter `http:` die Zeile `address: 0.0.0.0:80` in `address: 0.0.0.0:3000` und startest wieder:
+
+```bash
+cd __ROOT__/adguard-home
+docker compose stop
+sudo nano __DATA(adguard-home)__/conf/AdGuardHome.yaml
+docker compose start
+```
+</Step>
+
+<Step title="Upstream-DNS und Blocklisten wählen">
+AdGuard Home beantwortet nur, was es blockiert, selbst. Alle anderen Anfragen reicht es an einen **Upstream-DNS-Server** weiter. Unter „Einstellungen → DNS-Einstellungen“ ist bereits ein verschlüsselter Server eingetragen (DNS-over-HTTPS, erkennbar an `https://`). Dein Internetanbieter sieht dann nicht mehr, welche Namen du auflöst. Du kannst ihn so lassen oder einen anderen Anbieter eintragen. Mit „Upstreams testen“ prüfst du, ob er antwortet.
+
+Die eigentliche Arbeit machen die **Blocklisten**. Unter „Filter → DNS-Sperrlisten“ ist die „AdGuard DNS filter“-Liste schon aktiv. Über „Sperrliste hinzufügen → Aus der Liste auswählen“ kannst du weitere Listen per Häkchen ergänzen, zum Beispiel eine der HaGeZi-Listen. AdGuard Home aktualisiert sie automatisch.
+
+Mehr Listen heißt nicht automatisch besser. Jede Liste blockiert auch mal etwas, das du brauchst, etwa einen Link in einer Newsletter-Mail oder den Login einer App. Starte mit ein bis zwei Listen. Geht etwas nicht, suchst du die Adresse im „Abfrageprotokoll“ und gibst sie dort per Klick frei. AdGuard Home legt dafür eine Ausnahmeregel unter „Filter → Benutzerdefinierte Filterregeln“ an.
+</Step>
+
+<Step title="Direkt testen">
+Bevor du das ganze Netz umstellst, prüfst du den Server gezielt. Das Werkzeug `dig` fragt einen bestimmten DNS-Server. Es steckt im Paket `dnsutils`. Führe die Befehle auf dem Server oder auf einem anderen Linux-Rechner im Heimnetz aus und setze die IP deines Servers ein:
+
+```bash
+sudo apt install dnsutils
+dig @192.168.1.10 debian.org +short
+dig @192.168.1.10 doubleclick.net +short
+```
+
+Die erste Anfrage liefert normale IP-Adressen. Die zweite zielt auf eine bekannte Werbe-Domain und sollte `0.0.0.0` liefern: Sie wurde blockiert. Im „Abfrageprotokoll“ siehst du beide Anfragen. Unter Windows geht dasselbe mit `nslookup doubleclick.net 192.168.1.10`.
+
+Bekommst du keine Antwort (`connection timed out`), läuft der Container nicht oder Port 53 ist nicht veröffentlicht. Prüfe `docker compose ps` und die Logs.
+</Step>
+
+<Step title="Router als DNS-Verteiler einstellen">
+Damit alle Geräte AdGuard Home nutzen, soll der Router ihn verteilen. Die Geräte bekommen ihre Netzwerkeinstellungen per **DHCP** vom Router, darunter auch den DNS-Server. Trägst du dort die IP deines Servers ein, fragen alle Geräte automatisch AdGuard Home. Die Einstellung heißt je nach Router „Lokaler DNS-Server“, „DNS-Server für DHCP“ oder ähnlich.
+
+Bei einer **FRITZ!Box** findest du sie grob hier (je nach FRITZ!OS-Version leicht anders):
+
+- „Heimnetz → Netzwerk → Netzwerkeinstellungen → IP-Adressen → IPv4-Einstellungen“. Dort trägst du bei „Lokaler DNS-Server“ die IP deines Servers ein.
+- In den IPv6-Einstellungen daneben gibt es ein entsprechendes Feld für DNSv6. Nutzt dein Netz IPv6, verteilt die FRITZ!Box sonst weiter sich selbst als DNS-Server, und manche Geräte umgehen AdGuard Home darüber.
+
+Stell den DNS-Server **nicht** unter „Internet → Zugangsdaten → DNS-Server“ ein. Dann würden zwar auch alle Anfragen bei AdGuard Home landen, aber immer im Namen der FRITZ!Box. Du siehst im Protokoll nur noch ein einziges Gerät.
+
+Die Geräte übernehmen den neuen DNS-Server erst, wenn sie ihre DHCP-Einstellungen erneuern. Am schnellsten geht das, indem du WLAN kurz aus- und wieder einschaltest. Nach einigen Minuten tauchen die Geräte unter „Clients“ im Dashboard auf.
+
+Manche Geräte und Browser umgehen den DNS-Server des Routers, etwa mit fest eingestelltem verschlüsseltem DNS. Die tauchen dann nicht im Protokoll auf. Das ist normal und lässt sich nur am jeweiligen Gerät ändern.
+</Step>
+
+<Step title="Ausfall einplanen">
+Jetzt hängt das ganze Heimnetz an deinem Server. **Ist der Server aus oder der Container gestoppt, geht im Heimnetz kein DNS mehr.** Webseiten laden nicht, Apps melden „keine Verbindung“, obwohl das Internet eigentlich läuft. Das passiert schneller als gedacht: ein Update mit Neustart, ein Stromausfall, eine Wartung.
+
+Überleg dir deshalb vorher, was dann passieren soll:
+
+- **Zweiter DNS-Server im Router**: Viele Router erlauben einen zweiten Eintrag. Trägst du dort einen öffentlichen DNS-Server ein, läuft das Netz weiter, wenn AdGuard Home ausfällt. Der Haken: Geräte nutzen den zweiten Server nicht nur im Notfall, sondern auch zwischendurch. Dann kommt dort Werbung durch.
+- **Zweite AdGuard-Home-Instanz**: Eine zweite Instanz auf einem anderen Gerät, etwa einem Raspberry Pi, mit denselben Einstellungen. Beide IPs trägst du im Router ein. Das ist die sauberste Lösung, aber mehr Pflege.
+- **Notfallplan**: Du akzeptierst den Ausfall und schreibst dir auf, wie du im Router den DNS-Eintrag zurücksetzt. Leg diese Notiz so ab, dass auch jemand anderes aus deinem Haushalt sie findet (siehe [Dokumentation](/de/nachschlagen/dokumentation/)).
+
+Für den Anfang ist der Notfallplan in Ordnung. Nimm AdGuard Home außerdem in [Uptime Kuma](/de/einrichten/uptime-kuma/) auf. Der Monitortyp „DNS“ fragt den Server regelmäßig nach einem Namen und meldet sich, wenn keine Antwort kommt.
+</Step>
+
+</Steps>
+
+## Wie geht es weiter?
+
+- **Lokale Adressen**: Unter „Filter → DNS-Umschreibungen“ kannst du `*.__DOMAIN__` auf die interne IP deines Servers zeigen lassen. Geräte im Heimnetz erreichen deine Dienste dann direkt, ohne Umweg über das Internet.
+- **Clients benennen**: Unter „Einstellungen → Client-Einstellungen“ gibst du Geräten Namen und kannst für einzelne Geräte andere Regeln festlegen, etwa strengere Filter für Kindergeräte.
+- **Dashboard**: Die Zahl der blockierten Anfragen zeigt dir [Homepage](/de/einrichten/dashboard-homepage/) direkt auf deiner Startseite an.
+- **Backup**: Deine Einstellungen stecken in `__DATA(adguard-home)__/conf`. Sie werden mit dem Rest von `__ROOT__` [gesichert](/de/einrichten/backups-borgmatic/).

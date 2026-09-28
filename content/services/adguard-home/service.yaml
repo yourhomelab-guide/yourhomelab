@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: AdGuard Home
+category: network
+level: 2
+port: 3000
+hostPort: 3080
+subdomain: adguard
+subdomainOnly: true
+links:
+  repo: AdguardTeam/AdGuardHome
+  website: https://adguard.com/adguard-home/overview.html
+  docs: https://github.com/AdguardTeam/AdGuardHome/wiki
+upstream:
+  label: wiki/Docker
+  url: https://github.com/AdguardTeam/AdGuardHome/wiki/Docker
+resources:
+  ram: 100
+  gpu: no
+pairsWith: [homepage, uptime-kuma]

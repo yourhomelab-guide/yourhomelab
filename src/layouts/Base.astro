@@ -61,6 +61,7 @@ const uiJson = JSON.stringify(Object.fromEntries(uiKeys.map((k) => [k, t(lang, k
     <meta name="theme-color" content="#ffffff" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="sitemap" href="/sitemap-index.xml" />
+    <slot name="head" />
     <link rel="preload" href={onestLatin} as="font" type="font/woff2" crossorigin />
     <style set:html={fontCss}></style>
     {site.umami.websiteId && <script defer src={site.umami.src} data-website-id={site.umami.websiteId} data-domains={site.umami.domains} data-do-not-track="true" />}

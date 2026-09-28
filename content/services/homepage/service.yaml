@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: Homepage
+category: management
+level: 1
+port: 3000
+hostPort: 3002
+subdomain: home
+subdomainOnly: true
+links:
+  repo: gethomepage/homepage
+  website: https://gethomepage.dev
+  docs: https://gethomepage.dev/configs/
+upstream:
+  label: docs/installation/docker.md
+  url: https://gethomepage.dev/installation/docker/
+resources:
+  ram: 170
+  gpu: no
+pairsWith: [uptime-kuma, beszel, adguard-home]

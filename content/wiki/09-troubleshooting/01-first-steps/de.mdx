@@ -1,0 +1,147 @@
+---
+slug: fehlersuche-erste-schritte
+title: "Fehlersuche: erste Schritte"
+description: "Ein Dienst läuft nicht, und du weißt nicht, wo du anfangen sollst? Mit einer festen Reihenfolge aus wenigen Befehlen findest du die meisten Fehler in ein paar Minuten."
+level: 1
+related: [logs, docker-compose, docker-networks, backup-strategies]
+practice: first-stack
+---
+
+## Ruhe bewahren
+
+Fast jeder Fehler im Homelab hat eine Ursache, die irgendwo steht: im Log, im Status des Containers oder in der
+Konfiguration. Hektisches Herumprobieren macht es meistens schlimmer, weil du danach nicht mehr weißt, welche Änderung
+was bewirkt hat. Drei Regeln helfen:
+
+- **Erst lesen, dann ändern.** Schau dir Status und Logs an, bevor du etwas anfasst.
+- **Eine Änderung nach der anderen.** Ändere einen Wert, starte neu, prüfe. Hilft es nicht, mach es rückgängig.
+- **Backup vor Experimenten.** Bevor du an Daten oder Datenbanken gehst, sichere den Datenordner.
+  Eine schnelle Kopie reicht für den Moment:
+
+```bash
+cd __ROOT__/myapp
+docker compose stop
+sudo cp -a __DATA(myapp)__ __DATA(myapp)__.bak-$(date +%F)
+docker compose start
+```
+
+Ersetze `myapp` durch den Namen deines Stacks, zum Beispiel `vaultwarden`.
+
+## 1. Läuft der Container überhaupt?
+
+Wechsle in den Stack-Ordner und lass dir den Status aller Container anzeigen, auch der gestoppten:
+
+```bash
+cd __ROOT__/myapp
+docker compose ps -a
+```
+
+Achte auf die Spalte `STATUS`:
+
+| Status | Bedeutung |
+| --- | --- |
+| `Up 3 hours` | Läuft. Das Problem liegt eher beim Netzwerk oder Proxy. |
+| `Up 2 minutes (unhealthy)` | Läuft, aber der Healthcheck schlägt fehl. |
+| `Restarting (1) 5 seconds ago` | Stürzt ab und wird neu gestartet. Siehe [Neustart-Schleife](/de/nachschlagen/container-neustart-schleife/). |
+| `Exited (1) 10 minutes ago` | Beendet mit Fehlercode. Die Logs verraten, warum. |
+| `Exited (137)` | Hart beendet, oft wegen Speichermangel. |
+
+## 2. Logs lesen
+
+Die letzten Zeilen des Logs nennen fast immer den Grund:
+
+```bash
+docker compose logs --tail 50
+docker compose logs --tail 50 -f <service>
+```
+
+`-f` folgt dem Log live, beenden mit `Strg+C`. Such nach der **ersten** Fehlermeldung, nicht nach der letzten.
+Folgefehler verdecken oft die eigentliche Ursache. Mehr dazu im Artikel [Logs](/de/nachschlagen/logs/).
+
+## 3. Konfiguration prüfen
+
+Tippfehler in der `compose.yaml` oder fehlende Variablen in der `.env` sind sehr häufig. `docker compose config`
+liest beides ein und zeigt die fertige Konfiguration, so wie Docker sie sieht:
+
+```bash
+docker compose config
+```
+
+Fehlt eine Variable, siehst du eine Warnung wie diese:
+
+```text
+WARN[0000] The "DB_PASSWORD" variable is not set. Defaulting to a blank string.
+```
+
+<Callout type="warning" title="Enthält Secrets">
+  Die Ausgabe von `docker compose config` enthält deine Passwörter im Klartext. Poste sie nicht ungeprüft in Foren.
+</Callout>
+
+Du verstehst einen Abschnitt deiner `compose.yaml` nicht? Der [Compose-Erklärer](/de/werkzeuge/compose-erklaerer/)
+erklärt jede Zeile.
+
+## 4. Details mit docker inspect
+
+`docker inspect` zeigt alles, was Docker über einen Container weiß. Die volle Ausgabe ist lang, darum filterst du
+gezielt:
+
+```bash
+# Status, Exit-Code und ob der Speicher ausging
+docker inspect --format '{{.State.Status}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}}' <container>
+
+# In welchen Netzwerken hängt der Container?
+docker inspect --format '{{range $name, $net := .NetworkSettings.Networks}}{{$name}} {{end}}' <container>
+
+# Welche Ordner sind eingebunden?
+docker inspect --format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{println}}{{end}}' <container>
+```
+
+Den Containernamen zeigt `docker compose ps` in der ersten Spalte.
+
+## 5. Ports und Ressourcen
+
+Welche Ports belegt sind und von welchem Programm, zeigt `ss`:
+
+```bash
+sudo ss -tulpn
+```
+
+Dazu ein schneller Blick auf Speicherplatz und Auslastung:
+
+```bash
+df -h
+docker stats --no-stream
+```
+
+## Häufige Fehler im Überblick
+
+<Cards>
+  <Card title="Permission denied">
+    Der Container darf nicht in seinen Datenordner schreiben. [Zum Artikel](/de/nachschlagen/permission-denied/)
+  </Card>
+  <Card title="Port belegt">
+    `address already in use` beim Start. [Zum Artikel](/de/nachschlagen/port-belegt/)
+  </Card>
+  <Card title="Kein Zertifikat">
+    Der Browser warnt, der Proxy bekommt kein Let's-Encrypt-Zertifikat. [Zum Artikel](/de/nachschlagen/zertifikat-fehlt/)
+  </Card>
+  <Card title="Neustart-Schleife">
+    Der Container startet ständig neu. [Zum Artikel](/de/nachschlagen/container-neustart-schleife/)
+  </Card>
+  <Card title="Bad Gateway">
+    Der Proxy meldet 502, 504 oder 404. [Zum Artikel](/de/nachschlagen/bad-gateway/)
+  </Card>
+  <Card title="Datenbank startet nicht">
+    Nach einem Update passt die Datenbank-Version nicht mehr. [Zum Artikel](/de/nachschlagen/datenbank-version/)
+  </Card>
+  <Card title="Festplatte voll">
+    `no space left on device`. [Zum Artikel](/de/nachschlagen/festplatte-voll/)
+  </Card>
+</Cards>
+
+## Wenn du nicht weiterkommst
+
+- Kopiere die Fehlermeldung in eine Suchmaschine oder in die Issues des Projekts auf GitHub. Du bist selten der Erste.
+- Lies die Release Notes, wenn der Fehler nach einem Update auftrat. Breaking Changes stehen dort.
+- Fragst du in einem Forum, gib an: Image mit Tag, relevante Teile der `compose.yaml` (ohne Secrets) und die
+  Log-Zeilen rund um den ersten Fehler.

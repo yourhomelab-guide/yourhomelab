@@ -1,0 +1,101 @@
+---
+/**
+ * <Glossary /> – all entries of content/glossary/<lang>.yaml, sorted alphabetically, with an anchor per entry
+ * (`id="<id>"`). The remark plugin src/lib/remark-glossary.mjs links terms in articles and guides to these anchors.
+ */
+import { parse } from 'yaml';
+import de from '../../../content/glossary/de.yaml?raw';
+import en from '../../../content/glossary/en.yaml?raw';
+import { langFromUrl, t } from '../../lib/i18n';
+
+interface Entry {
+  id: string;
+  term: string;
+  aliases?: string[];
+  text: string;
+}
+
+const lang = langFromUrl(Astro.url);
+const entries = ((parse(lang === 'de' ? de : en) ?? []) as Entry[])
+  .slice()
+  .sort((a, b) => a.term.localeCompare(b.term, lang, { sensitivity: 'base' }));
+
+/** First letter without diacritics; digits and symbols are grouped under "#" */
+const letterOf = (s: string) => {
+  const c = s.normalize('NFD').replace(/[̀-ͯ]/g, '').charAt(0).toUpperCase();
+  return /[A-Z]/.test(c) ? c : '#';
+};
+const groups: { letter: string; items: Entry[] }[] = [];
+for (const e of entries) {
+  const l = letterOf(e.term);
+  if (groups.at(-1)?.letter !== l) groups.push({ letter: l, items: [] });
+  groups.at(-1)!.items.push(e);
+}
+const anchor = (l: string) => `glossary-${l === '#' ? '0-9' : l.toLowerCase()}`;
+
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+/** Minimal inline Markdown: `code`, **bold**, *italic*, [text](url) */
+const inline = (md: string) => {
+  const codes: string[] = [];
+  let s = esc(md).replace(/`([^`]+)`/g, (_, c) => `\u0000${codes.push(`<code>${c}</code>`) - 1}\u0000`);
+  s = s
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2">$1</a>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
+  return s.replace(/\u0000(\d+)\u0000/g, (_, i) => codes[Number(i)]);
+};
+---
+
+<div class="glossary">
+  <nav class="letters" aria-label={t(lang, 'glossary.letters')}>
+    {groups.map((g) => <a href={`#${anchor(g.letter)}`}>{g.letter}</a>)}
+  </nav>
+  {
+    groups.map((g) => (
+      <section class="group" aria-labelledby={anchor(g.letter)}>
+        <p class="letter" id={anchor(g.letter)}>{g.letter}</p>
+        <dl>
+          {g.items.map((e) => (
+            <div class="entry" id={e.id}>
+              <dt>
+                <a class="term" href={`#${e.id}`}>{e.term}</a>
+                {e.aliases?.length ? (
+                  <span class="aliases">
+                    {t(lang, 'glossary.aliases')} {e.aliases.join(', ')}
+                  </span>
+                ) : null}
+              </dt>
+              <dd set:html={inline(e.text)} />
+            </div>
+          ))}
+        </dl>
+      </section>
+    ))
+  }
+</div>
+
+<style>
+  .glossary { display: flex; flex-direction: column; gap: 26px; }
+  .letters { display: flex; flex-wrap: wrap; gap: 6px; }
+  .letters a {
+    min-width: 34px; height: 34px; display: inline-grid; place-items: center; border-radius: 10px;
+    background: var(--surface); color: var(--accent-700); font-weight: 650; font-size: 14px; text-decoration: none;
+  }
+  .letters a:hover { background: var(--accent-50); }
+  .group { display: flex; flex-direction: column; gap: 10px; }
+  .letter {
+    margin: 0; font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.01em;
+    scroll-margin-top: calc(var(--header-h) + 16px);
+  }
+  dl { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  .entry {
+    background: var(--surface); border-radius: 16px; padding: 16px 20px;
+    scroll-margin-top: calc(var(--header-h) + 16px); transition: box-shadow 0.2s;
+  }
+  .entry:target { box-shadow: var(--ring); }
+  dt { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+  .term { font-size: 17px; font-weight: 700; color: var(--text); text-decoration: none; }
+  .term:hover { color: var(--accent-700); }
+  .aliases { font-size: 13.5px; color: var(--muted); }
+  dd { margin: 6px 0 0; font-size: 15.5px; line-height: 1.6; color: var(--text-3); }
+</style>

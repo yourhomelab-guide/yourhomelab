@@ -1,0 +1,88 @@
+name: Homelab from issue
+
+# Turns a "Homelab vorstellen" issue (.github/ISSUE_TEMPLATE/homelab.yml) into content/homelabs/<id>/homelab.md
+# and opens (or updates) a pull request. If required fields are missing, it comments on the issue instead.
+# Issue text only reaches the script through environment variables, never through ${{ }} in shell code.
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+concurrency:
+  group: homelab-issue-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  entry:
+    if: >-
+      github.event.issue.state == 'open' &&
+      contains(github.event.issue.labels.*.name, 'homelab') &&
+      (github.event.action != 'labeled' || github.event.label.name == 'homelab')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      - name: Create homelab.md from the issue
+        id: parse
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+        run: node scripts/homelab-from-issue.mjs
+
+      - name: Open pull request
+        if: steps.parse.outcome == 'success'
+        id: pr
+        uses: peter-evans/create-pull-request@v8
+        with:
+          branch: homelab/issue-${{ github.event.issue.number }}
+          delete-branch: true
+          add-paths: content/homelabs/${{ steps.parse.outputs.slug }}/homelab.md
+          title: 'Homelab: ${{ steps.parse.outputs.name }}'
+          commit-message: 'Add homelab "${{ steps.parse.outputs.slug }}" (#${{ github.event.issue.number }})'
+          labels: homelab
+          body: |
+            Automatisch erstellt aus #${{ github.event.issue.number }} von @${{ github.event.issue.user.login }}.
+
+            Vor dem Merge prüfen:
+            - [ ] Keine echten Domains, IP-Adressen oder Geheimnisse (auch im Freitext)
+            - [ ] Texte, Sprache (`lang`) und Dienste-Liste passen
+            - [ ] `npm run build` läuft durch (PRs vom GitHub-Token starten die CI nicht automatisch)
+
+            Closes #${{ github.event.issue.number }}
+
+      - name: Comment on the issue
+        if: always() && (steps.parse.outcome == 'failure' || steps.pr.outputs.pull-request-number != '')
+        uses: actions/github-script@v8
+        env:
+          PARSE_ERROR: ${{ steps.parse.outputs.error }}
+          PR_NUMBER: ${{ steps.pr.outputs.pull-request-number }}
+          PR_OPERATION: ${{ steps.pr.outputs.pull-request-operation }}
+        with:
+          script: |
+            const { PARSE_ERROR, PR_NUMBER, PR_OPERATION } = process.env;
+            let body;
+            if (PARSE_ERROR || !PR_NUMBER) {
+              body = [
+                'Danke für dein Homelab! Leider konnten wir daraus noch keinen Eintrag machen:',
+                '',
+                PARSE_ERROR || '- Unbekannter Fehler, bitte schau in das Log der Action.',
+                '',
+                'Bearbeite das Issue einfach (oben rechts „…“ → „Edit“), dann versuchen wir es automatisch noch einmal.',
+                '',
+                '_Thanks for sharing your homelab! Some information is missing or invalid (see above). Edit the issue and we will try again automatically._',
+              ].join('\n');
+            } else if (PR_OPERATION === 'created') {
+              body = `Danke! Wir haben daraus einen Eintrag gemacht: #${PR_NUMBER}. Sobald er gemergt ist, erscheint dein Homelab auf der Website.\n\n_Thanks! Your entry is ready for review in #${PR_NUMBER}._`;
+            } else {
+              return; // PR updated after an edit: no new comment needed
+            }
+            await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });

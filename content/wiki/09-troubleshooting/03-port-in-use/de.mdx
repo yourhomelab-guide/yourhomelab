@@ -1,0 +1,118 @@
+---
+slug: port-belegt
+title: "Port belegt"
+description: "Docker kann einen Container nicht starten, weil ein anderes Programm den Port schon benutzt. Du findest heraus, wer ihn belegt, und gibst ihn frei oder weichst auf einen anderen Port aus."
+level: 2
+related: [ip-ports-nat, docker-networks, first-steps]
+practice: first-stack
+---
+
+## Symptom
+
+`docker compose up -d` bricht ab, der Container bleibt im Status `Created`. Die Meldung sieht je nach Docker-Version
+etwa so aus:
+
+```text
+Error response from daemon: driver failed programming external connectivity on endpoint pihole:
+Bind for 0.0.0.0:53 failed: port is already allocated
+```
+
+```text
+Error response from daemon: failed to bind port 0.0.0.0:80/tcp:
+listen tcp4 0.0.0.0:80: bind: address already in use
+```
+
+Die Zahl hinter dem Doppelpunkt ist der belegte Port auf dem Host.
+
+## Warum das passiert
+
+Ein Port auf dem Host kann nur von **einem** Programm gleichzeitig belegt werden. Mit `ports: - "80:80"` bittet der
+Container Docker, Port 80 des Hosts an ihn weiterzuleiten. Hört dort schon ein anderes Programm oder ein anderer
+Container, schlägt das fehl. Mehr zu Ports erklärt [IP, Ports & NAT](/de/nachschlagen/ip-ports-nat/).
+
+## Ursachen
+
+1. **Ein anderer Container nutzt den Port.** Etwa zwei Stacks, die beide `8080:8080` verwenden, oder ein alter
+   Container, der noch läuft.
+2. **Port 80 oder 443: ein Webserver auf dem Host.** Ein früher installierter Apache oder nginx, oder ein zweiter
+   Reverse Proxy.
+3. **Port 53: systemd-resolved.** Unter Ubuntu lauscht der lokale DNS-Dienst auf `127.0.0.53:53`. Das kollidiert mit
+   DNS-Diensten wie Pi-hole oder AdGuard Home.
+4. **Derselbe Port steht doppelt in der `compose.yaml`.**
+
+## Prüfen
+
+Wer belegt den Port? Ersetze `80` durch deinen Port:
+
+```bash
+sudo ss -tulpn | grep ':80 '
+```
+
+Die letzte Spalte nennt das Programm, zum Beispiel `users:(("nginx",pid=812,fd=6))`. Steht dort `docker-proxy`, ist es
+ein Container. Welcher, zeigt:
+
+```bash
+docker ps --filter publish=80
+```
+
+Ob ein Webserver als Systemdienst läuft:
+
+```bash
+systemctl status apache2 nginx
+```
+
+## Lösung
+
+### Anderer Container
+
+Beende den alten Container, oder gib dem neuen einen anderen Host-Port. Links steht der Port auf dem Host, rechts der
+im Container. Nur den linken änderst du:
+
+```yaml
+ports:
+  - "8081:8080"
+```
+
+Hinter einem Reverse Proxy brauchst du für Web-Dienste meist gar keine `ports:`. Der Proxy erreicht den Container über
+das Netzwerk `__NETWORK__`. Dann fällt der Konflikt ganz weg.
+
+### Alter Webserver auf Port 80/443
+
+Brauchst du ihn nicht mehr, stoppe und deaktiviere ihn:
+
+```bash
+sudo systemctl disable --now apache2
+# oder
+sudo systemctl disable --now nginx
+```
+
+Deinstallieren kannst du ihn danach mit `sudo apt remove apache2` bzw. `sudo apt remove nginx`.
+
+### Port 53 und systemd-resolved
+
+Du schaltest nur den lokalen DNS-Stub ab. Die Namensauflösung des Servers funktioniert danach weiter über die
+DNS-Server aus deinem Netz.
+
+```bash
+sudo mkdir -p /etc/systemd/resolved.conf.d
+printf '[Resolve]\nDNSStubListener=no\n' | sudo tee /etc/systemd/resolved.conf.d/no-stub.conf
+sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+sudo systemctl restart systemd-resolved
+```
+
+Prüfe danach mit `sudo ss -tulpn | grep ':53 '`, dass der Port frei ist, und mit `ping -c1 debian.org`, dass die
+Namensauflösung noch geht. Unter Debian ist systemd-resolved meist gar nicht installiert.
+
+### Auf eine bestimmte IP binden
+
+Hat der Server mehrere IP-Adressen, kann ein Dienst auch nur auf einer davon lauschen:
+
+```yaml
+ports:
+  - "192.168.1.10:53:53/udp"
+```
+
+## Denk an die Firewall
+
+Nutzt du einen neuen Port, der von außen erreichbar sein soll, gibst du ihn ggf. in UFW frei. Achtung: Von Docker
+veröffentlichte Ports umgehen UFW. Details stehen im Guide [Firewall mit UFW](/de/einrichten/firewall-ufw/).

@@ -75,7 +75,7 @@ creates `content/services/jellyfin/` from the template. Then:
 | Field | Required | Meaning |
 | --- | --- | --- |
 | `name` | yes | Display name |
-| `category` | yes | `proxy`, `management`, `data`, `code`, `auth` or `monitoring` |
+| `category` | yes | `proxy`, `management`, `network`, `data`, `media`, `code`, `auth` or `monitoring` |
 | `level` | | `1` beginner, `2` advanced, `3` pro |
 | `tag` | | Badge: `recommended`, `popular` or `new` |
 | `popular` | | `true` shows the service on the start page |
@@ -92,6 +92,9 @@ creates `content/services/jellyfin/` from the template. Then:
 | `links.website`, `links.docs` | yes | URLs |
 | `upstream.label`, `upstream.url` | | Where the official Compose file lives |
 | `reviewed` | | Date you last tested the template |
+| `resources.ram`, `resources.gpu` | | Typical RAM use of the whole stack in MB (normal use, not peak); GPU: `no`, `optional` or `recommended`. Used by the RAM planner and stack builder |
+| `db` | | Database for backup dumps: `type` (`postgres`, `mariadb`, `mysql`, `sqlite`), `service` (DB container in `compose.yaml`), `user`, `name` (literal or `${VAR}` from `.env`); for SQLite only `path` below the stack folder, e.g. `data/data/db.sqlite3` |
+| `pairsWith` | | Ids of services that go well with this one, shown as "Passt gut zu" |
 
 ### `compose.yaml` – the most important rule
 

@@ -13,6 +13,7 @@ import Steps from './Steps.astro';
 import Step from './Step.astro';
 import OneWay from './OneWayMdx.astro';
 import ServiceFiles from '../ServiceFiles.astro';
+import Glossary from './Glossary.astro';
 
 export const mdxComponents = {
   pre: CodeBlock,
@@ -26,4 +27,5 @@ export const mdxComponents = {
   Step,
   OneWay,
   ServiceFiles,
+  Glossary,
 };

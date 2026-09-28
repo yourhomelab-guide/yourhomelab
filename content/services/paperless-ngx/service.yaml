@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: Paperless-ngx
+category: data
+level: 2
+tag: popular
+popular: true
+port: 8000
+subdomain: paperless
+subdomainOnly: true
+links:
+  repo: paperless-ngx/paperless-ngx
+  website: https://docs.paperless-ngx.com
+  docs: https://docs.paperless-ngx.com
+upstream:
+  label: docker/compose/docker-compose.postgres.yml
+  url: https://github.com/paperless-ngx/paperless-ngx/blob/main/docker/compose/docker-compose.postgres.yml
+resources:
+  ram: 1000
+  gpu: no
+db:
+  type: postgres
+  service: db
+  user: paperless
+  name: paperless
+pairsWith: [nextcloud, pocket-id]

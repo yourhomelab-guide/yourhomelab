@@ -1,0 +1,15 @@
+# The setup wizard runs on port 3000. In the wizard, set the admin web interface
+# to port 3000 as well, so the web UI stays where the reverse proxy expects it.
+services:
+  adguard-home:
+    image: adguard/adguardhome:v0.107.79
+    container_name: adguard-home
+    restart: unless-stopped
+    ports:
+      # DNS for your home network. Port 53 must be free on the host:
+      # on Ubuntu, turn off the systemd-resolved stub listener first.
+      - "53:53/tcp"
+      - "53:53/udp"
+    volumes:
+      - ./data/work:/opt/adguardhome/work
+      - ./data/conf:/opt/adguardhome/conf

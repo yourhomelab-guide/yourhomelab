@@ -13,3 +13,10 @@ upstream:
   label: docs/src/setup/index.md
   url: https://github.com/NginxProxyManager/nginx-proxy-manager/blob/develop/docs/src/setup/index.md
 reviewed: 2026-09-12
+resources:
+  ram: 150
+  gpu: no
+db:
+  type: sqlite
+  path: data/data/database.sqlite
+pairsWith: [portainer, uptime-kuma, adguard-home]

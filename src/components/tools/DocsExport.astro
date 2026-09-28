@@ -1,10 +1,229 @@
 ---
-/** Placeholder – replaced by the real tool. */
-import type { Lang } from '../../lib/i18n';
+/**
+ * Docs export: turns "Mein Setup", the picked services and a few optional fields into a Markdown file
+ * (overview, service table, per-service paths/update/backup/restore, emergency links). See src/lib/tools/docs.ts.
+ */
+import YAML from 'yaml';
+import ServicePicker from './ServicePicker.astro';
+import { site } from '../../config/site';
+import { getServices, getSetupPath, getVariants } from '../../lib/content';
+import { readServiceFile } from '../../lib/compose';
+import { t, type Lang } from '../../lib/i18n';
+import { url } from '../../lib/routes';
+
 interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
+const services = await getServices(lang);
+const { guides } = await getSetupPath(lang);
+const guideUrl = (id: string, fallback: string) => {
+  const g = guides.find((x) => x.id === id);
+  return site.url + (g ? url.guide(lang, g.slug) : fallback);
+};
+
+/** `${VAR}` → value from .env.example (when it is a plain literal) */
+function resolveVar(id: string, v?: string) {
+  const m = v && /^\$\{(\w+)\}$/.exec(v);
+  if (!m) return v;
+  const env = readServiceFile(id, '.env.example') ?? '';
+  const val = new RegExp(`^${m[1]}=(.*)$`, 'm').exec(env)?.[1]?.trim();
+  return val && !val.includes('__') ? val : v;
+}
+/** Name of the password variable inside a MariaDB/MySQL container */
+function passwordVar(id: string, dbService?: string) {
+  try {
+    const doc = YAML.parse(readServiceFile(id, 'compose.yaml') ?? '');
+    const env = doc?.services?.[dbService ?? '']?.environment;
+    const keys: string[] = Array.isArray(env) ? env.map((e: string) => String(e).split('=')[0]) : Object.keys(env ?? {});
+    return keys.find((k) => /^(MARIADB|MYSQL)_PASSWORD$/.test(k)) ?? keys.find((k) => /^(MARIADB|MYSQL)_ROOT_PASSWORD$/.test(k));
+  } catch {
+    return undefined;
+  }
+}
+
+const data = services.map((s) => {
+  const variants = getVariants(s);
+  const db = s.db
+    ? {
+        type: s.db.type,
+        service: s.db.service,
+        user: resolveVar(s.id, s.db.user),
+        name: resolveVar(s.id, s.db.name),
+        path: s.db.path,
+        pwVar: s.db.type === 'mariadb' || s.db.type === 'mysql' ? passwordVar(s.id, s.db.service) : undefined,
+      }
+    : undefined;
+  // mariadb: a root password variable means the root user
+  if (db?.pwVar && /ROOT_PASSWORD$/.test(db.pwVar)) db.user = 'root';
+  return {
+    id: s.id,
+    name: s.name,
+    port: s.port,
+    isProxy: s.category === 'proxy',
+    page: site.url + url.service(lang, s.id),
+    db,
+    urls: Object.fromEntries(Object.entries(variants).map(([k, v]) => [k, v.url])),
+  };
+});
+
+const k = (key: string) => t(lang, `tools.docs-export.${key}`);
+const mdKeys = [
+  'defaultTitle', 'title', 'generated', 'overview', 'field', 'value', 'ip', 'hardware', 'domain', 'proxy', 'urls', 'urlsSub', 'urlsPath',
+  'stacks', 'service', 'dataMode', 'dataStack', 'dataCentral', 'network', 'tz', 'backupTarget', 'services', 'noServices', 'port',
+  'stackDir', 'dataDir', 'database', 'url', 'dbContainer', 'guide', 'update', 'backup', 'backupText', 'backupDump', 'backupSqlite',
+  'restore', 'restore1', 'restore2', 'restore3', 'restore3Db', 'restore3Sqlite', 'restore4', 'emergency', 'emergencyText',
+  'emergencyPlan', 'backupsGuide', 'restoreGuide', 'emergencyProxy', 'notes',
+];
+const texts = Object.fromEntries(mdKeys.map((key) => [key, k(`md.${key}`)]));
+const payload = {
+  lang,
+  services: data,
+  texts,
+  proxyNames: { traefik: t(lang, 'proxy.traefik'), caddy: t(lang, 'proxy.caddy'), npm: t(lang, 'proxy.npm'), none: t(lang, 'proxy.none') },
+  toolUrl: site.url + url.tool(lang, 'docs-export'),
+  links: {
+    emergency: guideUrl('emergency-plan', lang === 'de' ? '/de/einrichten/notfallplan/' : '/en/setup/emergency-plan/'),
+    backups: guideUrl('backups-borgmatic', url.guide(lang, 'backups-borgmatic')),
+    restore: guideUrl('testing-restores', url.guide(lang, lang === 'de' ? 'restore-testen' : 'testing-restores')),
+  },
+};
+const fields = [
+  { id: 'title', type: 'text', ph: k('phTitle') },
+  { id: 'hardware', type: 'text', ph: k('phHardware') },
+  { id: 'ip', type: 'text', ph: '192.168.1.10' },
+  { id: 'backup', type: 'text', ph: k('phBackup') },
+] as const;
 ---
 
-<p data-lang={lang}>…</p>
+<div class="de" data-docs-export>
+  <section class="card box">
+    <div class="box-head">
+      <h2>{k('servicesTitle')}</h2>
+      <p class="muted">{k('servicesText')}</p>
+    </div>
+    <ServicePicker lang={lang} compact />
+  </section>
+
+  <section class="card box">
+    <div class="box-head">
+      <h2>{k('detailsTitle')}</h2>
+      <p class="muted">{k('detailsText')}</p>
+    </div>
+    <div class="form">
+      {
+        fields.map((f) => (
+          <label>
+            {k(`field.${f.id}`)}
+            <input type={f.type} name={f.id} placeholder={f.ph} autocomplete="off" spellcheck="false" data-field={f.id} />
+          </label>
+        ))
+      }
+      <label class="wide">
+        {k('field.notes')}
+        <textarea name="notes" rows="4" placeholder={k('phNotes')} data-field="notes"></textarea>
+      </label>
+    </div>
+  </section>
+
+  <section class="card box">
+    <div class="box-head row">
+      <h2>{k('previewTitle')}</h2>
+      <div class="actions">
+        <button type="button" class="btn btn-primary btn-sm" data-md-download>{k('download')}</button>
+        <button type="button" class="btn btn-outline btn-sm" data-md-copy>{t(lang, 'code.copy')}</button>
+      </div>
+    </div>
+    <div class="files">
+      <div class="file-body">
+        <pre data-md-preview></pre>
+      </div>
+    </div>
+  </section>
+
+  <script type="application/json" data-docs-data set:html={JSON.stringify(payload)} />
+</div>
+
+<script>
+  import { copyText, getSetup } from '../../client/store';
+  import { download, getStack } from '../../client/stack';
+  import { buildDocs, type DocsInput, type DocsService } from '../../lib/tools/docs';
+  import { fill } from '../../lib/tools/stack';
+
+  interface Data {
+    lang: 'de' | 'en';
+    services: (Omit<DocsService, 'url'> & { urls: Record<string, string> })[];
+    texts: Record<string, string>;
+    proxyNames: Record<string, string>;
+    toolUrl: string;
+    links: { emergency: string; backups: string; restore: string };
+  }
+  const INPUT_KEY = 'yhl-docs-export';
+
+  const root = document.querySelector<HTMLElement>('[data-docs-export]');
+  if (root) init(root);
+
+  function init(root: HTMLElement) {
+    const D: Data = JSON.parse(root.querySelector('[data-docs-data]')!.textContent!);
+    const inputs = [...root.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('[data-field]')];
+    const pre = root.querySelector<HTMLElement>('[data-md-preview]')!;
+    let md = '';
+
+    // Restore what the visitor typed last time (only kept in this browser)
+    try {
+      const saved = JSON.parse(localStorage.getItem(INPUT_KEY) ?? '{}');
+      inputs.forEach((i) => typeof saved[i.dataset.field!] === 'string' && (i.value = saved[i.dataset.field!]));
+    } catch {}
+
+    function render() {
+      const s = getSetup();
+      const key = `${s.proxy}.${s.urlMode}.${s.dataMode}`;
+      const stack = new Set(getStack());
+      const list: DocsService[] = D.services
+        .filter((x) => stack.has(x.id))
+        .map(({ urls, ...x }) => ({ ...x, url: fill(urls[key] ?? '', s) }));
+      const input = Object.fromEntries(inputs.map((i) => [i.dataset.field!, i.value])) as unknown as DocsInput;
+      const date = new Date().toLocaleDateString(D.lang === 'de' ? 'de-DE' : 'en-US', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      md = buildDocs(list, s, input, D.texts, { date, toolUrl: D.toolUrl, proxyName: D.proxyNames[s.proxy] ?? s.proxy, links: D.links });
+      pre.textContent = md;
+    }
+
+    root.addEventListener('input', (e) => {
+      if (!(e.target as Element).matches('[data-field]')) return;
+      try {
+        localStorage.setItem(INPUT_KEY, JSON.stringify(Object.fromEntries(inputs.map((i) => [i.dataset.field!, i.value]))));
+      } catch {}
+      render();
+    });
+    root.querySelector('[data-md-download]')!.addEventListener('click', () => download('homelab-doku.md', md, 'text/markdown'));
+    root.querySelector<HTMLElement>('[data-md-copy]')!.addEventListener('click', (e) => copyText(e.currentTarget as HTMLElement, md));
+    document.addEventListener('yhl:stack', render);
+    document.addEventListener('yhl:setup', render);
+    render();
+  }
+</script>
+
+<style>
+  .de { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .box { padding: 24px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .box-head { display: flex; flex-direction: column; gap: 6px; }
+  .box-head.row { flex-direction: row; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px 16px; }
+  h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+  .box-head p { font-size: 14.5px; line-height: 1.5; margin: 0; }
+  .form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .wide { grid-column: 1 / -1; }
+  label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text-4); min-width: 0; }
+  input, textarea {
+    border: 1.5px solid var(--line-2); border-radius: 12px; padding: 0 14px; font-family: var(--font); font-size: 14.5px;
+    color: var(--text); background: #f7fafc; min-width: 0; width: 100%;
+  }
+  input { height: 42px; }
+  textarea { padding: 10px 14px; resize: vertical; line-height: 1.5; }
+  input:focus, textarea:focus { border-color: var(--accent); outline: none; box-shadow: var(--ring); }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .file-body { max-height: 560px; overflow: auto; }
+  .file-body pre { padding: 14px 16px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12.5px; }
+  @media (max-width: 600px) {
+    .box { padding: 18px 16px; }
+  }
+</style>

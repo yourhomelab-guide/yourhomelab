@@ -1,0 +1,160 @@
+---
+slug: datenbank-version
+title: "Datenbank startet nach Update nicht"
+description: "Nach einem Update startet Postgres oder MariaDB nicht mehr, weil die Daten zu einer anderen Hauptversion gehören. So kommst du zurück und machst das Upgrade sauber per Dump und Restore."
+level: 3
+related: [images-tags, updates, backup-strategies, first-steps]
+practice: testing-restores
+---
+
+## Symptom
+
+Nach `docker compose pull` und `docker compose up -d` hängt der Datenbank-Container in einer
+[Neustart-Schleife](/de/nachschlagen/container-neustart-schleife/), die App meldet, dass sie keine Datenbank erreicht.
+Im Log von Postgres steht:
+
+```text
+FATAL:  database files are incompatible with server
+DETAIL:  The data directory was initialized by PostgreSQL version 16, which is not compatible with this version 17.6.
+```
+
+## Warum das passiert
+
+Postgres speichert seine Daten in einem Format, das zur **Hauptversion** gehört (16, 17, 18 …). Eine neue Hauptversion
+kann die Dateien der alten nicht einfach öffnen. Innerhalb einer Hauptversion, also etwa von 17.5 auf 17.6, ist ein
+Update dagegen problemlos.
+
+Meist steckt ein zu offener Tag dahinter: `postgres:latest` oder gar kein Tag springt beim nächsten `pull` still auf die
+nächste Hauptversion. Hintergrund dazu in [Images & Tags](/de/nachschlagen/images-tags/).
+
+## Ursachen
+
+1. **Tag `latest` oder kein Tag** beim Datenbank-Image.
+2. **Tag bewusst erhöht**, ohne die Daten zu migrieren.
+3. **Ein Update-Tool** wie Watchtower oder Renovate hat die Hauptversion erhöht.
+
+## Prüfen
+
+Welches Image läuft, und welche Version haben die Daten?
+
+```bash
+cd __ROOT__/myapp
+grep -n "image:" compose.yaml
+docker compose logs --tail 20 db
+sudo cat __DATA(myapp)__/db/PG_VERSION
+```
+
+`myapp` steht für deinen Stack, `db` für den Dienstnamen der Datenbank. Wo die Daten liegen, zeigt der Bind Mount in
+deiner `compose.yaml`. Im Beispiel ist es `__DATA(myapp)__/db`. `PG_VERSION` enthält die Hauptversion der Daten.
+
+## Sofort-Lösung: zurück zur alten Version
+
+Die Daten sind nicht kaputt. Postgres hat sich nur geweigert, sie zu öffnen. Trag in der `compose.yaml` wieder die
+Hauptversion aus `PG_VERSION` ein und **pinne** sie, damit das nicht wieder passiert:
+
+```yaml
+  db:
+    image: postgres:16
+```
+
+```bash
+docker compose up -d
+```
+
+Der Dienst läuft wieder. Hat die neue Version doch schon etwas an den Daten geändert und der Start scheitert weiterhin,
+spielst du dein letztes Backup zurück, siehe [Restore testen](/de/einrichten/restore-testen/).
+
+## Richtig upgraden: Dump und Restore für Postgres
+
+Der sichere Weg: Daten mit der alten Version exportieren (Dump), mit der neuen Version frisch anlegen und
+wieder einspielen (Restore).
+
+<Callout type="warning" title="Erst sichern">
+  Mach vorher ein Backup des ganzen Stack-Ordners, siehe [Backups mit borgmatic](/de/einrichten/backups-borgmatic/).
+  Der alte Datenordner bleibt im folgenden Ablauf außerdem als Kopie liegen.
+</Callout>
+
+1. **Alte Version laufen lassen und App stoppen.** Nur die Datenbank darf laufen, damit sich während des Dumps nichts
+   ändert:
+
+   ```bash
+   cd __ROOT__/myapp
+   docker compose stop
+   docker compose up -d db
+   ```
+
+2. **Dump erstellen.** `pg_dumpall` sichert alle Datenbanken samt Benutzern. Die Variable wird im Container ausgewertet:
+
+   ```bash
+   docker compose exec -T db sh -c 'pg_dumpall -U "$POSTGRES_USER"' > dump.sql
+   ls -lh dump.sql
+   ```
+
+   Die Datei darf nicht leer sein.
+
+3. **Stack stoppen und alten Datenordner beiseitelegen:**
+
+   ```bash
+   docker compose down
+   sudo mv __DATA(myapp)__/db __DATA(myapp)__/db-old
+   ```
+
+4. **Neue Hauptversion eintragen** und nur die Datenbank starten. Sie legt einen leeren Datenordner mit Benutzer und
+   Passwort aus der `.env` an:
+
+   ```yaml
+     db:
+       image: postgres:17
+   ```
+
+   ```bash
+   docker compose up -d db
+   docker compose logs --tail 20 db
+   ```
+
+   Warte, bis `database system is ready to accept connections` erscheint.
+
+5. **Dump einspielen:**
+
+   ```bash
+   docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d postgres' < dump.sql
+   ```
+
+   Meldungen wie `role "..." already exists` sind harmlos, weil der Benutzer beim Anlegen schon entstanden ist.
+
+6. **Alles starten und testen:**
+
+   ```bash
+   docker compose up -d
+   ```
+
+   Melde dich in der App an und prüfe, ob deine Daten da sind. Läuft alles ein paar Tage stabil, lösch `dump.sql` und
+   `__DATA(myapp)__/db-old`. Der Dump enthält Passwort-Hashes, lass ihn nicht herumliegen.
+
+<Callout title="Vorgaben der App beachten">
+  Manche Apps verlangen eine bestimmte Postgres-Version oder bringen ein eigenes Image mit, etwa Immich. Lies vor dem
+  Upgrade die Doku der App. Ab Postgres 18 hat das offizielle Image außerdem den Speicherort der Daten im Container
+  geändert. Die Hinweise dazu stehen auf der [Docker-Hub-Seite von Postgres](https://hub.docker.com/_/postgres).
+</Callout>
+
+## MariaDB
+
+MariaDB kann Datendateien älterer Versionen meist direkt übernehmen, muss danach aber seine Systemtabellen anpassen.
+Das offizielle Image erledigt das beim Start, wenn du diese Variable setzt:
+
+```yaml
+  db:
+    image: mariadb:11
+    environment:
+      - MARIADB_AUTO_UPGRADE=1
+```
+
+Ein **Downgrade** auf eine ältere Version klappt dagegen nicht. Dafür brauchst du das Backup von vorher. Pinne auch hier
+die Hauptversion, also `mariadb:11` statt `mariadb:latest`. Bei MySQL gilt: Große Versionssprünge nur schrittweise und
+mit Backup, siehe [MySQL-Doku zum Upgrade](https://dev.mysql.com/doc/refman/8.4/en/upgrading.html).
+
+## Vorbeugen
+
+- Datenbank-Images immer auf die Hauptversion pinnen: `postgres:17`, `mariadb:11`.
+- Major-Updates von Datenbanken nie automatisch übernehmen, siehe [Updates mit Renovate](/de/einrichten/updates-renovate/).
+- Vor jedem größeren Update ein frisches Backup, siehe [Updates](/de/nachschlagen/updates/).

@@ -26,7 +26,7 @@ body:
     id: category
     attributes:
       label: Kategorie
-      options: [Reverse Proxy, Verwaltung, Daten, Code, Login, Monitoring, Andere]
+      options: [Reverse Proxy, Verwaltung, Netzwerk, Daten, Medien, Code, Login, Monitoring, Andere]
     validations:
       required: true
   - type: textarea

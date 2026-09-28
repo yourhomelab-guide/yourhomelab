@@ -1,0 +1,110 @@
+---
+slug: permission-denied
+title: "Permission denied"
+description: "Der Container startet, kann aber nicht in seinen Datenordner schreiben. Meist passen Besitzer und Rechte des Ordners nicht zu dem Benutzer, mit dem der Prozess im Container läuft."
+level: 2
+related: [volumes-bind-mounts, directory-structure, first-steps]
+practice: creating-the-directory-structure
+---
+
+## Symptom
+
+Der Container beendet sich kurz nach dem Start oder läuft in eine [Neustart-Schleife](/de/nachschlagen/container-neustart-schleife/).
+Im Log steht eine Meldung wie:
+
+```text
+mkdir: cannot create directory '/data/config': Permission denied
+chown: changing ownership of '/var/lib/postgresql/data': Operation not permitted
+Error: EACCES: permission denied, open '/app/data/db.sqlite'
+```
+
+## Warum das passiert
+
+Prozesse im Container laufen unter einer Benutzer-ID (UID) und Gruppen-ID (GID), genau wie auf dem Host. Linux
+kennt dabei nur Zahlen, keine Namen. Schreibt ein Container mit UID 1000 in einen Bind Mount, der Root (UID 0) gehört,
+lehnt Linux das ab. Der Name des Benutzers im Container spielt keine Rolle.
+
+## Ursachen
+
+1. **Docker hat den Ordner selbst angelegt.** Gibt es den Pfad eines Bind Mounts beim Start noch nicht, legt Docker
+   ihn an, und zwar als `root:root`. Läuft der Dienst nicht als Root, darf er dort nicht schreiben.
+2. **Das Image läuft absichtlich ohne Root-Rechte.** Viele moderne Images (rootless) nutzen eine feste UID, oft `1000`,
+   manchmal auch `65532` oder eine eigene. Der Datenordner muss dieser UID gehören.
+3. **PUID/PGID fehlen oder sind falsch.** Images etwa von linuxserver.io lesen die Variablen `PUID` und `PGID` und
+   laufen dann unter dieser UID/GID.
+4. **Dateien wurden als Root kopiert.** Etwa beim Zurückspielen eines Backups mit `sudo cp` oder `sudo tar`.
+5. **Die Rechte sind zu streng**, zum Beispiel `700` für einen anderen Besitzer.
+
+## Prüfen
+
+In den Befehlen steht `myapp` für deinen Stack, `<service>` für den Dienstnamen aus der `compose.yaml`.
+
+Wem gehört der Datenordner? `-n` zeigt Zahlen statt Namen:
+
+```bash
+ls -ln __DATA(myapp)__
+```
+
+Unter welcher UID läuft der Prozess im Container?
+
+```bash
+cd __ROOT__/myapp
+docker compose exec <service> id
+```
+
+Läuft der Container nicht lange genug für `exec`, schau nach, ob das Image einen Benutzer vorgibt. Leer bedeutet Root:
+
+```bash
+docker image inspect --format '{{.Config.User}}' <image>
+```
+
+Deine eigene UID und GID zeigt `id` auf dem Host. Der erste angelegte Benutzer hat unter Debian und Ubuntu meist
+`1000`.
+
+## Lösung
+
+**Ordner dem richtigen Benutzer geben.** Setze die UID und GID aus dem Prüfschritt ein:
+
+```bash
+cd __ROOT__/myapp
+docker compose down
+sudo chown -R 1000:1000 __DATA(myapp)__
+docker compose up -d
+```
+
+**Bei Images mit PUID/PGID** trägst du deine eigene UID/GID in die `compose.yaml` ein, und der Ordner gehört dir:
+
+```yaml
+environment:
+  - PUID=__PUID__
+  - PGID=__PGID__
+```
+
+```bash
+sudo chown -R __PUID__:__PGID__ __DATA(myapp)__
+```
+
+**Ordner vor dem ersten Start anlegen.** So verhinderst du, dass Docker ihn als Root erzeugt:
+
+```bash
+mkdir -p __DATA(myapp)__
+```
+
+Die Doku des Images nennt meist, welche UID es erwartet. Oft steht dort auch ein fertiger `chown`-Befehl.
+
+<Callout type="warning" title="Kein chmod 777">
+  `chmod -R 777` macht den Fehler scheinbar weg, erlaubt aber jedem Prozess auf dem Server, die Daten zu lesen und
+  zu ändern. Manche Programme, etwa Datenbanken oder SSH, verweigern bei zu offenen Rechten sogar den Start. Setz
+  lieber den richtigen Besitzer.
+</Callout>
+
+**Datenbanken nicht umbiegen.** Offizielle Images von Postgres oder MariaDB setzen die Rechte ihres Datenordners
+beim ersten Start selbst. Hat der Ordner danach eine unerwartete UID (etwa `999`), ist das normal. Ändere sie nicht.
+
+## SELinux
+
+Auf Fedora, RHEL oder Rocky Linux kann SELinux den Zugriff blockieren, obwohl die Rechte stimmen. Dann hilft die Endung
+`:Z` am Bind Mount, zum Beispiel `- __DATA(myapp)__:/data:Z`. Unter Debian und Ubuntu ist SELinux normalerweise nicht
+aktiv, dort brauchst du das nicht.
+
+Mehr Hintergrund zu Bind Mounts findest du unter [Volumes & Bind Mounts](/de/nachschlagen/volumes-bind-mounts/).

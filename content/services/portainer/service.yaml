@@ -12,3 +12,7 @@ upstream:
   label: "Docker Hub: portainer-ce"
   url: https://hub.docker.com/r/portainer/portainer-ce
 reviewed: 2026-09-12
+resources:
+  ram: 60
+  gpu: no
+pairsWith: [nginx-proxy-manager, uptime-kuma, beszel]

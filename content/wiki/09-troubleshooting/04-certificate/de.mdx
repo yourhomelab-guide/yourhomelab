@@ -1,0 +1,116 @@
+---
+slug: zertifikat-fehlt
+title: "Zertifikat fehlt"
+description: "Der Browser warnt vor einer unsicheren Verbindung, weil dein Reverse Proxy kein Zertifikat von Let's Encrypt bekommt. Fast immer kann Let's Encrypt deinen Server nicht erreichen."
+level: 2
+related: [tls-certificates, dns-domains, port-forwarding, cgnat-ds-lite]
+practice: reverse-proxy-traefik
+---
+
+## Symptom
+
+Der Browser zeigt eine Warnung wie `NET::ERR_CERT_AUTHORITY_INVALID`. Traefik liefert statt eines echten Zertifikats
+sein Ersatzzertifikat **TRAEFIK DEFAULT CERT** aus, Caddy und Nginx Proxy Manager (NPM) melden einen Fehler beim
+Anfordern. Im Log des Proxys steht etwa:
+
+```text
+Unable to obtain ACME certificate for domains "app.example.com":
+... acme: error: 400 :: urn:ietf:params:acme:error:connection :: Timeout during connect (likely firewall problem)
+```
+
+```text
+acme: error: 429 :: urn:ietf:params:acme:error:rateLimited :: too many certificates already issued ...
+```
+
+## Warum das passiert
+
+Bevor Let's Encrypt ein Zertifikat ausstellt, prüft es, ob dir die Domain gehört. Dazu verbindet sich Let's Encrypt
+aus dem Internet mit deinem Server (Challenge). Traefik nutzt auf dieser Seite die TLS-Challenge über Port 443,
+Caddy und NPM meist die HTTP-Challenge über Port 80. Klappt diese Verbindung nicht, gibt es kein Zertifikat.
+Hintergrund steht in [TLS & Zertifikate](/de/nachschlagen/tls-zertifikate/).
+
+## Ursachen
+
+1. **DNS zeigt nicht auf deinen Server.** Der A-Record fehlt, hat einen Tippfehler oder zeigt auf eine alte IP.
+2. **Ein falscher AAAA-Record.** Gibt es einen IPv6-Eintrag, versucht Let's Encrypt es bevorzugt über IPv6. Zeigt er
+   ins Leere, scheitert die Challenge, obwohl IPv4 funktioniert.
+3. **Port 80/443 ist im Router nicht weitergeleitet** oder eine Firewall blockt ihn.
+4. **Kein öffentliches IPv4 (CGNAT, DS-Lite).** Dann kommt von außen niemand an deinen Router heran, siehe
+   [CGNAT & DS-Lite](/de/nachschlagen/cgnat-ds-lite/).
+5. **Rate Limit.** Nach zu vielen Versuchen oder Zertifikaten sperrt Let's Encrypt für eine Weile, typisch nach vielen
+   Neustarts mit gelöschter `acme.json`.
+6. **acme.json hat falsche Rechte (Traefik).** Traefik verweigert die Datei, wenn sie nicht `600` hat.
+7. **Tippfehler in der Konfiguration**, etwa ein Cert-Resolver-Name, der nicht `le` heißt, oder eine fehlende E-Mail.
+
+## Prüfen
+
+**Logs lesen.** Die Fehlermeldung nennt meist die Ursache direkt:
+
+```bash
+cd __ROOT__/traefik
+docker compose logs traefik | grep -i -E "acme|certificate"
+```
+
+Für Caddy und NPM entsprechend `docker compose logs` im jeweiligen Stack-Ordner.
+
+**DNS prüfen.** Beide Adressen müssen zu deinem Anschluss gehören. `dig` steckt im Paket `dnsutils`:
+
+```bash
+dig +short A app.__DOMAIN__
+dig +short AAAA app.__DOMAIN__
+curl -4 ifconfig.me; echo
+```
+
+Die IPv4 aus `dig` muss mit der aus `curl` übereinstimmen.
+
+**Erreichbarkeit von außen prüfen.** Am einfachsten mit dem Handy im Mobilfunknetz (WLAN aus) die Adresse
+`http://app.__DOMAIN__` aufrufen. Kommt gar nichts an, liegt es an Portfreigabe, Firewall oder CGNAT.
+
+**Rechte der acme.json (Traefik):**
+
+```bash
+ls -l __DATA(traefik)__/letsencrypt/acme.json
+```
+
+Richtig ist `-rw-------`. Sonst steht im Log etwa `permissions 644 for /letsencrypt/acme.json are too open, please use 600`.
+
+## Lösung
+
+- **DNS:** Korrigiere A- und AAAA-Record beim Domain-Anbieter. Hast du kein funktionierendes IPv6, lösch den
+  AAAA-Record. Änderungen brauchen je nach TTL ein paar Minuten bis Stunden. Siehe Guide [Domain & DNS](/de/einrichten/domain-dns/).
+- **Portfreigabe:** Leite Port 80 und 443 (TCP) im Router auf die IP deines Servers weiter, siehe
+  [Portfreigabe](/de/nachschlagen/portfreigabe/). Prüf mit `sudo ufw status`, ob beide Ports erlaubt sind.
+- **CGNAT:** Die Challenge über Port 80/443 kann nicht klappen. Nutze einen [Tunnel](/de/nachschlagen/tunnel/) oder
+  die DNS-Challenge. Bei der DNS-Challenge beweist dein Proxy die Domain über einen Eintrag beim DNS-Anbieter, ganz
+  ohne offene Ports. Das braucht einen API-Schlüssel deines Anbieters, siehe
+  [Traefik-Doku zu ACME](https://doc.traefik.io/traefik/https/acme/).
+- **acme.json:**
+
+  ```bash
+  chmod 600 __DATA(traefik)__/letsencrypt/acme.json
+  cd __ROOT__/traefik && docker compose restart traefik
+  ```
+
+- **Rate Limit:** Warte ab. Die Meldung nennt meist, ab wann es wieder geht. Lösch die `acme.json` nicht immer wieder,
+  sonst holst du jedes Mal neue Zertifikate. Die Grenzen stehen in der
+  [Let's-Encrypt-Doku](https://letsencrypt.org/docs/rate-limits/).
+
+## Mit der Staging-Umgebung testen
+
+Solange du noch experimentierst, nutz die Test-Umgebung von Let's Encrypt. Sie hat viel großzügigere Limits, stellt
+aber nur Zertifikate aus, denen der Browser nicht vertraut. Für Traefik ergänzt du unter `command:`:
+
+```yaml
+      - --certificatesresolvers.le.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+```
+
+Funktioniert alles, entfernst du die Zeile wieder, leerst die gespeicherten Test-Zertifikate und startest neu:
+
+```bash
+cd __ROOT__/traefik
+docker compose down
+: > __DATA(traefik)__/letsencrypt/acme.json
+docker compose up -d
+```
+
+Caddy hat dafür die globale Option `acme_ca`, siehe [Caddy-Doku](https://caddyserver.com/docs/caddyfile/options).

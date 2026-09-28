@@ -1,0 +1,140 @@
+---
+slug: festplatte-voll
+title: "Festplatte voll"
+description: "Dienste stürzen ab, Updates scheitern, Datenbanken melden Schreibfehler: Die Festplatte ist voll. Meist stecken alte Images, ungebremste Logs oder Backups dahinter."
+level: 1
+related: [logs, monitoring, backup-strategies, first-steps]
+practice: monitoring-beszel
+---
+
+## Symptom
+
+Plötzlich geht vieles gleichzeitig nicht mehr. Ein `docker compose pull` bricht ab, Container starten nicht, und in den
+Logs steht:
+
+```text
+write /var/lib/docker/tmp/GetImageBlob123456: no space left on device
+```
+
+```text
+PANIC:  could not write to file "pg_wal/xlogtemp.42": No space left on device
+```
+
+## Ursachen
+
+1. **Alte Images.** Jedes Update lädt ein neues Image. Die alten bleiben liegen, oft mehrere Gigabyte.
+2. **Container-Logs ohne Rotation.** Docker schreibt Logs standardmäßig ohne Größenbegrenzung.
+3. **Alte Backups oder Dumps** auf derselben Platte, die nie aufgeräumt werden.
+4. **Build-Cache**, wenn du selbst Images baust.
+5. **Daten der Dienste selbst**, etwa Fotos, Downloads oder Medien.
+
+## Prüfen
+
+Wie voll ist welche Platte?
+
+```bash
+df -h
+```
+
+Interessant sind `/` und die Platte, auf der `__ROOT__` liegt. Steht bei `Use%` 100 %, ist sie voll.
+
+Wie viel belegt Docker, und wie viel davon ließe sich freigeben (`RECLAIMABLE`)?
+
+```bash
+docker system df
+```
+
+Welche Container-Logs sind groß?
+
+```bash
+sudo du -sh /var/lib/docker/containers/*/*-json.log | sort -h | tail -5
+```
+
+Welcher Stack belegt am meisten?
+
+```bash
+sudo du -h -d1 __ROOT__ | sort -h
+```
+
+Und das System-Journal:
+
+```bash
+journalctl --disk-usage
+```
+
+## Lösung
+
+### Alte Images entfernen
+
+```bash
+docker image prune -a
+```
+
+Das löscht alle Images, die gerade kein Container nutzt. Läuft ein Stack gerade nicht, lädt `docker compose up -d` sein
+Image später einfach neu. Daten sind nicht betroffen.
+
+Build-Cache entfernen, falls du Images selbst baust:
+
+```bash
+docker builder prune
+```
+
+<Callout type="warning" title="Vorsicht mit --volumes">
+  `docker system prune` räumt gestoppte Container, ungenutzte Netzwerke und Images ohne Tag auf. Mit `--volumes` löscht es auch
+  Volumes, die gerade kein Container nutzt, und damit womöglich Daten eines gestoppten Stacks. Lass die Option
+  weg. Bind Mounts unter `__ROOT__` rührt Docker nie an.
+</Callout>
+
+### Große Logs leeren und Rotation einschalten
+
+Ein riesiges Log leerst du im laufenden Betrieb, ohne die Datei zu löschen. Den Pfad hast du oben mit `du` gefunden:
+
+```bash
+sudo truncate -s 0 /var/lib/docker/containers/<id>/<id>-json.log
+```
+
+Damit das nicht wieder passiert, stell die Log-Rotation ein. Wie das geht, steht im Artikel [Logs](/de/nachschlagen/logs/)
+im Abschnitt zur Log-Rotation.
+
+Das Journal kürzt du so auf 500 MB:
+
+```bash
+sudo journalctl --vacuum-size=500M
+```
+
+### Alte Backups und Pakete
+
+Liegen Backups auf derselben Platte, lösch alte Stände. Bei borgmatic erledigen `keep_daily` & Co. und `compact` das
+automatisch, siehe [Backups mit borgmatic](/de/einrichten/backups-borgmatic/). Vergiss auch alte Dumps und `.bak`-Kopien
+aus früheren Experimenten nicht.
+
+Heruntergeladene Pakete von `apt` löschst du mit:
+
+```bash
+sudo apt clean
+sudo apt autoremove
+```
+
+### Wenn die Daten selbst zu groß werden
+
+Wächst ein Dienst einfach über die Platte hinaus, hilft Aufräumen nicht dauerhaft. Dann gehören seine Daten auf eine
+größere oder zusätzliche Platte. Mit dem Modus „zentral“ aus [Verzeichnisstruktur](/de/nachschlagen/verzeichnisstruktur/)
+kannst du die Daten getrennt von der Konfiguration ablegen.
+
+## Nach dem Aufräumen
+
+Datenbanken, die mitten im Schreiben abgebrochen sind, erholen sich meist beim Neustart von selbst. Starte die
+betroffenen Stacks neu und prüf ihre Logs:
+
+```bash
+cd __ROOT__/myapp
+docker compose up -d
+docker compose logs --tail 30
+```
+
+`myapp` steht für deinen Stack.
+
+## Vorbeugen
+
+Lass dich warnen, bevor die Platte voll ist. [Beszel](/de/einrichten/monitoring-beszel/) kann dir zum Beispiel ab 85 %
+Belegung eine Nachricht schicken. Hintergrund dazu in [Monitoring](/de/nachschlagen/monitoring/).

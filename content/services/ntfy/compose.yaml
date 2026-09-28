@@ -1,0 +1,22 @@
+services:
+  ntfy:
+    image: binwiederhier/ntfy:v2
+    container_name: ntfy
+    restart: unless-stopped
+    command: serve
+    environment:
+      - TZ=${TZ}
+      - NTFY_BASE_URL=__URL__
+      # Message cache and user database (SQLite), kept in ./data
+      - NTFY_CACHE_FILE=/var/lib/ntfy/cache.db
+      - NTFY_AUTH_FILE=/var/lib/ntfy/auth.db
+      - NTFY_ATTACHMENT_CACHE_DIR=/var/lib/ntfy/attachments
+      # Private server: nobody may read or write without an account
+      - NTFY_AUTH_DEFAULT_ACCESS=deny-all
+      - NTFY_ENABLE_LOGIN=true
+      # Real client IPs from the reverse proxy (for rate limiting)
+      - NTFY_BEHIND_PROXY=true
+      # Instant notifications on iOS: sends only a message ID to ntfy.sh
+      - NTFY_UPSTREAM_BASE_URL=https://ntfy.sh
+    volumes:
+      - ./data/data:/var/lib/ntfy

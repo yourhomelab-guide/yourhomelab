@@ -15,3 +15,10 @@ upstream:
   label: docker-compose.yml
   url: https://github.com/pocket-id/pocket-id/blob/main/docker-compose.yml
 reviewed: 2026-09-12
+resources:
+  ram: 30
+  gpu: no
+db:
+  type: sqlite
+  path: data/data/pocket-id.db
+pairsWith: [tinyauth, immich, forgejo]

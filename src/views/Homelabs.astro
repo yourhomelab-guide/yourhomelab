@@ -5,6 +5,9 @@ import { getHomelabs } from '../lib/content';
 import { t, type Lang } from '../lib/i18n';
 import { url } from '../lib/routes';
 
+/** "In Zahlen" only appears once there are this many real (non-example) homelabs. */
+const STATS_MIN = 10;
+
 interface Props {
   lang: Lang;
 }
@@ -19,6 +22,28 @@ const facets = (Object.keys(homelabFacets) as HomelabFacet[]).map((f) => ({
     .filter((o) => o.n > 0),
 }));
 const submit = `${site.repo}/issues/new?template=homelab.yml`;
+
+/* Statistics over real entries: top 4 values per facet (share of homelabs, multiple answers possible) + median servers */
+const real = labs.filter((l) => !l.data.example);
+const statFacets: HomelabFacet[] = ['platform', 'management', 'proxy', 'access'];
+const stats =
+  real.length > 0 && real.length >= STATS_MIN
+    ? statFacets.map((f) => ({
+        id: f,
+        top: homelabFacets[f]
+          .map((v) => ({ v, pct: Math.round((real.filter((l) => values(l, f).includes(v)).length / real.length) * 100) }))
+          .filter((o) => o.pct > 0)
+          .sort((a, b) => b.pct - a.pct)
+          .slice(0, 4),
+      }))
+    : null;
+const median = (a: number[]) => {
+  const s = [...a].sort((x, y) => x - y);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+};
+const medianServers = real.length ? median(real.map((l) => l.data.servers)) : 0;
+const fmt = new Intl.NumberFormat(lang === 'de' ? 'de-DE' : 'en-US', { maximumFractionDigits: 1 });
 ---
 
 <Base lang={lang} title={t(lang, 'homelabs.title')} description={t(lang, 'homelabs.lead')} alternates={{ de: url.section('de', 'homelabs'), en: url.section('en', 'homelabs') }} nav="homelabs">
@@ -30,6 +55,38 @@ const submit = `${site.repo}/issues/new?template=homelab.yml`;
       </div>
       <a class="btn btn-primary" href={submit}>{t(lang, 'homelabs.submitCta')} ↗</a>
     </div>
+
+    {
+      stats && (
+        <section class="stats" aria-labelledby="stats-h">
+          <div class="stats-head">
+            <h2 id="stats-h" class="stats-title">{t(lang, 'homelabs.stats.title')}</h2>
+            <span class="muted">{t(lang, 'homelabs.stats.lead', { n: real.length })}</span>
+          </div>
+          <div class="stats-grid">
+            {stats.map((f) => (
+              <div class="stat">
+                <span class="eyebrow">{t(lang, `homelabs.field.${f.id}`)}</span>
+                <ul>
+                  {f.top.map((o) => (
+                    <li>
+                      <span class="bar-l">{t(lang, `homelabs.${f.id}.${o.v}`)}</span>
+                      <span class="bar-v">{o.pct} %</span>
+                      <span class="bar" aria-hidden="true"><span style={`width:${o.pct}%`} /></span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            <div class="stat stat-median">
+              <span class="eyebrow">{t(lang, 'homelabs.servers')}</span>
+              <strong>{fmt.format(medianServers)}</strong>
+              <span class="muted">{t(lang, 'homelabs.stats.median')}</span>
+            </div>
+          </div>
+        </section>
+      )
+    }
 
     <div class="layout">
     <aside class="filters" data-lab-filters>
@@ -159,6 +216,20 @@ const submit = `${site.repo}/issues/new?template=homelab.yml`;
   .labs { padding-top: 48px; padding-bottom: 88px; display: flex; flex-direction: column; gap: 24px; }
   .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
   .head-text { display: flex; flex-direction: column; gap: 10px; max-width: 680px; }
+  .stats { background: var(--surface); border-radius: 20px; padding: 22px 24px; display: flex; flex-direction: column; gap: 18px; }
+  .stats-head { display: flex; gap: 6px 16px; align-items: baseline; flex-wrap: wrap; }
+  .stats-title { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+  .stats-head .muted { font-size: 13.5px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 20px 28px; }
+  .stat { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .stat ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+  .stat li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; font-size: 13.5px; color: var(--text-2); }
+  .bar-l { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-v { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .bar { grid-column: 1 / -1; height: 6px; border-radius: 999px; background: var(--line-3); overflow: hidden; }
+  .bar span { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+  .stat-median strong { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; color: var(--text); }
+  .stat-median .muted { font-size: 13.5px; }
   .layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 32px; align-items: start; }
   .filters { position: sticky; top: calc(var(--header-h) + 20px); max-height: calc(100vh - var(--header-h) - 40px); overflow-y: auto; scrollbar-width: thin; display: flex; flex-direction: column; gap: 20px; padding: 2px; }
   .results { display: flex; flex-direction: column; gap: 16px; min-width: 0; }

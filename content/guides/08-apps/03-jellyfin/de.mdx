@@ -1,0 +1,163 @@
+---
+slug: jellyfin
+title: "Jellyfin"
+description: "Am Ende läuft Jellyfin als eigene Mediathek für Filme und Serien: sauber sortierte Bibliotheken mit Covern und Beschreibungen, Apps auf Handy und Fernseher und auf Wunsch Hardware-Transkodierung über die iGPU."
+level: 1
+minutes: 40
+requires: [Docker Compose, Reverse Proxy, Medien auf dem Server]
+services: [jellyfin]
+---
+
+Jellyfin ist ein Medienserver: Er liest deine Film- und Serienordner, holt Cover, Beschreibungen und Besetzung aus Online-Datenbanken und spielt alles auf Fernseher, Handy oder im Browser ab. Anders als Plex oder Emby ist Jellyfin komplett frei. Es gibt kein Konto beim Hersteller und keine Funktionen hinter einer Bezahlschranke.
+
+Der wichtigste Teil der Einrichtung passiert nicht in Jellyfin, sondern vorher im Dateisystem. Wenn Ordner und Dateinamen stimmen, erkennt Jellyfin fast alles von selbst. Wenn nicht, sortierst du später jeden Film einzeln von Hand.
+
+<Steps>
+
+<Step title="Medienordner anlegen">
+Deine Medien liegen **nicht** in `__ROOT__`. Sie sind groß, ändern sich selten und gehören meist auf eine eigene Festplatte. Außerdem willst du sie nicht jede Nacht mit dem restlichen Homelab sichern. In diesem Guide liegen sie unter `/srv/media`. Hängt bei dir eine zweite Platte zum Beispiel unter `/mnt/media`, nimm diesen Pfad.
+
+Jellyfin mag eine Bibliothek pro Medientyp. Lege dafür je einen Ordner an:
+
+```bash
+sudo mkdir -p /srv/media/Filme /srv/media/Serien
+sudo chown -R $USER:$USER /srv/media
+```
+
+Innerhalb der Ordner hilft eine feste Struktur. Den Titel mit Erscheinungsjahr in Klammern erkennt Jellyfin am zuverlässigsten:
+
+```
+/srv/media/
+├── Filme/
+│   ├── Das Boot (1981)/
+│   │   └── Das Boot (1981).mkv
+│   └── Metropolis (1927)/
+│       └── Metropolis (1927).mp4
+└── Serien/
+    └── Dark (2017)/
+        ├── Season 01/
+        │   ├── Dark S01E01.mkv
+        │   └── Dark S01E02.mkv
+        └── Season 02/
+            └── Dark S02E01.mkv
+```
+
+Wichtig sind vor allem der Jahrgang beim Film und das Muster `S01E01` bei Serien. Alle Regeln, auch für Musik, Extras und mehrere Versionen eines Films, stehen in der [Jellyfin-Doku zu Filmen](https://jellyfin.org/docs/general/server/media/movies) und [zu Serien](https://jellyfin.org/docs/general/server/media/shows).
+</Step>
+
+<Step title="Rechte klären">
+Jellyfin läuft im Container nicht als root, sondern mit deiner Benutzer-ID. Die steht als `PUID` und `PGID` in der `.env`, die Vorlage setzt sie per `user:` in der `compose.yaml`. Damit das klappt, braucht dieser Benutzer:
+
+- **Lesen** in deinem Medienordner. Hast du ihn wie oben mit `chown` dir gegeben, passt das.
+- **Schreiben** in seinen eigenen Datenordnern für Einstellungen und Cache.
+
+Die Datenordner legst du selbst an, bevor der Container startet. Sonst erzeugt Docker sie als root, und Jellyfin bricht mit `Permission denied` ab:
+
+```bash
+mkdir -p __ROOT__/jellyfin __DATA(jellyfin)__/config __DATA(jellyfin)__/cache
+```
+
+Deine IDs siehst du mit `id`. Beim ersten Benutzer auf Debian und Ubuntu sind beide meist `1000`. Mehr zum Thema steht unter [Permission denied](/de/nachschlagen/permission-denied/).
+
+Der Medienordner wird in der Vorlage mit `:ro` eingebunden, also nur lesend. Jellyfin kann dann nichts in deiner Sammlung verändern oder löschen. Willst du später Cover und Infodateien direkt neben den Filmen speichern oder Medien über die Oberfläche löschen, entferne das `:ro`.
+</Step>
+
+<Step title="compose.yaml und .env schreiben">
+Trag in der `.env` unter `MEDIA_DIR` deinen Medienordner ein, etwa `/srv/media`. Im Container heißt er dann `/media`, mit den Unterordnern `/media/Filme` und `/media/Serien`.
+
+<ServiceFiles id="jellyfin" />
+
+Jellyfin braucht eine eigene Subdomain. Hinter einem Pfad wie `/jellyfin` läuft es nur mit Zusatzeinstellungen.
+</Step>
+
+<Step title="Starten und Ersteinrichtung">
+```bash
+cd __ROOT__/jellyfin
+docker compose up -d
+docker compose logs -f jellyfin
+```
+
+Sobald im Log keine neuen Zeilen mehr kommen, öffnest du die Adresse im Browser. Ein Assistent führt dich durch die Einrichtung:
+
+1. **Sprache** der Oberfläche wählen.
+2. **Administrator** anlegen. Nimm einen eigenen Benutzernamen und ein langes Passwort aus dem Passwortmanager. Dieses Konto darf alles.
+3. **Bibliotheken** kannst du hier schon anlegen oder überspringen und im nächsten Schritt nachholen.
+4. **Metadatensprache** auf Deutsch und Land auf Deutschland stellen. Dann kommen Titel und Beschreibungen auf Deutsch, wo es sie gibt.
+5. **Fernzugriff**: Lass die Option für Remote-Verbindungen eingeschaltet. Ob der Server wirklich von außen erreichbar ist, entscheidest du am Reverse Proxy und am Router, nicht hier.
+
+Für die Familie legst du danach unter **Dashboard → Benutzer** eigene Konten an. Jedes Konto merkt sich, was schon gesehen wurde, und du kannst den Zugriff pro Bibliothek oder per Altersfreigabe begrenzen.
+</Step>
+
+<Step title="Bibliotheken anlegen">
+Unter **Dashboard → Bibliotheken** fügst du je eine Bibliothek hinzu:
+
+| Inhaltstyp | Ordner im Container |
+|---|---|
+| Filme | `/media/Filme` |
+| Serien | `/media/Serien` |
+
+Jellyfin sieht nur Pfade im Container, also `/media/…`, nicht `/srv/media/…`. Die übrigen Einstellungen kannst du am Anfang so lassen. Nach dem Speichern durchsucht Jellyfin die Ordner und lädt Metadaten nach. Bei großen Sammlungen dauert der erste Scan eine Weile.
+
+Wurde ein Titel falsch erkannt, öffnest du ihn, wählst im Menü **Identifizieren** und suchst den richtigen Eintrag. Passiert das oft, liegt es fast immer an Ordner- oder Dateinamen.
+</Step>
+
+<Step title="Apps verbinden">
+Im Browser läuft Jellyfin ohne Installation. Für andere Geräte gibt es Apps, die meisten sind kostenlos:
+
+- **Android und Android TV / Fire TV:** die offizielle Jellyfin-App aus dem jeweiligen Store.
+- **iPhone, iPad, Apple TV:** zum Beispiel Swiftfin oder die Jellyfin-App.
+- **Computer:** der Browser oder die Desktop-App von Jellyfin.
+- **Smart-TVs** von LG und Samsung haben eigene Apps, bei manchen Modellen etwas umständlich zu installieren.
+
+Die aktuelle Übersicht steht auf der [Download-Seite von Jellyfin](https://jellyfin.org/downloads/clients). In der App gibst du als Server die volle Adresse mit `https://` ein und meldest dich mit deinem Jellyfin-Konto an.
+</Step>
+
+<Step title="Hardware-Transkodierung (optional)">
+Kann ein Gerät ein Video nicht direkt abspielen, etwa wegen des Codecs oder weil unterwegs die Bandbreite fehlt, rechnet Jellyfin es in Echtzeit um. Das heißt **Transkodieren**. Auf der CPU kostet das viel Leistung. Viele Intel-Prozessoren haben dafür eine eigene Einheit in der integrierten Grafik (iGPU): **Quick Sync**. Sie schafft mehrere Streams gleichzeitig bei wenig Stromverbrauch. AMD-iGPUs funktionieren ähnlich über VA-API.
+
+Prüfe zuerst, ob die iGPU im System auftaucht, und lies die Gruppen-ID von `render` aus:
+
+```bash
+ls -l /dev/dri
+getent group render | cut -d: -f3
+```
+
+Siehst du ein Gerät `renderD128`, trägst du die Zahl aus dem zweiten Befehl in der `.env` bei `RENDER_GID` ein. Dann entfernst du in der `compose.yaml` die `#` vor den Zeilen `devices:` und `group_add:` samt ihren Einträgen und startest den Container neu:
+
+```bash
+cd __ROOT__/jellyfin
+docker compose up -d
+docker compose exec jellyfin /usr/lib/jellyfin-ffmpeg/vainfo
+```
+
+`vainfo` listet die Codecs, die die iGPU beherrscht. Kommt statt einer Liste ein Fehler, fehlt meist der Gerätezugriff oder die Gruppe stimmt nicht.
+
+Zum Schluss schaltest du die Hardwarebeschleunigung im **Dashboard** bei den Einstellungen zur **Transkodierung** ein. Wähle „Intel QuickSync (QSV)“ bei Intel oder „Video Acceleration API (VA-API)“ bei AMD und hake nur die Codecs an, die `vainfo` angezeigt hat. Details je nach Prozessor-Generation stehen in der [Jellyfin-Doku zu Intel](https://jellyfin.org/docs/general/post-install/transcoding/hardware-acceleration/intel).
+
+<Callout title="Läuft Jellyfin in einer VM?">
+Unter Proxmox muss die iGPU erst an die VM oder den LXC-Container durchgereicht werden, bevor Docker sie sieht. Das ist ein eigenes Thema. Einfacher ist es, Jellyfin direkt auf dem Host oder in einem LXC-Container laufen zu lassen.
+</Callout>
+</Step>
+
+<Step title="Zugriff von außen">
+Über deinen Reverse Proxy ist Jellyfin mit HTTPS erreichbar. Ob die Adresse auch aus dem Internet funktioniert, hängt davon ab, wie du [Zugriff von außen](/de/nachschlagen/zugriffswege-vergleich/) eingerichtet hast:
+
+- **VPN** wie [WireGuard](/de/einrichten/vpn-wireguard/): der sicherste Weg. Jellyfin bleibt im Heimnetz, du verbindest Handy oder Laptop per VPN. Nachteil: Auf manchen Fernsehern und bei Freunden lässt sich kein VPN einrichten.
+- **Portfreigabe** auf den Reverse Proxy: funktioniert mit allen Apps. Dann ist die Anmeldeseite öffentlich. Nutze lange Passwörter, gib keinem Konto ohne Not Admin-Rechte und halte Jellyfin aktuell.
+
+Damit Jellyfin die echte Adresse deiner Geräte sieht und nicht nur die des Proxys, trägst du den Proxy im **Dashboard** unter **Netzwerk** bei den bekannten Proxys ein, zum Beispiel mit seinem Containernamen `traefik`. Das ist für Logs und für getrennte Bitraten-Limits im Heimnetz und unterwegs wichtig. Die Details stehen in der [Jellyfin-Doku zu Reverse Proxys](https://jellyfin.org/docs/general/post-install/networking/reverse-proxy/).
+
+Login-Schutz wie [Tinyauth](/de/einrichten/tinyauth/) oder [Pocket ID](/de/einrichten/pocket-id/) als Middleware vor Jellyfin funktioniert nur im Browser. Die Apps können mit der vorgeschalteten Anmeldeseite nichts anfangen.
+
+<Callout type="warning" title="Kein Streaming über Cloudflare Tunnel">
+Ein [Cloudflare Tunnel](/de/einrichten/cloudflare-tunnel/) ist bequem, die Nutzungsbedingungen von Cloudflare sehen das Ausliefern von Videos über ihr kostenloses Netz aber nicht vor. Wer es trotzdem tut, riskiert die Sperrung seines Kontos. Für Jellyfin nimmst du deshalb VPN oder Portfreigabe.
+</Callout>
+</Step>
+
+<Step title="Backup">
+Sichere den Ordner `__DATA(jellyfin)__/config`. Darin stecken Benutzer, Einstellungen und was jeder schon gesehen hat. Den Ordner `cache` brauchst du nicht, Jellyfin baut ihn neu auf. Wenn du mit [borgmatic](/de/einrichten/backups-borgmatic/) sicherst, kannst du ihn ausschließen.
+
+Deine Medien selbst liegen außerhalb von `__ROOT__` und sind damit **nicht** im normalen Backup. Überlege dir, ob du sie sichern willst: Selbst gerippte Filme lassen sich neu rippen, Familienvideos nicht. Die gehören eher in [Immich](/de/dienste/immich/) oder in ein eigenes Backup.
+</Step>
+
+</Steps>

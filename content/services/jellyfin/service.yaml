@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: Jellyfin
+category: media
+level: 1
+tag: popular
+popular: true
+port: 8096
+subdomain: jellyfin
+subdomainOnly: true
+links:
+  repo: jellyfin/jellyfin
+  website: https://jellyfin.org
+  docs: https://jellyfin.org/docs/
+upstream:
+  label: "jellyfin.org: Installation > Container"
+  url: https://jellyfin.org/docs/general/installation/container
+resources:
+  ram: 600
+  gpu: optional
+pairsWith: [immich]

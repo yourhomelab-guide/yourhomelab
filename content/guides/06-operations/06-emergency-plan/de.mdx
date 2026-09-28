@@ -1,0 +1,290 @@
+---
+slug: notfallplan
+title: "Notfallplan"
+description: "Du legst ein Notfall-Blatt mit allem an, was du ohne deinen Server brauchst, legst fest, welche Dienste zuerst zurückkommen, und hast eine Schritt-für-Schritt-Anleitung, mit der du dein Homelab aus dem borgmatic-Backup auf neuer Hardware wieder aufbaust."
+level: 2
+minutes: 45
+requires: [Backups mit borgmatic, Restore getestet]
+---
+
+<OneWay />
+
+Irgendwann passiert es: Die SSD stirbt, ein Blitz trifft die Leitung, der Server wird gestohlen oder ein Update zerlegt das System so gründlich, dass Neuaufsetzen schneller ist als Reparieren. Mit einem Backup ist das kein Drama, sondern ein Nachmittag Arbeit. Vorausgesetzt, du kommst an das Backup heran und weißt, was zu tun ist.
+
+Genau daran scheitert es in der Praxis selten am Backup selbst, sondern an Kleinigkeiten: Die Passphrase liegt im Passwortmanager, und der lief auf dem toten Server. Der Zugang zum Backup-Rechner ging nur mit dem SSH-Schlüssel des alten Servers. Die Adresse des Backup-Ziels stand nur in der Konfiguration auf dem alten Server.
+
+Dieser Guide hat deshalb zwei Teile. Die **Vorbereitung** erledigst du jetzt, in Ruhe. Den **Ablauf im Ernstfall** liest du, wenn es so weit ist. Er setzt voraus, dass du [Backups mit borgmatic](/de/einrichten/backups-borgmatic/) eingerichtet und den [Restore getestet](/de/einrichten/restore-testen/) hast.
+
+## Vorbereitung: das Notfall-Blatt
+
+Das Notfall-Blatt ist eine kurze Sammlung von allem, was du brauchst, wenn dein Server nicht mehr da ist. Die wichtigste Regel: **Nichts davon darf nur auf dem Server liegen, den du sicherst.**
+
+| Was | Wofür |
+| --- | --- |
+| Borg-Passphrase | Ohne sie ist das Backup nicht lesbar, auch nicht für dich. |
+| Exportierter Borg-Schlüssel (`sudo borgmatic key export`) | Rückversicherung, falls die Schlüsseldatei im Repository beschädigt ist. |
+| Adresse des Repositorys, z. B. `ssh://backup@192.168.1.20/./borg` | Damit der neue Server weiß, wo das Backup liegt. |
+| Zugang zum Backup-Ziel: Login beim Anbieter oder am Backup-Rechner | Der neue Server braucht einen eigenen SSH-Schlüssel, den du dort eintragen musst. |
+| Master-Passwort des Passwortmanagers und Wiederherstellungscodes für 2FA | Ohne sie kommst du an keine anderen Zugänge. |
+| Zugang zum Registrar bzw. DNS-Anbieter | Falls der neue Server eine andere IP-Adresse bekommt. |
+| Zugang zum Router | Portfreigaben und feste IP-Zuordnung umstellen. |
+| Zugang zum Hoster, falls du einen VPS nutzt | Neuen Server bestellen, Firewall beim Anbieter anpassen. |
+| Übersicht deiner Dienste: Subdomains, Ports, Datenbanken, Pfade außerhalb von `__ROOT__` | Damit du weißt, was alles zurückkommen muss. |
+| Kopie von `/etc/borgmatic/config.yaml` (optional) | borgmatic legt sie zwar automatisch mit in jedes Archiv, eine Kopie spart dir im Ernstfall aber einen Schritt. |
+
+Die Übersicht deiner Dienste musst du nicht von Hand schreiben. Der [Doku-Export](/de/werkzeuge/doku-export/) erzeugt aus deinem Setup eine Markdown-Datei mit Ports, Pfaden und Restore-Schritten. Die borgmatic-Konfiguration kannst du im Notfall aus dem Backup holen oder mit dem Werkzeug [borgmatic-Konfiguration](/de/werkzeuge/borgmatic-konfiguration/) neu erzeugen.
+
+<Callout type="warning" title="Das Henne-Ei-Problem mit dem Passwortmanager">
+Läuft dein Passwortmanager selbst im Homelab, etwa als [Vaultwarden](/de/dienste/vaultwarden/), liegen die Borg-Passphrase und alle anderen Zugänge im Backup, das du ohne die Passphrase nicht öffnen kannst. Die Bitwarden-Apps behalten zwar eine verschlüsselte Kopie deines Tresors und zeigen sie oft auch ohne Server noch an. Verlass dich aber nicht darauf. Bewahre zumindest die Borg-Passphrase, den Schlüssel und das Master-Passwort zusätzlich **außerhalb** auf.
+</Callout>
+
+Wo du das Notfall-Blatt aufbewahrst, hängt davon ab, wovor du dich schützen willst. Bewährt hat sich:
+
+- **Ausgedruckt** in einem verschlossenen Umschlag, zum Beispiel bei deinen wichtigen Unterlagen. Für den Borg-Schlüssel erzeugt `sudo borgmatic key export --paper` eine Fassung zum Abtippen.
+- **Eine zweite Kopie außer Haus**, etwa bei einer Vertrauensperson. Ein Brand trifft sonst Server, USB-Backup und Papier gleichzeitig.
+- **Digital an einem Ort, der nicht von deinem Server abhängt**, zum Beispiel in einem verschlüsselten Export deines Passwortmanagers auf einem USB-Stick.
+
+Ein Blatt Papier mit der Passphrase ist ein Risiko, wenn jemand bei dir einbricht. Für die meisten ist das kleiner als das Risiko, alle Daten zu verlieren. Entscheide bewusst, was für dich passt.
+
+Aktualisiere das Blatt, wenn du ein Passwort, das Backup-Ziel oder einen Anbieter wechselst. Und probiere es aus: Der vollständige Test aus [Restore testen](/de/einrichten/restore-testen/), nur mit dem Notfall-Blatt in der Hand, ist die beste Generalprobe.
+
+## Prioritäten festlegen
+
+Im Ernstfall willst du nicht überlegen, womit du anfängst. Leg die Reihenfolge jetzt fest und schreib sie mit aufs Notfall-Blatt. Eine sinnvolle Grundordnung:
+
+| Reihenfolge | Was | Warum |
+| --- | --- | --- |
+| 1 | Passwortmanager | Alle anderen Zugänge hängen daran. |
+| 2 | Reverse Proxy und Login-Dienst (z. B. Traefik, Pocket ID) | Ohne sie ist kaum ein anderer Dienst erreichbar. |
+| 3 | Dienste mit wichtigen Daten, die täglich genutzt werden | Dateien, Fotos, Kalender, Smart Home. Hier warten oft auch andere Menschen. |
+| 4 | Alles andere | Dashboards, Monitoring, Medien und Experimente. |
+
+Nutzt jemand in deinem Haushalt deine Dienste mit, überleg dir auch einen Plan B für die Zwischenzeit. Zum Beispiel, dass die Fotos weiter auf dem Handy bleiben, bis der Server wieder läuft.
+
+## Ablauf im Ernstfall
+
+Plane genug Zeit ein. Wie lange der Restore dauert, hängt vor allem von der Datenmenge und der Verbindung zum Backup ab. 500 GB über eine Leitung mit 100 Mbit/s brauchen allein für die Übertragung rund elf Stunden. Eine USB-Platte am neuen Server ist deutlich schneller.
+
+<Steps>
+
+<Step title="Lage klären und nichts überstürzen">
+Finde zuerst heraus, was genau kaputt ist. Ist nur das Netzteil defekt, reicht vielleicht ein Ersatzteil. Ist nur die Systemplatte tot, liegen die Daten auf einer zweiten Platte eventuell noch unversehrt.
+
+Solange du nicht weißt, was los ist, gilt:
+
+- **Nichts auf eine Platte schreiben, die noch Daten enthalten könnte.** Keine Reparaturversuche auf gut Glück.
+- **Das Backup-Repository nicht anfassen.** Führe nie ein zweites `repo-create` aus und starte `borgmatic` auf keinem Rechner ohne Aktion, solange der Restore nicht fertig ist. Die Aufräumregeln könnten sonst echte Archive löschen.
+- **Prüfe, ob das Backup selbst betroffen ist.** Wurde der Server kompromittiert oder waren Dateien schon vor dem Ausfall beschädigt, ist das neueste Archiv vielleicht nicht das richtige.
+</Step>
+
+<Step title="Neue Hardware oder VM bereitstellen">
+Du brauchst einen Rechner, auf dem dein Homelab wieder laufen kann. Das muss nicht gleich die endgültige Lösung sein:
+
+- ein Ersatzrechner oder alter Laptop,
+- eine VM auf deinem PC, um das Wichtigste schnell zurückzuholen,
+- ein gemieteter VPS, wenn dein Backup-Ziel über das Internet erreichbar ist.
+
+Achte auf genug Speicherplatz für alle Daten aus dem Backup, plus Reserve. Am einfachsten ist ein Rechner mit derselben Architektur wie der alte, also wieder x86 oder wieder ARM. Warum, erklärt der Guide [Umzug auf neue Hardware](/de/einrichten/umzug-neue-hardware/).
+</Step>
+
+<Step title="Betriebssystem und Docker installieren">
+Richte den neuen Server so ein wie den alten. Die Guides dafür kennst du schon:
+
+1. [Betriebssystem installieren](/de/einrichten/betriebssystem-installieren/)
+2. [Feste IP & Hostname](/de/einrichten/feste-ip-hostname/)
+3. [SSH-Schlüssel einrichten](/de/einrichten/ssh-schluessel/) und [Benutzer & sudo](/de/einrichten/benutzer-sudo/)
+4. [SSH härten](/de/einrichten/ssh-haerten/) und [Firewall mit UFW](/de/einrichten/firewall-ufw/)
+5. [Docker installieren](/de/einrichten/docker-installieren/)
+
+Drei Dinge sparen dir später Arbeit. Gib dem Server **dieselbe feste IP-Adresse** wie dem alten, dann passen Portfreigaben und lokale DNS-Einträge sofort wieder. Gib ihm **denselben Hostnamen**, denn borgmatic benennt die Archive danach und zeigt standardmäßig nur die Archive des eigenen Hostnamens. Und leg **denselben Benutzernamen** an. Der erste Benutzer bekommt unter Debian und Ubuntu die ID `1000`, wie vorher, und die Rechte der wiederhergestellten Dateien passen.
+
+Die automatischen Updates kannst du später nachholen. Prüfe zum Schluss, ob Docker läuft:
+
+```bash
+docker compose version
+```
+</Step>
+
+<Step title="borgmatic installieren und mit dem Backup verbinden">
+Installiere Borg und borgmatic genau wie im [Backup-Guide](/de/einrichten/backups-borgmatic/):
+
+```bash
+sudo apt update
+sudo apt install borgbackup pipx
+sudo PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/local/bin pipx install borgmatic
+```
+
+Trag die Passphrase **aus dem Notfall-Blatt** ein:
+
+```bash
+sudo mkdir -p /etc/borgmatic
+sudo chmod 700 /etc/borgmatic
+sudo nano /etc/borgmatic/passphrase
+sudo chmod 600 /etc/borgmatic/passphrase
+```
+
+Leg dann mit `sudo nano /etc/borgmatic/config.yaml` eine Minimalfassung der Konfiguration an. Für den Restore genügen dein Repository und die Passphrase:
+
+```yaml
+repositories:
+    - path: ssh://backup@192.168.1.20/./borg
+      label: remote
+
+encryption_passphrase: "{credential file /etc/borgmatic/passphrase}"
+
+# Show archives of every host name, not just this server's
+match_archives: "*"
+```
+
+Die letzte Zeile sorgt dafür, dass du die Archive auch dann siehst, wenn der neue Server einen anderen Hostnamen hat. Sie gehört nur in diese Restore-Konfiguration, nicht in die spätere echte.
+
+Liegt das Backup auf einem anderen Rechner, braucht root auf dem neuen Server einen eigenen SSH-Schlüssel. Erzeuge ihn und trag den öffentlichen Teil beim Backup-Ziel ein, also in `~/.ssh/authorized_keys` des Benutzers `backup` oder in der Weboberfläche deines Anbieters:
+
+```bash
+sudo ssh-keygen -t ed25519
+sudo cat /root/.ssh/id_ed25519.pub
+```
+
+Eine USB-Platte hängst du am selben Pfad ein wie vorher. Jetzt der entscheidende Test:
+
+```bash
+sudo borgmatic repo-list
+```
+
+Siehst du deine Archive, ist das Schwierigste geschafft.
+
+Deine vollständige Konfiguration steckt übrigens im Backup: borgmatic legt die verwendeten Konfigurationsdateien automatisch in jedes Archiv, mit ihrem vollen Pfad. So holst du sie in einen Ordner zum Vergleichen:
+
+```bash
+mkdir -p /tmp/bootstrap
+P=/etc/borgmatic
+sudo borgmatic extract --archive latest --path "${P#/}" --destination /tmp/bootstrap
+sudo ls /tmp/bootstrap/etc/borgmatic
+```
+
+Die Passphrase-Datei ist dort nicht dabei, das ist gewollt. Übernimm die echte `config.yaml` erst nach dem Restore, zusammen mit dem Timer. Die [borgmatic-Doku](https://torsion.org/borgmatic/how-to/extract-a-backup/) beschreibt dafür auch die Aktion `config bootstrap`. Meldet Borg einen Fehler beim Schlüssel, importierst du den exportierten Schlüssel aus dem Notfall-Blatt mit `sudo borgmatic key import`. Die Details stehen in der [borgmatic-Doku](https://torsion.org/borgmatic/reference/command-line/actions/key-import/).
+
+<Callout type="warning" title="Noch kein Timer">
+Richte den systemd-Timer erst ein, wenn alles wiederhergestellt ist. Ein Backup eines halb leeren Servers würde sonst neben deinen echten Archiven landen, und die Aufräumregeln könnten gute Stände löschen.
+</Callout>
+</Step>
+
+<Step title="Daten zurückholen">
+Wähle zuerst das Archiv. `repo-list` zeigt alle Stände mit Datum. Meist ist das neueste richtig. War der alte Server schon vor dem Ausfall auffällig, nimm ein älteres.
+
+Den kompletten Homelab-Ordner holst du mit einem einzigen Befehl an seinen ursprünglichen Ort zurück. Auf einem frischen Server ist `--destination /` genau richtig:
+
+```bash
+sudo borgmatic extract --archive latest --destination /
+```
+
+Statt `latest` kannst du jeden Namen aus `repo-list` einsetzen. Borg stellt dabei auch Besitzer und Rechte wieder her.
+
+Willst du nach Priorität vorgehen, holst du zuerst nur einzelne Stacks. Borg speichert Pfade ohne führenden Schrägstrich, deshalb der Ausdruck hinter `--path` (mehr dazu in [Restore testen](/de/einrichten/restore-testen/)):
+
+```bash
+P=__ROOT__/vaultwarden
+sudo borgmatic extract --archive latest --path "${P#/}" --destination /
+```
+
+Im Modus „zentral“ liegen die Daten unter `__DATA_ROOT__`. Hol sie dann mit einem zweiten Aufruf zurück, falls der Ordner nicht ohnehin unterhalb von `__ROOT__` liegt. Dasselbe gilt für andere Pfade, die in `source_directories` stehen.
+
+Prüfe zum Schluss, ob alles da ist:
+
+```bash
+ls -la __ROOT__
+```
+</Step>
+
+<Step title="Datenbanken zurückspielen">
+Hat dein Backup die Stacks mit Datenbank vorher gestoppt, sind die Datenbankdateien in Ordnung. Dann überspringst du diesen Schritt. Liefen die Datenbanken während des Backups, sind die kopierten Dateien vielleicht nicht stimmig. Der sichere Weg ist dann der **Dump**, den dein Backup vorher erstellt hat.
+
+Das Prinzip: Du schiebst die alten Datenbankdateien beiseite, startest nur den Datenbank-Container mit einem leeren Datenordner und spielst den Dump ein. Das Beispiel nutzt Authentik mit PostgreSQL aus dem Backup-Guide:
+
+```bash
+cd __ROOT__/authentik
+sudo mv __DATA(authentik)__/postgres __DATA(authentik)__/postgres.alt
+docker compose up -d postgresql
+docker compose exec postgresql pg_isready -U authentik
+```
+
+Meldet `pg_isready` `accepting connections`, spielst du den Dump ein:
+
+```bash
+sudo cat __DATA(authentik)__/db-dump/authentik.sql \
+  | docker compose exec -T postgresql psql -U authentik -d authentik
+```
+
+Bei MariaDB, etwa für Nextcloud, sieht das so aus. Auch hier schiebst du vorher den alten Datenordner beiseite und startest nur die Datenbank:
+
+```bash
+cd __ROOT__/nextcloud
+sudo mv __DATA(nextcloud)__/db __DATA(nextcloud)__/db.alt
+docker compose up -d db
+sudo cat __DATA(nextcloud)__/db-dump/nextcloud.sql \
+  | docker compose exec -T db sh -c 'mariadb -u root -p"$MARIADB_ROOT_PASSWORD" nextcloud'
+```
+
+Gib dem Container nach dem Start ein paar Sekunden, bis die Datenbank bereit ist. Dienste mit SQLite, etwa Vaultwarden in der Standardeinstellung, brauchen diesen Schritt meist nicht. Die Ordner mit `.alt` löschst du erst, wenn der Dienst ein paar Tage sauber gelaufen ist.
+</Step>
+
+<Step title="Stacks in der richtigen Reihenfolge starten">
+Leg zuerst das Proxy-Netzwerk an. Es gehört zu Docker selbst und ist deshalb nicht im Backup:
+
+```bash
+docker network create __NETWORK__
+```
+
+Starte dann den Reverse Proxy und danach die Dienste nach deiner Prioritätenliste:
+
+```bash
+cd __ROOT__/traefik && docker compose up -d
+cd __ROOT__/vaultwarden && docker compose up -d
+```
+
+Sind die wichtigsten Dienste da, startest du den Rest auf einmal. Bereits laufende Stacks bleiben dabei unverändert:
+
+```bash
+for f in __ROOT__/*/compose.yaml; do docker compose -f "$f" up -d; done
+```
+
+Docker lädt dabei alle Images neu herunter. Steht in einer `compose.yaml` ein fester Tag, bekommst du dieselbe Version wie vorher. Bei `latest` kann es eine neuere sein. Schau bei Problemen deshalb zuerst ins Log:
+
+```bash
+docker compose -f __ROOT__/vaultwarden/compose.yaml logs --tail 50
+```
+</Step>
+
+<Step title="DNS, Router und Zugriff prüfen">
+Hat der neue Server dieselbe IP-Adresse wie der alte, musst du hier meist nichts tun. Sonst gehst du diese Punkte durch:
+
+- **Router**: Portfreigaben für 80 und 443 (und ggf. den WireGuard-Port) auf die neue interne IP umstellen, feste IP-Zuordnung anpassen.
+- **DNS**: Zuhause zeigen deine Einträge auf die öffentliche IP deines Anschlusses. Die ändert sich durch neue Hardware nicht. Läuft der Server auf einem neuen VPS, änderst du beim DNS-Anbieter die A- und AAAA-Records auf die neue Adresse.
+- **Lokale DNS-Einträge**, etwa in deinem Router oder in Pi-hole, auf die neue IP umstellen.
+
+Prüfe dann, ob der Name auf die richtige Adresse zeigt:
+
+```bash
+dig +short vault.__DOMAIN__
+```
+
+`dig` steckt im Paket `dnsutils` (`sudo apt install dnsutils`). Teste deine Dienste zum Schluss auch von außen, zum Beispiel mit dem Handy im Mobilfunknetz statt im WLAN.
+
+Die Zertifikate hat Traefik mit seinem Datenordner zurückbekommen, es muss also nichts neu anfordern. Klappt die Anforderung doch einmal nicht, starte Traefik nicht in einer Schleife neu. Let's Encrypt begrenzt, wie oft du Zertifikate anfordern darfst.
+</Step>
+
+<Step title="Nacharbeiten">
+Dein Homelab läuft wieder. Damit der nächste Ernstfall genauso glimpflich ausgeht, fehlen noch ein paar Dinge:
+
+1. **Backup wieder einschalten**: die echte `config.yaml` aus `/tmp/bootstrap` nach `/etc/borgmatic` kopieren, Command-Hooks und Monitoring darin prüfen, den systemd-Timer aus dem [Backup-Guide](/de/einrichten/backups-borgmatic/) anlegen und einen Lauf von Hand starten. Lösch danach `/tmp/bootstrap`.
+2. **Monitoring**: Agents für [Beszel](/de/einrichten/monitoring-beszel/) neu installieren, falls sie außerhalb von Docker liefen, und in [Uptime Kuma](/de/einrichten/uptime-kuma/) prüfen, ob alle Monitore grün sind.
+3. **Automatische Updates** und andere Einstellungen außerhalb von `__ROOT__` nachholen.
+4. **Notfall-Blatt aktualisieren**: Was hat gefehlt, was hat länger gedauert als gedacht? Schreib es jetzt auf, solange du es noch weißt.
+5. **Alte Datenträger** sicher löschen oder zerstören, bevor du sie entsorgst. Auf ihnen liegen deine Secrets.
+</Step>
+
+</Steps>
+
+## Wie geht es weiter?
+
+Ein Notfallplan ist nur so gut wie seine letzte Probe. Plane einmal im Jahr einen vollständigen Restore nach [Restore testen](/de/einrichten/restore-testen/) ein und nimm dabei nur das Notfall-Blatt zur Hand. Wie du ein funktionierendes Homelab ohne Ausfall auf neue Hardware bringst, zeigt der Guide [Umzug auf neue Hardware](/de/einrichten/umzug-neue-hardware/). Tipps für die Dokumentation findest du unter [Dokumentation](/de/nachschlagen/dokumentation/).

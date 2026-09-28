@@ -1,10 +1,327 @@
 ---
-/** Placeholder – replaced by the real tool. */
-import type { Lang } from '../../lib/i18n';
+/**
+ * Getting-started assistant: a few questions, one at a time, then a personal recommendation
+ * (platform, reverse proxy, access, URL scheme, data mode) and a suggested guide order.
+ * Logic: src/lib/tools/assistant.ts. It never hides guides; it only suggests an order.
+ */
+import { questions, textKeys } from '../../lib/tools/assistant';
+import { linkMap } from '../../lib/tools/refs';
+import { t, type Lang } from '../../lib/i18n';
+import { url } from '../../lib/routes';
+
 interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
+const k = (key: string, vars?: Record<string, string | number>) => t(lang, `tools.assistant.${key}`, vars);
+
+const uiKeys = ['progress', 'back', 'next', 'finish', 'restart', 'more', 'optional', 'apply', 'applied', 'toGuides', 'area.platform', 'area.proxy', 'area.access', 'area.url', 'area.data', 'edit'];
+const texts = Object.fromEntries([...textKeys(), ...uiKeys].map((key) => [key, k(key)]));
+const links = await linkMap(lang);
+const data = { texts, links, questions: questions.map((q) => ({ id: q.id })) };
+const total = questions.length;
 ---
 
-<p data-lang={lang}>…</p>
+<div class="asst" data-assistant>
+  <script type="application/json" data-asst-data set:html={JSON.stringify(data)} />
+
+  <section class="card quiz" data-quiz aria-labelledby="asst-progress">
+    <div class="progress">
+      <span id="asst-progress" class="p-label" data-progress-label aria-live="polite">{k('progress').replace('{n}', '1').replace('{total}', String(total))}</span>
+      <div class="bar" aria-hidden="true"><span data-progress-bar></span></div>
+    </div>
+
+    <form data-form>
+      {
+        questions.map((q, i) => (
+          <fieldset data-q={q.id} hidden={i > 0}>
+            <legend class="q-title">{k(`q.${q.id}`)}</legend>
+            <p class="q-hint">
+              {k(`q.${q.id}.hint`)}
+              {'link' in q && links[q.link] && (
+                <>
+                  {' '}
+                  <a href={links[q.link].href}>{links[q.link].title} →</a>
+                </>
+              )}
+            </p>
+            <div class="opts">
+              {q.options.map((o) => (
+                <label class="opt">
+                  <input type="radio" name={q.id} value={o} />
+                  <span>{k(`q.${q.id}.${o}`)}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        ))
+      }
+      <div class="nav">
+        <button type="button" class="btn btn-outline btn-sm" data-back>{k('back')}</button>
+        <button type="submit" class="btn btn-primary btn-sm" data-next disabled>{k('next')}</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="result" data-result hidden>
+    <div class="r-head">
+      <div>
+        <span class="eyebrow">{k('resultEyebrow')}</span>
+        <h2 class="h2" tabindex="-1" data-result-title>{k('resultTitle')}</h2>
+        <p class="muted">{k('resultLead')}</p>
+      </div>
+      <div class="r-actions">
+        <button type="button" class="btn btn-outline btn-sm" data-edit>{k('edit')}</button>
+        <button type="button" class="link-btn" data-restart>{k('restart')}</button>
+      </div>
+    </div>
+
+    <div class="blocks" data-blocks></div>
+
+    <div class="card apply">
+      <div>
+        <h3>{k('applyTitle')}</h3>
+        <p class="muted" data-apply-summary></p>
+      </div>
+      <button type="button" class="btn btn-primary" data-apply>{k('apply')}</button>
+      <p class="applied" data-applied hidden role="status">
+        <span>{k('applied')}</span>
+        <a href={url.section(lang, 'setup')}>{k('toGuides')} →</a>
+      </p>
+    </div>
+
+    <div class="card order">
+      <h3>{k('orderTitle')}</h3>
+      <p class="muted">{k('orderLead')}</p>
+      <ol data-order></ol>
+      <p class="all">
+        {k('orderAll')} <a href={url.section(lang, 'setup')}>{k('toGuides')} →</a>
+      </p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  import { activeQuestions, recommend, setupPatch, type Answers, type QuestionId } from '../../lib/tools/assistant';
+  import { getSetup, setSetup } from '../../client/store';
+
+  const KEY = 'yhl-assistant';
+  type Ref = { href: string; title: string };
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-assistant]')) {
+    const data = JSON.parse(root.querySelector('[data-asst-data]')!.textContent!) as { texts: Record<string, string>; links: Record<string, Ref> };
+    const tx = (key: string) => data.texts[key] ?? key;
+    const form = root.querySelector<HTMLFormElement>('[data-form]')!;
+    const quiz = root.querySelector<HTMLElement>('[data-quiz]')!;
+    const result = root.querySelector<HTMLElement>('[data-result]')!;
+    const btnBack = root.querySelector<HTMLButtonElement>('[data-back]')!;
+    const btnNext = root.querySelector<HTMLButtonElement>('[data-next]')!;
+    const label = root.querySelector<HTMLElement>('[data-progress-label]')!;
+    const bar = root.querySelector<HTMLElement>('[data-progress-bar]')!;
+    const applied = root.querySelector<HTMLElement>('[data-applied]')!;
+
+    let answers: Answers = {};
+    let step = 0;
+    let done = false;
+
+    try {
+      const saved = JSON.parse(localStorage.getItem(KEY) ?? 'null');
+      if (saved && typeof saved === 'object') {
+        answers = saved.answers ?? {};
+        step = Number(saved.step) || 0;
+        done = !!saved.done;
+      }
+    } catch {}
+
+    const save = () => {
+      try {
+        localStorage.setItem(KEY, JSON.stringify({ answers, step, done }));
+      } catch {}
+    };
+
+    function syncForm() {
+      for (const [q, v] of Object.entries(answers)) {
+        const el = form.elements.namedItem(q);
+        if (el instanceof RadioNodeList) el.value = v ?? '';
+      }
+    }
+
+    function showStep(focus = false) {
+      const list = activeQuestions(answers);
+      step = Math.max(0, Math.min(step, list.length - 1));
+      const cur = list[step];
+      form.querySelectorAll<HTMLFieldSetElement>('fieldset[data-q]').forEach((fs) => (fs.hidden = fs.dataset.q !== cur.id));
+      label.textContent = tx('progress').replace('{n}', String(step + 1)).replace('{total}', String(list.length));
+      bar.style.width = `${((step + (answers[cur.id] ? 1 : 0)) / list.length) * 100}%`;
+      btnBack.disabled = step === 0;
+      btnNext.disabled = !answers[cur.id];
+      btnNext.textContent = step === list.length - 1 ? tx('finish') : tx('next');
+      if (focus) form.querySelector<HTMLInputElement>(`fieldset[data-q="${cur.id}"] input:checked, fieldset[data-q="${cur.id}"] input`)?.focus();
+    }
+
+    const link = (ref: string) => {
+      const r = data.links[ref];
+      if (!r) return null;
+      const a = document.createElement('a');
+      a.href = r.href;
+      a.textContent = r.title;
+      return a;
+    };
+    const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
+      const e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text) e.textContent = text;
+      return e;
+    };
+
+    function renderResult() {
+      const r = recommend(answers);
+      const blocks = root.querySelector<HTMLElement>('[data-blocks]')!;
+      blocks.replaceChildren();
+      for (const area of ['platform', 'proxy', 'access', 'url', 'data'] as const) {
+        const b = r[area];
+        const card = el('article', 'card block');
+        card.append(el('span', 'eyebrow', tx(`area.${area}`)), el('h3', '', tx(`r.${area}.${b.choice}`)));
+        for (const w of b.why) card.append(el('p', '', tx(`why.${w}`)));
+        const ls = b.links.map(link).filter((x): x is HTMLAnchorElement => !!x);
+        if (ls.length) {
+          const p = el('p', 'more', `${tx('more')} `);
+          ls.forEach((a, i) => p.append(...(i ? [document.createTextNode(' · '), a] : [a])));
+          card.append(p);
+        }
+        blocks.append(card);
+      }
+
+      const patch = setupPatch(r);
+      root.querySelector('[data-apply-summary]')!.textContent = [tx(`r.proxy.${patch.proxy}`), tx(`r.url.${patch.urlMode}`), tx(`r.data.${patch.dataMode}`)].join(' · ');
+
+      const ol = root.querySelector<HTMLOListElement>('[data-order]')!;
+      ol.replaceChildren();
+      for (const it of r.order) {
+        const a = link(it.ref);
+        if (!a) continue;
+        const li = el('li', it.optional ? 'is-optional' : '');
+        const top = el('div', 'o-top');
+        top.append(a);
+        if (it.optional) top.append(el('span', 'tag opt-tag', tx('optional')));
+        li.append(top);
+        if (it.note) li.append(el('span', 'o-note', tx(`note.${it.note}`)));
+        ol.append(li);
+      }
+    }
+
+    function render(focus = false) {
+      syncForm();
+      quiz.hidden = done;
+      result.hidden = !done;
+      applied.hidden = true;
+      if (done) {
+        renderResult();
+        if (focus) root.querySelector<HTMLElement>('[data-result-title]')!.focus();
+      } else showStep(focus);
+    }
+
+    form.addEventListener('change', (e) => {
+      const input = e.target as HTMLInputElement;
+      answers[input.name as QuestionId] = input.value;
+      save();
+      showStep();
+    });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const list = activeQuestions(answers);
+      if (!answers[list[step].id]) return;
+      if (step >= list.length - 1) done = true;
+      else step++;
+      save();
+      render(true);
+    });
+    btnBack.addEventListener('click', () => {
+      step--;
+      save();
+      showStep(true);
+    });
+    root.querySelector('[data-edit]')!.addEventListener('click', () => {
+      done = false;
+      step = 0;
+      save();
+      render(true);
+    });
+    root.querySelectorAll('[data-restart]').forEach((b) =>
+      b.addEventListener('click', () => {
+        answers = {};
+        step = 0;
+        done = false;
+        form.reset();
+        try {
+          localStorage.removeItem(KEY);
+        } catch {}
+        render(true);
+      }),
+    );
+    root.querySelector('[data-apply]')!.addEventListener('click', () => {
+      setSetup({ ...getSetup(), ...setupPatch(recommend(answers)) });
+      applied.hidden = false;
+    });
+
+    render();
+  }
+</script>
+
+<style>
+  .asst { display: flex; flex-direction: column; gap: 20px; max-width: 820px; }
+  .quiz { padding: 26px 28px; display: flex; flex-direction: column; gap: 22px; }
+  .progress { display: flex; flex-direction: column; gap: 8px; }
+  .p-label { font-size: 13px; font-weight: 600; color: var(--text-4); }
+  .bar { height: 6px; border-radius: 999px; background: var(--bg); overflow: hidden; }
+  .bar span { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 999px; transition: width 0.2s; }
+  form { display: flex; flex-direction: column; gap: 22px; }
+  fieldset { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .q-title { padding: 0; font-size: 21px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.3; margin-bottom: 6px; }
+  .q-hint { font-size: 14.5px; line-height: 1.5; color: var(--text-4); }
+  .opts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+  .opt { display: flex; position: relative; }
+  .opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .opt span { border: 1.5px solid var(--line-2); background: #fff; color: var(--text-2); border-radius: 999px; padding: 9px 16px; font-size: 14.5px; cursor: pointer; line-height: 1.35; }
+  .opt span:hover { border-color: var(--accent-300); }
+  .opt input:checked + span { border-color: var(--accent); background: var(--accent-50); color: var(--accent-600); font-weight: 600; }
+  .opt input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .nav { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .nav .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .result { display: flex; flex-direction: column; gap: 18px; }
+  .r-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+  .r-head > div:first-child { display: flex; flex-direction: column; gap: 6px; max-width: 600px; }
+  .r-head h2:focus { outline: none; }
+  .r-actions { display: flex; gap: 16px; align-items: center; }
+  .blocks { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .blocks :global(.block) { padding: 20px 22px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .blocks :global(.block h3) { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+  .blocks :global(.block p) { font-size: 14.5px; line-height: 1.55; color: var(--text-3); }
+  .blocks :global(.block .more) { font-size: 13.5px; color: var(--muted); margin-top: auto; padding-top: 4px; }
+  h3 { font-size: 18px; font-weight: 700; }
+  .apply { padding: 20px 22px; display: flex; gap: 14px 20px; align-items: center; flex-wrap: wrap; border: 2px solid var(--accent-100); }
+  .apply > div { flex: 1 1 280px; display: flex; flex-direction: column; gap: 4px; }
+  .apply .muted { font-size: 14px; }
+  .applied { flex-basis: 100%; display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: 14.5px; font-weight: 600; color: var(--lvl1-fg); background: var(--lvl1-bg); padding: 10px 14px; border-radius: 12px; }
+  .applied[hidden] { display: none; }
+  .order { padding: 22px 24px; display: flex; flex-direction: column; gap: 8px; }
+  .order > .muted { font-size: 14.5px; line-height: 1.5; }
+  ol { margin: 8px 0 0; padding-left: 26px; display: flex; flex-direction: column; gap: 10px; }
+  ol :global(li) { font-size: 15px; line-height: 1.4; padding-left: 4px; }
+  ol :global(li::marker) { color: var(--muted); font-size: 13.5px; }
+  ol :global(.o-top) { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  ol :global(.o-top a) { font-weight: 600; }
+  ol :global(.is-optional .o-top a) { font-weight: 400; color: var(--text-4); }
+  ol :global(.opt-tag) { background: var(--bg); color: var(--muted); }
+  ol :global(.o-note) { display: block; font-size: 13.5px; color: var(--muted); margin-top: 2px; }
+  .all { font-size: 14px; color: var(--muted); margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--line-3); }
+  @media (max-width: 600px) {
+    .quiz { padding: 20px 18px; }
+    .q-title { font-size: 19px; }
+    .opts { flex-direction: column; }
+    .opt span { width: 100%; border-radius: 14px; }
+    .order { padding: 18px; }
+  }
+</style>

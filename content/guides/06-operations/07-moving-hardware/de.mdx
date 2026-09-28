@@ -1,0 +1,256 @@
+---
+slug: umzug-neue-hardware
+title: "Umzug auf neue Hardware"
+description: "Du ziehst dein komplettes Homelab mit allen Stacks, Daten und Zertifikaten auf einen neuen Server um. Am Ende laufen alle Dienste auf der neuen Hardware, und der alte Server bleibt als Rückfallebene erhalten, bis alles sicher funktioniert."
+level: 2
+minutes: 60
+requires: [Linux-Server, Docker Compose, SSH-Zugang zu beiden Servern]
+---
+
+<OneWay />
+
+Irgendwann ist der alte Mini-PC zu langsam, zu laut oder zu stromhungrig. Oder du steigst vom Raspberry Pi auf einen richtigen Server um. Der Umzug klingt nach viel Arbeit. Mit der Ordnerstruktur dieser Seite ist er aber überschaubar: Alles, was zu deinen Diensten gehört, liegt in einem einzigen Ordner, `__ROOT__`. Den kopierst du auf den neuen Server, startest die Stacks, und fertig.
+
+Ein paar Dinge musst du trotzdem beachten: Die Dienste müssen während des Kopierens stehen, Dateirechte müssen erhalten bleiben, und Datenbanken ziehen am sichersten als Dump um. Genau das zeigt dieser Guide.
+
+<Steps>
+
+<Step title="Bestandsaufnahme auf dem alten Server">
+Verschaff dir zuerst einen Überblick. Welche Stacks laufen gerade?
+
+```bash
+docker ps --format '{{.Names}}\t{{.Image}}'
+ls __ROOT__
+```
+
+Prüfe außerdem, was **außerhalb** von `__ROOT__` liegt und mit umziehen muss:
+
+- **Named Volumes**: Daten in Volumes, die Docker selbst verwaltet, liegen unter `/var/lib/docker/volumes` und werden nicht mitkopiert. `docker volume ls` zeigt sie. Stacks nach den Vorlagen dieser Seite nutzen Bind Mounts, dann ist die Liste leer oder enthält nur Überbleibsel.
+- **Datenordner im Modus „zentral“** unter `__DATA_ROOT__`, falls er nicht ohnehin unterhalb von `__ROOT__` liegt, und andere eingebundene Pfade, etwa eine Mediensammlung auf einer zweiten Platte.
+- **Systemeinstellungen**: `/etc/borgmatic`, Timer und Crontabs, Einträge in `/etc/fstab`, deine UFW-Regeln (`sudo ufw status`).
+- **Agents außerhalb von Docker**, zum Beispiel der Beszel-Agent, falls du ihn als Systemdienst installiert hast.
+
+Schreib dir die Liste auf. Sie ist gleichzeitig ein guter Anfang für deine [Dokumentation](/de/nachschlagen/dokumentation/).
+
+Prüfe zuletzt die Architektur beider Rechner:
+
+```bash
+uname -m
+```
+
+`x86_64` steht für normale PCs und Mini-PCs, `aarch64` für ARM, etwa einen Raspberry Pi. Zeigen beide Server dasselbe an, ist alles einfach. Wenn nicht, lies den Kasten am Ende dieses Guides, bevor du weitermachst.
+</Step>
+
+<Step title="Neuen Server vorbereiten">
+Richte den neuen Server genauso ein wie den alten. Die Guides dafür kennst du:
+
+1. [Betriebssystem installieren](/de/einrichten/betriebssystem-installieren/) und [Feste IP & Hostname](/de/einrichten/feste-ip-hostname/). Nimm für die Übergangszeit eine andere IP-Adresse als der alte Server.
+2. [SSH-Schlüssel](/de/einrichten/ssh-schluessel/), [Benutzer & sudo](/de/einrichten/benutzer-sudo/), [SSH härten](/de/einrichten/ssh-haerten/), [Firewall mit UFW](/de/einrichten/firewall-ufw/) und [Automatische Updates](/de/einrichten/automatische-updates/)
+3. [Docker installieren](/de/einrichten/docker-installieren/)
+
+Leg denselben Benutzernamen an wie auf dem alten Server und prüfe auf beiden Rechnern die Benutzer-ID:
+
+```bash
+id
+```
+
+Steht dort auf beiden Seiten `uid=1000`, gehören die kopierten Dateien auf dem neuen Server wieder dir. Das ist bei Debian und Ubuntu für den ersten Benutzer der Normalfall.
+
+Lege dann den Homelab-Ordner an und installiere rsync, das Werkzeug zum Kopieren. rsync muss auf **beiden** Servern installiert sein:
+
+```bash
+sudo mkdir -p __ROOT__
+sudo chown $USER:$USER __ROOT__
+sudo apt install rsync
+```
+</Step>
+
+<Step title="Zugang zwischen den Servern einrichten">
+Damit Besitzer, Gruppen und Rechte aller Dateien erhalten bleiben, muss rsync auf beiden Seiten als root laufen. Direkte root-Anmeldung per SSH hast du beim [Härten](/de/einrichten/ssh-haerten/) aber zu Recht abgeschaltet. Deshalb gehst du einen kleinen Umweg: Du holst die Daten vom neuen Server aus ab, meldest dich am alten als normaler Benutzer an und startest dort rsync mit `sudo`.
+
+Auf dem **neuen** Server bekommt root einen SSH-Schlüssel. Hast du dort schon einen erzeugt, etwa für borgmatic, überspringst du den ersten Befehl:
+
+```bash
+sudo ssh-keygen -t ed25519
+sudo cat /root/.ssh/id_ed25519.pub
+```
+
+Auf dem **alten** Server trägst du diesen öffentlichen Schlüssel für deinen Benutzer ein. Außerdem erlaubst du deinem Benutzer vorübergehend, rsync ohne Passwort mit sudo zu starten:
+
+```bash
+nano ~/.ssh/authorized_keys
+echo "$USER ALL=(root) NOPASSWD: /usr/bin/rsync" | sudo tee /etc/sudoers.d/umzug
+sudo chmod 440 /etc/sudoers.d/umzug
+sudo visudo -c
+```
+
+Füge im Editor den Schlüssel als neue Zeile ein. `visudo -c` prüft die sudo-Konfiguration und sollte für alle Dateien `parsed OK` melden. Teste jetzt vom **neuen** Server aus, ob alles klappt. Ersetze dabei `benutzer` und `192.168.1.10` durch deinen Benutzernamen und die IP-Adresse des alten Servers:
+
+```bash
+sudo ssh benutzer@192.168.1.10 sudo rsync --version
+```
+
+Beim ersten Mal fragt SSH, ob du dem Server vertraust. Bestätige mit `yes`. Siehst du danach die Version von rsync, ist der Zugang bereit.
+</Step>
+
+<Step title="Datenbanken dumpen und Stacks stoppen">
+Datenbanken ziehen am sichersten als **Dump** um, also als Export in eine Datei. Ein Dump funktioniert unabhängig von Architektur und Speicherformat. Kopierte Datenbankdateien laufen meist auch, aber nur, wenn Image-Version und Architektur gleich bleiben. Der Dump ist deine Versicherung.
+
+Hast du [Backups mit borgmatic](/de/einrichten/backups-borgmatic/) eingerichtet, stehen die passenden Befehle schon in deiner Konfiguration. Führe sie jetzt von Hand aus, zum Beispiel für Authentik:
+
+```bash
+sudo mkdir -p __DATA(authentik)__/db-dump
+docker compose -f __ROOT__/authentik/compose.yaml exec -T postgresql pg_dump -U authentik -d authentik \
+  | sudo tee __DATA(authentik)__/db-dump/authentik.sql > /dev/null
+sudo ls -lh __DATA(authentik)__/db-dump/
+```
+
+Ist die Datei nur wenige Bytes groß, ist etwas schiefgegangen. Prüfe dann den Befehl, bevor du weitermachst.
+
+Jetzt stoppst du alle Stacks, damit sich während des Kopierens nichts mehr ändert. Die Schleife geht jeden Stack-Ordner durch:
+
+```bash
+for f in __ROOT__/*/compose.yaml; do docker compose -f "$f" down; done
+docker ps
+```
+
+`docker ps` sollte jetzt leer sein. `down` entfernt nur die Container, die Daten im Stack-Ordner bleiben. Deaktiviere außerdem das nächtliche Backup auf dem alten Server, damit es nicht mitten im Umzug startet:
+
+```bash
+sudo systemctl disable --now borgmatic.timer
+```
+</Step>
+
+<Step title="Daten mit rsync kopieren">
+Jetzt kopierst du den kompletten Homelab-Ordner. Der Befehl läuft auf dem **neuen** Server und holt die Daten vom alten ab:
+
+```bash
+sudo rsync -aHAX --numeric-ids --info=progress2 \
+  --rsync-path="sudo rsync" \
+  benutzer@192.168.1.10:__ROOT__/ __ROOT__/
+```
+
+Was die Optionen bedeuten:
+
+- `-a` (archive) kopiert rekursiv und behält Rechte, Besitzer, Zeitstempel und symbolische Links.
+- `-H`, `-A` und `-X` übernehmen zusätzlich harte Links, ACLs (erweiterte Zugriffsrechte) und erweiterte Dateiattribute.
+- `--numeric-ids` überträgt Besitzer als Nummer statt als Name. Das ist wichtig, weil Container oft Benutzer-IDs verwenden, die es auf dem Host gar nicht als Namen gibt, etwa die ID der Datenbank im Container.
+- `--rsync-path="sudo rsync"` startet rsync auf dem alten Server mit root-Rechten, damit es alle Dateien lesen kann.
+
+Achte auf die **Schrägstriche am Ende** beider Pfade. Mit `__ROOT__/` kopiert rsync den Inhalt des Ordners in den Zielordner. Ohne den Schrägstrich landet der Ordner selbst noch einmal darin.
+
+Nutzt du den Modus „zentral“ und liegt `__DATA_ROOT__` außerhalb von `__ROOT__`, wiederholst du den Befehl für diesen Ordner. Dasselbe gilt für andere Pfade aus deiner Bestandsaufnahme:
+
+```bash
+sudo mkdir -p __DATA_ROOT__
+sudo rsync -aHAX --numeric-ids --info=progress2 \
+  --rsync-path="sudo rsync" \
+  benutzer@192.168.1.10:__DATA_ROOT__/ __DATA_ROOT__/
+```
+
+Bricht die Übertragung ab, starte denselben Befehl einfach noch einmal. rsync überträgt nur, was noch fehlt. Zum Schluss prüfst du mit einem Probelauf, ob beide Seiten gleich sind. `-n` simuliert nur, `-i` listet jede Abweichung auf. Bleibt die Liste leer, ist alles angekommen:
+
+```bash
+sudo rsync -aHAXn -i --numeric-ids --rsync-path="sudo rsync" \
+  benutzer@192.168.1.10:__ROOT__/ __ROOT__/
+```
+
+Räume danach auf dem **alten** Server die sudo-Ausnahme wieder weg:
+
+```bash
+sudo rm /etc/sudoers.d/umzug
+```
+</Step>
+
+<Step title="Stacks auf dem neuen Server starten">
+Das Proxy-Netzwerk gehört zu Docker und wird nicht mitkopiert. Leg es neu an:
+
+```bash
+docker network create __NETWORK__
+```
+
+Starte zuerst den Reverse Proxy und schau ins Log:
+
+```bash
+cd __ROOT__/traefik
+docker compose up -d
+docker compose logs --tail 30
+```
+
+Danach startest du alle übrigen Stacks auf einmal. Bereits laufende bleiben dabei unverändert:
+
+```bash
+for f in __ROOT__/*/compose.yaml; do docker compose -f "$f" up -d; done
+docker ps
+```
+
+Docker lädt dabei alle Images neu herunter, das dauert beim ersten Mal etwas.
+
+Hast du die Architektur gewechselt oder startet eine Datenbank nicht sauber, spielst du den Dump ein. Das Prinzip: alte Datenbankdateien beiseite schieben, nur den Datenbank-Container mit leerem Ordner starten, Dump einspielen, Rest starten. Für Authentik sieht das so aus:
+
+```bash
+cd __ROOT__/authentik
+docker compose down
+sudo mv __DATA(authentik)__/postgres __DATA(authentik)__/postgres.alt
+docker compose up -d postgresql
+docker compose exec postgresql pg_isready -U authentik
+sudo cat __DATA(authentik)__/db-dump/authentik.sql \
+  | docker compose exec -T postgresql psql -U authentik -d authentik
+docker compose up -d
+```
+
+Wiederhole `pg_isready`, bis `accepting connections` erscheint, und spiele erst dann den Dump ein. Den Ordner mit `.alt` löschst du erst, wenn der Dienst ein paar Tage sauber läuft.
+
+Übertrage zum Schluss die Einstellungen außerhalb von `__ROOT__` aus deiner Bestandsaufnahme, zum Beispiel die borgmatic-Konfiguration. Der Timer für das Backup wird erst im letzten Schritt eingeschaltet.
+</Step>
+
+<Step title="Umschalten: IP, DNS und Portfreigaben">
+Bisher läuft der neue Server unter einer eigenen IP-Adresse. Jetzt lenkst du den Verkehr um. Dafür gibt es zwei Wege:
+
+**Weg 1: Der neue Server übernimmt die alte IP-Adresse.** Das ist meist der einfachere. Fahre den alten Server herunter, stelle die feste IP des neuen Servers auf die alte Adresse um (wie in [Feste IP & Hostname](/de/einrichten/feste-ip-hostname/)) und passe die feste Zuordnung im Router an. Portfreigaben und lokale DNS-Einträge stimmen dann sofort.
+
+**Weg 2: Der neue Server behält seine IP-Adresse.** Dann stellst du um:
+
+- **Portfreigaben im Router** für 80 und 443, und falls vorhanden den WireGuard-Port, auf die neue interne IP.
+- **Lokale DNS-Einträge**, etwa im Router oder in Pi-hole.
+- **Öffentliche DNS-Einträge** nur, wenn sich die öffentliche IP ändert. Zuhause bleibt sie gleich, denn deine Einträge zeigen auf deinen Anschluss und nicht auf den Server. Ziehst du auf einen neuen VPS um, änderst du beim DNS-Anbieter die A- und AAAA-Records.
+
+Beim Wechsel auf einen neuen VPS hilft es, die TTL der DNS-Einträge einen Tag vorher auf wenige Minuten zu senken. Die TTL legt fest, wie lange andere Rechner sich einen Eintrag merken. Dann greifen die neuen Einträge schneller.
+
+Teste danach alle Dienste, am besten auch von außen, etwa mit dem Handy im Mobilfunknetz. Die Zertifikate hat Traefik mit seinem Datenordner mitgebracht, es muss also nichts neu anfordern. Prüfe trotzdem im Browser, ob das Schloss erscheint.
+</Step>
+
+<Step title="Backup und Monitoring umstellen">
+Schalte jetzt das Backup auf dem neuen Server ein. Liegt dein Backup-Ziel auf einem anderen Rechner, trag dort den öffentlichen SSH-Schlüssel von root des neuen Servers ein (siehe [Backups mit borgmatic](/de/einrichten/backups-borgmatic/)). Aktiviere den Timer und starte einen Lauf von Hand:
+
+```bash
+sudo borgmatic config validate
+sudo systemctl enable --now borgmatic.timer
+sudo systemctl start borgmatic.service
+sudo journalctl -u borgmatic.service -e
+```
+
+borgmatic benennt Archive nach dem Hostnamen. Aufräumregeln und Befehle wie `repo-list` beziehen sich standardmäßig nur auf die Archive des eigenen Hostnamens. Hat der neue Server einen anderen Namen, beginnt er also eine neue Reihe, und die Archive des alten Servers bleiben unangetastet. Das ist als Rückfallebene sogar praktisch. Zum Anzeigen oder Löschen der alten Archive brauchst du dann die Option `--match-archives`, Details stehen in der [borgmatic-Doku](https://torsion.org/borgmatic/reference/configuration/). Willst du das vermeiden, gib dem neuen Server denselben Hostnamen wie dem alten.
+
+Ergänze außerdem dein Monitoring: Installiere den Agent von [Beszel](/de/einrichten/monitoring-beszel/) auf dem neuen Server, falls er als Systemdienst lief, und prüfe in [Uptime Kuma](/de/einrichten/uptime-kuma/), ob alle Monitore grün sind.
+</Step>
+
+<Step title="Alten Server erst nach Tagen abschalten">
+Lass den alten Server nach dem Umzug ausgeschaltet, aber unverändert stehen. Manche Probleme zeigen sich erst nach Tagen: ein nächtlicher Job, der fehlt, ein Dienst, den du nur einmal pro Woche nutzt, eine Datei, die doch außerhalb von `__ROOT__` lag. Solange der alte Server noch da ist, holst du das in Minuten nach.
+
+Nach ein bis zwei Wochen ohne Überraschungen kannst du ihn endgültig abbauen. Lösche vorher die Datenträger sicher, bevor du ihn verkaufst oder weitergibst. Darauf liegen alle deine Daten und Secrets.
+
+Aktualisiere zum Schluss deine [Dokumentation](/de/nachschlagen/dokumentation/) und das Notfall-Blatt aus dem [Notfallplan](/de/einrichten/notfallplan/): neue Hardware, neue IP, neuer SSH-Schlüssel beim Backup-Ziel.
+</Step>
+
+</Steps>
+
+<Callout type="warning" title="Wechsel zwischen ARM und x86">
+Ziehst du von einem Raspberry Pi (ARM) auf einen Mini-PC (x86) um oder umgekehrt, brauchst du für jeden Container ein Image für die neue Architektur. Die meisten bekannten Images gibt es für beide. Auf Docker Hub siehst du das unter „OS/ARCH“, auf dem Server prüfst du es mit `docker buildx imagetools inspect <image>`. Steht in einer `compose.yaml` eine feste Plattform (`platform:`), passe sie an oder entferne sie.
+
+Datenbanken ziehen bei einem Architekturwechsel **immer** per Dump um. Die Datenbankdateien selbst sind zwischen Architekturen nicht zuverlässig übertragbar. Alle anderen Dateien, also Konfiguration, Uploads und SQLite-Datenbanken, kannst du normal kopieren.
+</Callout>
+
+## Die Alternative: Umzug aus dem Backup
+
+Du kannst den Umzug auch komplett über dein borgmatic-Backup erledigen, statt direkt zu kopieren: Stacks stoppen, ein letztes Backup erstellen und auf dem neuen Server wiederherstellen, genau wie im [Notfallplan](/de/einrichten/notfallplan/) beschrieben. Das dauert je nach Backup-Ziel länger, ist aber gleichzeitig ein vollständiger Restore-Test. Danach weißt du sicher, dass dein Backup im Ernstfall funktioniert.

@@ -13,3 +13,7 @@ upstream:
   label: docker-compose.example.yml
   url: https://github.com/steveiliop56/tinyauth/blob/main/docker-compose.example.yml
 reviewed: 2026-09-12
+resources:
+  ram: 20
+  gpu: no
+pairsWith: [pocket-id, traefik, caddy]

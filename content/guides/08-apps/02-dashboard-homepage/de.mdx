@@ -1,0 +1,193 @@
+---
+slug: dashboard-homepage
+title: "Dashboard mit Homepage"
+description: "Homepage ist die Startseite für dein Homelab: Alle Dienste liegen als Kacheln auf einer Seite, mit Status, Live-Werten aus Uptime Kuma oder AdGuard Home und einer Suchleiste. Die Konfiguration steht in wenigen YAML-Dateien."
+level: 1
+minutes: 25
+requires: [Docker Compose, Reverse Proxy]
+services: [homepage]
+---
+
+Mit jedem Dienst wächst die Liste der Adressen, die du dir merken musst. [Homepage](https://gethomepage.dev) sammelt sie auf einer Seite. Jeder Dienst bekommt eine Kachel mit Symbol, Link und auf Wunsch Live-Daten: wie viele Anfragen AdGuard Home blockiert hat, ob in Uptime Kuma alles grün ist, ob ein Container läuft. Die Seite eignet sich gut als Startseite im Browser, auch für die Familie.
+
+Homepage hat keine Klick-Oberfläche zum Einrichten. Du beschreibst alles in YAML-Dateien, genau wie in einer `compose.yaml`. Das klingt nach mehr Arbeit, hat aber einen Vorteil: Die Dateien liegen in `__ROOT__`, landen im Backup und lassen sich mit Git versionieren.
+
+<OneWay />
+
+Wer lieber per Drag-and-drop im Browser baut, schaut sich [Homarr](https://homarr.dev) an. Homarr hat einen grafischen Editor, Benutzerkonten und viele Integrationen, ist dafür etwas schwerer. Beide Wege führen zu einem guten Dashboard.
+
+<Callout type="warning" title="Dashboards zeigen viel">
+Ein Dashboard mit Widgets verrät, welche Dienste du betreibst, und zeigt Daten aus ihnen an. Die Zugangsdaten für die Widgets liegen in der Konfiguration. Stell Homepage deshalb nicht ungeschützt ins Internet. Schalte einen Login davor (letzter Schritt) oder erreiche es nur im Heimnetz und über [VPN](/de/einrichten/vpn-wireguard/).
+</Callout>
+
+<Steps>
+
+<Step title="Homepage starten">
+Lege den Ordner an und darin `compose.yaml` und `.env`:
+
+```bash
+mkdir -p __ROOT__/homepage
+cd __ROOT__/homepage
+```
+
+<ServiceFiles id="homepage" />
+
+Der Stack besteht aus zwei Containern. `homepage` ist das Dashboard. `socket-proxy` gibt ihm Lesezugriff auf Docker, dazu mehr im Schritt „Docker einbinden“.
+
+Wichtig ist die Variable `HOMEPAGE_ALLOWED_HOSTS` in der `.env`. Homepage beantwortet aus Sicherheitsgründen nur Anfragen an Adressen, die dort stehen. Sie muss genau die Adresse enthalten, die du im Browser eintippst, ohne `https://`. Mehrere Einträge trennst du mit Komma, ohne Leerzeichen. Nutzt du keinen Reverse Proxy, gehört die IP des Servers mit Port hinein, zum Beispiel `192.168.1.10:3002`.
+
+```bash
+docker compose up -d
+docker compose logs -f homepage
+```
+
+Beim ersten Start legt Homepage Beispieldateien in `__DATA(homepage)__/config` an. Öffne `https://home.__DOMAIN__`. Du siehst eine Seite mit Platzhalter-Kacheln. Siehst du stattdessen eine Fehlermeldung zur Host-Prüfung, vergleiche die Adresse im Log mit `HOMEPAGE_ALLOWED_HOSTS`.
+</Step>
+
+<Step title="Die Konfigurationsdateien">
+Alles, was du einstellst, steht in `__DATA(homepage)__/config`. Die wichtigsten Dateien:
+
+| Datei | Inhalt |
+| --- | --- |
+| `settings.yaml` | Titel, Sprache, Farben, Layout |
+| `services.yaml` | Deine Dienste als Kacheln, in Gruppen |
+| `widgets.yaml` | Die Leiste oben: Suche, Uhrzeit, Wetter |
+| `bookmarks.yaml` | Einfache Linklisten ohne Status |
+| `docker.yaml` | Verbindung zu Docker |
+
+Die Dateien gehören deinem Benutzer (über `PUID` und `PGID` in der `.env`), du bearbeitest sie also ohne `sudo`. Homepage liest sie bei jedem Neuladen der Seite neu ein, ein Neustart des Containers ist nicht nötig. Achte auf die Einrückung: YAML arbeitet mit Leerzeichen, nie mit Tabs. Einen kaputten Eintrag zeigt Homepage als Fehler auf der Seite an.
+
+Beginne mit `settings.yaml`:
+
+```yaml
+title: Homelab
+language: de
+```
+</Step>
+
+<Step title="Dienste eintragen">
+In `services.yaml` legst du Gruppen an, darin die Dienste. Ersetze den Beispielinhalt zum Beispiel durch:
+
+```yaml
+- Werkzeuge:
+    - Vaultwarden:
+        icon: vaultwarden.png
+        href: https://vault.__DOMAIN__
+        description: Passwörter
+        siteMonitor: http://vaultwarden:80
+
+- Betrieb:
+    - Uptime Kuma:
+        icon: uptime-kuma.png
+        href: https://status.__DOMAIN__
+        description: Erreichbarkeit
+    - Beszel:
+        icon: beszel.png
+        href: https://beszel.__DOMAIN__
+        description: Serverwerte
+```
+
+Die Felder im Einzelnen:
+
+- `href` ist der Link, den die Kachel öffnet.
+- `icon` holt ein Symbol aus den [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons). Mit `sh-` davor nutzt du die Symbole von [selfh.st/icons](https://selfh.st/icons/), mit `mdi-` allgemeine Symbole.
+- `siteMonitor` prüft eine Adresse und zeigt einen Punkt mit Antwortzeit an. Nimm hier die **interne** Adresse aus Containername und Port. Homepage hängt im Proxy-Netzwerk `__NETWORK__` und erreicht die anderen Container direkt. Das funktioniert auch, wenn der Dienst hinter einem Login liegt.
+
+Alle Optionen stehen in der [Doku zu services.yaml](https://gethomepage.dev/configs/services/).
+</Step>
+
+<Step title="Widgets einbauen">
+Es gibt zwei Arten von Widgets.
+
+**Info-Widgets** stehen oben auf der Seite und kommen in `widgets.yaml`:
+
+```yaml
+- search:
+    provider: duckduckgo
+    target: _blank
+- datetime:
+    text_size: xl
+    format:
+      dateStyle: long
+      timeStyle: short
+```
+
+**Dienst-Widgets** hängen an einer Kachel und zeigen Daten aus dem Dienst. Homepage fragt dafür die Schnittstelle des Dienstes ab. Zwei Beispiele für `services.yaml`:
+
+```yaml
+- Betrieb:
+    - Uptime Kuma:
+        icon: uptime-kuma.png
+        href: https://status.__DOMAIN__
+        widget:
+          type: uptimekuma
+          url: http://uptime-kuma:3001
+          slug: homelab
+    - AdGuard Home:
+        icon: adguard-home.png
+        href: https://adguard.__DOMAIN__
+        widget:
+          type: adguard
+          url: http://adguard-home:3000
+          username: admin
+          password: "{{HOMEPAGE_VAR_ADGUARD_PASSWORD}}"
+```
+
+Das Uptime-Kuma-Widget liest eine [Statusseite](/de/einrichten/uptime-kuma/). `slug` ist deren Kurzname. Das AdGuard-Widget braucht die Anmeldedaten der Weboberfläche.
+
+Passwörter schreibst du nicht direkt in die YAML-Datei. Homepage ersetzt `{{HOMEPAGE_VAR_…}}` durch die gleichnamige Umgebungsvariable. Ergänze in der `compose.yaml` beim Dienst `homepage` unter `environment`:
+
+```yaml
+      - HOMEPAGE_VAR_ADGUARD_PASSWORD=${HOMEPAGE_VAR_ADGUARD_PASSWORD}
+```
+
+Den Wert trägst du in die `.env` ein und startest mit `docker compose up -d` neu. So bleiben Secrets an einer Stelle, siehe [.env & Secrets](/de/einrichten/env-secrets/). Die Liste aller Widgets steht in der [Homepage-Doku](https://gethomepage.dev/widgets/).
+</Step>
+
+<Step title="Docker einbinden">
+Homepage kann zu jeder Kachel anzeigen, ob der Container läuft und wie viel CPU und RAM er braucht. Dafür muss es Docker fragen können.
+
+Der naheliegende Weg wäre, den Docker-Socket `/var/run/docker.sock` in den Container einzubinden. Über diese Datei steuert man Docker. **Wer Zugriff auf den Socket hat, hat Root-Rechte auf dem Server**: Er kann Container starten, die das ganze Dateisystem einbinden. Das Anhängsel `:ro` (read-only) ändert daran nichts. Es schützt nur die Datei selbst, nicht die Befehle, die man über sie schickt.
+
+Deshalb enthält der Stack den `socket-proxy`. Er hat den Socket, lässt aber nur lesende Anfragen durch (`POST=0`) und nur zu Containern (`CONTAINERS=1`). Homepage spricht mit dem Proxy statt mit Docker. Er ist nur innerhalb des Stacks erreichbar, nicht von außen.
+
+Trag den Proxy in `docker.yaml` ein:
+
+```yaml
+my-docker:
+  host: socket-proxy
+  port: 2375
+```
+
+Jetzt kannst du eine Kachel mit einem Container verbinden. Ergänze beim Dienst in `services.yaml`:
+
+```yaml
+        server: my-docker
+        container: vaultwarden
+```
+
+Alternativ beschreibst du die Kachel direkt beim Dienst. Homepage findet Container mit passenden **Labels** automatisch. In der `compose.yaml` von Vaultwarden sähe das so aus:
+
+```yaml
+    labels:
+      - homepage.group=Werkzeuge
+      - homepage.name=Vaultwarden
+      - homepage.icon=vaultwarden.png
+      - homepage.href=https://vault.__DOMAIN__
+      - homepage.description=Passwörter
+```
+
+Nutzt du Traefik, hat der Dienst schon einen `labels`-Block. Die Homepage-Labels kommen einfach dazu. Beide Wege lassen sich mischen. Für den Anfang ist `services.yaml` übersichtlicher, weil alles an einer Stelle steht.
+</Step>
+
+<Step title="Zugang absichern">
+Zum Schluss sorgst du dafür, dass nicht jeder dein Dashboard sieht. Drei Wege, vom einfachsten zum komfortabelsten:
+
+- **Nur im Heimnetz**: Du legst keinen öffentlichen DNS-Eintrag an oder erreichst Homepage nur über [VPN](/de/einrichten/vpn-wireguard/).
+- **Login davor**: Mit Traefik schaltest du [Tinyauth](/de/einrichten/tinyauth/) oder [Pocket ID](/de/einrichten/pocket-id/) als Middleware vor Homepage. Ein Login schützt dann alle Dienste gleich.
+- **Eingebautes Passwort**: Seit Version 2 hat Homepage eine einfache Anmeldung per Passwort oder OIDC. Die Variablen dafür stehen in der [Installationsanleitung](https://gethomepage.dev/installation/#security-authentication).
+
+Mehr zu diesem Thema findest du unter [Angriffsfläche klein halten](/de/nachschlagen/angriffsflaeche/).
+</Step>
+
+</Steps>

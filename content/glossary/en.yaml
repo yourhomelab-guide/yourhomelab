@@ -1,0 +1,501 @@
+# Glossary (English). Shown on /en/wiki/glossary/ and linked automatically in wiki articles and guides
+# (first occurrence per page, see src/lib/remark-glossary.mjs).
+# Format: id (English, kebab-case, same as in de.yaml), term, aliases (other spellings), text (1–3 sentences, inline Markdown).
+# Terms in all caps (e.g. NAT) or all lowercase (e.g. root) are only linked in exactly that spelling, all others
+# regardless of case. Endings like -s and -es are included in the link.
+
+- id: container
+  term: Container
+  aliases: [Docker container]
+  text: >-
+    A program that runs in isolation, with its own file system, network and processes. Unlike a VM, a container doesn't
+    bring its own operating system. It shares the kernel with the host. It starts in seconds, and you can throw it away
+    and recreate it at any time.
+
+- id: image
+  term: Image
+  aliases: [container image, Docker image]
+  text: >-
+    The read-only template a container is created from: the program, its libraries and default settings in one package.
+    You pull images from a registry and pick the version with a tag.
+
+- id: image-tag
+  term: Image tag
+  aliases: []
+  text: >-
+    The part after the colon in an image name, such as `postgres:16`. It selects a version. `latest` is just a name, not
+    a guarantee that you get the newest stable release.
+
+- id: registry
+  term: Registry
+  aliases: [container registry]
+  text: >-
+    A server that hosts images for download. The best known are Docker Hub and the GitHub Container Registry
+    (`ghcr.io`).
+
+- id: volume
+  term: Volume
+  aliases: [named volume, Docker volume]
+  text: >-
+    Storage that Docker manages itself (under `/var/lib/docker/volumes`). Data in it survives when you delete the
+    container. On this site we mostly use bind mounts instead, so the data sits in plain sight in your homelab folder.
+
+- id: bind-mount
+  term: Bind mount
+  aliases: []
+  text: >-
+    A folder on the host that is mounted into a container, for example `./data:/data`. The container reads and writes
+    straight to that folder, so you can back up and inspect the files like any others.
+
+- id: docker-compose
+  term: Docker Compose
+  aliases: [Compose]
+  text: >-
+    A tool that describes one or more containers in a file (`compose.yaml`) and starts them together. Instead of long
+    `docker run` commands, `docker compose up -d` is all you need.
+
+- id: stack
+  term: Stack
+  aliases: []
+  text: >-
+    All containers that belong to one service and live in a shared `compose.yaml`, for example an app and its database.
+    On this site, every stack gets its own folder inside the homelab folder.
+
+- id: label
+  term: Label
+  aliases: [Docker label]
+  text: >-
+    A key-value note attached to a container. Docker itself ignores it, but other programs read it. Traefik, for
+    example, takes the address a service should be reachable at from its labels.
+
+- id: environment-variable
+  term: Environment variable
+  aliases: []
+  text: >-
+    A named value a program receives when it starts, such as `TZ=Europe/Berlin`. Containers are almost always configured
+    through environment variables. Compose likes to read them from an `.env` file.
+
+- id: secret
+  term: Secret
+  aliases: []
+  text: >-
+    A confidential value like a password, an API token or a key. Secrets don't belong in public Git repositories, and
+    only belong in backups if they're encrypted. More in [Managing secrets](/en/wiki/managing-secrets/).
+
+- id: healthcheck
+  term: Healthcheck
+  aliases: [health check]
+  text: >-
+    A command Docker runs regularly to check that a container isn't just running but actually working. You see the
+    result in `docker ps` as `healthy` or `unhealthy`.
+
+- id: kernel
+  term: Kernel
+  aliases: []
+  text: >-
+    The core of the operating system. It manages hardware, memory and processes. All containers on a host share the
+    same Linux kernel, while each VM has its own.
+
+- id: reverse-proxy
+  term: Reverse proxy
+  aliases: []
+  text: >-
+    A service that accepts all requests on ports 80 and 443 and forwards them to the right container based on the host
+    name. It usually handles the TLS certificates, too. Examples are Traefik, Caddy and Nginx Proxy Manager.
+
+- id: entrypoint
+  term: Entrypoint
+  aliases: []
+  text: >-
+    In Traefik, a port where Traefik accepts requests. On this site they're called `web` (port 80) and `websecure`
+    (port 443).
+
+- id: middleware
+  term: Middleware
+  aliases: []
+  text: >-
+    An extra step a reverse proxy applies to a request before it reaches the service. Examples are a redirect to HTTPS,
+    additional security headers or a login in front.
+
+- id: forward-auth
+  term: Forward auth
+  aliases: [ForwardAuth]
+  text: >-
+    Before each request, the reverse proxy asks a login service like Tinyauth or Authentik whether the visitor is signed
+    in. The request only goes through if the answer is yes. This lets you protect services that have no login of their
+    own.
+
+- id: dns
+  term: DNS
+  aliases: [Domain Name System]
+  text: >-
+    The phone book of the internet: it translates names like `cloud.example.com` into IP addresses. You manage the
+    records with the provider of your domain.
+
+- id: domain
+  term: Domain
+  aliases: [domain name]
+  text: >-
+    A name like `example.com` that you rent from a registrar for a yearly fee. Below your domain you can create as many
+    subdomains for your services as you like.
+
+- id: registrar
+  term: Registrar
+  aliases: [domain registrar]
+  text: >-
+    The company where you register and renew a domain. Often you manage the DNS records there, too.
+
+- id: subdomain
+  term: Subdomain
+  aliases: []
+  text: >-
+    A name below your domain, such as `photos.example.com`. Each service usually gets its own subdomain, and the reverse
+    proxy routes requests based on it.
+
+- id: a-record
+  term: A record
+  aliases: [AAAA record]
+  text: >-
+    A DNS record that points a name to an IPv4 address. Its IPv6 counterpart is called an AAAA record.
+
+- id: cname
+  term: CNAME
+  aliases: [CNAME record]
+  text: >-
+    A DNS record that points a name to another name instead of an IP address. When the IP changes, you only need to
+    update the target record.
+
+- id: wildcard
+  term: Wildcard
+  aliases: [wildcard record, wildcard certificate, wildcard DNS]
+  text: >-
+    A placeholder with an asterisk, such as `*.example.com`. As a DNS record, it sends all subdomains to your server at
+    once. As a certificate, it covers all subdomains one level down.
+
+- id: dyndns
+  term: DynDNS
+  aliases: [DDNS, dynamic DNS]
+  text: >-
+    A method that automatically updates a DNS record when your public IP address changes. Many routers and small tools
+    can do this.
+
+- id: ip-address
+  term: IP address
+  aliases: []
+  text: >-
+    The address of a device on a network. At home these are private addresses like `192.168.1.10`. Only your router's
+    public address is reachable from the internet.
+
+- id: ipv6
+  term: IPv6
+  aliases: []
+  text: >-
+    The newer version of the Internet Protocol, with vastly more addresses than IPv4. With IPv6, every device gets its
+    own public address, so a firewall rule takes the place of port forwarding.
+
+- id: static-ip
+  term: Static IP
+  aliases: [fixed IP]
+  text: >-
+    An IP address that doesn't change. Your server needs one on your home network so port forwarding and DNS records
+    always reach the right device.
+
+- id: dhcp
+  term: DHCP
+  aliases: []
+  text: >-
+    The method your router uses to hand out IP addresses to devices on your home network automatically. For the server,
+    you usually set up a fixed assignment in the router.
+
+- id: lan
+  term: LAN
+  aliases: [home network, local network]
+  text: >-
+    Your local network at home, meaning everything behind your router. Devices on the LAN reach each other directly.
+    From outside, they aren't reachable without port forwarding, a VPN or a tunnel.
+
+- id: port
+  term: Port
+  aliases: []
+  text: >-
+    A number that addresses a service on a computer, like a room number in a hotel. HTTP uses port 80, HTTPS port 443
+    and SSH port 22.
+
+- id: port-forwarding
+  term: Port forwarding
+  aliases: []
+  text: >-
+    A rule in your router that forwards requests from the internet on a specific port to a device on your home network.
+    More in [Port forwarding](/en/wiki/port-forwarding/).
+
+- id: nat
+  term: NAT
+  aliases: [Network Address Translation]
+  text: >-
+    Your router translates the private addresses of your home network into its single public IPv4 address. That's why
+    devices at home aren't directly reachable from outside, only through port forwarding.
+
+- id: cgnat
+  term: CGNAT
+  aliases: [Carrier-Grade NAT]
+  text: >-
+    NAT at your internet provider: many customers share one public IPv4 address. Port forwarding over IPv4 is then
+    impossible, because you can't configure your provider's router.
+
+- id: ds-lite
+  term: DS-Lite
+  aliases: [Dual-Stack Lite]
+  text: >-
+    An internet connection with its own public IPv6 address but no public IPv4 address of its own. IPv4 runs through
+    CGNAT at the provider, so you can only be reached from outside via IPv6, a tunnel or a VPS.
+
+- id: tls
+  term: TLS
+  aliases: [SSL, Transport Layer Security]
+  text: >-
+    The encryption protocol behind HTTPS. SSL is its outdated predecessor, but the name has stuck around.
+
+- id: https
+  term: HTTPS
+  aliases: []
+  text: >-
+    HTTP with TLS encryption. The browser shows a padlock and checks the server's certificate. Many services only work
+    properly over HTTPS these days.
+
+- id: certificate
+  term: Certificate
+  aliases: [TLS certificate, SSL certificate]
+  text: >-
+    A digital ID that confirms a server belongs to a domain. Browsers only trust certificates from a recognized
+    authority such as Let's Encrypt.
+
+- id: lets-encrypt
+  term: Let's Encrypt
+  aliases: [Let’s Encrypt, LetsEncrypt]
+  text: >-
+    A nonprofit certificate authority that issues free TLS certificates. Reverse proxies like Traefik and Caddy request
+    and renew them automatically.
+
+- id: acme-challenge
+  term: ACME challenge
+  aliases: [DNS challenge, HTTP challenge]
+  text: >-
+    The proof you give Let's Encrypt that you control a domain. The HTTP challenge requires your server to be reachable
+    from outside on port 80. With the DNS challenge, your proxy briefly creates a DNS record. Only the DNS challenge
+    works without open ports and gives you wildcard certificates.
+
+- id: ssh
+  term: SSH
+  aliases: [Secure Shell]
+  text: >-
+    The encrypted protocol you use to connect to your server's command line. More in
+    [SSH basics](/en/wiki/ssh-basics/).
+
+- id: key-pair
+  term: Key pair
+  aliases: [SSH key, public key, private key]
+  text: >-
+    Two files that belong together: the private key stays secret on your computer, the public key goes on the server.
+    With them you sign in without a password, and far more securely.
+
+- id: passphrase
+  term: Passphrase
+  aliases: []
+  text: >-
+    A long password that protects a key or a backup. If you lose your backup's passphrase, the data can't be read
+    anymore, not even by you.
+
+- id: vpn
+  term: VPN
+  aliases: [Virtual Private Network]
+  text: >-
+    An encrypted tunnel that lets a device on the road act as if it were on your home network. Your services stay
+    private, and only the VPN endpoint is reachable from outside.
+
+- id: wireguard
+  term: WireGuard
+  aliases: []
+  text: >-
+    A lean, modern VPN protocol built into the Linux kernel. It's known for being fast and easy to set up, and many VPN
+    tools are built on it.
+
+- id: tunnel
+  term: Tunnel
+  aliases: [Cloudflare Tunnel]
+  text: >-
+    An outgoing connection from your server to a provider, through which requests from the internet find their way back
+    to you. You don't need port forwarding, and it even works behind CGNAT. In return, your traffic flows through the
+    provider.
+
+- id: firewall
+  term: Firewall
+  aliases: []
+  text: >-
+    A filter that decides which connections a computer accepts. On your server, you only allow what's needed, such as
+    SSH, HTTP and HTTPS.
+
+- id: ufw
+  term: UFW
+  aliases: [Uncomplicated Firewall]
+  text: >-
+    A simple command-line tool for the firewall on Ubuntu and Debian. Watch out: ports that Docker publishes bypass UFW
+    rules.
+
+- id: sudo
+  term: sudo
+  aliases: []
+  text: >-
+    A command that lets a regular user run single commands with root privileges, for example `sudo apt update`. You
+    work as a regular user and only take admin rights when you need them.
+
+- id: root
+  term: root
+  aliases: [root user, superuser]
+  text: >-
+    The Linux administrator account that can do anything. You avoid working as root or signing in as root over SSH,
+    because a typo or a stolen login would then hit the whole system right away.
+
+- id: puid-pgid
+  term: PUID/PGID
+  aliases: [PUID, PGID]
+  text: >-
+    Environment variables many images use to set the user and group ID the service runs as. If you use your own IDs
+    (usually `1000`), you own the files in the data folder.
+
+- id: cron
+  term: Cron
+  aliases: [cron job, crontab]
+  text: >-
+    The classic scheduler on Linux. An entry in the crontab runs a command at fixed times, such as every night at three.
+    systemd timers are the modern alternative.
+
+- id: vps
+  term: VPS
+  aliases: [Virtual Private Server]
+  text: >-
+    A rented virtual machine in a data center with its own public IP address. Handy as a gateway to the internet or for
+    services that must always be reachable.
+
+- id: hypervisor
+  term: Hypervisor
+  aliases: []
+  text: >-
+    Software that runs several virtual machines on one computer and hands out CPU, RAM and storage to them. Well-known
+    examples are Proxmox VE (with KVM) and VMware ESXi.
+
+- id: vm
+  term: VM
+  aliases: [virtual machine]
+  text: >-
+    A fully simulated computer with its own operating system that runs on a hypervisor. VMs are more strongly isolated
+    from each other than containers, but they need more RAM and storage.
+
+- id: lxc
+  term: LXC
+  aliases: [Linux Containers]
+  text: >-
+    Containers that feel like small, complete Linux systems, with their own init system and package manager. Proxmox VE
+    offers them as a lightweight alternative to VMs.
+
+- id: bare-metal
+  term: Bare metal
+  aliases: []
+  text: >-
+    The operating system runs directly on the hardware, with no hypervisor in between. It's the simplest option, with
+    the least technology between you and your services.
+
+- id: nas
+  term: NAS
+  aliases: [Network Attached Storage]
+  text: >-
+    A storage device on your network with several hard drives, meant for file storage and backups. Many NAS systems can
+    run containers these days, too.
+
+- id: raid
+  term: RAID
+  aliases: []
+  text: >-
+    Several drives working together so that losing one drive doesn't cost you data. RAID is not a backup: if you delete
+    a file or an attacker encrypts it, it's gone from all drives at once.
+
+- id: zfs
+  term: ZFS
+  aliases: []
+  text: >-
+    A file system with built-in checks for data errors, RAID features and snapshots. It powers TrueNAS and is available
+    in Proxmox VE, for example.
+
+- id: backup
+  term: Backup
+  aliases: []
+  text: >-
+    A copy of your data in a different place that you can restore from in an emergency. A good backup runs
+    automatically, lives outside the server and is encrypted. More in [Backup strategies](/en/wiki/backup-strategies/).
+
+- id: restore
+  term: Restore
+  aliases: []
+  text: >-
+    Bringing data back from a backup. Only a restore you've actually tested proves that your backup really works.
+
+- id: snapshot
+  term: Snapshot
+  aliases: []
+  text: >-
+    A frozen state of a file system or VM at a specific point in time. Snapshots are fast and handy before updates, but
+    they live on the same drive, so they don't replace a backup.
+
+- id: deduplication
+  term: Deduplication
+  aliases: [deduplicates, deduplicated]
+  text: >-
+    Identical blocks of data are stored only once, even if they appear in many files or backup versions. That's why
+    daily backups with Borg or restic take up little extra space.
+
+- id: database-dump
+  term: Database dump
+  aliases: [dump]
+  text: >-
+    An export of a database as a file, created with tools like `pg_dump` or `mariadb-dump`. A dump is consistent in
+    itself and can also be imported into a newer database version.
+
+- id: rule-3-2-1
+  term: 3-2-1 rule
+  aliases: []
+  text: >-
+    Three copies of your data, on two different media, one of them off-site. The best-known rule of thumb for backups.
+
+- id: sso
+  term: SSO
+  aliases: [Single Sign-On]
+  text: >-
+    Sign in once, use every service. A central login service vouches for you to the other services. More in
+    [Single sign-on](/en/wiki/single-sign-on/).
+
+- id: oidc
+  term: OIDC
+  aliases: [OpenID Connect]
+  text: >-
+    An open standard for single sign-on. Services that support OIDC let you sign in through a central login service
+    like Pocket ID or Authentik.
+
+- id: identity-provider
+  term: Identity provider
+  aliases: [IdP]
+  text: >-
+    The central login service that manages users and confirms to other services who is signing in. Examples in a
+    homelab are Pocket ID and Authentik.
+
+- id: two-factor
+  term: Two-factor authentication
+  aliases: [2FA, MFA]
+  text: >-
+    Your password gets a second proof, such as a code from an app or a hardware key. A stolen password alone is then no
+    longer enough.
+
+- id: passkey
+  term: Passkey
+  aliases: []
+  text: >-
+    A sign-in without a password: your device or a hardware key signs you in with a key pair, unlocked with your
+    fingerprint, face or PIN. Passkeys can't be phished, because they're bound to the domain.

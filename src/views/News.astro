@@ -1,0 +1,69 @@
+---
+import Base from '../layouts/Base.astro';
+import { formatDate, t, type Lang } from '../lib/i18n';
+import { getNews } from '../lib/news';
+import { url } from '../lib/routes';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const items = await getNews(lang);
+const feed = url.newsFeed(lang);
+---
+
+<Base lang={lang} title={t(lang, 'news.title')} description={t(lang, 'news.lead')} alternates={{ de: url.section('de', 'news'), en: url.section('en', 'news') }}>
+  <link slot="head" rel="alternate" type="application/rss+xml" title={t(lang, 'news.rss')} href={feed} />
+  <main class="wrap news">
+    <div class="head">
+      <div class="head-text">
+        <h1 class="h1">{t(lang, 'news.title')}</h1>
+        <p class="lead">{t(lang, 'news.lead')}</p>
+      </div>
+      <a class="btn btn-outline btn-sm rss" href={feed}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1.5" fill="currentColor"></circle></svg>
+        {t(lang, 'news.rss')}
+      </a>
+    </div>
+
+    {items.length === 0 && <p class="muted">{t(lang, 'news.empty')}</p>}
+    <ol class="list">
+      {
+        items.map((i) => (
+          <li class="row">
+            <time datetime={i.date.toISOString()}>{formatDate(lang, i.date)}</time>
+            <div class="body">
+              <div class="meta">
+                <span class:list={['tag', { upd: i.change === 'updated' }]}>{t(lang, `news.${i.change}`)}</span>
+                <span class="kind">{t(lang, `nav.${i.kind}`)}</span>
+              </div>
+              <a href={i.href} class="title">{i.title}</a>
+              {i.description && <p>{i.description}</p>}
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </main>
+</Base>
+
+<style>
+  .news { padding-top: 48px; padding-bottom: 88px; display: flex; flex-direction: column; gap: 28px; max-width: 900px; }
+  .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
+  .head-text { display: flex; flex-direction: column; gap: 10px; max-width: 680px; }
+  .rss { display: inline-flex; align-items: center; gap: 8px; }
+  .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; background: var(--surface); border-radius: 20px; }
+  .row { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 16px; padding: 18px 22px; border-top: 1px solid var(--line-3); }
+  .row:first-child { border-top: none; }
+  time { font-size: 13.5px; color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 2px; }
+  .body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .tag.upd { background: var(--line-3); color: var(--text-4); }
+  .kind { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+  .title { font-size: 16.5px; font-weight: 700; color: var(--text); }
+  .body p { font-size: 14.5px; line-height: 1.55; color: var(--text-3); text-wrap: pretty; }
+  @media (max-width: 720px) {
+    .news { padding-top: 32px; }
+    .row { grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 16px; }
+  }
+</style>

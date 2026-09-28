@@ -21,6 +21,7 @@ const donate = Object.values(site.donate).find(Boolean);
     </span>
     <nav class="links">
       {donate && <a href={donate}>{t(lang, 'footer.support')}</a>}
+      <a href={url.section(lang, 'news')}>{t(lang, 'footer.news')}</a>
       <a href={site.repo}>GitHub</a>
       <a href={url.section(lang, 'impressum')}>{t(lang, 'footer.impressum')}</a>
       <a href={url.section(lang, 'datenschutz')}>{t(lang, 'footer.privacy')}</a>

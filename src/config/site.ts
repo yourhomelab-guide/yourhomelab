@@ -37,7 +37,7 @@ export const site = {
 export const sourceLang: 'de' | 'en' = 'de';
 
 /** Service categories in display order. Labels live in src/i18n/*.json as `category.<id>`. */
-export const categories = ['proxy', 'management', 'data', 'code', 'auth', 'monitoring'] as const;
+export const categories = ['proxy', 'management', 'network', 'data', 'media', 'code', 'auth', 'monitoring'] as const;
 export type Category = (typeof categories)[number];
 
 /**
