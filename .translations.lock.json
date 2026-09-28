@@ -1,0 +1,1218 @@
+{
+  "content/faq/01-official-docs/de.md": {
+    "hash": "955c47d8dd877fd2",
+    "by": "claude"
+  },
+  "content/faq/02-more-help/de.md": {
+    "hash": "c10c9a29ea9f7bee",
+    "by": "claude"
+  },
+  "content/faq/03-prerequisites/de.md": {
+    "hash": "ac79129ea2756718",
+    "by": "claude"
+  },
+  "content/faq/04-kubernetes/de.md": {
+    "hash": "7f073994e32cfb4c",
+    "by": "claude"
+  },
+  "content/faq/05-template-freshness/de.md": {
+    "hash": "8646d8cd5b851a00",
+    "by": "claude"
+  },
+  "content/faq/06-my-setup/de.md": {
+    "hash": "fc57e314ea5ec9c6",
+    "by": "claude"
+  },
+  "content/faq/07-contributing/de.md": {
+    "hash": "b93dc4ef7bc65064",
+    "by": "claude"
+  },
+  "content/guides/01-preparation/01-choosing-hardware/de.mdx": {
+    "hash": "93d3815249b18a40",
+    "by": "claude"
+  },
+  "content/guides/01-preparation/02-installing-the-os/de.mdx": {
+    "hash": "a28789348e47bba2",
+    "by": "claude"
+  },
+  "content/guides/01-preparation/03-static-ip-hostname/de.mdx": {
+    "hash": "f4a3116e05935429",
+    "by": "claude"
+  },
+  "content/guides/01-preparation/de.md": {
+    "hash": "f4fca49cb2d22cac",
+    "by": "claude"
+  },
+  "content/guides/02-securing/01-ssh-keys/de.mdx": {
+    "hash": "53fb7aed617bbbfa",
+    "by": "claude"
+  },
+  "content/guides/02-securing/02-hardening-ssh/de.mdx": {
+    "hash": "5ac10d0bf0605303",
+    "by": "claude"
+  },
+  "content/guides/02-securing/03-users-sudo/de.mdx": {
+    "hash": "f62488fada6311a7",
+    "by": "claude"
+  },
+  "content/guides/02-securing/04-firewall-ufw/de.mdx": {
+    "hash": "b6248ffcadf9a4de",
+    "by": "claude"
+  },
+  "content/guides/02-securing/05-automatic-updates/de.mdx": {
+    "hash": "de72353e9f59cba5",
+    "by": "claude"
+  },
+  "content/guides/02-securing/de.md": {
+    "hash": "740fc136fc41e7be",
+    "by": "claude"
+  },
+  "content/guides/03-docker/01-installing-docker/de.mdx": {
+    "hash": "fbc4fcad16bf1932",
+    "by": "claude"
+  },
+  "content/guides/03-docker/02-creating-the-directory-structure/de.mdx": {
+    "hash": "c11d3502aac3c2b0",
+    "by": "claude"
+  },
+  "content/guides/03-docker/03-first-stack/de.mdx": {
+    "hash": "3a31c2a8a53a4cd2",
+    "by": "claude"
+  },
+  "content/guides/03-docker/04-env-secrets/de.mdx": {
+    "hash": "994b180f58beaf4f",
+    "by": "claude"
+  },
+  "content/guides/03-docker/de.md": {
+    "hash": "328d333ed6be4196",
+    "by": "claude"
+  },
+  "content/guides/04-access/01-domain-dns/de.mdx": {
+    "hash": "6cff90ac038572c2",
+    "by": "claude"
+  },
+  "content/guides/04-access/02-reverse-proxy-traefik/de.mdx": {
+    "hash": "f364c15dd8412062",
+    "by": "claude"
+  },
+  "content/guides/04-access/03-vpn-wireguard/de.mdx": {
+    "hash": "c549033ae99d52f5",
+    "by": "claude"
+  },
+  "content/guides/04-access/04-cloudflare-tunnel/de.mdx": {
+    "hash": "767f986cc76f6b12",
+    "by": "claude"
+  },
+  "content/guides/04-access/de.md": {
+    "hash": "edc652d1f27bb7f9",
+    "by": "claude"
+  },
+  "content/guides/05-login-protection/01-pocket-id/de.mdx": {
+    "hash": "f8c51b03fa2b2d94",
+    "by": "claude"
+  },
+  "content/guides/05-login-protection/02-tinyauth/de.mdx": {
+    "hash": "4658535243d0febc",
+    "by": "claude"
+  },
+  "content/guides/05-login-protection/03-crowdsec/de.mdx": {
+    "hash": "181293ae784efec0",
+    "by": "claude"
+  },
+  "content/guides/05-login-protection/de.md": {
+    "hash": "7b553860a38eba07",
+    "by": "claude"
+  },
+  "content/guides/06-operations/01-backups-restic/de.mdx": {
+    "hash": "d19be75c899d3785",
+    "by": "claude"
+  },
+  "content/guides/06-operations/02-testing-restores/de.mdx": {
+    "hash": "09864dcca9b52486",
+    "by": "claude"
+  },
+  "content/guides/06-operations/03-monitoring-beszel/de.mdx": {
+    "hash": "ea18c4572b856789",
+    "by": "claude"
+  },
+  "content/guides/06-operations/04-uptime-kuma/de.mdx": {
+    "hash": "41399c393d27dd8f",
+    "by": "claude"
+  },
+  "content/guides/06-operations/de.md": {
+    "hash": "31d2421ee386f465",
+    "by": "claude"
+  },
+  "content/guides/07-deployment/01-portainer-dockhand/de.mdx": {
+    "hash": "39c10fcc9ceb035a",
+    "by": "claude"
+  },
+  "content/guides/07-deployment/02-git-deployments-forgejo/de.mdx": {
+    "hash": "17a49fac65c77785",
+    "by": "claude"
+  },
+  "content/guides/07-deployment/03-updates-renovate/de.mdx": {
+    "hash": "11faa844ec9448c6",
+    "by": "claude"
+  },
+  "content/guides/07-deployment/de.md": {
+    "hash": "a969a1c0ac34035e",
+    "by": "claude"
+  },
+  "content/pages/imprint/de.md": {
+    "hash": "964466a12c2ed33a",
+    "by": "claude"
+  },
+  "content/pages/privacy/de.md": {
+    "hash": "5608bf1aab86454c",
+    "by": "claude"
+  },
+  "content/services/authentik/de.md": {
+    "hash": "bacab3375ad98808",
+    "by": "claude"
+  },
+  "content/services/beszel/de.md": {
+    "hash": "ef5c639f557fbd73",
+    "by": "claude"
+  },
+  "content/services/caddy/de.md": {
+    "hash": "c865ff7e334df38e",
+    "by": "claude"
+  },
+  "content/services/dockhand/de.md": {
+    "hash": "61ee2a3726ce4ecb",
+    "by": "claude"
+  },
+  "content/services/forgejo/de.md": {
+    "hash": "361aee5e4cd6bd1f",
+    "by": "claude"
+  },
+  "content/services/immich/de.md": {
+    "hash": "fc45c56db5c01b51",
+    "by": "claude"
+  },
+  "content/services/nextcloud/de.md": {
+    "hash": "a7017ffb77822cf1",
+    "by": "claude"
+  },
+  "content/services/nginx-proxy-manager/de.md": {
+    "hash": "59e2e09ed63c0717",
+    "by": "claude"
+  },
+  "content/services/pocket-id/de.md": {
+    "hash": "285cc6eabc240a61",
+    "by": "claude"
+  },
+  "content/services/portainer/de.md": {
+    "hash": "dfdf29f8bd24e298",
+    "by": "claude"
+  },
+  "content/services/tinyauth/de.md": {
+    "hash": "a14dac984b23712e",
+    "by": "claude"
+  },
+  "content/services/traefik/de.md": {
+    "hash": "f7dc71a17ac3966c",
+    "by": "claude"
+  },
+  "content/services/uptime-kuma/de.md": {
+    "hash": "beb3ade51b4b033e",
+    "by": "claude"
+  },
+  "content/services/vaultwarden/de.md": {
+    "hash": "1420f1fdafaca3fc",
+    "by": "claude"
+  },
+  "content/wiki/01-basics/01-what-is-self-hosting/de.mdx": {
+    "hash": "de87f9a0439ddc2d",
+    "by": "claude"
+  },
+  "content/wiki/01-basics/02-is-it-worth-it/de.mdx": {
+    "hash": "5b49cd73d29b5d01",
+    "by": "claude"
+  },
+  "content/wiki/01-basics/03-cloud-hybrid-local/de.mdx": {
+    "hash": "394baec3d25a4058",
+    "by": "claude"
+  },
+  "content/wiki/01-basics/04-hardware-overview/de.mdx": {
+    "hash": "576d0b1471737312",
+    "by": "claude"
+  },
+  "content/wiki/01-basics/05-costs-power/de.mdx": {
+    "hash": "58630a57199c8cc4",
+    "by": "claude"
+  },
+  "content/wiki/02-systems/01-bare-metal-linux/de.mdx": {
+    "hash": "326d04c05156beb3",
+    "by": "claude"
+  },
+  "content/wiki/02-systems/02-proxmox-ve/de.mdx": {
+    "hash": "6b15293d5809ecd0",
+    "by": "claude"
+  },
+  "content/wiki/02-systems/03-truenas-unraid/de.mdx": {
+    "hash": "327ae4bdeef7881b",
+    "by": "claude"
+  },
+  "content/wiki/02-systems/04-vms-or-containers/de.mdx": {
+    "hash": "19a00b5a237bbea1",
+    "by": "claude"
+  },
+  "content/wiki/03-containers/01-what-is-docker/de.mdx": {
+    "hash": "2a41d423bd3fe482",
+    "by": "claude"
+  },
+  "content/wiki/03-containers/02-docker-compose/de.mdx": {
+    "hash": "ad2af20e3be796c9",
+    "by": "claude"
+  },
+  "content/wiki/03-containers/03-images-tags/de.mdx": {
+    "hash": "fa587e38cb00587e",
+    "by": "claude"
+  },
+  "content/wiki/03-containers/04-volumes-bind-mounts/de.mdx": {
+    "hash": "42d5e8d3e7727712",
+    "by": "claude"
+  },
+  "content/wiki/03-containers/05-docker-networks/de.mdx": {
+    "hash": "061c05585bbecd31",
+    "by": "claude"
+  },
+  "content/wiki/04-networking/01-ip-ports-nat/de.mdx": {
+    "hash": "0aea72f15e97b5d9",
+    "by": "claude"
+  },
+  "content/wiki/04-networking/02-dns-domains/de.mdx": {
+    "hash": "5eb2afb908942c8b",
+    "by": "claude"
+  },
+  "content/wiki/04-networking/03-reverse-proxy-explained/de.mdx": {
+    "hash": "882fa463d59e0125",
+    "by": "claude"
+  },
+  "content/wiki/04-networking/04-tls-certificates/de.mdx": {
+    "hash": "29bde6f03d17575a",
+    "by": "claude"
+  },
+  "content/wiki/04-networking/05-cgnat-ds-lite/de.mdx": {
+    "hash": "8e3a506296e2aed2",
+    "by": "claude"
+  },
+  "content/wiki/05-remote-access/01-port-forwarding/de.mdx": {
+    "hash": "67afcc8e98dcf41f",
+    "by": "claude"
+  },
+  "content/wiki/05-remote-access/02-vpn/de.mdx": {
+    "hash": "e827b1a6bfaf97ea",
+    "by": "claude"
+  },
+  "content/wiki/05-remote-access/03-tunnels/de.mdx": {
+    "hash": "af21363f263937b9",
+    "by": "claude"
+  },
+  "content/wiki/05-remote-access/04-access-methods-compared/de.mdx": {
+    "hash": "7a1af75faa134578",
+    "by": "claude"
+  },
+  "content/wiki/06-security/01-ssh-basics/de.mdx": {
+    "hash": "b1f1d576c8a4d6de",
+    "by": "claude"
+  },
+  "content/wiki/06-security/02-single-sign-on/de.mdx": {
+    "hash": "12a51c62f5f2c987",
+    "by": "claude"
+  },
+  "content/wiki/06-security/03-managing-secrets/de.mdx": {
+    "hash": "5da830f4c7caca36",
+    "by": "claude"
+  },
+  "content/wiki/06-security/04-attack-surface/de.mdx": {
+    "hash": "cdd35551faa697b8",
+    "by": "claude"
+  },
+  "content/wiki/07-operations/01-backup-strategies/de.mdx": {
+    "hash": "f5070f1a616f85d4",
+    "by": "claude"
+  },
+  "content/wiki/07-operations/02-monitoring/de.mdx": {
+    "hash": "308a9d12d09295d8",
+    "by": "claude"
+  },
+  "content/wiki/07-operations/03-updates/de.mdx": {
+    "hash": "ebf40bb310ccc390",
+    "by": "claude"
+  },
+  "content/wiki/07-operations/04-logs/de.mdx": {
+    "hash": "5a06477eee095023",
+    "by": "claude"
+  },
+  "content/wiki/08-conventions/01-directory-structure/de.mdx": {
+    "hash": "2f28b36fee6ce370",
+    "by": "claude"
+  },
+  "content/wiki/08-conventions/02-naming/de.mdx": {
+    "hash": "b10c7e724501cfaf",
+    "by": "claude"
+  },
+  "content/wiki/08-conventions/03-env-files/de.mdx": {
+    "hash": "395355afb830d28f",
+    "by": "claude"
+  },
+  "content/wiki/08-conventions/04-documentation/de.mdx": {
+    "hash": "757857481c65d9b1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#banner.label": {
+    "hash": "2362c7ffde83a464",
+    "by": "claude"
+  },
+  "src/i18n/de.json#banner.link": {
+    "hash": "2d2d33fb4756d15a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#banner.text": {
+    "hash": "383f32a8f5cf9e47",
+    "by": "claude"
+  },
+  "src/i18n/de.json#category.auth": {
+    "hash": "9d6322c1f4d9d3f3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#category.code": {
+    "hash": "340f463033e0fd5d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#category.data": {
+    "hash": "43bf4ac31f53b059",
+    "by": "claude"
+  },
+  "src/i18n/de.json#category.management": {
+    "hash": "2456bb8ed72ffaa4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#category.monitoring": {
+    "hash": "1dc83f605edf0ae2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#category.proxy": {
+    "hash": "8f5358d2e288b0ad",
+    "by": "claude"
+  },
+  "src/i18n/de.json#code.copied": {
+    "hash": "c2756e0294f8cf4c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#code.copy": {
+    "hash": "472050b730a60f23",
+    "by": "claude"
+  },
+  "src/i18n/de.json#code.secret": {
+    "hash": "5fd424ab6e89b225",
+    "by": "claude"
+  },
+  "src/i18n/de.json#footer.impressum": {
+    "hash": "b8a6051923e6a649",
+    "by": "claude"
+  },
+  "src/i18n/de.json#footer.owner": {
+    "hash": "ac9f509e3e26b2de",
+    "by": "claude"
+  },
+  "src/i18n/de.json#footer.privacy": {
+    "hash": "f624fcf0dcbb39c0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#footer.support": {
+    "hash": "f088e87ad9402285",
+    "by": "claude"
+  },
+  "src/i18n/de.json#footer.templates": {
+    "hash": "07ff1d886d230282",
+    "by": "claude"
+  },
+  "src/i18n/de.json#footer.texts": {
+    "hash": "bbb0bd5ff551e76b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#header.home": {
+    "hash": "ebc5fc6705afa615",
+    "by": "claude"
+  },
+  "src/i18n/de.json#header.mySetup": {
+    "hash": "b8d56d4f8c357a9f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#header.search": {
+    "hash": "f4124edec3ae7ebf",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.allServices": {
+    "hash": "997a49303180c44c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.badge": {
+    "hash": "9f9c4d6c6404e0e4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.continueAt": {
+    "hash": "f657b1190d3d8e85",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.contributeRepo": {
+    "hash": "09a332479a8f5ee1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.contributeSuggest": {
+    "hash": "fc4289ed20aa0be2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.contributeText": {
+    "hash": "b36c470b3b83a4c0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.contributeTitle": {
+    "hash": "6559adf16cbf661f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.ctaServices": {
+    "hash": "3d595c9d21a39563",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.ctaStart": {
+    "hash": "3c86b3ce7db7839e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.decideCta": {
+    "hash": "96fc7de6c01b4720",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.decideText": {
+    "hash": "9d0cb3dbcb74bc48",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.decideTitle": {
+    "hash": "f42270435275c4c9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.door1.cta": {
+    "hash": "a4d3c06635920218",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.door1.kicker": {
+    "hash": "e6a38fd5bc2eb72b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.door1.text": {
+    "hash": "eb56c922791b6bfd",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.door1.title": {
+    "hash": "51b593fe5c8f1294",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.door2.cta": {
+    "hash": "35ce1ae4c7ccbf01",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.door2.kicker": {
+    "hash": "375145ada9647c4a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.door2.text": {
+    "hash": "af10fe17abb0c934",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.door2.title": {
+    "hash": "43eb5bef64b5e8f7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.door3.cta": {
+    "hash": "a4197c09b7707f67",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.door3.kicker": {
+    "hash": "a6f5acc69db6b9a0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.door3.text": {
+    "hash": "4f001404dce18d10",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.door3.title": {
+    "hash": "ae3f315fdc1bd4e6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.faqLead": {
+    "hash": "6ebcf999f747bf00",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.faqTitle": {
+    "hash": "bb8f48ee26d70001",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.lead": {
+    "hash": "84aa676930e7bc99",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.pathProgress": {
+    "hash": "ef2c9f5f9aba68b4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.pathTitle": {
+    "hash": "97ba09319e23ce88",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.popular": {
+    "hash": "ebea67fdb7be2bea",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.startAt": {
+    "hash": "cbb1eaaa9892d0a9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.supportText": {
+    "hash": "b8d5d5915b53aba9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.supportTitle": {
+    "hash": "f088e87ad9402285",
+    "by": "claude"
+  },
+  "src/i18n/de.json#home.title": {
+    "hash": "e186873a414501cd",
+    "by": "claude"
+  },
+  "src/i18n/de.json#lang.hint": {
+    "hash": "f087e91b6730f7b0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#lang.hintClose": {
+    "hash": "d4481ff49f3394e7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#lang.hintCta": {
+    "hash": "f5ec1fc06872aa8b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#lang.name": {
+    "hash": "801cfe0fa1182664",
+    "by": "claude"
+  },
+  "src/i18n/de.json#lang.switch": {
+    "hash": "714125dc3292dfd2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#level.1": {
+    "hash": "bdf768f3fc5dc729",
+    "by": "claude"
+  },
+  "src/i18n/de.json#level.2": {
+    "hash": "e9014307a4193f8b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#level.3": {
+    "hash": "588df216666cb7fb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#meta.description": {
+    "hash": "c697efb44a345c02",
+    "by": "claude"
+  },
+  "src/i18n/de.json#nav.services": {
+    "hash": "a6f5acc69db6b9a0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#nav.setup": {
+    "hash": "375145ada9647c4a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#nav.start": {
+    "hash": "e4bb9f1ece9af926",
+    "by": "claude"
+  },
+  "src/i18n/de.json#nav.wiki": {
+    "hash": "e6a38fd5bc2eb72b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#notFound.back": {
+    "hash": "e2998007714df41b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#notFound.text": {
+    "hash": "93acb2ee34904f48",
+    "by": "claude"
+  },
+  "src/i18n/de.json#notFound.title": {
+    "hash": "106d2f8924d13eaf",
+    "by": "claude"
+  },
+  "src/i18n/de.json#oneway.text": {
+    "hash": "6722591400bf1220",
+    "by": "claude"
+  },
+  "src/i18n/de.json#oneway.title": {
+    "hash": "d1f203eaa3c17198",
+    "by": "claude"
+  },
+  "src/i18n/de.json#page.edit": {
+    "hash": "ecf1c6aaf9d58ea7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#page.lastEdited": {
+    "hash": "2987b9b6c3e26262",
+    "by": "claude"
+  },
+  "src/i18n/de.json#page.stubCta": {
+    "hash": "fb178a25fec1caf9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#page.stubDiscuss": {
+    "hash": "eb28bc22f2af2931",
+    "by": "claude"
+  },
+  "src/i18n/de.json#page.stubText": {
+    "hash": "1cac75ca66102fca",
+    "by": "claude"
+  },
+  "src/i18n/de.json#page.stubTitle": {
+    "hash": "df5645aa5aa8d5dc",
+    "by": "claude"
+  },
+  "src/i18n/de.json#page.untranslated": {
+    "hash": "76acd7a872e1f6bd",
+    "by": "claude"
+  },
+  "src/i18n/de.json#proxy.caddy": {
+    "hash": "da12414e87375439",
+    "by": "claude"
+  },
+  "src/i18n/de.json#proxy.caddy.desc": {
+    "hash": "39419511daeb34aa",
+    "by": "claude"
+  },
+  "src/i18n/de.json#proxy.none": {
+    "hash": "898a95b991209028",
+    "by": "claude"
+  },
+  "src/i18n/de.json#proxy.none.desc": {
+    "hash": "28db28a1b3e5a6cc",
+    "by": "claude"
+  },
+  "src/i18n/de.json#proxy.npm": {
+    "hash": "4ea5dcaa2c72c4eb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#proxy.npm.desc": {
+    "hash": "5722e5719a173d3b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#proxy.traefik": {
+    "hash": "54ace6970a10f182",
+    "by": "claude"
+  },
+  "src/i18n/de.json#proxy.traefik.desc": {
+    "hash": "b9535387816ae674",
+    "by": "claude"
+  },
+  "src/i18n/de.json#quiz.hint": {
+    "hash": "41100f07fa37654a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#quiz.recommendation": {
+    "hash": "816acf491405b949",
+    "by": "claude"
+  },
+  "src/i18n/de.json#quiz.reset": {
+    "hash": "a3301d60bdd86c3b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#quiz.start": {
+    "hash": "8a8e832b7bf68f8b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#search.noHits": {
+    "hash": "05bc50b77dbd2af3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#search.placeholder": {
+    "hash": "777606d735052ad4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#search.services": {
+    "hash": "a6f5acc69db6b9a0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#search.setup": {
+    "hash": "375145ada9647c4a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#search.wiki": {
+    "hash": "e6a38fd5bc2eb72b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.contributeText": {
+    "hash": "ba5d6ab9e9270740",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.contributeTitle": {
+    "hash": "2617e8459c478a8d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.curated": {
+    "hash": "3621ea6d4b74e96b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.curatedText": {
+    "hash": "293b391fffd0dbed",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.docs": {
+    "hash": "2a9d508bdc770606",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.edit": {
+    "hash": "a8b1fcb2b88ffe1b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.forcedSub": {
+    "hash": "ad7266f1e5daf8b5",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.goodToKnow": {
+    "hash": "bf80815c3081b49b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.image": {
+    "hash": "1aa4cb0bcca76e92",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.npm": {
+    "hash": "3cbb1d5d72269263",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.port": {
+    "hash": "72e9a59f5a1d6289",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.reachable": {
+    "hash": "50158d179e0d6b21",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.relatedGuides": {
+    "hash": "c1d7ffd64424a9d2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.report": {
+    "hash": "69f76bd5756041ae",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.reviewed": {
+    "hash": "d3eb109070f5764e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.source": {
+    "hash": "1eb7dc43911b7e74",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.sourceCurated": {
+    "hash": "92e5887d3ae1596a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.step1": {
+    "hash": "05d80097b3407f34",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.step1Text": {
+    "hash": "d0b2090688467b38",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.step1TextNet": {
+    "hash": "d9a8840a0f7425a7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.step2": {
+    "hash": "adb409721fd4682e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.step2Text": {
+    "hash": "8955aa048aeefc02",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.step3": {
+    "hash": "a6a8d7c2c67ccef9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.step3Text": {
+    "hash": "d7abf522450e77fe",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.template": {
+    "hash": "697cf59a6265909a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.tree": {
+    "hash": "49d7690f3cac715a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.upstream": {
+    "hash": "82bb87134779eac3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.upstreamOpen": {
+    "hash": "ebb2367245d5c9e8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.upstreamText": {
+    "hash": "78942a02edcebcc2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.website": {
+    "hash": "b5a229ac8becc603",
+    "by": "claude"
+  },
+  "src/i18n/de.json#services.all": {
+    "hash": "3801a35c51822839",
+    "by": "claude"
+  },
+  "src/i18n/de.json#services.change": {
+    "hash": "ea5e3417aabcc097",
+    "by": "claude"
+  },
+  "src/i18n/de.json#services.deploy": {
+    "hash": "9eb54f0340929a34",
+    "by": "claude"
+  },
+  "src/i18n/de.json#services.filter": {
+    "hash": "c430be14373a921f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#services.lead": {
+    "hash": "bd6d341bfe1ccba4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#services.missingCta": {
+    "hash": "4e33f381cbbb5d34",
+    "by": "claude"
+  },
+  "src/i18n/de.json#services.missingText": {
+    "hash": "d6389d728c2abfc5",
+    "by": "claude"
+  },
+  "src/i18n/de.json#services.missingTitle": {
+    "hash": "dfd5179368e4b604",
+    "by": "claude"
+  },
+  "src/i18n/de.json#services.noResults": {
+    "hash": "c2f4bddda0b4c467",
+    "by": "claude"
+  },
+  "src/i18n/de.json#services.title": {
+    "hash": "a6f5acc69db6b9a0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#services.yourSetup": {
+    "hash": "7d242f86af109a41",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.back": {
+    "hash": "548611ce58f71a17",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.changeSetup": {
+    "hash": "b9e48b9f851c4857",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.check": {
+    "hash": "b886e2f016dd24f1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.checked": {
+    "hash": "5a1aa4a0472875ca",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.continueHere": {
+    "hash": "c835cd5a783c7676",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.guideOf": {
+    "hash": "4aa863167a372a42",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.inStage": {
+    "hash": "8003135f9ee1ce76",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.lead": {
+    "hash": "82b214a384b95b37",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.markDone": {
+    "hash": "9bdb90554e41197e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.minShort": {
+    "hash": "86cd16c0eb08bbc4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.minutes": {
+    "hash": "109e135dcd724b2f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.next": {
+    "hash": "1e14bdf34c3bdead",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.progress": {
+    "hash": "3bc71e937546beac",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.requires": {
+    "hash": "d23659e7b43ccbe8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.stage": {
+    "hash": "a8ed09a983c09fa9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.stageMeta": {
+    "hash": "46d44efeca2cb42a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.steps": {
+    "hash": "4ca5384a22e0ad80",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.stepsDone": {
+    "hash": "abd92c75ee536171",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.tailored": {
+    "hash": "e71231300a69a5ea",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.title": {
+    "hash": "375145ada9647c4a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.cancel": {
+    "hash": "f7ff1178af202f6f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.close": {
+    "hash": "b808f6e97075772f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.data": {
+    "hash": "1d5f69a642c45e10",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.dataCentral": {
+    "hash": "fd4c119deb1a2e0c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.dataRoot": {
+    "hash": "c4dbcc77bffaa868",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.dataStack": {
+    "hash": "c4cfc55f770c4e90",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.domain": {
+    "hash": "79fa33618d8eaa1f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.email": {
+    "hash": "f4029c79a451cb40",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.example": {
+    "hash": "0cce6ad7ec55c188",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.lead": {
+    "hash": "431213e3c6a4f842",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.network": {
+    "hash": "229ac8590d4c493d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.reset": {
+    "hash": "e08b720282f76868",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.root": {
+    "hash": "18cabb5cc75c7424",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.save": {
+    "hash": "f6b2ff39f540eb81",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.sec1": {
+    "hash": "872207da0216bbfe",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.sec2": {
+    "hash": "92b7e0ddbdd04010",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.sec3": {
+    "hash": "6a8da41ea2af827b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.sec4": {
+    "hash": "4774a83847fb3d0c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.title": {
+    "hash": "b8d56d4f8c357a9f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.tz": {
+    "hash": "00507b23a11ba675",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.urlPath": {
+    "hash": "c2596a2cfe185c75",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.urlScheme": {
+    "hash": "d930c34a164600eb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.urlSub": {
+    "hash": "f6fcb73e864f6b2a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#skip": {
+    "hash": "0223fd4834ed4884",
+    "by": "claude"
+  },
+  "src/i18n/de.json#summary.data": {
+    "hash": "43bf4ac31f53b059",
+    "by": "claude"
+  },
+  "src/i18n/de.json#summary.dataStack": {
+    "hash": "d2059e3545072aa2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#summary.network": {
+    "hash": "7831c04124b640f8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#summary.proxy": {
+    "hash": "a68ee4167406a050",
+    "by": "claude"
+  },
+  "src/i18n/de.json#summary.service": {
+    "hash": "e0e8898cdd01fd52",
+    "by": "claude"
+  },
+  "src/i18n/de.json#summary.stacks": {
+    "hash": "5242ce0a513a997a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#summary.urls": {
+    "hash": "1240054e2040d953",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tag.new": {
+    "hash": "d9b1e13f3b97c8b0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tag.popular": {
+    "hash": "51c750895f90fcc9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tag.recommended": {
+    "hash": "29974a4ab3f9a623",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.articles": {
+    "hash": "dab4b031c2af0bd2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.filter": {
+    "hash": "84aa84057f9c516c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.filterClear": {
+    "hash": "6245dabd92e3f9af",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.group.basics": {
+    "hash": "8f27347e109a5090",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.group.containers": {
+    "hash": "0c7823e8c759af7d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.group.conventions": {
+    "hash": "f23ffbd0114e18d5",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.group.networking": {
+    "hash": "7831c04124b640f8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.group.operations": {
+    "hash": "2145893cd732fbd6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.group.remote-access": {
+    "hash": "878ef7d4eeaaf159",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.group.security": {
+    "hash": "4474c752608931d9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.group.systems": {
+    "hash": "504596546375608e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.lead": {
+    "hash": "55e9509eb0331549",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.noHits": {
+    "hash": "ba8f7d42bf4a417c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.notYetLink": {
+    "hash": "644d8f92c7f7d1bb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.notYetText": {
+    "hash": "db578ad9caf5e7cd",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.notYetTitle": {
+    "hash": "a639c885b3390fee",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.onThisPage": {
+    "hash": "c6ea3ff4811369bb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.practice": {
+    "hash": "0e68899ccd15e8ae",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.readingTime": {
+    "hash": "d285218379004e3b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.related": {
+    "hash": "a29dcaef789ed50a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.title": {
+    "hash": "e6a38fd5bc2eb72b",
+    "by": "claude"
+  }
+}

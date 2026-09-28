@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: Dockhand
+category: management
+level: 1
+port: 3000
+subdomain: dockhand
+links:
+  repo: Finsys/dockhand
+  website: https://dockhand.pro
+  docs: https://dockhand.pro
+upstream:
+  label: README.md
+  url: https://github.com/Finsys/dockhand
+reviewed: 2026-09-12

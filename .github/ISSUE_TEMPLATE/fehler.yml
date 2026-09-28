@@ -1,0 +1,30 @@
+name: Fehler melden
+description: Etwas in einem Guide, Artikel oder einer Vorlage stimmt nicht
+title: "Fehler: "
+labels: ["fehler"]
+body:
+  - type: input
+    id: url
+    attributes:
+      label: Betroffene Seite
+      placeholder: https://yourhomelab.guide/dienste/vaultwarden/
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: Was ist falsch?
+      description: Was passiert, und was hättest du erwartet?
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Dein Setup
+      description: Reverse Proxy, URL-Schema, Datenordner aus »Mein Setup«, Betriebssystem, Docker-Version
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Fehlermeldung
+      description: Ausgabe von `docker compose logs` o. ä. Entferne vorher Passwörter und Domains!
+      render: shell

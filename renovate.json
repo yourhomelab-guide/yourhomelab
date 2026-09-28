@@ -1,0 +1,18 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "enabledManagers": ["docker-compose"],
+  "docker-compose": {
+    "managerFilePatterns": ["/^content/services/[^_][^/]*/compose\\.yaml$/"]
+  },
+  "labels": ["dienst", "update"],
+  "prConcurrentLimit": 5,
+  "schedule": ["before 6am on monday"],
+  "packageRules": [
+    {
+      "matchManagers": ["docker-compose"],
+      "commitMessageTopic": "{{depName}}",
+      "prBodyNotes": ["Vor dem Merge: Vorlage testen und `reviewed` in service.yaml aktualisieren."]
+    }
+  ]
+}

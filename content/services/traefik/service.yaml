@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: Traefik
+category: proxy
+level: 2
+tag: recommended
+popular: true
+reverseProxy: true
+port: 8080
+subdomain: traefik
+links:
+  repo: traefik/traefik
+  website: https://traefik.io
+  docs: https://doc.traefik.io/traefik/
+upstream:
+  label: docs/content/user-guides/docker-compose
+  url: https://github.com/traefik/traefik/tree/master/docs/content/user-guides/docker-compose
+reviewed: 2026-09-12

@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: Caddy
+category: proxy
+level: 1
+reverseProxy: true
+port: 80
+subdomain: caddy
+files:
+  - Caddyfile
+links:
+  repo: caddyserver/caddy
+  website: https://caddyserver.com
+  docs: https://caddyserver.com/docs/
+upstream:
+  label: "Docker Hub: caddy"
+  url: https://hub.docker.com/_/caddy
+reviewed: 2026-09-12

@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: Nginx Proxy Manager
+category: proxy
+level: 1
+reverseProxy: true
+port: 81
+subdomain: npm
+links:
+  repo: NginxProxyManager/nginx-proxy-manager
+  website: https://nginxproxymanager.com
+  docs: https://nginxproxymanager.com/guide/
+upstream:
+  label: docs/src/setup/index.md
+  url: https://github.com/NginxProxyManager/nginx-proxy-manager/blob/develop/docs/src/setup/index.md
+reviewed: 2026-09-12

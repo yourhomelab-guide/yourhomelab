@@ -1,0 +1,13 @@
+# Write the plain, proxy-less version. The website adds Traefik labels,
+# networks or ports automatically depending on the visitor's setup.
+# Persistent data always goes under ./data/<name>.
+services:
+  myservice:
+    image: owner/myservice:1.0.0
+    container_name: myservice
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - BASE_URL=__URL__
+    volumes:
+      - ./data/data:/data

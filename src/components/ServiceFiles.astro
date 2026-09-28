@@ -1,0 +1,89 @@
+---
+/**
+ * Tabbed compose.yaml / .env / proxy snippet / folder tree for a service.
+ * In MDX: <ServiceFiles id="traefik" />
+ */
+import { defaultSetup as d } from '../config/site';
+import { getServices, getVariants } from '../lib/content';
+import { readServiceFile } from '../lib/compose';
+import { renderCode } from '../lib/highlight';
+import { langFromUrl, placeholderDefaults, t } from '../lib/i18n';
+
+interface Props {
+  id: string;
+  /** Embed the variant data itself. Set to false when a parent already is the variant root. */
+  root?: boolean;
+  /** Show the "Quelle:" line */
+  source?: boolean;
+}
+const { id, root = true, source = false } = Astro.props;
+const lang = langFromUrl(Astro.url);
+const svc = (await getServices(lang)).find((s) => s.id === id);
+if (!svc) throw new Error(`<ServiceFiles id="${id}">: unknown service`);
+const variants = getVariants(svc);
+const v = variants[`${d.proxy}.${d.urlMode}.${d.dataMode}`];
+const values = placeholderDefaults(lang);
+const code = (s: string) => renderCode(s, { numbers: true, values });
+const extra = svc.files.map((f) => ({ name: f, content: readServiceFile(id, f) ?? '' }));
+const uid = `sf-${id}-${Math.random().toString(36).slice(2, 7)}`;
+const tabs: { key: string; label: string; show?: string; proxyLabel?: boolean }[] = [
+  { key: 'compose', label: 'compose.yaml' },
+  { key: 'env', label: '.env' },
+  { key: 'proxy', label: v.proxyKind === 'npm' ? t(lang, 'service.npm') : 'Caddyfile', show: 'proxy', proxyLabel: true },
+  ...extra.map((f) => ({ key: `file-${f.name}`, label: f.name })),
+  { key: 'tree', label: t(lang, 'service.tree') },
+];
+const Wrapper = root ? 'div' : Fragment;
+---
+
+<Wrapper {...(root ? { 'data-variant-root': '', 'data-key': `${d.proxy}.${d.urlMode}.${d.dataMode}` } : {})}>
+  <div class="files">
+    <div class="files-bar" role="tablist">
+      {
+        tabs.map((tab, i) => (
+          <button
+            type="button"
+            class="file-tab"
+            role="tab"
+            id={`${uid}-t-${tab.key}`}
+            aria-controls={`${uid}-p-${tab.key}`}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            data-tab={tab.key}
+            data-v-show={tab.show}
+            data-v-proxylabel={tab.proxyLabel ? '' : undefined}
+            hidden={tab.show ? !v[tab.show as 'proxy'] : undefined}
+          >
+            {tab.label}
+          </button>
+        ))
+      }
+      <button type="button" class="copy-btn" data-copy>{t(lang, 'code.copy')}</button>
+    </div>
+    <div class="file-body">
+      {
+        source && (
+          <div class="file-source">
+            <span>{t(lang, 'service.source')}</span>
+            <span>{t(lang, 'service.sourceCurated')}</span>
+          </div>
+        )
+      }
+      <pre id={`${uid}-p-compose`} role="tabpanel" data-panel="compose" data-v="compose" data-numbers set:html={code(v.compose)} />
+      <pre id={`${uid}-p-env`} role="tabpanel" data-panel="env" data-v="env" data-numbers hidden set:html={code(v.env)} />
+      <pre id={`${uid}-p-proxy`} role="tabpanel" data-panel="proxy" data-v="proxy" data-numbers hidden set:html={code(v.proxy ?? '')} />
+      {extra.map((f) => <pre id={`${uid}-p-file-${f.name}`} role="tabpanel" data-panel={`file-${f.name}`} data-numbers hidden set:html={code(f.content)} />)}
+      <pre id={`${uid}-p-tree`} role="tabpanel" data-panel="tree" data-v="tree" data-numbers hidden set:html={code(v.tree)} />
+    </div>
+  </div>
+  {root && <script type="application/json" data-variants set:html={JSON.stringify(variants)} />}
+</Wrapper>
+
+<script>
+  document.addEventListener('click', (e) => {
+    const tab = (e.target as Element).closest<HTMLElement>('.files [role="tab"]');
+    if (!tab) return;
+    const files = tab.closest('.files')!;
+    files.querySelectorAll<HTMLElement>('[role="tab"]').forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
+    files.querySelectorAll<HTMLElement>('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== tab.dataset.tab));
+  });
+</script>

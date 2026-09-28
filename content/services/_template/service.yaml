@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+# Metadata of the service. All fields are documented in CONTRIBUTING.md.
+name: My Service
+# proxy | management | data | code | auth | monitoring
+category: data
+# 1 = Einsteiger, 2 = Fortgeschritten, 3 = Profi
+level: 1
+# optional badge: recommended | popular | new
+# tag: new
+# Port the web UI listens on INSIDE the container
+port: 8080
+# Port published on the host when the visitor uses no reverse proxy (defaults to port)
+# hostPort: 8080
+# Subdomain (sub.example.com) or path (example.com/sub)
+subdomain: myservice
+# true if the app cannot run under a path like example.com/myservice
+subdomainOnly: false
+links:
+  # owner/repo on GitHub, or a full URL for Codeberg etc.
+  repo: owner/myservice
+  website: https://example.org
+  docs: https://example.org/docs
+upstream:
+  label: docker-compose.yml
+  url: https://github.com/owner/myservice/blob/main/docker-compose.yml
+# Date you last tested this template (YYYY-MM-DD)
+reviewed: 2026-01-01

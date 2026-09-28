@@ -1,0 +1,186 @@
+---
+import { defaultSetup, proxies } from '../config/site';
+import { t, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const d = defaultSetup;
+---
+
+<dialog id="setup-dialog" class="dlg" aria-labelledby="setup-title">
+  <form method="dialog" class="dlg-card" id="setup-form">
+    <div class="dlg-head">
+      <div class="head-text">
+        <h2 id="setup-title">{t(lang, 'setupDialog.title')}</h2>
+        <p>{t(lang, 'setupDialog.lead')}</p>
+      </div>
+      <button type="button" class="x" data-close aria-label={t(lang, 'setupDialog.close')}>×</button>
+    </div>
+
+    <div class="dlg-body">
+      <fieldset>
+        <legend>{t(lang, 'setupDialog.sec1')}</legend>
+        <div class="grid2">
+          <label>{t(lang, 'setupDialog.domain')}<input name="domain" value={d.domain} autocomplete="off" spellcheck="false" /></label>
+          <label>{t(lang, 'setupDialog.email')}<input name="email" type="email" value={d.email} autocomplete="off" spellcheck="false" /></label>
+        </div>
+        <div class="row">
+          <span class="lbl">{t(lang, 'setupDialog.urlScheme')}</span>
+          <label class="opt"><input type="radio" name="urlMode" value="sub" checked /><span>{t(lang, 'setupDialog.urlSub')}</span></label>
+          <label class="opt"><input type="radio" name="urlMode" value="path" /><span>{t(lang, 'setupDialog.urlPath')}</span></label>
+          <span class="example mono" data-example="url"></span>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>{t(lang, 'setupDialog.sec2')}</legend>
+        <div class="proxies">
+          {
+            proxies.map((p) => (
+              <label class="proxy">
+                <input type="radio" name="proxy" value={p} checked={p === d.proxy} />
+                <span class="proxy-card">
+                  <span class="proxy-top">
+                    <b>{t(lang, `proxy.${p}`)}</b>
+                    {p === 'traefik' && <span class="rec">{t(lang, 'tag.recommended')}</span>}
+                  </span>
+                  <span class="proxy-desc">{t(lang, `proxy.${p}.desc`)}</span>
+                </span>
+              </label>
+            ))
+          }
+        </div>
+        <label class="narrow" data-when="has-proxy">{t(lang, 'setupDialog.network')}<input name="network" value={d.network} autocomplete="off" spellcheck="false" /></label>
+      </fieldset>
+
+      <fieldset>
+        <legend>{t(lang, 'setupDialog.sec3')}</legend>
+        <label>{t(lang, 'setupDialog.root')}<input name="root" value={d.root} autocomplete="off" spellcheck="false" /></label>
+        <div class="row">
+          <span class="lbl">{t(lang, 'setupDialog.data')}</span>
+          <label class="opt"><input type="radio" name="dataMode" value="stack" checked /><span>{t(lang, 'setupDialog.dataStack')}</span></label>
+          <label class="opt"><input type="radio" name="dataMode" value="central" /><span>{t(lang, 'setupDialog.dataCentral')}</span></label>
+        </div>
+        <label data-when="central">{t(lang, 'setupDialog.dataRoot')}<input name="dataRoot" value={d.dataRoot} autocomplete="off" spellcheck="false" /></label>
+        <span class="hint">{t(lang, 'setupDialog.example')} <span class="mono" data-example="data"></span></span>
+      </fieldset>
+
+      <fieldset>
+        <legend>{t(lang, 'setupDialog.sec4')}</legend>
+        <div class="grid3">
+          <label>{t(lang, 'setupDialog.tz')}<input name="tz" value={d.tz} autocomplete="off" spellcheck="false" /></label>
+          <label>PUID<input name="puid" value={d.puid} inputmode="numeric" autocomplete="off" /></label>
+          <label>PGID<input name="pgid" value={d.pgid} inputmode="numeric" autocomplete="off" /></label>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="dlg-foot">
+      <button type="button" class="link-btn reset" data-reset>{t(lang, 'setupDialog.reset')}</button>
+      <button type="button" class="btn btn-outline" data-close>{t(lang, 'setupDialog.cancel')}</button>
+      <button type="submit" class="btn btn-primary">{t(lang, 'setupDialog.save')}</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+  import { defaultSetup, type Setup } from '../config/site';
+  import { getSetup, setSetup } from '../client/store';
+
+  const dlg = document.getElementById('setup-dialog') as HTMLDialogElement;
+  const form = document.getElementById('setup-form') as HTMLFormElement;
+
+  function fill(s: Setup) {
+    for (const [k, v] of Object.entries(s)) {
+      const el = form.elements.namedItem(k);
+      if (el instanceof RadioNodeList) el.value = String(v);
+      else if (el instanceof HTMLInputElement) el.value = String(v);
+    }
+    update();
+  }
+  function read(): Setup {
+    const fd = new FormData(form);
+    const s = { ...defaultSetup } as Record<string, string>;
+    for (const k of Object.keys(defaultSetup)) {
+      const v = String(fd.get(k) ?? '').trim();
+      if (v) s[k] = v.replace(/\/+$/, '') || v;
+    }
+    return s as unknown as Setup;
+  }
+  function update() {
+    const s = read();
+    form.querySelector('[data-example="url"]')!.textContent = s.urlMode === 'sub' ? `https://vault.${s.domain}` : `https://${s.domain}/vault`;
+    form.querySelector('[data-example="data"]')!.textContent = s.dataMode === 'stack' ? `${s.root}/vaultwarden/data/` : `${s.dataRoot}/vaultwarden/`;
+    form.querySelector<HTMLElement>('[data-when="has-proxy"]')!.hidden = s.proxy === 'none';
+    form.querySelector<HTMLElement>('[data-when="central"]')!.hidden = s.dataMode !== 'central';
+  }
+
+  document.addEventListener('click', (e) => {
+    if ((e.target as Element).closest('[data-setup-open]')) {
+      fill(getSetup());
+      dlg.showModal();
+    }
+  });
+  form.addEventListener('input', update);
+  form.addEventListener('submit', () => setSetup(read()));
+  form.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => dlg.close()));
+  form.querySelector('[data-reset]')!.addEventListener('click', () => fill({ ...defaultSetup }));
+  dlg.addEventListener('click', (e) => {
+    if (e.target === dlg) dlg.close();
+  });
+</script>
+
+<style>
+  .dlg { border: none; padding: 0; background: transparent; width: 760px; max-width: calc(100% - 32px); max-height: calc(100dvh - 64px); margin: 48px auto auto; overflow: visible; }
+  .dlg::backdrop { background: rgba(14, 30, 44, 0.42); }
+  .dlg-card { background: var(--surface); border-radius: 24px; box-shadow: 0 30px 80px rgba(10, 30, 50, 0.25); display: flex; flex-direction: column; max-height: calc(100dvh - 64px); }
+  .dlg-head { padding: 26px 30px 18px; display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; border-bottom: 1px solid var(--line-3); }
+  .head-text { display: flex; flex-direction: column; gap: 6px; }
+  .dlg-head h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+  .dlg-head p { font-size: 14.5px; line-height: 1.5; color: var(--text-4); }
+  .x { border: none; background: var(--bg); width: 36px; height: 36px; border-radius: 50%; font-size: 18px; color: var(--text-4); flex: none; }
+  .dlg-body { padding: 22px 30px; display: flex; flex-direction: column; gap: 26px; overflow-y: auto; }
+  fieldset { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  legend { padding: 0; margin-bottom: 12px; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+  label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text-4); min-width: 0; }
+  input:not([type='radio']) {
+    height: 42px; border: 1.5px solid var(--line-2); border-radius: 12px; padding: 0 14px; font-family: var(--mono); font-size: 13.5px;
+    color: var(--accent-600); background: #f7fafc; min-width: 0; width: 100%;
+  }
+  input:not([type='radio']):focus { border-color: var(--accent); outline: none; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
+  .narrow { max-width: 340px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .lbl { font-size: 13px; font-weight: 600; color: var(--text-4); margin-right: 4px; }
+  .opt { flex-direction: row; }
+  .opt input, .proxy input { position: absolute; opacity: 0; pointer-events: none; }
+  .opt span { border: 1.5px solid var(--line-2); background: #fff; color: var(--text-2); border-radius: 999px; padding: 7px 14px; font-size: 13.5px; font-weight: 400; cursor: pointer; }
+  .opt input:checked + span { border-color: var(--accent); background: var(--accent-50); color: var(--accent-600); font-weight: 600; }
+  .opt input:focus-visible + span, .proxy input:focus-visible + .proxy-card { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .example { margin-left: auto; font-size: 12.5px; color: var(--muted); }
+  .hint { font-size: 13px; color: var(--muted); }
+  .hint .mono { color: var(--text-4); }
+  .proxies { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+  .proxy-card { border: 2px solid var(--line); background: #fff; border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; color: var(--text); height: 100%; }
+  .proxy-card:hover { border-color: #9ed3e4; }
+  .proxy input:checked + .proxy-card { border-color: var(--accent); background: var(--accent-50); }
+  .proxy-top { display: flex; justify-content: space-between; gap: 6px; align-items: center; }
+  .proxy-top b { font-size: 15px; }
+  .rec { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: var(--accent-50); color: var(--accent-600); }
+  .proxy input:checked + .proxy-card .rec { background: var(--accent); color: #fff; }
+  .proxy-desc { font-size: 12.5px; line-height: 1.4; color: var(--muted); font-weight: 400; }
+  .proxy input:checked + .proxy-card .proxy-desc { color: #33505f; }
+  .dlg-foot { padding: 18px 30px 24px; border-top: 1px solid var(--line-3); display: flex; gap: 10px; align-items: center; }
+  .reset { color: var(--muted); font-size: 14px; margin-right: auto; }
+  @media (max-width: 600px) {
+    .dlg { margin-top: 16px; max-height: calc(100dvh - 32px); }
+    .dlg-card { max-height: calc(100dvh - 32px); }
+    .dlg-head, .dlg-body, .dlg-foot { padding-inline: 18px; }
+    .grid3 { grid-template-columns: 1fr 1fr; }
+    .grid3 label:first-child { grid-column: 1 / -1; }
+    .example { margin-left: 0; width: 100%; }
+  }
+</style>

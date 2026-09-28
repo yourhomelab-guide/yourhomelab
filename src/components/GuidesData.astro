@@ -1,0 +1,17 @@
+---
+/** Embeds the ordered guide list for client/progress.ts */
+import { getSetupPath } from '../lib/content';
+import type { Lang } from '../lib/i18n';
+import { url } from '../lib/routes';
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const { guides } = await getSetupPath(lang);
+const data = guides.map((g) => ({ slug: g.id, steps: g.steps, stage: g.stage.slug, title: g.entry.data.title, url: url.guide(lang, g.slug), stub: g.source.data.status === 'stub' }));
+---
+
+<script type="application/json" id="yhl-guides" set:html={JSON.stringify(data)} />
+<script>
+  import '../client/progress';
+</script>

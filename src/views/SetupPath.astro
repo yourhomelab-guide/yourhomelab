@@ -1,0 +1,123 @@
+---
+/** The setup path: all stages, one visible at a time (tabs via #anchor). */
+import Base from '../layouts/Base.astro';
+import Level from '../components/Level.astro';
+import StageStrip from '../components/StageStrip.astro';
+import GuidesData from '../components/GuidesData.astro';
+import { getSetupPath } from '../lib/content';
+import { t, type Lang } from '../lib/i18n';
+import { url } from '../lib/routes';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const { stages, guides } = await getSetupPath(lang);
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<Base lang={lang} title={t(lang, 'setup.title')} description={t(lang, 'setup.lead')} alternates={{ de: url.section('de', 'setup'), en: url.section('en', 'setup') }} nav="setup">
+  <div class="top">
+    <div class="wrap top-in">
+      <div class="head">
+        <div class="head-text">
+          <h1 class="h1">{t(lang, 'setup.title')}</h1>
+          <p class="lead">{t(lang, 'setup.lead')}</p>
+        </div>
+        <div class="total">
+          <div class="total-row">
+            <span>{t(lang, 'setup.progress')}</span>
+            <strong data-total-count>0 / {guides.length}</strong>
+          </div>
+          <div class="bar"><span data-total-bar></span></div>
+        </div>
+      </div>
+      <StageStrip lang={lang} stages={stages} current={stages[0]?.slug} mode="tabs" />
+    </div>
+  </div>
+  <main class="panels">
+    {
+      stages.map((s, i) => (
+        <section class="panel" id={s.slug} data-stage-panel={s.slug} hidden={i !== 0} role="tabpanel">
+          <div class="kicker">{t(lang, 'setup.stageMeta', { n: pad(s.n), min: s.minutes })}</div>
+          <h2>{s.title}</h2>
+          <p class="lead">{s.description}</p>
+          <div class="list">
+            {s.guides.map((g, gi) => (
+              <a class:list={['guide card', { stub: g.source.data.status === 'stub' }]} href={url.guide(lang, g.slug)} data-guide-item={g.id}>
+                <span class="num-badge">
+                  <span class="n">{pad(gi + 1)}</span>
+                  <span class="ok">✓</span>
+                </span>
+                <span class="g-t">
+                  <span>{g.entry.data.title}</span>
+                  <span class="cur" data-current-hint={g.id} hidden>
+                    {t(lang, 'setup.continueHere')}
+                  </span>
+                </span>
+                <Level lang={lang} level={g.entry.data.level} />
+                <span class="min">{t(lang, 'setup.minShort', { n: g.entry.data.minutes })}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      ))
+    }
+  </main>
+  <GuidesData lang={lang} />
+</Base>
+
+<script>
+  const tabs = document.querySelectorAll<HTMLAnchorElement>('[data-stage-tab]');
+  const panels = document.querySelectorAll<HTMLElement>('[data-stage-panel]');
+  function show(slug: string | null, push = false) {
+    const target = Array.from(panels).find((p) => p.dataset.stagePanel === slug) ?? panels[0];
+    panels.forEach((p) => (p.hidden = p !== target));
+    tabs.forEach((tab) => tab.setAttribute('aria-selected', String(tab.dataset.stageTab === target.dataset.stagePanel)));
+    if (push) history.replaceState(null, '', `#${target.dataset.stagePanel}`);
+  }
+  tabs.forEach((tab) =>
+    tab.addEventListener('click', (e) => {
+      e.preventDefault();
+      show(tab.dataset.stageTab!, true);
+    }),
+  );
+  show(location.hash.slice(1) || null);
+  window.addEventListener('hashchange', () => show(location.hash.slice(1)));
+  // Don't jump to the panel anchor on load
+  if (location.hash) requestAnimationFrame(() => window.scrollTo(0, 0));
+</script>
+
+<style>
+  .top { background: var(--surface); border-bottom: 1px solid var(--line); }
+  .top-in { padding-top: 48px; padding-bottom: 28px; display: flex; flex-direction: column; gap: 24px; }
+  .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+  .head-text { display: flex; flex-direction: column; gap: 10px; max-width: 640px; }
+  .total { display: flex; flex-direction: column; gap: 8px; min-width: 240px; }
+  .total-row { display: flex; justify-content: space-between; font-size: 14px; }
+  .total-row span { color: var(--text-4); }
+  .total-row strong { font-weight: 600; }
+  .panels { max-width: 880px; margin: 0 auto; padding: 48px var(--gutter) 88px; }
+  .panel { display: flex; flex-direction: column; gap: 18px; }
+  .panel h2 { font-size: 36px; font-weight: 700; letter-spacing: -0.025em; }
+  .panel .lead { margin-bottom: 10px; }
+  .list { display: flex; flex-direction: column; gap: 18px; }
+  .guide { border-radius: 18px; padding: 18px 22px; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto auto; gap: 18px; align-items: center; color: var(--text); }
+  .guide:hover { box-shadow: var(--ring); text-decoration: none; color: var(--text); }
+  .guide .ok { display: none; }
+  .guide:global(.is-done) .num-badge { background: var(--accent); color: #fff; font-size: 18px; }
+  .guide:global(.is-done) .n { display: none; }
+  .guide:global(.is-done) .ok { display: inline; }
+  .g-t { display: flex; flex-direction: column; gap: 3px; }
+  .g-t span:first-child { font-size: 17px; font-weight: 600; }
+  .guide.stub .g-t span:first-child { color: var(--text-4); }
+  .cur { font-size: 13px; color: var(--accent); font-weight: 600; }
+  .min { font-size: 13.5px; color: var(--muted); min-width: 56px; text-align: right; }
+  @media (max-width: 720px) {
+    .top-in { padding-top: 32px; }
+    .panels { padding-top: 32px; }
+    .panel h2 { font-size: 28px; }
+    .guide { grid-template-columns: 44px minmax(0, 1fr) auto; padding: 16px; gap: 14px; }
+    .guide :global(.lvl) { display: none; }
+  }
+</style>

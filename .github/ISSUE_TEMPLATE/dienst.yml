@@ -1,0 +1,50 @@
+name: Dienst vorschlagen
+description: Ein Dienst fehlt auf yourhomelab.guide
+title: "Dienst: "
+labels: ["dienst", "neu"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke für den Vorschlag! Noch schneller geht es, wenn du die Vorlage selbst anlegst:
+        `npm run new service <name>` und dann einen Pull Request öffnen (siehe CONTRIBUTING.md).
+  - type: input
+    id: name
+    attributes:
+      label: Name des Dienstes
+      placeholder: Jellyfin
+    validations:
+      required: true
+  - type: input
+    id: repo
+    attributes:
+      label: Repository
+      placeholder: https://github.com/jellyfin/jellyfin
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Kategorie
+      options: [Reverse Proxy, Verwaltung, Daten, Code, Login, Monitoring, Andere]
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Wofür nutzt man ihn?
+      description: Ein, zwei Sätze. Warum gehört er auf yourhomelab?
+    validations:
+      required: true
+  - type: textarea
+    id: compose
+    attributes:
+      label: Funktionierende compose.yaml (optional)
+      description: Falls du den Dienst schon betreibst, hilft deine Konfiguration sehr. Entferne vorher Passwörter und Domains!
+      render: yaml
+  - type: checkboxes
+    id: pr
+    attributes:
+      label: Mithelfen
+      options:
+        - label: Ich würde die Vorlage selbst als Pull Request einreichen

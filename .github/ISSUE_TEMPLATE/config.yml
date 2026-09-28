@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Frage oder Idee
+    url: https://github.com/yourhomelab-guide/yourhomelab/discussions
+    about: Fragen zum eigenen Setup, Themenwünsche und alles andere gehören in die Discussions.

@@ -1,0 +1,35 @@
+---
+import { langFromUrl, t } from '../../lib/i18n';
+interface Props {
+  title: string;
+}
+const { title } = Astro.props;
+const lang = langFromUrl(Astro.url);
+---
+
+<div class="step card" data-step="__STEP__">
+  <span class="num-badge step-num" aria-hidden="true"></span>
+  <div class="step-body">
+    <h3>{title}</h3>
+    <slot />
+  </div>
+  <button type="button" class="step-toggle" data-step-toggle aria-pressed="false">{t(lang, 'setup.check')}</button>
+</div>
+
+<style>
+  .step { counter-increment: step; padding: 26px 28px; display: grid; grid-template-columns: 44px minmax(0, 1fr) 104px; gap: 18px; align-items: start; }
+  .step-num::before { content: counter(step); font-size: 17px; }
+  :global(.step.is-done) .step-num { background: var(--accent); color: #fff; }
+  :global(.step.is-done) .step-num::before { content: '✓'; font-size: 18px; }
+  .step-body { display: flex; flex-direction: column; gap: 12px; min-width: 0; font-size: 16px; line-height: 1.6; color: var(--text-3); }
+  .step-body h3 { margin: 10px 0 0; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
+  .step-body :global(p) { margin: 0; text-wrap: pretty; }
+  .step-toggle { width: 104px; border: 1.5px solid var(--line-2); background: #fff; color: var(--text-4); border-radius: 999px; padding: 7px 0; font-size: 13px; font-weight: 600; margin-top: 8px; }
+  .step-toggle:hover { border-color: var(--accent); color: var(--accent-600); }
+  :global(.step.is-done) .step-toggle { border-color: var(--accent-50); background: var(--accent-50); color: var(--accent-600); }
+  @media (max-width: 720px) {
+    .step { grid-template-columns: 44px minmax(0, 1fr); padding: 20px; gap: 14px; }
+    .step-body { grid-column: 1 / -1; grid-row: 2; }
+    .step-toggle { grid-row: 1; grid-column: 2; justify-self: end; margin-top: 6px; }
+  }
+</style>

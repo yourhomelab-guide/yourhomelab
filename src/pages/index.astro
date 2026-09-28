@@ -1,0 +1,39 @@
+---
+/**
+ * Language chooser at "/". On the live server, public/.htaccess redirects visitors to /de/ or /en/
+ * based on their browser language before this page is ever shown.
+ */
+import '../styles/global.css';
+import { site } from '../config/site';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{site.name}</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" hreflang="de" href={`${site.url}/de/`} />
+    <link rel="alternate" hreflang="en" href={`${site.url}/en/`} />
+    <link rel="alternate" hreflang="x-default" href={`${site.url}/`} />
+  </head>
+  <body>
+    <main class="choose">
+      <span class="logo"><span></span></span>
+      <h1>yourhomelab</h1>
+      <div class="opts">
+        <a class="btn btn-primary btn-lg" href="/de/" hreflang="de" lang="de">Deutsch</a>
+        <a class="btn btn-outline btn-lg" href="/en/" hreflang="en" lang="en">English</a>
+      </div>
+    </main>
+  </body>
+</html>
+
+<style>
+  .choose { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 24px; }
+  .logo { width: 48px; height: 48px; border-radius: 14px; background: var(--accent); display: flex; align-items: center; justify-content: center; }
+  .logo span { width: 18px; height: 18px; border-radius: 5px; background: #fff; }
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+  .opts { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+</style>

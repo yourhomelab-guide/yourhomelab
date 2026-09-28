@@ -1,0 +1,114 @@
+---
+import { t, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<dialog id="search-dialog" class="sdlg" aria-label={t(lang, 'header.search')} data-index={`/search-${lang}.json`}>
+  <div class="scard">
+    <div class="shead">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C8894" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5 20 20"></path></svg>
+      <input type="search" id="search-input" placeholder={t(lang, 'search.placeholder')} autocomplete="off" spellcheck="false" aria-controls="search-results" />
+      <kbd>Esc</kbd>
+    </div>
+    <div class="sbody" id="search-results" role="listbox"></div>
+  </div>
+</dialog>
+
+<script>
+  import { ui } from '../client/store';
+
+  interface Item { g: 'wiki' | 'setup' | 'services'; t: string; s: string; u: string; k?: string }
+  const dlg = document.getElementById('search-dialog') as HTMLDialogElement;
+  const input = document.getElementById('search-input') as HTMLInputElement;
+  const results = document.getElementById('search-results')!;
+  let index: Item[] | null = null;
+
+  async function load() {
+    if (index) return;
+    try {
+      index = await (await fetch(dlg.dataset.index!)).json();
+    } catch {
+      index = [];
+    }
+  }
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+  function render() {
+    const s = ui();
+    const q = norm(input.value.trim());
+    const terms = q.split(/\s+/).filter(Boolean);
+    const hit = (it: Item) => terms.every((w) => norm(`${it.t} ${it.s} ${it.k ?? ''}`).includes(w));
+    const html = (['wiki', 'setup', 'services'] as const)
+      .map((g) => {
+        const all = (index ?? []).filter((it) => it.g === g && hit(it));
+        if (!all.length) return '';
+        const items = all.slice(0, q ? 6 : 3);
+        return `<div class="sgroup"><div class="sgroup-h"><span>${esc(s[`search.${g}`])}</span><span>${all.length}</span></div>${items
+          .map((it) => `<a class="sitem" role="option" href="${esc(it.u)}"><b>${esc(it.t)}</b><span>${esc(it.s)}</span></a>`)
+          .join('')}</div>`;
+      })
+      .join('');
+    results.innerHTML = html || `<div class="snone">${esc(s['search.noHits'])}</div>`;
+  }
+
+  async function open() {
+    input.value = '';
+    dlg.showModal();
+    input.focus();
+    await load();
+    render();
+  }
+  document.addEventListener('click', (e) => {
+    if ((e.target as Element).closest('[data-search-open]')) open();
+  });
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      dlg.open ? dlg.close() : open();
+    }
+  });
+  input.addEventListener('input', render);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') results.querySelector<HTMLAnchorElement>('a')?.click();
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      results.querySelector<HTMLAnchorElement>('a')?.focus();
+    }
+  });
+  results.addEventListener('keydown', (e) => {
+    const links = Array.from(results.querySelectorAll<HTMLAnchorElement>('a'));
+    const i = links.indexOf(document.activeElement as HTMLAnchorElement);
+    if (e.key === 'ArrowDown' && i < links.length - 1) (e.preventDefault(), links[i + 1].focus());
+    if (e.key === 'ArrowUp') (e.preventDefault(), i > 0 ? links[i - 1].focus() : input.focus());
+  });
+  dlg.addEventListener('click', (e) => {
+    if (e.target === dlg) dlg.close();
+  });
+</script>
+
+<style>
+  .sdlg { border: none; padding: 0; background: transparent; width: 640px; max-width: calc(100% - 32px); margin: 88px auto auto; overflow: visible; }
+  .sdlg::backdrop { background: rgba(14, 30, 44, 0.42); }
+  .scard { background: var(--surface); border-radius: 22px; box-shadow: 0 30px 80px rgba(10, 30, 50, 0.25); display: flex; flex-direction: column; overflow: hidden; max-height: calc(100dvh - 120px); }
+  .shead { display: flex; align-items: center; gap: 12px; padding: 0 20px; height: 62px; border-bottom: 1px solid var(--line-3); flex: none; }
+  .shead input { flex: 1; border: none; font-size: 17px; background: none; min-width: 0; outline: none; -webkit-appearance: none; appearance: none; }
+  .shead input::-webkit-search-cancel-button { display: none; }
+  kbd { font-family: inherit; font-size: 12px; color: var(--muted); border: 1px solid var(--line-2); border-radius: 6px; padding: 2px 7px; }
+  .sbody { overflow-y: auto; padding: 10px 10px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .sbody :global(.sgroup) { display: flex; flex-direction: column; }
+  .sbody :global(.sgroup-h) { display: flex; justify-content: space-between; padding: 10px 12px 6px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .sbody :global(.sgroup-h span:last-child) { font-weight: 500; }
+  .sbody :global(.sitem) { padding: 10px 12px; border-radius: 12px; display: flex; flex-direction: column; gap: 2px; color: var(--text); }
+  .sbody :global(.sitem:hover), .sbody :global(.sitem:focus) { background: var(--accent-50); text-decoration: none; outline: none; }
+  .sbody :global(.sitem b) { font-size: 15px; font-weight: 600; }
+  .sbody :global(.sitem span) { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sbody :global(.snone) { padding: 28px 12px; text-align: center; font-size: 15px; color: var(--muted); }
+  @media (max-width: 600px) {
+    .sdlg { margin-top: 16px; }
+  }
+</style>

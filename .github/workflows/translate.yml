@@ -1,0 +1,52 @@
+name: Translate
+
+# Machine-translates new or changed source-language content with DeepL (free API) and opens a pull request.
+# The result is marked as "deepl" in .translations.lock.json and can be polished later with Claude Code locally
+# (see CLAUDE.md). No Claude credentials are used in CI.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content/**'
+      - 'src/i18n/**'
+  workflow_dispatch:
+
+concurrency:
+  group: translate
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  translate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Translate with DeepL
+        env:
+          DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
+        run: |
+          if [ -z "$DEEPL_API_KEY" ]; then echo "::warning::DEEPL_API_KEY secret missing, skipping"; exit 0; fi
+          node scripts/translate.mjs deepl
+      - name: Check that the site still builds
+        run: npm run build
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          branch: auto/translations
+          delete-branch: true
+          title: 'Übersetzungen aktualisieren (DeepL)'
+          commit-message: 'Update translations (DeepL)'
+          labels: übersetzung
+          body: |
+            Automatisch mit DeepL übersetzt, nachdem sich Inhalte in der Ausgangssprache geändert haben.
+            Code, Platzhalter, Links und MDX-Komponenten bleiben unverändert.
+
+            Bitte kurz querlesen und mergen. Später lassen sich die als `deepl` markierten Dateien lokal
+            mit Claude Code nachpolieren (`npm run translate status`, siehe CLAUDE.md).

@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: Vaultwarden
+category: data
+level: 1
+tag: popular
+popular: true
+port: 80
+hostPort: 8080
+subdomain: vault
+links:
+  repo: dani-garcia/vaultwarden
+  website: https://github.com/dani-garcia/vaultwarden/wiki
+  docs: https://github.com/dani-garcia/vaultwarden/wiki
+upstream:
+  label: wiki/Using-Docker-Compose
+  url: https://github.com/dani-garcia/vaultwarden/wiki/Using-Docker-Compose
+reviewed: 2026-09-12

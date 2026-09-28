@@ -1,0 +1,117 @@
+---
+import '../styles/global.css';
+import onestLatin from '@fontsource-variable/onest/files/onest-latin-wght-normal.woff2?url';
+import onestLatinExt from '@fontsource-variable/onest/files/onest-latin-ext-wght-normal.woff2?url';
+import monoLatin from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
+import monoLatinExt from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-ext-wght-normal.woff2?url';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import SetupDialog from '../components/SetupDialog.astro';
+import SearchDialog from '../components/SearchDialog.astro';
+import { site } from '../config/site';
+import { otherLang, t, type Lang } from '../lib/i18n';
+import type { Section } from '../lib/routes';
+
+interface Props {
+  lang: Lang;
+  title?: string;
+  description?: string;
+  /** URL of this page in each language (only languages that exist) */
+  alternates: Partial<Record<Lang, string>>;
+  nav?: Section;
+  noindex?: boolean;
+}
+const { lang, title, description = t(lang, 'meta.description'), alternates, nav, noindex = false } = Astro.props;
+const fullTitle = title ? `${title} · ${site.name}` : `${site.name} · ${t(lang, 'home.title')}`;
+const canonical = new URL(Astro.url.pathname, site.url).href;
+const other = otherLang(lang);
+
+const L = 'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD';
+const LX = 'U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF';
+const face = (family: string, src: string, range: string) =>
+  `@font-face{font-family:'${family}';font-style:normal;font-display:swap;font-weight:100 900;src:url(${src}) format('woff2');unicode-range:${range}}`;
+const fontCss = [face('Onest', onestLatin, L), face('Onest', onestLatinExt, LX), face('JetBrains Mono', monoLatin, L), face('JetBrains Mono', monoLatinExt, LX)].join('');
+
+/** Strings the client scripts need */
+const uiKeys = [
+  'code.copy', 'code.copied', 'service.npm', 'summary.dataStack', 'summary.service', 'setup.stepsDone', 'setup.check', 'setup.checked',
+  'home.continueAt', 'home.startAt', 'home.pathProgress', 'search.noHits', 'search.wiki', 'search.setup', 'search.services',
+  'proxy.traefik', 'proxy.caddy', 'proxy.npm', 'proxy.none', 'setupDialog.urlSub',
+];
+const uiJson = JSON.stringify(Object.fromEntries(uiKeys.map((k) => [k, t(lang, k)])));
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="canonical" href={canonical} />
+    {Object.entries(alternates).map(([l, href]) => <link rel="alternate" hreflang={l} href={new URL(href, site.url).href} />)}
+    {alternates.de && alternates.en && <link rel="alternate" hreflang="x-default" href={new URL(alternates.en, site.url).href} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={title ?? site.name} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={lang === 'de' ? 'de_DE' : 'en_US'} />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="preload" href={onestLatin} as="font" type="font/woff2" crossorigin />
+    <style set:html={fontCss}></style>
+    {site.umami.websiteId && <script defer src={site.umami.src} data-website-id={site.umami.websiteId} data-domains={site.umami.domains} data-do-not-track="true" />}
+  </head>
+  <body>
+    <a class="skip" href="#main">{t(lang, 'skip')}</a>
+    {
+      site.underConstruction && (
+        <div class="banner">
+          <div class="wrap banner-in">
+            <span class="banner-label">{t(lang, 'banner.label')}</span>
+            <span class="banner-text">{t(lang, 'banner.text')}</span>
+            <a href={`${site.repo}/milestones`}>{t(lang, 'banner.link')}</a>
+          </div>
+        </div>
+      )
+    }
+    {
+      alternates[other] && (
+        <div id="lang-hint" class="lang-hint" data-lang={other} lang={other} hidden>
+          <div class="wrap lang-hint-in">
+            <span>{t(other, 'lang.hint')}</span>
+            <a href={alternates[other]} hreflang={other}>{t(other, 'lang.hintCta')} →</a>
+            <button type="button" aria-label={t(other, 'lang.hintClose')}>×</button>
+          </div>
+        </div>
+      )
+    }
+    <Header lang={lang} nav={nav} alternates={alternates} />
+    <div id="main" tabindex="-1">
+      <slot />
+    </div>
+    <Footer lang={lang} />
+    <SetupDialog lang={lang} />
+    <SearchDialog lang={lang} />
+    <script type="application/json" id="yhl-ui" set:html={uiJson} />
+    <script>
+      import '../client/app';
+    </script>
+  </body>
+</html>
+
+<style>
+  .banner { background: rgba(255, 210, 50, 0.22); color: #4a3a00; border-bottom: 1px solid rgba(220, 170, 0, 0.35); }
+  .banner-in { padding-block: 10px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-size: 14px; line-height: 1.45; }
+  .banner-label { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: 12.5px; background: #f6c627; color: #3d2e00; padding: 3px 9px; border-radius: 6px; }
+  .banner-text { flex: 1; min-width: 240px; }
+  .banner a { color: #4a3a00; font-weight: 600; text-decoration: underline; }
+  .lang-hint { background: var(--text); color: #fff; }
+  .lang-hint-in { padding-block: 10px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+  .lang-hint a { color: #8fdcf2; font-weight: 600; }
+  .lang-hint button { margin-left: auto; border: none; background: rgba(255, 255, 255, 0.12); color: #fff; width: 28px; height: 28px; border-radius: 50%; font-size: 16px; line-height: 1; }
+  #main:focus { outline: none; }
+</style>

@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: Portainer
+category: management
+level: 1
+port: 9000
+subdomain: portainer
+links:
+  repo: portainer/portainer
+  website: https://www.portainer.io
+  docs: https://docs.portainer.io
+upstream:
+  label: "Docker Hub: portainer-ce"
+  url: https://hub.docker.com/r/portainer/portainer-ce
+reviewed: 2026-09-12

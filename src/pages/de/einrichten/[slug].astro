@@ -1,0 +1,11 @@
+---
+import GuidePage from '../../../views/GuidePage.astro';
+import { getSetupPath } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  return (await getSetupPath('de')).guides.map((guide) => ({ params: { slug: guide.slug }, props: { guide } }));
+}
+const { guide } = Astro.props;
+---
+
+<GuidePage lang="de" guide={guide} />

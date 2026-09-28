@@ -1,0 +1,20 @@
+services:
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginx-proxy-manager
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+    ports:
+      - "80:80"
+      - "81:81"
+      - "443:443"
+    volumes:
+      - ./data/data:/data
+      - ./data/letsencrypt:/etc/letsencrypt
+    networks:
+      - __NETWORK__
+
+networks:
+  __NETWORK__:
+    external: true

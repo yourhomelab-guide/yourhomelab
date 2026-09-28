@@ -1,0 +1,14 @@
+services:
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:12
+    container_name: forgejo
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - USER_UID=${PUID}
+      - USER_GID=${PGID}
+    ports:
+      # Git over SSH. 2222 avoids a clash with the server's own SSH.
+      - "2222:22"
+    volumes:
+      - ./data/data:/data

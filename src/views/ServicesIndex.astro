@@ -1,0 +1,148 @@
+---
+import Base from '../layouts/Base.astro';
+import Level from '../components/Level.astro';
+import ServiceLogo from '../components/ServiceLogo.astro';
+import SetupSummary from '../components/SetupSummary.astro';
+import { categories, site } from '../config/site';
+import { getServices } from '../lib/content';
+import { t, type Lang } from '../lib/i18n';
+import { url } from '../lib/routes';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const services = await getServices(lang);
+const cats = categories.filter((c) => services.some((s) => s.category === c));
+const hostOf = (u: string) => new URL(u).hostname.replace(/^www\./, '');
+---
+
+<Base lang={lang} title={t(lang, 'services.title')} description={t(lang, 'services.lead')} alternates={{ de: url.section('de', 'services'), en: url.section('en', 'services') }} nav="services">
+  <main class="wrap svcs">
+    <div class="head">
+      <div class="head-text">
+        <h1 class="h1">{t(lang, 'services.title')}</h1>
+        <p class="lead">{t(lang, 'services.lead')}</p>
+      </div>
+      <label class="filter">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C8894" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5 20 20"></path></svg>
+        <input type="search" placeholder={t(lang, 'services.filter')} aria-label={t(lang, 'services.filter')} data-svc-q />
+      </label>
+    </div>
+    <div class="setupbar card">
+      <span class="sb-l">{t(lang, 'services.yourSetup')}</span>
+      <SetupSummary lang={lang} />
+      <button type="button" class="btn btn-outline btn-sm" data-setup-open>{t(lang, 'services.change')}</button>
+    </div>
+    <div class="cats" role="group">
+      <button type="button" class="cat" aria-pressed="true" data-cat="">
+        {t(lang, 'services.all')} <span>{services.length}</span>
+      </button>
+      {
+        cats.map((c) => (
+          <button type="button" class="cat" aria-pressed="false" data-cat={c}>
+            {t(lang, `category.${c}`)} <span>{services.filter((s) => s.category === c).length}</span>
+          </button>
+        ))
+      }
+    </div>
+    <div class="grid">
+      {
+        services.map((s) => (
+          <div class="svc card" data-svc data-svc-cat={s.category} data-svc-text={`${s.name} ${s.description} ${t(lang, `category.${s.category}`)}`.toLowerCase()}>
+            <div class="svc-head">
+              <span class="svc-logo">
+                <ServiceLogo name={s.name} logo={s.logo} size={34} />
+              </span>
+              <div class="svc-name">
+                <strong>{s.name}</strong>
+                <span>{t(lang, `category.${s.category}`)}</span>
+              </div>
+              {s.tag && <span class="tag">{t(lang, `tag.${s.tag}`)}</span>}
+            </div>
+            <p>{s.description}</p>
+            <div class="svc-links">
+              <a href={s.repoUrl}>{s.repoLabel} ↗</a>
+              <a href={s.links.website}>{hostOf(s.links.website)} ↗</a>
+              <Level lang={lang} level={s.level} class="svc-lvl" />
+            </div>
+            <a class="deploy" href={url.service(lang, s.id)} aria-label={`${s.name}: ${t(lang, 'services.deploy')}`}>
+              {t(lang, 'services.deploy')}
+            </a>
+          </div>
+        ))
+      }
+      <a class="missing" href={`${site.repo}/issues/new?template=dienst.yml`}>
+        <strong>{t(lang, 'services.missingTitle')}</strong>
+        <span>{t(lang, 'services.missingText')}</span>
+        <span class="missing-cta">{t(lang, 'services.missingCta')} ↗</span>
+      </a>
+    </div>
+    <p class="muted" data-svc-none hidden>{t(lang, 'services.noResults')}</p>
+  </main>
+</Base>
+
+<script>
+  const q = document.querySelector<HTMLInputElement>('[data-svc-q]')!;
+  const catBtns = document.querySelectorAll<HTMLButtonElement>('[data-cat]');
+  let cat = '';
+  function apply() {
+    const term = q.value.trim().toLowerCase();
+    let n = 0;
+    document.querySelectorAll<HTMLElement>('[data-svc]').forEach((el) => {
+      const show = (!cat || el.dataset.svcCat === cat) && (!term || el.dataset.svcText!.includes(term));
+      el.hidden = !show;
+      if (show) n++;
+    });
+    document.querySelector<HTMLElement>('[data-svc-none]')!.hidden = n > 0;
+  }
+  q.addEventListener('input', apply);
+  catBtns.forEach((b) =>
+    b.addEventListener('click', () => {
+      cat = b.dataset.cat!;
+      catBtns.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      apply();
+    }),
+  );
+</script>
+
+<style>
+  .svcs { padding-top: 48px; padding-bottom: 88px; display: flex; flex-direction: column; gap: 24px; }
+  .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+  .head-text { display: flex; flex-direction: column; gap: 10px; max-width: 640px; }
+  .filter { height: 44px; width: 320px; max-width: 100%; border-radius: 999px; background: #fff; border: 1.5px solid var(--line-2); display: flex; align-items: center; gap: 10px; padding: 0 16px; }
+  .filter:focus-within { border-color: var(--accent); }
+  .filter input { flex: 1; border: none; background: none; font-size: 14.5px; min-width: 0; outline: none; }
+  .setupbar { border-radius: 18px; padding: 14px 18px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .setupbar :global(.chips) { flex: 1; }
+  .sb-l { font-size: 14px; font-weight: 600; }
+  .cats { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cat { border: none; background: #fff; color: var(--text-2); border-radius: 999px; padding: 8px 14px; font-size: 14px; font-weight: 500; }
+  .cat:hover { background: var(--accent-50); }
+  .cat span { color: var(--faint); }
+  .cat[aria-pressed='true'] { background: var(--accent); color: #fff; font-weight: 600; }
+  .cat[aria-pressed='true'] span { color: #fff; opacity: 0.75; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 16px; }
+  .svc { padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+  .svc-head { display: flex; gap: 14px; align-items: center; }
+  .svc-logo { width: 52px; height: 52px; border-radius: 14px; background: var(--bg); display: flex; align-items: center; justify-content: center; flex: none; }
+  .svc-name { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+  .svc-name strong { font-size: 17px; font-weight: 700; }
+  .svc-name span { font-size: 13px; color: var(--muted); }
+  .svc-head .tag { align-self: flex-start; }
+  .svc p { font-size: 14.5px; line-height: 1.55; color: var(--text-3); flex: 1; text-wrap: pretty; }
+  .svc-links { display: flex; gap: 14px; font-size: 13px; flex-wrap: wrap; align-items: center; }
+  .svc-links a { color: var(--text-4); }
+  .svc-links :global(.svc-lvl) { margin-left: auto; font-size: 12px; padding: 3px 8px; }
+  .deploy { background: var(--accent-50); color: var(--accent-600); border-radius: 12px; padding: 11px; font-size: 14.5px; font-weight: 600; text-align: center; }
+  .deploy:hover { background: var(--accent); color: #fff; text-decoration: none; }
+  .missing { border: 2px dashed var(--dash); border-radius: 20px; padding: 22px; display: flex; flex-direction: column; justify-content: center; gap: 8px; color: var(--text); min-height: 220px; }
+  .missing:hover { text-decoration: none; border-color: var(--accent); color: var(--text); }
+  .missing strong { font-size: 17px; }
+  .missing span { font-size: 14.5px; line-height: 1.55; color: var(--text-4); }
+  .missing .missing-cta { font-size: 14px; font-weight: 600; color: var(--accent-600); margin-top: 6px; }
+  @media (max-width: 720px) {
+    .svcs { padding-top: 32px; }
+    .filter { width: 100%; }
+  }
+</style>

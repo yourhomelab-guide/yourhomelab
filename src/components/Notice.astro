@@ -1,0 +1,38 @@
+---
+/** Stub ("help write this") and "not translated yet" notices */
+import { site } from '../config/site';
+import { t, type Lang } from '../lib/i18n';
+interface Props {
+  lang: Lang;
+  kind: 'stub' | 'untranslated';
+  file: string;
+}
+const { lang, kind, file } = Astro.props;
+---
+
+{
+  kind === 'stub' ? (
+    <div class="stub">
+      <strong>{t(lang, 'page.stubTitle')}</strong>
+      <p>{t(lang, 'page.stubText')}</p>
+      <div class="acts">
+        <a class="btn btn-primary btn-sm" href={`${site.repo}/edit/${site.branch}/${file}`}>
+          {t(lang, 'page.stubCta')} ↗
+        </a>
+        <a class="btn btn-outline btn-sm" href={`${site.repo}/discussions`}>
+          {t(lang, 'page.stubDiscuss')} ↗
+        </a>
+      </div>
+    </div>
+  ) : (
+    <p class="untr">{t(lang, 'page.untranslated')}</p>
+  )
+}
+
+<style>
+  .stub { border: 2px dashed var(--dash); border-radius: 20px; padding: 24px 26px; display: flex; flex-direction: column; gap: 10px; }
+  .stub strong { font-size: 18px; color: var(--text); }
+  .stub p { font-size: 15.5px; line-height: 1.6; color: var(--text-4); }
+  .acts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+  .untr { background: var(--warn-bg); color: var(--warn-fg); border-radius: 14px; padding: 12px 16px; font-size: 14px; line-height: 1.5; }
+</style>

@@ -1,0 +1,169 @@
+---
+import { render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Level from '../components/Level.astro';
+import Notice from '../components/Notice.astro';
+import PageFooter from '../components/PageFooter.astro';
+import SetupSummary from '../components/SetupSummary.astro';
+import StageStrip from '../components/StageStrip.astro';
+import GuidesData from '../components/GuidesData.astro';
+import { mdxComponents } from '../components/mdx';
+import { sourceLang } from '../config/site';
+import { getSetupPath, sourcePath, type Guide } from '../lib/content';
+import { t, type Lang } from '../lib/i18n';
+import { url } from '../lib/routes';
+
+interface Props {
+  lang: Lang;
+  guide: Guide;
+}
+const { lang, guide } = Astro.props;
+const { stages, guides } = await getSetupPath(lang);
+const { Content } = await render(guide.entry);
+const d = guide.entry.data;
+const stub = guide.source.data.status === 'stub';
+const pos = guides.findIndex((g) => g.slug === guide.slug);
+const prev = guides[pos - 1];
+const next = guides[pos + 1];
+const pad = (n: number) => String(n).padStart(2, '0');
+const file = sourcePath(guide.entry);
+---
+
+<Base lang={lang} title={d.title} description={d.description} alternates={{ de: url.guide('de', guide.slugs.de), en: url.guide('en', guide.slugs.en) }} nav="setup" noindex={stub}>
+  <div class="top">
+    <div class="wrap strip-wrap">
+      <StageStrip lang={lang} stages={stages} current={guide.stage.slug} mode="links" />
+    </div>
+    <div class="sub">
+      <div class="wrap sub-in">
+        <span class="sub-l">{t(lang, 'setup.inStage')}</span>
+        {
+          guide.stage.guides.map((g) =>
+            g.slug === guide.slug ? (
+              <span class="sp is-active" aria-current="page">
+                {g.entry.data.title}
+              </span>
+            ) : (
+              <a class="sp" href={url.guide(lang, g.slug)} data-guide-item={g.id}>
+                {g.entry.data.title}
+              </a>
+            ),
+          )
+        }
+      </div>
+    </div>
+  </div>
+
+  <main class="guide">
+    <div class="kicker">{t(lang, 'setup.guideOf', { stage: pad(guide.stage.n), n: guide.index + 1, total: guide.stage.guides.length })}</div>
+    <h1 class="h1">{d.title}</h1>
+    <div class="meta">
+      <Level lang={lang} level={d.level} />
+      <span class="pill">{t(lang, 'setup.minutes', { n: d.minutes })}</span>
+      {d.requires.length > 0 && <span class="pill">{t(lang, 'setup.requires', { list: d.requires.join(', ') })}</span>}
+    </div>
+    {!guide.translated && <Notice lang={lang} kind="untranslated" file={file} />}
+    {d.description && <p class="lead-lg">{d.description}</p>}
+    {
+      stub ? (
+        <Notice lang={lang} kind="stub" file={sourcePath(guide.source)} />
+      ) : (
+        <>
+          <div class="tailored card">
+            <div class="tailored-t">
+              <strong>{t(lang, 'setup.tailored')}</strong>
+              <SetupSummary lang={lang} />
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" data-setup-open>
+              {t(lang, 'setup.changeSetup')}
+            </button>
+          </div>
+          <div class="prose" data-guide-id={guide.id} lang={guide.translated ? undefined : sourceLang}>
+            <Content components={mdxComponents} />
+          </div>
+          {guide.steps === 0 && (
+            <button type="button" class="btn btn-outline mark" data-mark-done={guide.id}>
+              {t(lang, 'setup.markDone')}
+            </button>
+          )}
+        </>
+      )
+    }
+    <nav class="pn">
+      {
+        prev ? (
+          <a class="pn-a card" href={url.guide(lang, prev.slug)}>
+            <span>← {t(lang, 'setup.back')}</span>
+            <strong>{prev.entry.data.title}</strong>
+          </a>
+        ) : (
+          <span />
+        )
+      }
+      {
+        next && (
+          <a class="pn-a pn-next" href={url.guide(lang, next.slug)}>
+            <span>{t(lang, 'setup.next')} →</span>
+            <strong>{next.entry.data.title}</strong>
+          </a>
+        )
+      }
+    </nav>
+    <PageFooter lang={lang} file={file} />
+  </main>
+  <GuidesData lang={lang} />
+</Base>
+
+<script>
+  import { getProgress, setProgress } from '../client/store';
+  document.querySelectorAll<HTMLButtonElement>('[data-mark-done]').forEach((btn) => {
+    const slug = btn.dataset.markDone!;
+    const label = btn.textContent;
+    const sync = () => {
+      const on = getProgress().done.includes(slug);
+      btn.textContent = on ? '✓' : label;
+      btn.classList.toggle('btn-primary', on);
+      btn.setAttribute('aria-pressed', String(on));
+    };
+    btn.addEventListener('click', () => {
+      const p = getProgress();
+      p.done = p.done.includes(slug) ? p.done.filter((s) => s !== slug) : [...p.done, slug];
+      setProgress(p);
+      sync();
+    });
+    sync();
+  });
+</script>
+
+<style>
+  .top { background: var(--surface); border-bottom: 1px solid var(--line); }
+  .strip-wrap { padding-top: 18px; padding-bottom: 20px; }
+  .sub { border-top: 1px solid var(--line); background: var(--surface-2); }
+  .sub-in { padding-block: 14px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .sub-l { font-size: 13px; color: var(--muted); margin-right: 6px; }
+  .sp { font-size: 13.5px; padding: 7px 13px; border-radius: 999px; background: #fff; border: 1px solid var(--line-2); color: var(--text-2); }
+  .sp:hover { border-color: var(--accent); text-decoration: none; color: var(--text); }
+  .sp.is-active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .sp:global(.is-done)::before { content: '✓ '; color: var(--accent); }
+
+  .guide { max-width: 864px; margin: 0 auto; padding: 52px var(--gutter) 80px; display: flex; flex-direction: column; gap: 22px; }
+  .meta { display: flex; gap: 8px; flex-wrap: wrap; }
+  .meta :global(.lvl) { font-size: 13.5px; font-weight: 500; padding: 6px 12px; }
+  .lead-lg { font-size: 18.5px; line-height: 1.65; color: var(--text-2); text-wrap: pretty; }
+  .tailored { padding: 20px 24px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .tailored-t { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 260px; }
+  .tailored-t strong { font-size: 15px; }
+  .mark { align-self: flex-start; }
+  .pn { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 18px; }
+  .pn-a { border-radius: 18px; padding: 20px 22px; display: flex; flex-direction: column; gap: 4px; color: var(--text); }
+  .pn-a:hover { text-decoration: none; color: var(--text); box-shadow: var(--ring); }
+  .pn-a span { font-size: 13px; color: var(--muted); }
+  .pn-a strong { font-size: 17px; font-weight: 600; }
+  .pn-next { background: var(--accent); color: #fff; align-items: flex-end; text-align: right; }
+  .pn-next:hover { color: #fff; background: var(--accent-600); box-shadow: none; }
+  .pn-next span { color: #d4f0f8; }
+  @media (max-width: 720px) {
+    .guide { padding-top: 32px; }
+    .sub-l { width: 100%; }
+  }
+</style>

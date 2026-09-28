@@ -1,0 +1,57 @@
+---
+title: Reverse Proxy mit Traefik
+description: Ein Reverse Proxy nimmt alle Anfragen auf Port 80 und 443 entgegen und leitet sie anhand des Hostnamens an den richtigen Container weiter. Traefik liest dafür die Labels deiner Container aus und holt die TLS-Zertifikate von Let's Encrypt selbst.
+level: 2
+minutes: 25
+requires: [Docker Compose, Domain]
+services: [traefik]
+---
+
+<Steps>
+
+<Step title="Proxy-Netzwerk anlegen">
+Alle Dienste, die Traefik erreichen soll, hängen in einem gemeinsamen Docker-Netzwerk. Du legst es einmal an und referenzierst es danach in jedem Stack.
+
+```bash
+docker network create __NETWORK__
+```
+</Step>
+
+<Step title="Verzeichnis anlegen">
+Jeder Stack bekommt einen eigenen Ordner unter `__ROOT__`. Persistente Daten liegen im Unterordner `data/`, dann reicht ein Backup dieses Pfads.
+
+```bash
+mkdir -p __ROOT__/traefik/data/letsencrypt
+touch __ROOT__/traefik/data/letsencrypt/acme.json
+chmod 600 __ROOT__/traefik/data/letsencrypt/acme.json
+```
+</Step>
+
+<Step title="compose.yaml und .env schreiben">
+Die Konfiguration steht in `compose.yaml`. Werte, die sich zwischen Servern unterscheiden, kommen in die `.env`.
+
+<ServiceFiles id="traefik" />
+</Step>
+
+<Step title="Starten und prüfen">
+Beim ersten Start holt Traefik das Zertifikat. Im Log siehst du, ob die TLS-Challenge durchgeht.
+
+```bash
+cd __ROOT__/traefik
+docker compose up -d
+docker compose logs -f traefik
+```
+</Step>
+
+<Step title="Ersten Dienst anbinden">
+Ein Container wird über Labels an Traefik gehängt. Danach ist er unter seiner Subdomain mit gültigem Zertifikat erreichbar.
+
+```yaml
+labels:
+  - traefik.enable=true
+  - traefik.http.routers.whoami.rule=Host(`whoami.__DOMAIN__`)
+  - traefik.http.routers.whoami.tls.certresolver=le
+```
+</Step>
+
+</Steps>

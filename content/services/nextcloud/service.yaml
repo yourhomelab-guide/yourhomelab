@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: Nextcloud
+category: data
+level: 2
+popular: true
+port: 80
+hostPort: 8081
+subdomain: cloud
+subdomainOnly: true
+links:
+  repo: nextcloud/server
+  website: https://nextcloud.com
+  docs: https://docs.nextcloud.com
+upstream:
+  label: "nextcloud/docker: .examples"
+  url: https://github.com/nextcloud/docker/tree/master/.examples
+reviewed: 2026-09-12

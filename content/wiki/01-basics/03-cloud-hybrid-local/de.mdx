@@ -1,0 +1,79 @@
+---
+slug: cloud-hybrid-lokal
+title: Cloud, Hybrid oder Lokal?
+description: Bevor du Hardware kaufst oder einen Server mietest, lohnt sich die Frage, wo deine Dienste laufen sollen. Es gibt drei Modelle, und jedes hat andere Stärken bei Kosten, Datenhoheit und Erreichbarkeit.
+level: 1
+related: [hardware-overview, cgnat-ds-lite, access-methods-compared]
+practice: choosing-hardware
+---
+
+<OneWay />
+
+## Die drei Modelle
+
+<Cards>
+  <Card title="Lokal">
+    Der Server steht bei dir zuhause, etwa ein Mini-PC oder ein altes Notebook. Deine Daten verlassen das Haus nicht.
+  </Card>
+  <Card title="Hybrid">
+    Die Daten liegen zuhause, ein kleiner Cloud-Server oder ein Tunnel nimmt die Anfragen aus dem Internet entgegen.
+  </Card>
+  <Card title="Cloud">
+    Du mietest einen virtuellen Server (VPS) in einem Rechenzentrum. Feste IP, kein Gerät zuhause, monatliche Kosten.
+  </Card>
+</Cards>
+
+## Im Vergleich
+
+|                 | Lokal                            | Hybrid                                 | Cloud                          |
+| --------------- | -------------------------------- | -------------------------------------- | ------------------------------ |
+| **Kosten**      | Hardware einmalig, danach Strom  | Hardware plus kleiner VPS              | Monatliche Miete               |
+| **Datenhoheit** | Vollständig bei dir              | Daten zuhause, Eingang beim Anbieter   | Beim Anbieter                  |
+| **Erreichbarkeit** | Hängt vom Anschluss ab        | Gut, auch ohne öffentliche IPv4        | Sehr gut, feste IP             |
+| **Aufwand**     | Mittel                           | Höher, zwei Systeme                    | Gering                         |
+| **Gut für**     | Fotos, Medien, große Datenmengen | Öffentliche Dienste mit Daten zuhause  | Kleine Dienste, erster Einstieg |
+
+## Entscheidungshilfe
+
+<Quiz
+  questions={[
+    {
+      question: "Wo sollen deine Daten liegen?",
+      answers: [
+        { label: "Nur bei mir zuhause", points: { lokal: 2 } },
+        { label: "Zuhause, aber von überall erreichbar", points: { hybrid: 2 } },
+        { label: "Egal, Hauptsache es läuft", points: { cloud: 2 } },
+      ],
+    },
+    {
+      question: "Hat dein Anschluss eine öffentliche IPv4?",
+      answers: [
+        { label: "Ja", points: { lokal: 1 } },
+        { label: "Nein, DS-Lite oder CGNAT", points: { hybrid: 2, cloud: 1 } },
+        { label: "Weiß ich nicht", points: { hybrid: 1 } },
+      ],
+    },
+    {
+      question: "Wie viel Hardware willst du betreiben?",
+      answers: [
+        { label: "Keine", points: { cloud: 3 } },
+        { label: "Einen kleinen Rechner", points: { lokal: 1, hybrid: 1 } },
+        { label: "Gern mehrere Geräte", points: { lokal: 2 } },
+      ],
+    },
+  ]}
+  results={{
+    lokal: {
+      title: "Lokal",
+      text: "Ein Server bei dir zuhause reicht. Für den Zugriff von unterwegs nutzt du ein VPN wie WireGuard oder Tailscale, ohne Ports zu öffnen.",
+    },
+    hybrid: {
+      title: "Hybrid",
+      text: "Die Daten bleiben zuhause, ein kleiner VPS oder ein Tunnel dient als öffentlicher Eingang. Das funktioniert auch ohne öffentliche IPv4.",
+    },
+    cloud: {
+      title: "Cloud",
+      text: "Ein gemieteter VPS ist der einfachste Start: feste IP, kein Gerät zuhause. Lege Backups trotzdem außerhalb des Anbieters ab.",
+    },
+  }}
+/>

@@ -1,0 +1,63 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # "Zuletzt bearbeitet am" comes from git history
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+      - name: Upload to Hetzner Webhosting
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          PASS: ${{ secrets.DEPLOY_PASSWORD }}
+          TARGET: ${{ vars.DEPLOY_PATH || 'public_html' }}
+          PROTOCOL: ${{ vars.DEPLOY_PROTOCOL || 'sftp' }}
+        run: |
+          sudo apt-get install -y -qq lftp >/dev/null
+          # Hashed assets first, HTML last, so visitors never get HTML pointing to missing files.
+          lftp -u "$USER","$PASS" "$PROTOCOL://$HOST" <<LFTP
+          set sftp:auto-confirm yes
+          set ftp:ssl-force true
+          set ssl:verify-certificate yes
+          set net:max-retries 3
+          mkdir -pf $TARGET
+          mirror --reverse --parallel=8 --only-newer --no-perms --verbose=1 dist/_astro $TARGET/_astro
+          mirror --reverse --parallel=8 --no-perms --delete --verbose=1 --exclude-glob .well-known/ --exclude-glob _astro/ dist $TARGET
+          bye
+          LFTP
+      - name: Clean up old assets
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          PASS: ${{ secrets.DEPLOY_PASSWORD }}
+          TARGET: ${{ vars.DEPLOY_PATH || 'public_html' }}
+          PROTOCOL: ${{ vars.DEPLOY_PROTOCOL || 'sftp' }}
+        run: |
+          lftp -u "$USER","$PASS" "$PROTOCOL://$HOST" <<LFTP
+          set sftp:auto-confirm yes
+          set ftp:ssl-force true
+          mirror --reverse --parallel=8 --delete --no-perms --verbose=1 dist/_astro $TARGET/_astro
+          bye
+          LFTP

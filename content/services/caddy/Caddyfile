@@ -1,0 +1,8 @@
+{
+  email __EMAIL__
+}
+
+# One block per service
+vault.__DOMAIN__ {
+  reverse_proxy vaultwarden:80
+}

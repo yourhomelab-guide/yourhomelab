@@ -1,0 +1,28 @@
+---
+import Base from '../layouts/Base.astro';
+import { t, type Lang } from '../lib/i18n';
+import { url } from '../lib/routes';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<Base lang={lang} title={t(lang, 'notFound.title')} alternates={{ [lang]: lang === 'de' ? '/de/404/' : '/404.html' }} noindex>
+  <main class="nf">
+    <span class="code">404</span>
+    <h1 class="h1">{t(lang, 'notFound.title')}</h1>
+    <p class="lead">{t(lang, 'notFound.text')}</p>
+    <div class="acts">
+      <a class="btn btn-primary" href={url.section(lang, 'home')}>{t(lang, 'notFound.back')}</a>
+      <button type="button" class="btn btn-outline" data-search-open>{t(lang, 'header.search')}</button>
+    </div>
+  </main>
+</Base>
+
+<style>
+  .nf { max-width: 640px; margin: 0 auto; padding: 96px var(--gutter) 120px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+  .code { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--accent); background: var(--accent-50); padding: 5px 10px; border-radius: 8px; }
+  .acts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+</style>

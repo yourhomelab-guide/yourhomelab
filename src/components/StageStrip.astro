@@ -1,0 +1,63 @@
+---
+/**
+ * Row of stage tiles with progress. `mode="tabs"` switches panels on the setup page,
+ * `mode="links"` links to the setup page (used on guide pages).
+ */
+import type { Stage } from '../lib/content';
+import { t, type Lang } from '../lib/i18n';
+import { url } from '../lib/routes';
+interface Props {
+  lang: Lang;
+  stages: Stage[];
+  current?: string;
+  mode: 'tabs' | 'links';
+}
+const { lang, stages, current, mode } = Astro.props;
+const pad = (n: number) => String(n).padStart(2, '0');
+---
+
+<div class="strip" role={mode === 'tabs' ? 'tablist' : undefined}>
+  {
+    stages.map((s) => (
+      <a
+        href={mode === 'tabs' ? `#${s.slug}` : url.stage(lang, s.slug)}
+        class="tile"
+        data-stage-item={s.slug}
+        data-stage-tab={mode === 'tabs' ? s.slug : undefined}
+        role={mode === 'tabs' ? 'tab' : undefined}
+        aria-selected={mode === 'tabs' ? s.slug === current : undefined}
+        aria-current={mode === 'links' && s.slug === current ? 'step' : undefined}
+      >
+        <span class="meta">
+          <span>{t(lang, 'setup.stage', { n: pad(s.n) })}</span>
+          <span>
+            <span data-stage-done>0</span>/{s.guides.length}
+          </span>
+        </span>
+        <span class="name">{s.title}</span>
+        <span class="tbar">
+          <span data-stage-bar />
+        </span>
+      </a>
+    ))
+  }
+</div>
+
+<style>
+  .strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .tile { text-align: left; display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 14px; background: transparent; color: inherit; }
+  .tile:hover { background: var(--bg); text-decoration: none; }
+  .meta { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .name { font-size: 15px; font-weight: 600; color: var(--text-2); }
+  .tbar { height: 5px; border-radius: 5px; background: var(--line); overflow: hidden; }
+  .tbar span { display: block; height: 100%; width: 0; background: var(--accent-300); transition: width 0.3s; }
+  .tile[aria-selected='true'], .tile[aria-current='step'] { background: var(--accent-50); }
+  .tile[aria-selected='true'] .meta, .tile[aria-current='step'] .meta { color: var(--accent-600); }
+  .tile[aria-selected='true'] .name, .tile[aria-current='step'] .name { color: var(--accent-700); font-weight: 700; }
+  .tile[aria-selected='true'] .tbar, .tile[aria-current='step'] .tbar { background: var(--accent-200); }
+  .tile[aria-selected='true'] .tbar span, .tile[aria-current='step'] .tbar span { background: var(--accent); }
+  @media (max-width: 720px) {
+    .strip { display: flex; overflow-x: auto; margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scrollbar-width: none; }
+    .tile { flex: 0 0 150px; }
+  }
+</style>

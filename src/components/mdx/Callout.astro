@@ -1,0 +1,25 @@
+---
+/** <Callout title="…">Text</Callout> – highlighted info box. type: info | warning */
+interface Props {
+  title?: string;
+  type?: 'info' | 'warning';
+}
+const { title, type = 'info' } = Astro.props;
+---
+
+<aside class:list={['callout card', type]}>
+  <span class="info-i" aria-hidden="true">{type === 'warning' ? '!' : 'i'}</span>
+  <div>
+    {title && <strong>{title}</strong>}
+    <div class="cbody"><slot /></div>
+  </div>
+</aside>
+
+<style>
+  .callout { padding: 22px 26px; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 16px; align-items: start; }
+  .callout > div { display: flex; flex-direction: column; gap: 6px; }
+  strong { font-size: 16px; font-weight: 700; color: var(--text); }
+  .cbody { font-size: 15px; line-height: 1.65; color: var(--text-3); display: flex; flex-direction: column; gap: 10px; }
+  .cbody :global(p) { margin: 0; }
+  .warning .info-i { background: var(--warn-bg); color: var(--warn-fg); }
+</style>

@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: Beszel
+category: monitoring
+level: 1
+port: 8090
+subdomain: beszel
+links:
+  repo: henrygd/beszel
+  website: https://beszel.dev
+  docs: https://beszel.dev/guide/getting-started
+upstream:
+  label: supplemental/docker/hub/docker-compose.yml
+  url: https://github.com/henrygd/beszel/blob/main/supplemental/docker/hub/docker-compose.yml
+reviewed: 2026-09-12

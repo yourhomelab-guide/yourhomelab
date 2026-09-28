@@ -1,0 +1,11 @@
+---
+import { t, type Lang } from '../lib/i18n';
+interface Props {
+  lang: Lang;
+  level: 1 | 2 | 3;
+  class?: string;
+}
+const { lang, level, class: cls } = Astro.props;
+---
+
+<span class:list={['lvl', `lvl-${level}`, cls]}>{t(lang, `level.${level}`)}</span>

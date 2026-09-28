@@ -1,0 +1,257 @@
+---
+import { render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Level from '../components/Level.astro';
+import ServiceLogo from '../components/ServiceLogo.astro';
+import ServiceFiles from '../components/ServiceFiles.astro';
+import SetupSummary from '../components/SetupSummary.astro';
+import { mdxComponents } from '../components/mdx';
+import { defaultSetup as ds, site } from '../config/site';
+import { getSetupPath, getVariants, type Service } from '../lib/content';
+import { renderCode } from '../lib/highlight';
+import { formatDate, placeholderDefaults, t, type Lang } from '../lib/i18n';
+import { url } from '../lib/routes';
+
+interface Props {
+  lang: Lang;
+  service: Service;
+}
+const { lang, service: s } = Astro.props;
+const variants = getVariants(s);
+const key = `${ds.proxy}.${ds.urlMode}.${ds.dataMode}` as const;
+const v = variants[key];
+const values = placeholderDefaults(lang);
+const { Content } = await render(s.text);
+const hasBody = !!s.text.body?.trim();
+const { guides } = await getSetupPath(lang);
+const related = guides.filter((g) => g.entry.data.services.includes(s.id) || g.source.data.services.includes(s.id));
+const catLabel = t(lang, `category.${s.category}`);
+const issueUrl = `${site.repo}/issues/new?template=fehler.yml&title=${encodeURIComponent(`${s.name}: `)}`;
+---
+
+<Base lang={lang} title={s.name} description={s.description} alternates={{ de: url.service('de', s.id), en: url.service('en', s.id) }} nav="services">
+  <main class="wrap svc" data-variant-root data-key={key}>
+    <div class="crumbs">
+      <a href={url.section(lang, 'services')}>{t(lang, 'services.title')}</a><span>/</span><span>{catLabel}</span><span>/</span><span class="here">{s.name}</span>
+    </div>
+
+    <div class="hero card">
+      <span class="logo">
+        <ServiceLogo name={s.name} logo={s.logo} size={56} />
+      </span>
+      <div class="hero-t">
+        <div class="title-row">
+          <h1>{s.name}</h1>
+          <Level lang={lang} level={s.level} />
+        </div>
+        <p>{s.description}</p>
+      </div>
+      <div class="hero-links">
+        <a class="btn btn-outline btn-sm" href={s.repoUrl}>{s.repoLabel} ↗</a>
+        <a class="btn btn-outline btn-sm" href={s.links.website}>{t(lang, 'service.website')} ↗</a>
+        <a class="btn btn-outline btn-sm" href={s.links.docs}>{t(lang, 'service.docs')} ↗</a>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="main">
+        <div class="tailored">
+          <div class="tailored-t">
+            <strong>{t(lang, 'setup.tailored')}</strong>
+            <SetupSummary lang={lang} />
+          </div>
+          <button type="button" class="btn btn-white btn-sm" data-setup-open>{t(lang, 'setup.changeSetup')}</button>
+        </div>
+
+        <div class="forced" data-v-show="forcedSub" hidden={!v.forcedSub}>{t(lang, 'service.forcedSub', { name: s.name })}</div>
+
+        <div class="curated-view" data-source-panel="curated">
+          <div class="step card">
+            <span class="num-badge">1</span>
+            <div class="step-body">
+              <h2>{t(lang, 'service.step1')}</h2>
+              <p data-v-show="net" hidden={!v.net}>{t(lang, 'service.step1TextNet')}</p>
+              <p data-v-show="noNet" hidden={v.net}>{t(lang, 'service.step1Text')}</p>
+              <div class="code">
+                <pre data-v="mkdir" set:html={renderCode(v.mkdir, { values })} />
+                <button type="button" class="copy-btn" data-copy>{t(lang, 'code.copy')}</button>
+              </div>
+            </div>
+          </div>
+          <div class="step card">
+            <span class="num-badge">2</span>
+            <div class="step-body">
+              <h2>{t(lang, 'service.step2')}</h2>
+              <p>{t(lang, 'service.step2Text')}</p>
+              <ServiceFiles id={s.id} root={false} source />
+            </div>
+          </div>
+          <div class="step card">
+            <span class="num-badge">3</span>
+            <div class="step-body">
+              <h2>{t(lang, 'service.step3')}</h2>
+              <p>{t(lang, 'service.step3Text')}</p>
+              <div class="code">
+                <pre data-v="up" set:html={renderCode(v.up, { values })} />
+                <button type="button" class="copy-btn" data-copy>{t(lang, 'code.copy')}</button>
+              </div>
+            </div>
+          </div>
+          <div class="done card">
+            <span class="num-badge is-done">✓</span>
+            <div class="done-t">
+              <span>{t(lang, 'service.reachable')}</span>
+              <code data-v="url" data-v-code set:html={renderCode(v.url, { values })} />
+            </div>
+          </div>
+          {
+            hasBody && (
+              <div class="prose extra">
+                <Content components={mdxComponents} />
+              </div>
+            )
+          }
+        </div>
+      </div>
+
+      <aside class="side">
+        <div class="box card">
+          <strong>{t(lang, 'service.template')}</strong>
+          {
+            s.upstream && (
+              <div class="seg" role="group">
+                <button type="button" aria-pressed="true" data-source="curated">
+                  {t(lang, 'service.curated')}
+                </button>
+                <button type="button" aria-pressed="false" data-source="upstream">
+                  {t(lang, 'service.upstream')}
+                </button>
+              </div>
+            )
+          }
+          <p data-source-text="curated">
+            {t(lang, 'service.curatedText')} {s.reviewed && t(lang, 'service.reviewed', { date: formatDate(lang, s.reviewed) })}
+          </p>
+          {
+            s.upstream && (
+              <p data-source-text="upstream" hidden>
+                {t(lang, 'service.upstreamText')}
+                <a href={s.upstream.url}>
+                  {s.upstream.label} ↗
+                </a>
+              </p>
+            )
+          }
+          <dl class="facts">
+            <dt>{t(lang, 'service.image')}</dt>
+            <dd>{s.image}</dd>
+            <dt>{t(lang, 'service.port')}</dt>
+            <dd>{s.port}</dd>
+          </dl>
+        </div>
+        {
+          s.notes.length > 0 && (
+            <div class="box card">
+              <strong>{t(lang, 'service.goodToKnow')}</strong>
+              <ul class="notes">
+                {s.notes.map((n) => (
+                  <li>{n}</li>
+                ))}
+              </ul>
+            </div>
+          )
+        }
+        {
+          related.length > 0 && (
+            <div class="box card">
+              <strong>{t(lang, 'service.relatedGuides')}</strong>
+              {related.map((g) => (
+                <a class="rel" href={url.guide(lang, g.slug)}>
+                  {g.entry.data.title} →
+                </a>
+              ))}
+            </div>
+          )
+        }
+        <div class="box contrib">
+          <strong>{t(lang, 'service.contributeTitle')}</strong>
+          <span>{t(lang, 'service.contributeText')}</span>
+          <div class="contrib-links">
+            <a href={`${site.repo}/tree/${site.branch}/${s.filePath}`}>{t(lang, 'service.edit')} ↗</a>
+            <a href={issueUrl}>{t(lang, 'service.report')} ↗</a>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <script type="application/json" data-variants set:html={JSON.stringify(variants)} />
+  </main>
+</Base>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-source]').forEach((btn) =>
+    btn.addEventListener('click', () => {
+      const src = btn.dataset.source!;
+      document.querySelectorAll('[data-source]').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+      document.querySelectorAll<HTMLElement>('[data-source-text]').forEach((p) => (p.hidden = p.dataset.sourceText !== src));
+    }),
+  );
+</script>
+
+<style>
+  .svc { padding-top: 36px; padding-bottom: 88px; display: flex; flex-direction: column; gap: 28px; }
+  .crumbs { font-size: 13.5px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+  .crumbs .here { color: var(--text-2); }
+  .hero { border-radius: 24px; padding: 28px; display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+  .logo { width: 84px; height: 84px; border-radius: 22px; background: var(--bg); display: flex; align-items: center; justify-content: center; flex: none; }
+  .hero-t { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: min(100%, 280px); }
+  .title-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .title-row h1 { font-size: 38px; font-weight: 700; letter-spacing: -0.025em; }
+  .hero-t p { font-size: 16.5px; line-height: 1.55; color: var(--text-3); max-width: 640px; }
+  .hero-links { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cols { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; align-items: start; }
+  .main, .curated-view { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .tailored { background: var(--accent); color: #fff; border-radius: 20px; padding: 18px 22px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .tailored-t { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 260px; }
+  .tailored-t strong { font-size: 15px; }
+  .tailored :global(.chip) { background: rgba(255, 255, 255, 0.16); color: #e3f6fb; }
+  .tailored :global(.chip b) { color: #fff; }
+  .forced { background: var(--warn-bg); color: var(--warn-fg); border-radius: 14px; padding: 12px 16px; font-size: 14px; line-height: 1.5; }
+  .step { padding: 24px 26px; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 18px; align-items: start; }
+  .step .num-badge { font-size: 17px; }
+  .step-body { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .step-body h2 { margin-top: 10px; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
+  .step-body p { font-size: 15.5px; line-height: 1.6; color: var(--text-3); }
+  .done { padding: 22px 26px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .done-t { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+  .done-t span { font-size: 14px; color: var(--muted); }
+  .done-t code { font-family: var(--mono); font-size: 16px; color: var(--accent-600); overflow-wrap: anywhere; }
+  .extra { margin-top: 12px; }
+  .side { position: sticky; top: calc(var(--header-h) + 24px); display: flex; flex-direction: column; gap: 16px; }
+  .box { padding: 20px; display: flex; flex-direction: column; gap: 12px; font-size: 13.5px; line-height: 1.55; color: var(--text-4); }
+  .box > strong { font-size: 15px; color: var(--text); }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--bg); border-radius: 12px; padding: 3px; }
+  .seg button { border: none; background: none; padding: 8px 0; font-size: 13.5px; font-weight: 600; color: var(--muted); border-radius: 10px; }
+  .seg button[aria-pressed='true'] { background: #fff; color: var(--text); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); }
+  .box p a { display: block; margin-top: 6px; font-weight: 600; font-family: var(--mono); font-size: 12.5px; overflow-wrap: anywhere; }
+  .facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; font-size: 13px; padding-top: 12px; border-top: 1px solid var(--line-3); margin: 0; }
+  .facts dt { color: var(--muted); }
+  .facts dd { margin: 0; font-family: var(--mono); font-size: 12px; overflow-wrap: anywhere; color: var(--text); }
+  .notes { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  .notes li { display: grid; grid-template-columns: 8px minmax(0, 1fr); gap: 10px; color: var(--text-3); }
+  .notes li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-top: 7px; }
+  .rel { font-size: 14px; }
+  .contrib { border: 2px dashed var(--dash); border-radius: 20px; }
+  .contrib-links { display: flex; gap: 14px; font-weight: 600; flex-wrap: wrap; }
+  @media (max-width: 1000px) {
+    .cols { grid-template-columns: minmax(0, 1fr); }
+    .side { position: static; }
+  }
+  @media (max-width: 720px) {
+    .svc { padding-top: 24px; }
+    .hero { padding: 20px; gap: 16px; }
+    .logo { width: 64px; height: 64px; }
+    .title-row h1 { font-size: 30px; }
+    .step { grid-template-columns: minmax(0, 1fr); padding: 20px; gap: 12px; }
+    .step-body h2 { margin-top: 0; }
+  }
+</style>

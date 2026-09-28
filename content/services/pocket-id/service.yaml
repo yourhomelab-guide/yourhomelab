@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: Pocket ID
+category: auth
+level: 2
+tag: new
+popular: true
+port: 1411
+subdomain: id
+subdomainOnly: true
+links:
+  repo: pocket-id/pocket-id
+  website: https://pocket-id.org
+  docs: https://pocket-id.org/docs
+upstream:
+  label: docker-compose.yml
+  url: https://github.com/pocket-id/pocket-id/blob/main/docker-compose.yml
+reviewed: 2026-09-12

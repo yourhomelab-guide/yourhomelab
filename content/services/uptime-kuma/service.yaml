@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: Uptime Kuma
+category: monitoring
+level: 1
+popular: true
+port: 3001
+subdomain: status
+links:
+  repo: louislam/uptime-kuma
+  website: https://uptime.kuma.pet
+  docs: https://github.com/louislam/uptime-kuma/wiki
+upstream:
+  label: compose.yaml
+  url: https://github.com/louislam/uptime-kuma/blob/master/compose.yaml
+reviewed: 2026-09-12

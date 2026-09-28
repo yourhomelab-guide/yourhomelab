@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: Tinyauth
+category: auth
+level: 2
+port: 3000
+subdomain: login
+subdomainOnly: true
+links:
+  repo: steveiliop56/tinyauth
+  website: https://tinyauth.app
+  docs: https://tinyauth.app/docs
+upstream:
+  label: docker-compose.example.yml
+  url: https://github.com/steveiliop56/tinyauth/blob/main/docker-compose.example.yml
+reviewed: 2026-09-12

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.astro/
+public/icons/
+.env
+.DS_Store
+_design/
+.claude/

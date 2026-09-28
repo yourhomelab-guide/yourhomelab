@@ -1,0 +1,26 @@
+---
+interface Props {
+  name: string;
+  logo: string | null;
+  size: number;
+}
+const { name, logo, size } = Astro.props;
+---
+
+{
+  logo ? (
+    <img src={logo} alt="" width={size} height={size} loading="lazy" decoding="async" class="svc-logo" />
+  ) : (
+    <span class="svc-initial" aria-hidden="true" data-size={size}>
+      {name[0]}
+    </span>
+  )
+}
+
+<style>
+  .svc-logo { object-fit: contain; }
+  .svc-initial { display: flex; align-items: center; justify-content: center; color: var(--accent-600); font-weight: 700; }
+  .svc-initial[data-size='34'] { font-size: 20px; }
+  .svc-initial[data-size='44'] { width: 44px; height: 44px; border-radius: 12px; background: var(--accent-50); font-size: 18px; }
+  .svc-initial[data-size='56'] { font-size: 32px; }
+</style>

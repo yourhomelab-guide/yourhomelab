@@ -1,0 +1,38 @@
+---
+import { site } from '../config/site';
+import { t, type Lang } from '../lib/i18n';
+import { url } from '../lib/routes';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const year = new Date().getFullYear();
+const donate = Object.values(site.donate).find(Boolean);
+---
+
+<footer class="ftr">
+  <div class="wrap ftr-in">
+    <span class="brand">yourhomelab</span>
+    <span>
+      © {year} {t(lang, 'footer.owner')} · {t(lang, 'footer.texts')}
+      <a href={lang === 'de' ? 'https://creativecommons.org/licenses/by-sa/4.0/deed.de' : 'https://creativecommons.org/licenses/by-sa/4.0/'}>CC BY-SA 4.0</a> ·
+      {t(lang, 'footer.templates')} <a href="https://opensource.org/license/mit">MIT</a>
+    </span>
+    <nav class="links">
+      {donate && <a href={donate}>{t(lang, 'footer.support')}</a>}
+      <a href={site.repo}>GitHub</a>
+      <a href={url.section(lang, 'impressum')}>{t(lang, 'footer.impressum')}</a>
+      <a href={url.section(lang, 'datenschutz')}>{t(lang, 'footer.privacy')}</a>
+    </nav>
+  </div>
+</footer>
+
+<style>
+  .ftr { border-top: 1px solid #e1e9ee; }
+  .ftr-in { padding-block: 28px; display: flex; gap: 12px 24px; flex-wrap: wrap; align-items: center; font-size: 13.5px; color: var(--muted); }
+  .brand { font-weight: 700; color: var(--text-2); }
+  .ftr-in > span a { color: var(--text-4); text-decoration: underline; }
+  .links { margin-left: auto; display: flex; gap: 18px; flex-wrap: wrap; }
+  .links a { color: var(--text-4); }
+</style>

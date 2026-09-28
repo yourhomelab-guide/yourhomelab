@@ -1,0 +1,26 @@
+---
+/** "Angepasst an dein Setup" chips. Values are filled in the browser (see client/summary.ts). */
+import { defaultSetup as d } from '../config/site';
+import { t, type Lang } from '../lib/i18n';
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const rows: [string, string][] = [
+  ['proxy', t(lang, `proxy.${d.proxy}`)],
+  ['network', d.network],
+  ['stacks', d.root],
+  ['data', t(lang, 'summary.dataStack')],
+  ['urls', `${t(lang, 'summary.service')}.${d.domain}`],
+];
+---
+
+<div class="chips">
+  {
+    rows.map(([k, v]) => (
+      <span class="chip" data-sum={k}>
+        {t(lang, `summary.${k}`)} <b>{v}</b>
+      </span>
+    ))
+  }
+</div>

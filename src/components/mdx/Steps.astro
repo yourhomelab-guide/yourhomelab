@@ -1,0 +1,64 @@
+---
+/**
+ * <Steps> wraps <Step title="…"> blocks. Every step can be ticked off; progress is kept in the browser.
+ */
+import { langFromUrl, t } from '../../lib/i18n';
+
+const lang = langFromUrl(Astro.url);
+const slug = Astro.url.pathname.split('/').filter(Boolean).at(-1);
+let i = 0;
+const html = (await Astro.slots.render('default')).replace(/__STEP__/g, () => String(i++));
+const total = i;
+---
+
+<section class="steps" data-steps data-guide={slug} data-total={total}>
+  <div class="steps-head">
+    <h2>{t(lang, 'setup.steps')}</h2>
+    <div class="bar"><span data-steps-bar></span></div>
+    <span class="count" data-steps-count>{t(lang, 'setup.stepsDone', { done: 0, total })}</span>
+  </div>
+  <Fragment set:html={html} />
+</section>
+
+<script>
+  import { fmt, getProgress, setProgress, ui } from '../../client/store';
+
+  document.querySelectorAll<HTMLElement>('[data-steps]').forEach((root) => {
+    // Progress is keyed by the language-neutral guide id, so it is shared between languages
+    const slug = root.closest<HTMLElement>('[data-guide-id]')?.dataset.guideId ?? root.dataset.guide!;
+    const total = Number(root.dataset.total);
+    const s = ui();
+    const render = () => {
+      const done = new Set(getProgress().steps[slug] ?? []);
+      root.querySelectorAll<HTMLElement>('[data-step]').forEach((el) => {
+        const on = done.has(Number(el.dataset.step));
+        el.classList.toggle('is-done', on);
+        const btn = el.querySelector<HTMLButtonElement>('[data-step-toggle]')!;
+        btn.textContent = on ? s['setup.checked'] : s['setup.check'];
+        btn.setAttribute('aria-pressed', String(on));
+      });
+      root.querySelector<HTMLElement>('[data-steps-bar]')!.style.width = `${total ? (done.size / total) * 100 : 0}%`;
+      root.querySelector('[data-steps-count]')!.textContent = fmt(s['setup.stepsDone'], { done: done.size, total });
+    };
+    root.addEventListener('click', (e) => {
+      const btn = (e.target as Element).closest('[data-step-toggle]');
+      if (!btn) return;
+      const idx = Number(btn.closest<HTMLElement>('[data-step]')!.dataset.step);
+      const p = getProgress();
+      const cur = new Set(p.steps[slug] ?? []);
+      cur.has(idx) ? cur.delete(idx) : cur.add(idx);
+      p.steps[slug] = [...cur].sort((a, b) => a - b);
+      setProgress(p);
+      render();
+    });
+    render();
+  });
+</script>
+
+<style>
+  .steps { display: flex; flex-direction: column; gap: 22px; counter-reset: step; margin-top: 10px; }
+  .steps-head { display: flex; align-items: center; gap: 14px; }
+  .steps-head h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.015em; margin: 0; color: var(--text); }
+  .steps-head .bar { flex: 1; background: var(--line-2); }
+  .count { font-size: 14px; font-weight: 600; color: var(--text-4); white-space: nowrap; }
+</style>

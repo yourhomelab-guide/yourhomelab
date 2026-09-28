@@ -1,0 +1,36 @@
+services:
+  nextcloud:
+    image: nextcloud:31-apache
+    container_name: nextcloud
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - MYSQL_HOST=db
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis
+      - NEXTCLOUD_TRUSTED_DOMAINS=__HOST__
+      - OVERWRITEPROTOCOL=https
+    volumes:
+      - ./data/html:/var/www/html
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: mariadb:11
+    container_name: nextcloud-db
+    restart: unless-stopped
+    environment:
+      - MARIADB_DATABASE=nextcloud
+      - MARIADB_USER=nextcloud
+      - MARIADB_PASSWORD=${DB_PASSWORD}
+      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+    volumes:
+      - ./data/db:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    container_name: nextcloud-redis
+    restart: unless-stopped

@@ -1,0 +1,265 @@
+---
+import { render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import OneWay from '../components/OneWay.astro';
+import ServiceLogo from '../components/ServiceLogo.astro';
+import GuidesData from '../components/GuidesData.astro';
+import { site } from '../config/site';
+import { getFaq, getServices, getSetupPath, getWiki } from '../lib/content';
+import { t, type Lang } from '../lib/i18n';
+import { url } from '../lib/routes';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const [{ stages, guides }, services, faq, wiki] = await Promise.all([getSetupPath(lang), getServices(lang), getFaq(lang), getWiki(lang)]);
+const faqRendered = await Promise.all(faq.map(async (f) => ({ q: f.entry.data.question, Content: (await render(f.entry)).Content })));
+const pad = (n: number) => String(n).padStart(2, '0');
+const popular = services.filter((s) => s.popular);
+const firstGuide = guides[0];
+const wikiLink = (id: string) => {
+  const a = wiki.items.find((i) => i.id === id);
+  return a ? { t: a.entry.data.title, href: url.wiki(lang, a.slug) } : null;
+};
+const guideLink = (id: string) => {
+  const g = guides.find((i) => i.id === id);
+  return g ? { t: g.entry.data.title, href: url.guide(lang, g.slug) } : null;
+};
+const doors = [
+  { n: 1, href: url.section(lang, 'wiki'), links: ['what-is-docker', 'cloud-hybrid-local', 'reverse-proxy-explained'].map(wikiLink) },
+  { n: 2, href: url.section(lang, 'setup'), links: ['hardening-ssh', 'creating-the-directory-structure', 'backups-restic'].map(guideLink) },
+  { n: 3, href: url.section(lang, 'services'), links: ['vaultwarden', 'immich', 'forgejo'].map((id) => services.find((s) => s.id === id)).map((s) => (s ? { t: s.name, href: url.service(lang, s.id) } : null)) },
+];
+---
+
+<Base lang={lang} alternates={{ de: '/de/', en: '/en/' }} nav="home">
+  <main class="wrap home">
+    <section class="hero">
+      <div class="hero-text">
+        <span class="badge">{t(lang, 'home.badge')}</span>
+        <h1>{t(lang, 'home.title')}</h1>
+        <p>{t(lang, 'home.lead')}</p>
+        <div class="ctas">
+          <a class="btn btn-primary btn-lg" href={url.section(lang, 'setup')}>{t(lang, 'home.ctaStart')}</a>
+          <a class="btn btn-outline btn-lg" href={url.section(lang, 'services')}>{t(lang, 'home.ctaServices')}</a>
+        </div>
+      </div>
+      <div class="path card">
+        <div class="path-head">
+          <span>{t(lang, 'home.pathTitle')}</span>
+          <span class="muted" data-total-done>{t(lang, 'home.pathProgress', { done: 0, total: guides.length })}</span>
+        </div>
+        {
+          stages.map((s) => (
+            <a class="path-row" href={url.stage(lang, s.slug)} data-stage-item={s.slug}>
+              <span class="path-num">
+                <span class="n">{pad(s.n)}</span>
+                <span class="ok">✓</span>
+              </span>
+              <span class="path-t">
+                <span>{s.title}</span>
+                <span>{s.guides.map((g) => g.entry.data.title).join(' · ')}</span>
+              </span>
+              <span class="path-bar">
+                <span data-stage-bar />
+              </span>
+            </a>
+          ))
+        }
+        {
+          firstGuide && (
+            <a class="continue" href={url.guide(lang, firstGuide.slug)} data-continue>
+              <span>
+                <span class="muted" data-continue-label>
+                  {t(lang, 'home.startAt')}
+                </span>{' '}
+                <strong data-continue-title>{firstGuide.entry.data.title}</strong>
+              </span>
+              <span class="arrow">→</span>
+            </a>
+          )
+        }
+      </div>
+    </section>
+
+    <section class="doors">
+      {
+        doors.map((d) => (
+          <div class="door card">
+            <span class="door-k">{t(lang, `home.door${d.n}.kicker`)}</span>
+            <h2 class="h2">{t(lang, `home.door${d.n}.title`)}</h2>
+            <p>{t(lang, `home.door${d.n}.text`, { n: services.length })}</p>
+            <div class="door-links">{d.links.filter(Boolean).map((l) => <a href={l!.href}>{l!.t}</a>)}</div>
+            <a class="btn btn-soft btn-sm door-cta" href={d.href}>
+              {t(lang, `home.door${d.n}.cta`)} →
+            </a>
+          </div>
+        ))
+      }
+    </section>
+
+    <div class="oneway-wrap"><OneWay lang={lang} /></div>
+
+    <section class="popular">
+      <div class="sec-head">
+        <h2 class="h2">{t(lang, 'home.popular')}</h2>
+        <a class="link-btn" href={url.section(lang, 'services')}>{t(lang, 'home.allServices', { n: services.length })} →</a>
+      </div>
+      <div class="pop-grid">
+        {
+          popular.map((s) => (
+            <a class="pop card" href={url.service(lang, s.id)}>
+              <span class="pop-logo">
+                <ServiceLogo name={s.name} logo={s.logo} size={44} />
+              </span>
+              <span class="pop-name">{s.name}</span>
+              <span class="pop-cat">{t(lang, `category.${s.category}`)}</span>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="faq">
+      <div class="faq-intro">
+        <h2>{t(lang, 'home.faqTitle')}</h2>
+        <p>{t(lang, 'home.faqLead')}</p>
+      </div>
+      <div class="faq-list">
+        {
+          faqRendered.map((f, i) => (
+            <details class="qa card" name="faq" open={i === 0}>
+              <summary>
+                <span>{f.q}</span>
+                <span class="chev" aria-hidden="true" />
+              </summary>
+              <div class="qa-a">
+                <f.Content />
+              </div>
+            </details>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="promos">
+      <div class="promo promo-accent">
+        <h2 class="h2">{t(lang, 'home.decideTitle')}</h2>
+        <p>{t(lang, 'home.decideText')}</p>
+        <a class="btn btn-white btn-sm" href={`${wikiLink('cloud-hybrid-local')?.href ?? url.section(lang, 'wiki')}#${lang === 'de' ? 'entscheidungshilfe' : 'decision-helper'}`}>{t(lang, 'home.decideCta')} →</a>
+      </div>
+      <div class="promo card">
+        <h2 class="h2">{t(lang, 'home.contributeTitle')}</h2>
+        <p>{t(lang, 'home.contributeText')}</p>
+        <div class="promo-acts">
+          <a class="btn btn-dark btn-sm" href={site.repo}>{t(lang, 'home.contributeRepo')}</a>
+          <a class="btn btn-outline btn-sm" href={`${site.repo}/issues/new?template=dienst.yml`}>{t(lang, 'home.contributeSuggest')}</a>
+        </div>
+      </div>
+      {
+        Object.values(site.donate).some(Boolean) && (
+          <div class="promo promo-yellow">
+            <h2 class="h2">{t(lang, 'home.supportTitle')}</h2>
+            <p>{t(lang, 'home.supportText')}</p>
+            <div class="promo-acts">
+              {site.donate.sponsors && <a class="btn btn-dark btn-sm" href={site.donate.sponsors}>GitHub Sponsors</a>}
+              {site.donate.kofi && <a class="btn btn-outline btn-sm yellow-btn" href={site.donate.kofi}>Ko-fi</a>}
+              {site.donate.liberapay && <a class="btn btn-outline btn-sm yellow-btn" href={site.donate.liberapay}>Liberapay</a>}
+            </div>
+          </div>
+        )
+      }
+    </section>
+  </main>
+  <GuidesData lang={lang} />
+</Base>
+
+<style>
+  .home { padding-bottom: 80px; display: flex; flex-direction: column; gap: 72px; }
+  .hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 56px; align-items: center; padding-top: 72px; }
+  .hero-text { display: flex; flex-direction: column; gap: 24px; }
+  .badge { align-self: flex-start; font-size: 13.5px; font-weight: 600; padding: 7px 13px; border-radius: 999px; background: var(--accent-50); color: var(--accent-600); }
+  .hero h1 { font-size: 60px; line-height: 1.02; font-weight: 700; letter-spacing: -0.035em; text-wrap: balance; }
+  .hero p { font-size: 19px; line-height: 1.6; color: var(--text-2); max-width: 560px; text-wrap: pretty; }
+  .ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  .path { border-radius: 24px; padding: 28px; display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow-lg); }
+  .path-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 12px; font-size: 13px; }
+  .path-head span:first-child { font-size: 17px; font-weight: 700; }
+  .path-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) 90px; gap: 14px; align-items: center; padding: 10px 8px; margin: 0 -8px; border-radius: 12px; color: var(--text); }
+  .path-row:hover { background: var(--bg); text-decoration: none; color: var(--text); }
+  .path-num { width: 36px; height: 36px; border-radius: 11px; background: var(--accent-50); color: var(--accent-600); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+  .path-num .ok { display: none; font-size: 15px; }
+  .path-row:global(.is-done) .path-num { background: var(--accent); color: #fff; }
+  .path-row:global(.is-done) .path-num .n { display: none; }
+  .path-row:global(.is-done) .path-num .ok { display: inline; }
+  .path-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .path-t span:first-child { font-size: 15px; font-weight: 600; }
+  .path-t span:last-child { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .path-bar { height: 5px; border-radius: 5px; background: var(--line); overflow: hidden; }
+  .path-bar span { display: block; height: 100%; width: 0; background: var(--accent); }
+  .continue { margin-top: 12px; background: var(--bg); border-radius: 14px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 14.5px; color: var(--text); }
+  .continue:hover { background: var(--accent-50); text-decoration: none; color: var(--text); }
+  .continue strong { font-weight: 600; }
+  .arrow { color: var(--accent-600); font-weight: 600; }
+
+  .doors { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 20px; }
+  .door { padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+  .door-k { font-size: 13px; font-weight: 600; color: var(--accent-600); }
+  .door p { font-size: 15.5px; line-height: 1.6; color: var(--text-3); text-wrap: pretty; }
+  .door-links { display: flex; flex-direction: column; gap: 2px; padding: 6px 0 4px; }
+  .door-links a { padding: 7px 0; font-size: 14.5px; color: var(--text-2); border-bottom: 1px solid var(--line-3); }
+  .door-links a:hover { color: var(--accent-600); text-decoration: none; }
+  .door-cta { margin-top: auto; align-self: flex-start; }
+  .oneway-wrap { margin-top: -48px; }
+
+  .popular { display: flex; flex-direction: column; gap: 20px; }
+  .sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  .pop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .pop { border-radius: 18px; padding: 20px 12px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--text); text-align: center; }
+  .pop:hover { box-shadow: var(--ring); text-decoration: none; color: var(--text); }
+  .pop-logo { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; }
+  .pop-name { font-size: 14.5px; font-weight: 600; }
+  .pop-cat { font-size: 12.5px; color: var(--muted); }
+
+  .faq { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 40px; align-items: start; }
+  .faq-intro { display: flex; flex-direction: column; gap: 12px; max-width: 420px; }
+  .faq-intro h2 { font-size: 32px; font-weight: 700; letter-spacing: -0.025em; }
+  .faq-intro p { font-size: 16px; line-height: 1.6; color: var(--text-3); }
+  .faq-list { display: flex; flex-direction: column; gap: 8px; }
+  .qa { border-radius: 16px; overflow: hidden; interpolate-size: allow-keywords; }
+  .qa summary { list-style: none; padding: 18px 20px 18px 22px; display: flex; justify-content: space-between; align-items: center; gap: 16px; cursor: pointer; font-size: 16px; font-weight: 600; line-height: 1.4; }
+  .qa summary::-webkit-details-marker { display: none; }
+  .qa summary:hover { color: var(--accent-600); }
+  .chev { width: 20px; height: 20px; flex: none; display: flex; align-items: center; justify-content: center; transition: transform 0.25s ease; }
+  .chev::before { content: ''; width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: translateY(-2px) rotate(45deg); }
+  .qa[open] .chev { transform: rotate(180deg); }
+  .qa::details-content { block-size: 0; overflow: hidden; transition: block-size 0.28s ease, content-visibility 0.28s allow-discrete; }
+  .qa[open]::details-content { block-size: auto; }
+  .qa-a { padding: 0 64px 20px 22px; font-size: 15px; line-height: 1.65; color: var(--text-3); text-wrap: pretty; }
+  .qa-a :global(p) { margin: 0; }
+  .qa-a :global(code) { font-family: var(--mono); font-size: 0.9em; }
+
+  .promos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 20px; }
+  .promo { border-radius: 24px; padding: 32px; display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+  .promo p { font-size: 16px; line-height: 1.6; color: var(--text-3); max-width: 480px; }
+  .promo .btn { margin-top: 6px; }
+  .promo-acts { display: flex; gap: 10px; flex-wrap: wrap; }
+  .promo-accent { background: var(--accent); color: #fff; }
+  .promo-accent p { color: #e3f6fb; }
+  .promo-yellow { background: #fff6d6; }
+  .promo-yellow p { color: #4f4526; }
+  .yellow-btn { border-color: #e6d9a8; }
+
+  @media (max-width: 720px) {
+    .home { gap: 48px; }
+    .hero { padding-top: 40px; gap: 40px; }
+    .hero h1 { font-size: 40px; }
+    .hero p { font-size: 17px; }
+    .path { padding: 20px; }
+    .path-row { grid-template-columns: 36px minmax(0, 1fr) 56px; }
+    .oneway-wrap { margin-top: -24px; }
+    .qa-a { padding-right: 22px; }
+  }
+</style>

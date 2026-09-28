@@ -1,0 +1,22 @@
+---
+import { t, type Lang } from '../lib/i18n';
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<aside class="oneway card">
+  <span class="info-i" aria-hidden="true">i</span>
+  <div>
+    <strong>{t(lang, 'oneway.title')}</strong>
+    <p>{t(lang, 'oneway.text')}</p>
+  </div>
+</aside>
+
+<style>
+  .oneway { padding: 22px 26px; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 16px; align-items: start; }
+  .oneway div { display: flex; flex-direction: column; gap: 6px; }
+  .oneway strong { font-size: 16px; font-weight: 700; color: var(--text); }
+  .oneway p { font-size: 15px; line-height: 1.65; color: var(--text-3); text-wrap: pretty; }
+</style>

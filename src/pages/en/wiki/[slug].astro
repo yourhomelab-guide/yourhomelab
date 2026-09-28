@@ -1,0 +1,11 @@
+---
+import Wiki from '../../../views/Wiki.astro';
+import { getWiki } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  return (await getWiki('en')).items.map((article) => ({ params: { slug: article.slug }, props: { article } }));
+}
+const { article } = Astro.props;
+---
+
+<Wiki lang="en" article={article} />

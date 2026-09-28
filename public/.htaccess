@@ -1,0 +1,118 @@
+# yourhomelab.guide – Apache config for Hetzner Webhosting (static build, no PHP needed)
+Options -Indexes -MultiViews
+DirectoryIndex index.html
+AddDefaultCharset utf-8
+
+# ----------------------------------------------------------------- errors
+ErrorDocument 404 /404.html
+<If "%{REQUEST_URI} =~ m#^/de/#">
+  ErrorDocument 404 /de/404/index.html
+</If>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # HTTPS + no www
+  RewriteCond %{HTTPS} !=on [OR]
+  RewriteCond %{HTTP_HOST} ^www\. [NC]
+  RewriteRule ^ https://yourhomelab.guide%{REQUEST_URI} [R=301,L,NE]
+
+  # Language switch at "/": German browsers → /de/, everyone else → /en/ (302, so it can change per visitor)
+  RewriteCond %{HTTP:Accept-Language} ^\s*de [NC]
+  RewriteRule ^$ /de/ [R=302,L,E=LANGREDIRECT:1]
+  RewriteRule ^$ /en/ [R=302,L,E=LANGREDIRECT:1]
+
+  # Trailing slash for directories (the site uses /path/ URLs)
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteCond %{REQUEST_URI} !/$
+  RewriteRule ^(.*)$ /$1/ [R=301,L]
+
+  # ------------------------------------------ serve precompressed files
+  # Directory requests (always end in / after the redirect above) → index.html(.br|.gz)
+  RewriteCond %{HTTP:Accept-Encoding} br
+  RewriteCond %{REQUEST_URI} /$
+  RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}index.html.br -f
+  RewriteRule ^(.*)$ $1index.html.br [L]
+  RewriteCond %{HTTP:Accept-Encoding} gzip
+  RewriteCond %{REQUEST_URI} /$
+  RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}index.html.gz -f
+  RewriteRule ^(.*)$ $1index.html.gz [L]
+
+  # Files → file.br / file.gz
+  RewriteCond %{HTTP:Accept-Encoding} br
+  RewriteCond %{REQUEST_FILENAME}.br -f
+  RewriteRule ^(.+)$ $1.br [L]
+  RewriteCond %{HTTP:Accept-Encoding} gzip
+  RewriteCond %{REQUEST_FILENAME}.gz -f
+  RewriteRule ^(.+)$ $1.gz [L]
+</IfModule>
+
+# Correct types + encoding for the precompressed variants, and no double compression
+<FilesMatch "\.(html|css|js|mjs|json|xml|svg|txt|webmanifest)\.br$">
+  Header set Content-Encoding br
+  Header append Vary Accept-Encoding
+  SetEnv no-brotli 1
+  SetEnv no-gzip 1
+</FilesMatch>
+<FilesMatch "\.(html|css|js|mjs|json|xml|svg|txt|webmanifest)\.gz$">
+  Header set Content-Encoding gzip
+  Header append Vary Accept-Encoding
+  SetEnv no-brotli 1
+  SetEnv no-gzip 1
+</FilesMatch>
+<FilesMatch "\.html\.(br|gz)$">
+  ForceType "text/html; charset=utf-8"
+</FilesMatch>
+<FilesMatch "\.css\.(br|gz)$">
+  ForceType "text/css; charset=utf-8"
+</FilesMatch>
+<FilesMatch "\.m?js\.(br|gz)$">
+  ForceType "text/javascript; charset=utf-8"
+</FilesMatch>
+<FilesMatch "\.json\.(br|gz)$">
+  ForceType "application/json; charset=utf-8"
+</FilesMatch>
+<FilesMatch "\.xml\.(br|gz)$">
+  ForceType "application/xml; charset=utf-8"
+</FilesMatch>
+<FilesMatch "\.svg\.(br|gz)$">
+  ForceType image/svg+xml
+</FilesMatch>
+<FilesMatch "\.txt\.(br|gz)$">
+  ForceType "text/plain; charset=utf-8"
+</FilesMatch>
+<FilesMatch "\.webmanifest\.(br|gz)$">
+  ForceType application/manifest+json
+</FilesMatch>
+
+AddType font/woff2 .woff2
+AddType application/manifest+json .webmanifest
+
+# ------------------------------------------------------------------ caching
+<IfModule mod_headers.c>
+  # Hashed build assets never change
+  <If "%{REQUEST_URI} =~ m#^/_astro/#">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </If>
+  <ElseIf "%{REQUEST_URI} =~ m#^/icons/#">
+    Header set Cache-Control "public, max-age=604800"
+  </ElseIf>
+  <Else>
+    # HTML, search index, sitemap: always revalidate (cheap 304 thanks to ETag)
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </Else>
+
+  # ---------------------------------------------------------------- security
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "DENY"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=(), browsing-topics=()"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://stats.flystart-solutions.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://stats.flystart-solutions.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+  Header unset X-Powered-By
+  Header always set Vary "Accept-Language" env=REDIRECT_LANGREDIRECT
+  Header always set Vary "Accept-Language" env=LANGREDIRECT
+</IfModule>
+
+FileETag MTime Size

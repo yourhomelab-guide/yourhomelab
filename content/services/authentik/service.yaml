@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: Authentik
+category: auth
+level: 3
+port: 9000
+subdomain: auth
+subdomainOnly: true
+links:
+  repo: goauthentik/authentik
+  website: https://goauthentik.io
+  docs: https://docs.goauthentik.io
+upstream:
+  label: docker-compose.yml
+  url: https://goauthentik.io/docker-compose.yml
+reviewed: 2026-09-12

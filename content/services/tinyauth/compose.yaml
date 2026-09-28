@@ -1,0 +1,10 @@
+services:
+  tinyauth:
+    image: ghcr.io/steveiliop56/tinyauth:v3
+    container_name: tinyauth
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - APP_URL=__URL__
+      - SECRET=${TINYAUTH_SECRET}
+      - USERS=${TINYAUTH_USERS}

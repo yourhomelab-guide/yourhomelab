@@ -1,0 +1,29 @@
+name: Artikel oder Guide wünschen
+description: Ein Thema fehlt im Nachschlagewerk oder im Einrichtungsweg
+title: "Thema: "
+labels: ["inhalt"]
+body:
+  - type: dropdown
+    id: where
+    attributes:
+      label: Wo gehört es hin?
+      options: [Nachschlagen (Wiki-Artikel), Einrichten (Guide), Weiß nicht]
+    validations:
+      required: true
+  - type: input
+    id: topic
+    attributes:
+      label: Thema
+      placeholder: Backups mit Borg
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Was sollte drinstehen?
+  - type: checkboxes
+    id: write
+    attributes:
+      label: Mithelfen
+      options:
+        - label: Ich würde den Text selbst schreiben

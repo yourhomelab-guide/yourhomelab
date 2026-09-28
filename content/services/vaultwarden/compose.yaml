@@ -1,0 +1,12 @@
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - DOMAIN=__URL__
+      - SIGNUPS_ALLOWED=false
+      - ADMIN_TOKEN=${ADMIN_TOKEN}
+    volumes:
+      - ./data/data:/data

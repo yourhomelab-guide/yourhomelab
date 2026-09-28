@@ -1,0 +1,22 @@
+---
+import { site } from '../config/site';
+import { lastModified } from '../lib/git';
+import { formatDate, t, type Lang } from '../lib/i18n';
+interface Props {
+  lang: Lang;
+  /** Repo-relative path of the file to edit */
+  file: string;
+}
+const { lang, file } = Astro.props;
+const d = lastModified(file);
+---
+
+<div class="pfoot">
+  <span>{d && t(lang, 'page.lastEdited', { date: formatDate(lang, d) })}</span>
+  <a href={`${site.repo}/edit/${site.branch}/${file}`}>{t(lang, 'page.edit')}</a>
+</div>
+
+<style>
+  .pfoot { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line-2); font-size: 14px; color: var(--muted); }
+  .pfoot a { font-weight: 600; }
+</style>

@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../../../.astro/collections/services.schema.json
+name: Forgejo
+category: code
+level: 2
+popular: true
+port: 3000
+subdomain: git
+links:
+  repo: https://codeberg.org/forgejo/forgejo
+  website: https://forgejo.org
+  docs: https://forgejo.org/docs/latest/
+upstream:
+  label: docs/admin/installation-docker.md
+  url: https://forgejo.org/docs/latest/admin/installation/docker/
+reviewed: 2026-09-12

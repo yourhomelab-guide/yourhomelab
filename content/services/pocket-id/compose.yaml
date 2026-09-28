@@ -1,0 +1,13 @@
+services:
+  pocket-id:
+    image: ghcr.io/pocket-id/pocket-id:v1
+    container_name: pocket-id
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - APP_URL=__URL__
+      - TRUST_PROXY=true
+      - PUID=${PUID}
+      - PGID=${PGID}
+    volumes:
+      - ./data/data:/app/data

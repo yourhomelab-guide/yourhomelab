@@ -1,0 +1,91 @@
+---
+/**
+ * Decision helper. Each answer awards points to result ids; the result with most points wins.
+ *
+ * <Quiz
+ *   questions={[{ question: "…", answers: [{ label: "…", points: { lokal: 2 } }] }]}
+ *   results={{ lokal: { title: "Lokal", text: "…" } }}
+ * />
+ */
+import { langFromUrl, t } from '../../lib/i18n';
+import { url } from '../../lib/routes';
+
+interface Props {
+  questions: { question: string; answers: { label: string; points: Record<string, number> }[] }[];
+  results: Record<string, { title: string; text: string }>;
+}
+const { questions, results } = Astro.props;
+const lang = langFromUrl(Astro.url);
+---
+
+<div class="quiz card" data-quiz data-results={JSON.stringify(results)}>
+  {
+    questions.map((q, qi) => (
+      <fieldset class="q">
+        <legend>
+          {qi + 1}. {q.question}
+        </legend>
+        <div class="opts">
+          {q.answers.map((a) => (
+            <label class="opt">
+              <input type="radio" name={`q${qi}`} data-points={JSON.stringify(a.points)} />
+              <span>{a.label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    ))
+  }
+  <div class="result" data-result hidden>
+    <span class="rk">{t(lang, 'quiz.recommendation')}</span>
+    <span class="rt" data-result-title></span>
+    <span class="rx" data-result-text></span>
+    <div class="ra">
+      <a class="btn btn-primary btn-sm" href={url.section(lang, 'setup')}>{t(lang, 'quiz.start')}</a>
+      <button type="button" class="link-btn" data-reset>{t(lang, 'quiz.reset')}</button>
+    </div>
+  </div>
+  <p class="hint" data-hint>{t(lang, 'quiz.hint')}</p>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-quiz]').forEach((quiz) => {
+    const results = JSON.parse(quiz.dataset.results!);
+    const groups = quiz.querySelectorAll('fieldset').length;
+    const update = () => {
+      const checked = quiz.querySelectorAll<HTMLInputElement>('input:checked');
+      const done = checked.length === groups;
+      quiz.querySelector<HTMLElement>('[data-result]')!.hidden = !done;
+      quiz.querySelector<HTMLElement>('[data-hint]')!.hidden = done;
+      if (!done) return;
+      const score: Record<string, number> = {};
+      checked.forEach((i) => Object.entries(JSON.parse(i.dataset.points!) as Record<string, number>).forEach(([k, v]) => (score[k] = (score[k] ?? 0) + v)));
+      const best = Object.keys(results).sort((a, b) => (score[b] ?? 0) - (score[a] ?? 0))[0];
+      quiz.querySelector('[data-result-title]')!.textContent = results[best].title;
+      quiz.querySelector('[data-result-text]')!.textContent = results[best].text;
+    };
+    quiz.addEventListener('change', update);
+    quiz.querySelector('[data-reset]')!.addEventListener('click', () => {
+      quiz.querySelectorAll<HTMLInputElement>('input').forEach((i) => (i.checked = false));
+      update();
+    });
+  });
+</script>
+
+<style>
+  .quiz { padding: 26px 28px; display: flex; flex-direction: column; gap: 22px; }
+  .q { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  legend { padding: 0; margin-bottom: 10px; font-size: 16px; font-weight: 600; color: var(--text); }
+  .opts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .opt span { display: inline-block; border: 1.5px solid var(--line-2); background: #fff; color: var(--text-2); border-radius: 999px; padding: 9px 16px; font-size: 14px; font-weight: 500; line-height: 1.3; cursor: pointer; }
+  .opt span:hover { border-color: var(--accent); }
+  .opt input:checked + span { border-color: var(--accent); background: var(--accent); color: #fff; font-weight: 600; }
+  .opt input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .result { background: var(--accent-50); border-radius: 16px; padding: 20px 22px; display: flex; flex-direction: column; gap: 8px; }
+  .rk { font-size: 13px; font-weight: 600; color: var(--accent-600); }
+  .rt { font-size: 24px; font-weight: 700; color: var(--accent-700); }
+  .rx { font-size: 15.5px; line-height: 1.6; color: #23465a; }
+  .ra { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; align-items: center; }
+  .hint { font-size: 14px; color: var(--muted); }
+</style>

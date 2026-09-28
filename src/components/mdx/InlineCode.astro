@@ -1,0 +1,11 @@
+---
+/** Inline `code`. Placeholders like `__ROOT__` are shown with the visitor's value. */
+import { PH_RE } from '../../lib/highlight';
+import { langFromUrl, placeholderDefaults } from '../../lib/i18n';
+
+const html = await Astro.slots.render('default');
+const values = placeholderDefaults(langFromUrl(Astro.url));
+const out = html.replace(PH_RE, (m, k) => (values[k] !== undefined ? `<span class="tk-var" data-ph="${k}">${values[k]}</span>` : m));
+---
+
+<code set:html={out} />

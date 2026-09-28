@@ -1,0 +1,18 @@
+---
+interface Props {
+  title: string;
+}
+const { title } = Astro.props;
+---
+
+<div class="c card">
+  <strong>{title}</strong>
+  <div class="cbody"><slot /></div>
+</div>
+
+<style>
+  .c { border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 8px; }
+  strong { font-size: 18px; font-weight: 700; color: var(--text); }
+  .cbody { font-size: 15px; line-height: 1.55; color: var(--text-3); }
+  .cbody :global(p) { margin: 0; }
+</style>

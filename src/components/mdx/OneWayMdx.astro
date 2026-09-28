@@ -1,0 +1,6 @@
+---
+import OneWay from '../OneWay.astro';
+import { langFromUrl } from '../../lib/i18n';
+---
+
+<OneWay lang={langFromUrl(Astro.url)} />

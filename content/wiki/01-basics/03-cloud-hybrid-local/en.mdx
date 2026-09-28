@@ -1,0 +1,78 @@
+---
+title: Cloud, hybrid or local?
+description: Before you buy hardware or rent a server, it pays to ask where your services should run. There are three models, and each has different strengths in cost, data ownership and reachability.
+level: 1
+related: [hardware-overview, cgnat-ds-lite, access-methods-compared]
+practice: choosing-hardware
+---
+
+<OneWay />
+
+## The three models
+
+<Cards>
+  <Card title="Local">
+    The server sits in your home, for example a mini PC or an old laptop. Your data never leaves the house.
+  </Card>
+  <Card title="Hybrid">
+    The data lives at home, while a small cloud server or a tunnel accepts requests from the internet.
+  </Card>
+  <Card title="Cloud">
+    You rent a virtual private server (VPS) in a data center. Fixed IP, no device at home, monthly costs.
+  </Card>
+</Cards>
+
+## Compared
+
+|                    | Local                              | Hybrid                                | Cloud                           |
+| ------------------ | ---------------------------------- | ------------------------------------- | ------------------------------- |
+| **Cost**           | Hardware once, then electricity    | Hardware plus a small VPS             | Monthly rent                    |
+| **Data ownership** | Entirely yours                     | Data at home, entry point at provider | With the provider               |
+| **Reachability**   | Depends on your internet connection | Good, even without public IPv4       | Very good, fixed IP             |
+| **Effort**         | Medium                             | Higher, two systems                   | Low                             |
+| **Good for**       | Photos, media, large amounts of data | Public services with data at home   | Small services, getting started |
+
+## Decision helper
+
+<Quiz
+  questions={[
+    {
+      question: "Where should your data live?",
+      answers: [
+        { label: "Only at my home", points: { lokal: 2 } },
+        { label: "At home, but reachable from anywhere", points: { hybrid: 2 } },
+        { label: "Don't care, as long as it works", points: { cloud: 2 } },
+      ],
+    },
+    {
+      question: "Does your internet connection have a public IPv4 address?",
+      answers: [
+        { label: "Yes", points: { lokal: 1 } },
+        { label: "No, DS-Lite or CGNAT", points: { hybrid: 2, cloud: 1 } },
+        { label: "I don't know", points: { hybrid: 1 } },
+      ],
+    },
+    {
+      question: "How much hardware do you want to run?",
+      answers: [
+        { label: "None", points: { cloud: 3 } },
+        { label: "One small computer", points: { lokal: 1, hybrid: 1 } },
+        { label: "Several devices, happily", points: { lokal: 2 } },
+      ],
+    },
+  ]}
+  results={{
+    lokal: {
+      title: "Local",
+      text: "A server at home is enough. To reach it on the go, use a VPN such as WireGuard or Tailscale without opening any ports.",
+    },
+    hybrid: {
+      title: "Hybrid",
+      text: "Your data stays at home, a small VPS or a tunnel acts as the public entry point. This also works without a public IPv4 address.",
+    },
+    cloud: {
+      title: "Cloud",
+      text: "A rented VPS is the easiest start: fixed IP, no device at home. Still, keep your backups outside the provider.",
+    },
+  }}
+/>

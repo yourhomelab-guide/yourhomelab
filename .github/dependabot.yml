@@ -1,0 +1,11 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly }
+    groups:
+      astro: { patterns: ['astro', '@astrojs/*'] }
+      all: { patterns: ['*'], exclude-patterns: ['astro', '@astrojs/*'] }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
