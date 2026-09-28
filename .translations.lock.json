@@ -95,11 +95,11 @@
     "hash": "f364c15dd8412062",
     "by": "claude"
   },
-  "content/guides/04-access/03-vpn-wireguard/de.mdx": {
+  "content/guides/04-access/04-vpn-wireguard/de.mdx": {
     "hash": "c549033ae99d52f5",
     "by": "claude"
   },
-  "content/guides/04-access/04-cloudflare-tunnel/de.mdx": {
+  "content/guides/04-access/05-cloudflare-tunnel/de.mdx": {
     "hash": "767f986cc76f6b12",
     "by": "claude"
   },
