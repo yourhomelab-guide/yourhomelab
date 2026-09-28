@@ -12,7 +12,7 @@ with Claude Code.
 ## Contributing
 
 All content lives as individual files in [`content/`](content). How to write articles, add guides or contribute a
-service is described in [CONTRIBUTING.md](CONTRIBUTING.md) (German – feel free to open issues and PRs in English).
+service is described in [CONTRIBUTING.md](CONTRIBUTING.md).
 In short:
 
 ```bash

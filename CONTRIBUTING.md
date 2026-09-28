@@ -1,113 +1,119 @@
-# Mitmachen bei yourhomelab
+# Contributing to yourhomelab
 
-Schön, dass du helfen willst! Du brauchst keine Web-Kenntnisse: Alle Inhalte sind einzelne Markdown- und YAML-Dateien.
-Kleine Korrekturen gehen direkt im Browser über den Link »Diese Seite auf GitHub bearbeiten« unter jeder Seite.
+Great that you want to help! You don't need any web development skills: all content consists of individual
+Markdown and YAML files. Small fixes can be made right in the browser via the "Edit this page on GitHub" link at
+the bottom of every page.
 
-> **Englisch?** Schreib auf Deutsch. Die englische Fassung entsteht automatisch (siehe [Übersetzungen](#übersetzungen)).
-> English speakers are welcome to improve the `en.mdx` / `en.md` files or open an issue.
+> **Which language?** German is the source language of the site, so articles, guides and service descriptions are
+> written in German (`de.mdx`, `de.md`). The English version is generated automatically (see [Translations](#translations)).
+> Don't speak German? Improvements to the English files are just as welcome, and you can always open an issue or
+> pull request in English – a maintainer will take care of the German side.
 
-## Inhaltsverzeichnis
+## Contents
 
-1. [Lokal starten](#lokal-starten)
-2. [Wo liegt was?](#wo-liegt-was)
-3. [Einen Dienst hinzufügen](#einen-dienst-hinzufügen)
-4. [Artikel und Guides schreiben](#artikel-und-guides-schreiben)
-5. [Platzhalter](#platzhalter)
-6. [Bausteine für MDX](#bausteine-für-mdx)
-7. [Übersetzungen](#übersetzungen)
-8. [Stil](#stil)
+1. [Running it locally](#running-it-locally)
+2. [Where things live](#where-things-live)
+3. [Adding a service](#adding-a-service)
+4. [Writing articles and guides](#writing-articles-and-guides)
+5. [Placeholders](#placeholders)
+6. [MDX building blocks](#mdx-building-blocks)
+7. [Translations](#translations)
+8. [Style](#style)
 
-## Lokal starten
+## Running it locally
 
-Voraussetzung: Node.js 22 oder neuer.
+Requirement: Node.js 22 or newer.
 
 ```bash
 npm install
-npm run dev        # http://localhost:4321, Änderungen erscheinen sofort
-npm run build      # prüft alle Inhalte und baut die Seite
+npm run dev        # http://localhost:4321, changes show up instantly
+npm run build      # validates all content and builds the site
 ```
 
-Fehler in Frontmatter, `service.yaml` oder `compose.yaml` bricht den Build mit einer Meldung ab, die Datei und Feld nennt.
+Mistakes in frontmatter, `service.yaml` or `compose.yaml` stop the build with a message naming the file and field.
 
-## Wo liegt was?
+## Where things live
 
 ```
 content/
-├── wiki/<NN-gruppe>/<NN-name>/            Nachschlagen: ein Ordner pro Artikel
-│   ├── de.mdx                             deutscher Text (Original)
-│   └── en.mdx                             englische Übersetzung
-├── guides/<NN-etappe>/                    eine Etappe des Einrichtungswegs
-│   ├── de.md / en.md                      Titel + Beschreibung der Etappe
-│   └── <NN-name>/de.mdx, en.mdx           ein Ordner pro Guide
-├── services/<id>/                         ein Ordner pro Dienst
-│   ├── service.yaml                       Metadaten (Kategorie, Port, Links …)
-│   ├── compose.yaml                       die Vorlage
-│   ├── .env.example                       Variablen
-│   ├── de.md / en.md                      Beschreibung + »Gut zu wissen«
-│   └── logo.svg                           optional, sonst von selfh.st/icons
-├── faq/<NN-frage>/de.md, en.md            Häufige Fragen auf der Startseite
-└── pages/{imprint,privacy}/de.md, en.md   Rechtliches
-src/i18n/de.json, en.json                  Texte der Oberfläche (Buttons, Überschriften …)
+├── wiki/<NN-group>/<NN-name>/             "Learn": one folder per article
+│   ├── de.mdx                             German text (original)
+│   └── en.mdx                             English translation
+├── guides/<NN-stage>/                     one stage of the setup path
+│   ├── de.md / en.md                      title + description of the stage
+│   └── <NN-name>/de.mdx, en.mdx           one folder per guide
+├── services/<id>/                         one folder per service
+│   ├── service.yaml                       metadata (category, port, links …)
+│   ├── compose.yaml                       the template
+│   ├── .env.example                       variables
+│   ├── de.md / en.md                      description + "good to know" notes
+│   └── logo.svg                           optional, otherwise taken from selfh.st/icons
+├── faq/<NN-question>/de.md, en.md         FAQ on the start page
+└── pages/{imprint,privacy}/de.md, en.md   legal pages
+src/i18n/de.json, en.json                  interface texts (buttons, headings …)
 ```
 
-- **Ordnernamen sind englisch** und sprachneutral (`03-cloud-hybrid-local`). Sie sind die ID, über die sich Inhalte gegenseitig verlinken (`related`, `practice`, `services`).
-- Die **Zahl vorne** bestimmt nur die Reihenfolge. Sie taucht nicht in der URL auf, du kannst also umsortieren, ohne Links zu brechen.
-- Die **URL** ist der Ordnername ohne Zahl, z. B. `/en/wiki/cloud-hybrid-local/`. Für eine deutsche URL trägst du in `de.mdx` ein `slug:` ein (`slug: cloud-hybrid-lokal` → `/de/nachschlagen/cloud-hybrid-lokal/`). Nur Kleinbuchstaben, Ziffern und `-`, Umlaute ausschreiben.
-- Neue Wiki-Gruppe? Ordner anlegen und den Titel in `src/i18n/de.json` als `wiki.group.<name ohne Zahl>` eintragen.
+- **Folder names are English** and language-neutral (`03-cloud-hybrid-local`). They are the ID that content uses
+  to reference other content (`related`, `practice`, `services`).
+- The **number prefix** only sets the order. It never appears in URLs, so you can reorder without breaking links.
+- The **URL** is the folder name without the number, e.g. `/en/wiki/cloud-hybrid-local/`. For a German URL, add
+  `slug:` to `de.mdx` (`slug: cloud-hybrid-lokal` → `/de/nachschlagen/cloud-hybrid-lokal/`). Lowercase letters,
+  digits and `-` only; write umlauts as `ae`, `oe`, `ue`, `ss`.
+- New wiki group? Create the folder and add its title to `src/i18n/de.json` as `wiki.group.<name without number>`.
 
-## Einen Dienst hinzufügen
+## Adding a service
 
 ```bash
 npm run new service jellyfin
 ```
 
-legt `content/services/jellyfin/` aus der Vorlage an. Dann:
+creates `content/services/jellyfin/` from the template. Then:
 
 ### `service.yaml`
 
-| Feld | Pflicht | Bedeutung |
+| Field | Required | Meaning |
 | --- | --- | --- |
-| `name` | ja | Anzeigename |
-| `category` | ja | `proxy`, `management`, `data`, `code`, `auth` oder `monitoring` |
-| `level` | | `1` Einsteiger, `2` Fortgeschritten, `3` Profi |
-| `tag` | | Plakette: `recommended`, `popular` oder `new` |
-| `popular` | | `true` zeigt den Dienst auf der Startseite |
-| `port` | ja | Port der Weboberfläche **im** Container |
-| `hostPort` | | Port auf dem Server, wenn kein Reverse Proxy genutzt wird (Standard: `port`) |
-| `subdomain` | ja | z. B. `media` → `media.example.com` bzw. `example.com/media` |
-| `subdomainOnly` | | `true`, wenn der Dienst nicht unter einem Pfad läuft |
-| `main` | | Name des Web-Containers in `compose.yaml`, falls er nicht wie der Ordner heißt |
-| `reverseProxy` | | `true` nur für Reverse Proxies selbst (Traefik, Caddy …): Vorlage wird unverändert gezeigt |
-| `files` | | weitere Dateien im Ordner, die als Tab erscheinen, z. B. `[Caddyfile]` |
-| `traefikLabels` | | zusätzliche Traefik-Labels, z. B. Middlewares |
-| `icon` | | abweichender Name auf [selfh.st/icons](https://selfh.st/icons) |
-| `links.repo` | ja | `owner/repo` auf GitHub oder volle URL (Codeberg …) |
-| `links.website`, `links.docs` | ja | URLs |
-| `upstream.label`, `upstream.url` | | wo die offizielle Compose-Datei liegt |
-| `reviewed` | | Datum, an dem du die Vorlage getestet hast |
+| `name` | yes | Display name |
+| `category` | yes | `proxy`, `management`, `data`, `code`, `auth` or `monitoring` |
+| `level` | | `1` beginner, `2` advanced, `3` pro |
+| `tag` | | Badge: `recommended`, `popular` or `new` |
+| `popular` | | `true` shows the service on the start page |
+| `port` | yes | Port of the web UI **inside** the container |
+| `hostPort` | | Port on the server when no reverse proxy is used (default: `port`) |
+| `subdomain` | yes | e.g. `media` → `media.example.com` or `example.com/media` |
+| `subdomainOnly` | | `true` if the service can't run under a path |
+| `main` | | Name of the web container in `compose.yaml` if it differs from the folder name |
+| `reverseProxy` | | `true` only for reverse proxies themselves (Traefik, Caddy …): the template is shown unchanged |
+| `files` | | Additional files in the folder shown as tabs, e.g. `[Caddyfile]` |
+| `traefikLabels` | | Extra Traefik labels, e.g. middlewares |
+| `icon` | | Different name on [selfh.st/icons](https://selfh.st/icons) |
+| `links.repo` | yes | `owner/repo` on GitHub or a full URL (Codeberg …) |
+| `links.website`, `links.docs` | yes | URLs |
+| `upstream.label`, `upstream.url` | | Where the official Compose file lives |
+| `reviewed` | | Date you last tested the template |
 
-### `compose.yaml` – die wichtigste Regel
+### `compose.yaml` – the most important rule
 
-Schreib die **schlichte Variante ohne Reverse Proxy**. Die Website ergänzt je nach »Mein Setup« des Besuchers automatisch:
+Write the **plain version without a reverse proxy**. Depending on the visitor's "My setup", the website adds:
 
-- **Traefik**: `labels` (Router, Zertifikat, Port) + Proxy-Netzwerk
-- **Caddy / Nginx Proxy Manager**: Proxy-Netzwerk + passendes Snippet
-- **Kein Proxy**: `ports: "<hostPort>:<port>"`
-- **Zentraler Datenordner**: `./data/…` wird zu `<Datenordner>/<id>/…`
+- **Traefik**: `labels` (router, certificate, port) + proxy network
+- **Caddy / Nginx Proxy Manager**: proxy network + a matching snippet
+- **No proxy**: `ports: "<hostPort>:<port>"`
+- **Central data folder**: `./data/…` becomes `<data folder>/<id>/…`
 
-Also:
+So:
 
-- ✅ Persistente Daten immer unter `./data/<name>` mounten
-- ✅ `container_name` = Ordnername, Nebencontainer `<id>-<rolle>` (z. B. `nextcloud-db`)
-- ✅ Konkrete Image-Version, wenn das Projekt sinnvolle Tags hat (Renovate hält sie aktuell)
-- ✅ Geheimnisse als `${VARIABLE}` referenzieren und in `.env.example` definieren
-- ❌ Keine Traefik-Labels, kein `networks: proxy`, keine Ports für die Weboberfläche
-- ✅ Andere Ports (z. B. SSH `"2222:22"`) gehören hinein
-- Kommentare in Vorlagen bitte auf Englisch, weil beide Sprachfassungen dieselbe Datei zeigen
+- ✅ Always mount persistent data under `./data/<name>`
+- ✅ `container_name` = folder name, helper containers `<id>-<role>` (e.g. `nextcloud-db`)
+- ✅ A specific image version if the project has meaningful tags (Renovate keeps it up to date)
+- ✅ Reference secrets as `${VARIABLE}` and define them in `.env.example`
+- ❌ No Traefik labels, no `networks: proxy`, no ports for the web UI
+- ✅ Other ports (e.g. SSH `"2222:22"`) do belong in there
+- Comments in templates in English, since both language versions show the same file
 
 ### `.env.example`
 
-Nutze [Platzhalter](#platzhalter). `__SECRET__` wird im Browser des Besuchers durch einen Zufallswert ersetzt.
+Use [placeholders](#placeholders). `__SECRET__` is replaced with a random value in the visitor's browser.
 
 ### `de.md`
 
@@ -117,53 +123,53 @@ description: "Ein bis zwei Sätze für die Karte."
 notes:
   - "Hinweise für die Box »Gut zu wissen«."
 ---
-Optional: weiterer Text in Markdown, erscheint unter den Schritten.
+Optional: more Markdown text, shown below the steps.
 ```
 
-Teste die Vorlage selbst (`docker compose up -d`), bevor du den Pull Request öffnest.
+Test the template yourself (`docker compose up -d`) before opening the pull request.
 
-## Artikel und Guides schreiben
+## Writing articles and guides
 
 ```bash
 npm run new wiki 03-containers podman
-npm run new guide 06-operations log-rotation logs-rotieren   # dritter Wert: deutsche URL (optional)
+npm run new guide 06-operations log-rotation logs-rotieren   # third value: German URL (optional)
 ```
 
-Viele Themen sind schon als **Platzhalter** angelegt (`status: stub`). Die Seite zeigt dann »Dieser Text fehlt noch«.
-Zum Schreiben: Text in `de.mdx` ergänzen und die Zeile `status: stub` löschen.
+Many topics already exist as **stubs** (`status: stub`). The site then shows "This text is still missing".
+To write one: add the text to `de.mdx` and delete the `status: stub` line.
 
-### Frontmatter Wiki
+### Wiki frontmatter
 
 ```yaml
 ---
 title: Was ist Docker?
-description: Einleitung, die groß unter dem Titel steht.
-level: 1                        # 1 Einsteiger, 2 Fortgeschritten, 3 Profi
-related: [images-tags, docker-compose]   # Ordnernamen anderer Artikel (ohne Zahl)
-practice: installing-docker      # Ordnername eines Guides (»Praktisch umsetzen«)
+description: Introduction shown large below the title.
+level: 1                        # 1 beginner, 2 advanced, 3 pro
+related: [images-tags, docker-compose]   # folder names of other articles (without number)
+practice: installing-docker      # folder name of a guide ("Put it into practice")
 ---
 ```
 
-### Frontmatter Guide
+### Guide frontmatter
 
 ```yaml
 ---
 title: Reverse Proxy mit Traefik
-description: Was am Ende läuft.
+description: What runs at the end.
 level: 2
 minutes: 25
 requires: [Docker Compose, Domain]
-services: [traefik]             # erscheint auf diesen Dienstseiten unter »Passende Guides«
+services: [traefik]             # listed on these service pages under "Related guides"
 ---
 ```
 
-Überschriften im Text beginnen mit `##` (der Titel ist die `#`-Überschrift). `##`-Überschriften erscheinen in »Auf dieser Seite«.
+Headings in the text start with `##` (the title is the `#` heading). `##` headings appear in "On this page".
 
-## Platzhalter
+## Placeholders
 
-In Codeblöcken, Inline-Code, `compose.yaml` und `.env.example` werden diese Werte durch das »Mein Setup« des Besuchers ersetzt:
+In code blocks, inline code, `compose.yaml` and `.env.example`, these values are replaced with the visitor's "My setup":
 
-| Platzhalter | Beispiel |
+| Placeholder | Example |
 | --- | --- |
 | `__DOMAIN__` | `example.com` |
 | `__EMAIL__` | `admin@example.com` |
@@ -171,19 +177,20 @@ In Codeblöcken, Inline-Code, `compose.yaml` und `.env.example` werden diese Wer
 | `__ROOT__` | `/opt/stacks` |
 | `__DATA_ROOT__` | `/srv/appdata` |
 | `__TZ__`, `__PUID__`, `__PGID__` | `Europe/Berlin`, `1000`, `1000` |
-| `__SECRET__` | Zufallswert (nur `.env.example`) |
-| `__HOST__`, `__URL__` | Host bzw. volle URL des Dienstes (nur in Dienst-Vorlagen) |
+| `__SECRET__` | Random value (`.env.example` only) |
+| `__HOST__`, `__URL__` | Host or full URL of the service (service templates only) |
 
-Im Fließtext Platzhalter immer in Backticks setzen: `` `__ROOT__/traefik` ``. Ohne Backticks macht Markdown daraus Fettdruck.
+In running text, always put placeholders in backticks: `` `__ROOT__/traefik` ``. Without backticks, Markdown
+turns them into bold text.
 
-## Bausteine für MDX
+## MDX building blocks
 
-Diese Komponenten funktionieren in jeder `.mdx`-Datei ohne Import:
+These components work in every `.mdx` file without importing them:
 
 ~~~mdx
 <Steps>
 <Step title="Netzwerk anlegen">
-Text in Markdown. Leerzeilen um Codeblöcke nicht vergessen.
+Text in Markdown. Don't forget the blank lines around code blocks.
 
 ```bash
 docker network create __NETWORK__
@@ -192,36 +199,37 @@ docker network create __NETWORK__
 </Steps>
 ~~~
 
-| Baustein | Wofür |
+| Block | Purpose |
 | --- | --- |
-| `<Steps>` + `<Step title="…">` | nummerierte, abhakbare Schritte mit Fortschrittsbalken (Guides) |
-| `<ServiceFiles id="traefik" />` | compose.yaml / .env / Verzeichnis eines Dienstes, an das Setup angepasst |
-| `<Callout title="…">…</Callout>` | Infobox, mit `type="warning"` als Warnung |
-| `<OneWay />` | Box »Ein Weg von vielen« |
-| `<Cards>` + `<Card title="…">…</Card>` | Karten nebeneinander |
-| `<Quiz questions={…} results={…} />` | Entscheidungshilfe, Beispiel in `wiki/01-basics/03-cloud-hybrid-local/de.mdx` |
+| `<Steps>` + `<Step title="…">` | Numbered steps that can be ticked off, with a progress bar (guides) |
+| `<ServiceFiles id="traefik" />` | compose.yaml / .env / directory tree of a service, adapted to the setup |
+| `<Callout title="…">…</Callout>` | Info box, with `type="warning"` as a warning |
+| `<OneWay />` | The "One way among many" box |
+| `<Cards>` + `<Card title="…">…</Card>` | Cards side by side |
+| `<Quiz questions={…} results={…} />` | Decision helper, see `wiki/01-basics/03-cloud-hybrid-local/de.mdx` |
 
-Tabellen, Listen, Links und Bilder schreibst du ganz normal in Markdown.
+Tables, lists, links and images are plain Markdown.
 
-## Übersetzungen
+## Translations
 
-- Du schreibst und änderst nur die **deutsche** Datei (`de.mdx`, `de.md`, `src/i18n/de.json`).
-- Nach dem Merge übersetzt eine GitHub Action alle neuen und geänderten Texte mit **DeepL** und öffnet einen Pull Request.
-  Code, Platzhalter, Links und MDX-Komponenten werden dabei nicht angefasst, interne Links zeigen auf die englischen URLs.
-- Solange eine Übersetzung fehlt, zeigt die englische Seite den deutschen Text mit Hinweis.
-- Maintainer polieren DeepL-Übersetzungen bei Gelegenheit lokal mit Claude Code nach (siehe `CLAUDE.md`).
-- Englische Texte darfst du gern von Hand verbessern. Danach `npm run translate stamp <datei> --by human`,
-  sonst gilt die Datei weiter als maschinell übersetzt. Überschrieben wird sie erst, wenn sich das deutsche Original ändert.
-  Soll eine englische Datei nie automatisch überschrieben werden, trag `translation: manual` in ihr Frontmatter ein.
-- `npm run translate status` zeigt, was fehlt, veraltet oder maschinell übersetzt ist.
-- `.translations.lock.json` merkt sich, welcher Stand von wem übersetzt wurde. Nicht von Hand bearbeiten.
+- Only write and change the **German** file (`de.mdx`, `de.md`, `src/i18n/de.json`).
+- After merging, a GitHub Action translates all new and changed texts with **DeepL** and opens a pull request.
+  Code, placeholders, links and MDX components are left untouched; internal links point to the English URLs.
+- As long as a translation is missing, the English page shows the German text with a notice.
+- Maintainers polish DeepL translations locally with Claude Code from time to time (see `CLAUDE.md`).
+- You're welcome to improve English texts by hand. Afterwards run `npm run translate stamp <file> --by human`,
+  otherwise the file still counts as machine-translated. It is only overwritten again when the German original changes.
+  To never overwrite an English file automatically, add `translation: manual` to its frontmatter.
+- `npm run translate status` shows what is missing, outdated or machine-translated.
+- `.translations.lock.json` records which version was translated by whom. Don't edit it by hand.
 
-## Stil
+## Style
 
-- Duzen, kurze Sätze, aktive Formulierungen.
-- Erst erklären **warum**, dann **wie**.
-- Befehle so, dass man sie kopieren kann. Kein `sudo`, wenn es nicht nötig ist.
-- Keine echten Domains, IPs oder Passwörter. Nutze die Platzhalter.
-- Verlinke die offizielle Doku, statt sie abzuschreiben.
+- German texts address the reader informally ("du"); English texts use "you". Short sentences, active voice.
+- Explain **why** first, then **how**.
+- Commands should be copy-pasteable. No `sudo` unless it's needed.
+- No real domains, IPs or passwords. Use the placeholders.
+- Link to the official documentation instead of copying it.
 
-Mit deinem Beitrag stimmst du zu, dass Texte unter [CC BY-SA 4.0](LICENSE-CONTENT.md) und Code/Vorlagen unter [MIT](LICENSE) veröffentlicht werden.
+By contributing, you agree that texts are published under [CC BY-SA 4.0](LICENSE-CONTENT.md) and code/templates
+under [MIT](LICENSE).
