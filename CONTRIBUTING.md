@@ -15,10 +15,11 @@ the bottom of every page.
 2. [Where things live](#where-things-live)
 3. [Adding a service](#adding-a-service)
 4. [Writing articles and guides](#writing-articles-and-guides)
-5. [Placeholders](#placeholders)
-6. [MDX building blocks](#mdx-building-blocks)
-7. [Translations](#translations)
-8. [Style](#style)
+5. [Adding a homelab to the showcase](#adding-a-homelab-to-the-showcase)
+6. [Placeholders](#placeholders)
+7. [MDX building blocks](#mdx-building-blocks)
+8. [Translations](#translations)
+9. [Style](#style)
 
 ## Running it locally
 
@@ -164,6 +165,37 @@ services: [traefik]             # listed on these service pages under "Related g
 ```
 
 Headings in the text start with `##` (the title is the `#` heading). `##` headings appear in "On this page".
+
+## Adding a homelab to the showcase
+
+People submit their setup with the "Homelab vorstellen" issue form. A maintainer turns it into
+`content/homelabs/<id>/homelab.md` (folder name = URL, e.g. `alex-keller-rack`):
+
+```md
+---
+name: Keller-Rack
+author: Alex
+github: alex            # optional, links the profile (only with consent in the issue)
+lang: de                # language the texts are written in (entries are not translated)
+added: 2026-10-01
+summary: One or two sentences for the card.
+location: local         # local | hybrid | cloud
+platform: [proxmox]     # values: see homelabFacets in src/config/site.ts
+management: [compose, portainer]
+proxy: [traefik]
+access: [vpn]
+servers: 2
+hardware: 2× Lenovo M720q, 1× Synology DS920+
+watts: 25               # optional
+domain: …               # optional free text: domain, auth, backup, monitoring
+services: [vaultwarden, immich, Home Assistant]   # ids from content/services get linked
+---
+Optional Markdown: setup and details.
+```
+
+Filter values are fixed lists (`homelabFacets` in `src/config/site.ts`). A new value also needs a label
+(`homelabs.<field>.<value>` in `src/i18n/*.json`) and an option in `.github/ISSUE_TEMPLATE/homelab.yml`.
+Remove real domains, IPs and anything secret before merging.
 
 ## Placeholders
 

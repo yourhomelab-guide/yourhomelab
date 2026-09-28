@@ -1,0 +1,170 @@
+name: Homelab vorstellen / Show your homelab
+description: Dein Setup für den Bereich „Homelabs“ auf yourhomelab.guide
+title: "Homelab: "
+labels: ["homelab"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke, dass du dein Setup zeigst! Egal ob ein Raspberry Pi oder ein Rack im Keller: Jedes Homelab hilft anderen,
+        ihren eigenen Weg zu finden. Wir machen aus deinen Angaben einen Eintrag und verlinken dich, wenn du magst.
+        Du kannst auch auf Englisch schreiben. / You're welcome to write in English.
+
+        **Bitte keine echten Domains, IP-Adressen, Passwörter oder anderen Geheimnisse.**
+        Alles, was du hier einträgst, wird öffentlich auf der Website angezeigt.
+  - type: input
+    id: name
+    attributes:
+      label: Name deines Homelabs
+      placeholder: Keller-Rack
+    validations:
+      required: true
+  - type: input
+    id: author
+    attributes:
+      label: Wie sollen wir dich nennen?
+      description: Name oder Spitzname. Dein GitHub-Profil verlinken wir, wenn du unten zustimmst.
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Kurzbeschreibung
+      description: Ein bis zwei Sätze für die Karte in der Übersicht.
+    validations:
+      required: true
+  - type: dropdown
+    id: location
+    attributes:
+      label: Betriebsmodell
+      options:
+        - Lokal (alles zuhause)
+        - Hybrid (zuhause + Cloud/VPS)
+        - Cloud / VPS
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Plattform
+      description: Worauf laufen deine Dienste? Mehrfachauswahl möglich.
+      multiple: true
+      options:
+        - Linux direkt auf der Hardware
+        - Proxmox
+        - TrueNAS
+        - Unraid
+        - NAS (Synology, QNAP …)
+        - Kubernetes / k3s
+        - Docker Swarm
+        - Andere
+    validations:
+      required: true
+  - type: dropdown
+    id: management
+    attributes:
+      label: Verwaltung
+      description: Wie startest und verwaltest du deine Container? Mehrfachauswahl möglich.
+      multiple: true
+      options:
+        - docker run
+        - Docker Compose
+        - Portainer
+        - Dockhand
+        - Dockge
+        - Komodo
+        - GitOps (z. B. Flux, Argo CD, Git-Deployments)
+        - Ansible
+        - Andere
+    validations:
+      required: true
+  - type: dropdown
+    id: proxy
+    attributes:
+      label: Reverse Proxy
+      multiple: true
+      options:
+        - Traefik
+        - Caddy
+        - Nginx Proxy Manager
+        - nginx
+        - HAProxy
+        - Keiner
+        - Anderer
+  - type: dropdown
+    id: access
+    attributes:
+      label: Zugriff von außen
+      multiple: true
+      options:
+        - Portfreigabe
+        - VPN (WireGuard, Tailscale …)
+        - Tunnel (z. B. Cloudflare Tunnel)
+        - VPS als Eingang
+        - Nur im Heimnetz
+  - type: input
+    id: servers
+    attributes:
+      label: Anzahl Server
+      description: Physische Rechner und gemietete Server zusammen.
+      placeholder: "2"
+    validations:
+      required: true
+  - type: textarea
+    id: hardware
+    attributes:
+      label: Hardware
+      placeholder: 2× Lenovo M720q (32 GB RAM), 1× Synology DS920+
+    validations:
+      required: true
+  - type: input
+    id: watts
+    attributes:
+      label: Stromverbrauch im Leerlauf (optional)
+      placeholder: "ca. 25 W"
+  - type: input
+    id: domain
+    attributes:
+      label: Domain & DNS (optional)
+      placeholder: Domain bei …, DNS bei …, Wildcard-Zertifikat per DNS-Challenge
+  - type: input
+    id: auth
+    attributes:
+      label: Login / Single Sign-On (optional)
+      placeholder: Pocket ID + Tinyauth
+  - type: input
+    id: backup
+    attributes:
+      label: Backup (optional)
+      placeholder: borgmatic nachts auf NAS + extern
+  - type: input
+    id: monitoring
+    attributes:
+      label: Monitoring (optional)
+      placeholder: Uptime Kuma, Beszel
+  - type: textarea
+    id: services
+    attributes:
+      label: Welche Dienste betreibst du?
+      description: Kommagetrennt.
+      placeholder: Vaultwarden, Immich, Nextcloud, Home Assistant
+    validations:
+      required: true
+  - type: textarea
+    id: story
+    attributes:
+      label: Aufbau & Besonderheiten (optional)
+      description: Was ist besonders an deinem Setup? Was würdest du heute anders machen? Markdown ist erlaubt.
+  - type: input
+    id: link
+    attributes:
+      label: Link zu mehr Infos (optional)
+      description: Blogartikel oder Repository zu deinem Setup.
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Einverständnis
+      options:
+        - label: Ich bin einverstanden, dass diese Angaben öffentlich auf yourhomelab.guide erscheinen (Texte unter CC BY-SA 4.0).
+          required: true
+        - label: Verlinkt mein GitHub-Profil beim Eintrag.

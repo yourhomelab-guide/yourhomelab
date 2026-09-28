@@ -5,7 +5,7 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
-import { categories } from './config/site';
+import { categories, homelabFacets } from './config/site';
 
 /**
  * Every entry is a folder with one file per language: `01-basics/03-cloud-hybrid-local/de.mdx`.
@@ -145,4 +145,45 @@ const pages = defineCollection({
   }),
 });
 
-export const collections = { wiki, stages, guides, services, serviceTexts, faq, pages };
+/** Showcase: one folder per homelab with `homelab.md` (fields in frontmatter, free text in the body) */
+const facet = <K extends keyof typeof homelabFacets>(k: K) => z.enum(homelabFacets[k]);
+const homelabs = defineCollection({
+  loader: glob({ base: './content/homelabs', pattern: '[!_]*/homelab.md', generateId: ({ entry }) => entry.split('/')[0] }),
+  schema: z.object({
+    /** Name of the homelab, e.g. "Keller-Rack" */
+    name: z.string(),
+    /** Display name of the person */
+    author: z.string(),
+    /** GitHub user name, links to the profile */
+    github: z.string().regex(/^[A-Za-z0-9-]+$/, 'GitHub user name only').optional(),
+    /** Optional blog post or repo about the setup */
+    link: z.url().optional(),
+    /** Language the texts are written in */
+    lang: z.enum(['de', 'en']),
+    /** Demo entry that ships with the site, shown with a badge */
+    example: z.boolean().default(false),
+    added: z.coerce.date(),
+    /** One or two sentences for the card */
+    summary: z.string(),
+    location: facet('location'),
+    platform: z.array(facet('platform')).min(1),
+    management: z.array(facet('management')).min(1),
+    proxy: z.array(facet('proxy')).default([]),
+    access: z.array(facet('access')).default([]),
+    /** Number of machines (physical or rented) */
+    servers: z.number().int().positive(),
+    /** Free text, e.g. "2× Lenovo M720q, 1× Synology DS920+" */
+    hardware: z.string(),
+    /** Idle power draw of everything in watts */
+    watts: z.number().positive().optional(),
+    /** Free text fields shown in the detail view */
+    domain: z.string().optional(),
+    auth: z.string().optional(),
+    backup: z.string().optional(),
+    monitoring: z.string().optional(),
+    /** Service names; ids from content/services get linked */
+    services: z.array(z.string()).default([]),
+  }),
+});
+
+export const collections = { wiki, stages, guides, services, serviceTexts, faq, pages, homelabs };

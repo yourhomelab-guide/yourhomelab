@@ -40,6 +40,19 @@ export const sourceLang: 'de' | 'en' = 'de';
 export const categories = ['proxy', 'management', 'data', 'code', 'auth', 'monitoring'] as const;
 export type Category = (typeof categories)[number];
 
+/**
+ * Filterable fields of a homelab in the showcase (content/homelabs). Labels live in src/i18n/*.json as
+ * `homelabs.<field>.<value>`. Adding a value here also needs a label and an option in .github/ISSUE_TEMPLATE/homelab.yml.
+ */
+export const homelabFacets = {
+  location: ['local', 'hybrid', 'cloud'],
+  platform: ['bare-metal', 'proxmox', 'truenas', 'unraid', 'nas', 'kubernetes', 'swarm', 'other'],
+  management: ['cli', 'compose', 'portainer', 'dockhand', 'dockge', 'komodo', 'gitops', 'ansible', 'other'],
+  proxy: ['traefik', 'caddy', 'npm', 'nginx', 'haproxy', 'none', 'other'],
+  access: ['port-forwarding', 'vpn', 'tunnel', 'vps', 'lan-only'],
+} as const;
+export type HomelabFacet = keyof typeof homelabFacets;
+
 /** Reverse proxies a visitor can pick in "Mein Setup". */
 export const proxies = ['traefik', 'caddy', 'npm', 'none'] as const;
 export type Proxy = (typeof proxies)[number];

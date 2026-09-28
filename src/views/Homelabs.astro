@@ -1,0 +1,189 @@
+---
+import Base from '../layouts/Base.astro';
+import { homelabFacets, site, type HomelabFacet } from '../config/site';
+import { getHomelabs } from '../lib/content';
+import { t, type Lang } from '../lib/i18n';
+import { url } from '../lib/routes';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const labs = await getHomelabs();
+const values = (l: (typeof labs)[number], f: HomelabFacet): string[] => [l.data[f]].flat();
+/** Only offer filter options that at least one homelab uses */
+const facets = (Object.keys(homelabFacets) as HomelabFacet[]).map((f) => ({
+  id: f,
+  options: homelabFacets[f]
+    .map((v) => ({ v, n: labs.filter((l) => values(l, f).includes(v)).length }))
+    .filter((o) => o.n > 0),
+}));
+const submit = `${site.repo}/issues/new?template=homelab.yml`;
+---
+
+<Base lang={lang} title={t(lang, 'homelabs.title')} description={t(lang, 'homelabs.lead')} alternates={{ de: url.section('de', 'homelabs'), en: url.section('en', 'homelabs') }} nav="homelabs">
+  <main class="wrap labs">
+    <div class="head">
+      <div class="head-text">
+        <h1 class="h1">{t(lang, 'homelabs.title')}</h1>
+        <p class="lead">{t(lang, 'homelabs.lead')}</p>
+      </div>
+      <a class="btn btn-primary" href={submit}>{t(lang, 'homelabs.submitCta')} ↗</a>
+    </div>
+
+    <div class="filters card" data-lab-filters>
+      <div class="search-row">
+      <label class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C8894" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5 20 20"></path></svg>
+        <input type="search" placeholder={t(lang, 'homelabs.filter')} aria-label={t(lang, 'homelabs.filter')} data-lab-q />
+      </label>
+      <button type="button" class="toggle" aria-expanded="false" data-lab-toggle>{t(lang, 'homelabs.filters')} <span data-lab-active></span></button>
+      </div>
+      {
+        facets.map((f) => (
+          <div class="facet" role="group" aria-label={t(lang, `homelabs.field.${f.id}`)}>
+            <span class="facet-l">{t(lang, `homelabs.field.${f.id}`)}</span>
+            <div class="opts">
+              {f.options.map((o) => (
+                <button type="button" class="opt" aria-pressed="false" data-facet={f.id} data-value={o.v}>
+                  {t(lang, `homelabs.${f.id}.${o.v}`)} <span>{o.n}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+      <div class="status">
+        <span data-lab-count data-template={t(lang, 'homelabs.count')} data-total={labs.length}>{t(lang, 'homelabs.count', { n: labs.length, total: labs.length })}</span>
+        <button type="button" class="link-btn" data-lab-reset hidden>{t(lang, 'homelabs.reset')}</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      {
+        labs.map((l) => (
+          <a
+            class="lab card"
+            href={url.homelab(lang, l.id)}
+            data-lab
+            {...Object.fromEntries(facets.map((f) => [`data-f-${f.id}`, values(l, f.id).join(' ')]))}
+            data-text={[l.data.name, l.data.author, l.data.summary, l.data.hardware, ...l.data.services].join(' ').toLowerCase()}
+          >
+            <div class="lab-head">
+              <strong>{l.data.name}</strong>
+              {l.data.example && <span class="tag ex">{t(lang, 'homelabs.example')}</span>}
+            </div>
+            <span class="by">
+              {t(lang, 'homelabs.by', { name: l.data.author })} · {t(lang, 'homelabs.serversN', { n: l.data.servers })} · {t(lang, `homelabs.location.${l.data.location}`)}
+            </span>
+            <p>{l.data.summary}</p>
+            <div class="chips">
+              {[...l.data.platform.map((v) => t(lang, `homelabs.platform.${v}`)), ...l.data.management.map((v) => t(lang, `homelabs.management.${v}`)), ...l.data.proxy.filter((v) => v !== 'none').map((v) => t(lang, `homelabs.proxy.${v}`))].map((c) => (
+                <span class="chip">{c}</span>
+              ))}
+            </div>
+          </a>
+        ))
+      }
+      <a class="submit" href={submit}>
+        <strong>{t(lang, 'homelabs.submitTitle')}</strong>
+        <span>{t(lang, 'homelabs.submitText')}</span>
+        <span class="submit-cta">{t(lang, 'homelabs.submitCta')} ↗</span>
+      </a>
+    </div>
+    <p class="muted" data-lab-none hidden>{t(lang, 'homelabs.none')}</p>
+  </main>
+</Base>
+
+<script>
+  const q = document.querySelector<HTMLInputElement>('[data-lab-q]')!;
+  const opts = [...document.querySelectorAll<HTMLButtonElement>('[data-facet]')];
+  const cards = [...document.querySelectorAll<HTMLElement>('[data-lab]')];
+  const count = document.querySelector<HTMLElement>('[data-lab-count]')!;
+  const reset = document.querySelector<HTMLButtonElement>('[data-lab-reset]')!;
+
+  // Within a filter group any selected value matches (OR), across groups all must match (AND)
+  function apply() {
+    const term = q.value.trim().toLowerCase();
+    const active = new Map<string, string[]>();
+    for (const o of opts) if (o.getAttribute('aria-pressed') === 'true') active.set(o.dataset.facet!, [...(active.get(o.dataset.facet!) ?? []), o.dataset.value!]);
+    let n = 0;
+    for (const c of cards) {
+      const show =
+        (!term || c.dataset.text!.includes(term)) &&
+        [...active].every(([f, vals]) => {
+          const have = (c.getAttribute(`data-f-${f}`) ?? '').split(' ');
+          return vals.some((v) => have.includes(v));
+        });
+      c.hidden = !show;
+      if (show) n++;
+    }
+    count.textContent = count.dataset.template!.replace('{n}', String(n)).replace('{total}', count.dataset.total!);
+    document.querySelector<HTMLElement>('[data-lab-none]')!.hidden = n > 0;
+    reset.hidden = !term && active.size === 0;
+    const sel = opts.filter((o) => o.getAttribute('aria-pressed') === 'true').length;
+    document.querySelector<HTMLElement>('[data-lab-active]')!.textContent = sel ? `(${sel})` : '';
+  }
+  // On small screens the filter groups are collapsed behind a button
+  const toggle = document.querySelector<HTMLButtonElement>('[data-lab-toggle]')!;
+  toggle.addEventListener('click', () => {
+    const open = toggle.getAttribute('aria-expanded') !== 'true';
+    toggle.setAttribute('aria-expanded', String(open));
+    document.querySelector('[data-lab-filters]')!.classList.toggle('is-open', open);
+  });
+  q.addEventListener('input', apply);
+  for (const o of opts)
+    o.addEventListener('click', () => {
+      o.setAttribute('aria-pressed', String(o.getAttribute('aria-pressed') !== 'true'));
+      apply();
+    });
+  reset.addEventListener('click', () => {
+    q.value = '';
+    opts.forEach((o) => o.setAttribute('aria-pressed', 'false'));
+    apply();
+  });
+</script>
+
+<style>
+  .labs { padding-top: 48px; padding-bottom: 88px; display: flex; flex-direction: column; gap: 24px; }
+  .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+  .head-text { display: flex; flex-direction: column; gap: 10px; max-width: 680px; }
+  .filters { border-radius: 20px; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+  .search-row { display: flex; gap: 10px; align-items: center; }
+  .toggle { display: none; -webkit-tap-highlight-color: transparent; height: 44px; flex: none; border: 1.5px solid var(--line-2); background: #fff; border-radius: 999px; padding: 0 16px; font-size: 14px; font-weight: 600; color: var(--text-2); }
+  .toggle[aria-expanded='true'] { border-color: var(--accent); color: var(--accent-600); }
+  .search { flex: 1; height: 44px; max-width: 420px; border-radius: 999px; background: var(--bg); display: flex; align-items: center; gap: 10px; padding: 0 16px; }
+  .search:focus-within { box-shadow: 0 0 0 2px var(--accent); }
+  .search input { flex: 1; border: none; background: none; font-size: 14.5px; min-width: 0; outline: none; }
+  .facet { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; align-items: baseline; }
+  .facet-l { font-size: 13px; font-weight: 600; color: var(--text-4); }
+  .opts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .opt { -webkit-tap-highlight-color: transparent; border: 1.5px solid var(--line-2); background: #fff; color: var(--text-2); border-radius: 999px; padding: 5px 12px; font-size: 13.5px; }
+  .opt:hover { border-color: var(--accent); }
+  .opt span { color: var(--faint); font-size: 12.5px; }
+  .opt[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .opt[aria-pressed='true'] span { color: #fff; opacity: 0.75; }
+  .status { display: flex; gap: 16px; align-items: center; font-size: 13.5px; color: var(--muted); padding-top: 4px; border-top: 1px solid var(--line-3); padding-top: 12px; }
+  .status .link-btn { color: var(--accent-600); font-weight: 600; font-size: 13.5px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+  .lab { padding: 22px; display: flex; flex-direction: column; gap: 10px; color: var(--text); }
+  .lab:hover { box-shadow: var(--ring); text-decoration: none; color: var(--text); }
+  .lab[hidden] { display: none; }
+  .lab-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+  .lab-head strong { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+  .ex { background: var(--warn-bg); color: var(--warn-fg); }
+  .by { font-size: 13px; color: var(--muted); }
+  .lab p { font-size: 14.5px; line-height: 1.55; color: var(--text-3); flex: 1; text-wrap: pretty; }
+  .submit { border: 2px dashed var(--dash); border-radius: 20px; padding: 22px; display: flex; flex-direction: column; justify-content: center; gap: 8px; color: var(--text); min-height: 200px; }
+  .submit:hover { text-decoration: none; border-color: var(--accent); color: var(--text); }
+  .submit strong { font-size: 17px; }
+  .submit span { font-size: 14.5px; line-height: 1.55; color: var(--text-4); }
+  .submit .submit-cta { font-size: 14px; font-weight: 600; color: var(--accent-600); margin-top: 6px; }
+  @media (max-width: 720px) {
+    .labs { padding-top: 32px; }
+    .facet { grid-template-columns: minmax(0, 1fr); gap: 6px; display: none; }
+    .filters.is-open .facet { display: grid; }
+    .search { max-width: none; }
+    .toggle { display: block; }
+  }
+</style>
