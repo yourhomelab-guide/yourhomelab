@@ -9,7 +9,7 @@ import Footer from '../components/Footer.astro';
 import SetupDialog from '../components/SetupDialog.astro';
 import SearchDialog from '../components/SearchDialog.astro';
 import { site } from '../config/site';
-import { otherLang, t, type Lang } from '../lib/i18n';
+import { t, type Lang } from '../lib/i18n';
 import type { Section } from '../lib/routes';
 
 interface Props {
@@ -24,7 +24,6 @@ interface Props {
 const { lang, title, description = t(lang, 'meta.description'), alternates, nav, noindex = false } = Astro.props;
 const fullTitle = title ? `${title} · ${site.name}` : `${site.name} · ${t(lang, 'home.title')}`;
 const canonical = new URL(Astro.url.pathname, site.url).href;
-const other = otherLang(lang);
 
 const L = 'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD';
 const LX = 'U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF';
@@ -51,7 +50,7 @@ const uiJson = JSON.stringify(Object.fromEntries(uiKeys.map((k) => [k, t(lang, k
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={canonical} />
     {Object.entries(alternates).map(([l, href]) => <link rel="alternate" hreflang={l} href={new URL(href, site.url).href} />)}
-    {alternates.de && alternates.en && <link rel="alternate" hreflang="x-default" href={new URL(alternates.en, site.url).href} />}
+    {alternates.de && alternates.en && <link rel="alternate" hreflang="x-default" href={new URL(alternates.de, site.url).href} />}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={site.name} />
     <meta property="og:title" content={title ?? site.name} />
@@ -78,17 +77,6 @@ const uiJson = JSON.stringify(Object.fromEntries(uiKeys.map((k) => [k, t(lang, k
         </div>
       )
     }
-    {
-      alternates[other] && (
-        <div id="lang-hint" class="lang-hint" data-lang={other} lang={other} hidden>
-          <div class="wrap lang-hint-in">
-            <span>{t(other, 'lang.hint')}</span>
-            <a href={alternates[other]} hreflang={other}>{t(other, 'lang.hintCta')} →</a>
-            <button type="button" aria-label={t(other, 'lang.hintClose')}>×</button>
-          </div>
-        </div>
-      )
-    }
     <Header lang={lang} nav={nav} alternates={alternates} />
     <div id="main" tabindex="-1">
       <slot />
@@ -109,9 +97,5 @@ const uiJson = JSON.stringify(Object.fromEntries(uiKeys.map((k) => [k, t(lang, k
   .banner-label { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: 12.5px; background: #f6c627; color: #3d2e00; padding: 3px 9px; border-radius: 6px; }
   .banner-text { flex: 1; min-width: 240px; }
   .banner a { color: #4a3a00; font-weight: 600; text-decoration: underline; }
-  .lang-hint { background: var(--text); color: #fff; }
-  .lang-hint-in { padding-block: 10px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; font-size: 14px; }
-  .lang-hint a { color: #8fdcf2; font-weight: 600; }
-  .lang-hint button { margin-left: auto; border: none; background: rgba(255, 255, 255, 0.12); color: #fff; width: 28px; height: 28px; border-radius: 50%; font-size: 16px; line-height: 1; }
   #main:focus { outline: none; }
 </style>

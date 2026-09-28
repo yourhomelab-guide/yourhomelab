@@ -22,22 +22,3 @@ document.addEventListener('click', (e) => {
   if (pre) copyText(btn, codeText(pre));
 });
 
-// Language hint for visitors whose browser prefers the other language
-const hint = document.getElementById('lang-hint');
-if (hint) {
-  const target = hint.dataset.lang!;
-  let dismissed = false;
-  try {
-    dismissed = localStorage.getItem('yhl-lang-hint') === '1';
-  } catch {}
-  const prefers = (navigator.languages ?? [navigator.language]).map((l) => l.slice(0, 2).toLowerCase());
-  const current = document.documentElement.lang;
-  if (!dismissed && prefers.indexOf(target) !== -1 && (prefers.indexOf(current) === -1 || prefers.indexOf(target) < prefers.indexOf(current))) hint.hidden = false;
-  hint.querySelector('button')?.addEventListener('click', () => {
-    hint.hidden = true;
-    try {
-      localStorage.setItem('yhl-lang-hint', '1');
-    } catch {}
-  });
-}
-

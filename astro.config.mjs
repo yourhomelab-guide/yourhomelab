@@ -33,6 +33,8 @@ const sitemapNoindex = () => ({
 export default defineConfig({
   site: 'https://yourhomelab.guide',
   trailingSlash: 'always',
+  // "/" has no page of its own; on the live server public/.htaccess sends a 301 before this is reached
+  redirects: { '/': '/de/' },
   build: { format: 'directory', inlineStylesheets: 'auto' },
   compressHTML: true,
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },

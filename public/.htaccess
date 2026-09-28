@@ -17,10 +17,8 @@ ErrorDocument 404 /404.html
   RewriteCond %{HTTP_HOST} ^www\. [NC]
   RewriteRule ^ https://yourhomelab.guide%{REQUEST_URI} [R=301,L,NE]
 
-  # Language switch at "/": German browsers → /de/, everyone else → /en/ (302, so it can change per visitor)
-  RewriteCond %{HTTP:Accept-Language} ^\s*de [NC]
-  RewriteRule ^$ /de/ [R=302,L,E=LANGREDIRECT:1]
-  RewriteRule ^$ /en/ [R=302,L,E=LANGREDIRECT:1]
+  # "/" always goes to the German start page; the language is switched with DE/EN in the header
+  RewriteRule ^$ /de/ [R=301,L]
 
   # Trailing slash for directories (the site uses /path/ URLs)
   RewriteCond %{REQUEST_FILENAME} -d
@@ -111,8 +109,6 @@ AddType application/manifest+json .webmanifest
   Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=(), browsing-topics=()"
   Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://stats.flystart-solutions.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://stats.flystart-solutions.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
   Header unset X-Powered-By
-  Header always set Vary "Accept-Language" env=REDIRECT_LANGREDIRECT
-  Header always set Vary "Accept-Language" env=LANGREDIRECT
 </IfModule>
 
 FileETag MTime Size
