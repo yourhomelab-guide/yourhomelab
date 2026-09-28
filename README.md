@@ -46,7 +46,7 @@ Secrets (Settings → Secrets and variables → Actions):
 
 | Name | Where | Content |
 | --- | --- | --- |
-| `DEPLOY_HOST` | Environment `production` | e.g. `wwwXXX.your-server.de` (konsoleH → access data) |
+| `DEPLOY_HOST` | Environment `production` | Address of the host/webspace|
 | `DEPLOY_USER` | Environment `production` | SFTP/FTP user |
 | `DEPLOY_PASSWORD` | Environment `production` | Password of that user |
 | `DEPLOY_PATH` | Environment `production` (optional) | Target folder, default `public_html` |
