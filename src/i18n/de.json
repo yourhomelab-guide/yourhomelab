@@ -119,7 +119,7 @@
   "service.forcedSub": "{name} funktioniert nur mit eigener Subdomain. Die Vorlage nutzt deshalb eine Subdomain statt einer Pfad-URL.",
   "service.step1": "Ordner anlegen",
   "service.step1Text": "Lege den Stack-Ordner an.",
-  "service.step1TextNet": "Lege den Stack-Ordner an. Das gemeinsame Proxy-Netzwerk brauchst du nur beim ersten Dienst.",
+  "service.networkText": "Nur beim ersten Dienst: das gemeinsame Proxy-Netzwerk anlegen. Existiert es schon, überspringst du diesen Befehl.",
   "service.step2": "Dateien anlegen",
   "service.step2Text": "Kopiere die Dateien in den Ordner. Zufallswerte für Passwörter und Schlüssel sind in der .env schon eingetragen, sie werden nur in deinem Browser erzeugt.",
   "service.step3": "Starten",

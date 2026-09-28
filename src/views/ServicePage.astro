@@ -70,11 +70,17 @@ const issueUrl = `${site.repo}/issues/new?template=fehler.yml&title=${encodeURIC
             <span class="num-badge">1</span>
             <div class="step-body">
               <h2>{t(lang, 'service.step1')}</h2>
-              <p data-v-show="net" hidden={!v.net}>{t(lang, 'service.step1TextNet')}</p>
-              <p data-v-show="noNet" hidden={v.net}>{t(lang, 'service.step1Text')}</p>
+              <p>{t(lang, 'service.step1Text')}</p>
               <div class="code">
                 <pre data-v="mkdir" set:html={renderCode(v.mkdir, { values })} />
                 <button type="button" class="copy-btn" data-copy>{t(lang, 'code.copy')}</button>
+              </div>
+              <div class="once" data-v-show="net" hidden={!v.net}>
+                <p>{t(lang, 'service.networkText')}</p>
+                <div class="code">
+                  <pre set:html={renderCode('docker network create __NETWORK__', { values })} />
+                  <button type="button" class="copy-btn" data-copy>{t(lang, 'code.copy')}</button>
+                </div>
               </div>
             </div>
           </div>
@@ -221,6 +227,9 @@ const issueUrl = `${site.repo}/issues/new?template=fehler.yml&title=${encodeURIC
   .step-body { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
   .step-body h2 { margin-top: 10px; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; }
   .step-body p { font-size: 15.5px; line-height: 1.6; color: var(--text-3); }
+  .once { display: flex; flex-direction: column; gap: 10px; padding-top: 14px; border-top: 1px dashed var(--line-2); }
+  .once[hidden] { display: none; }
+  .once p { font-size: 14px; color: var(--muted); }
   .done { padding: 22px 26px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
   .done-t { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
   .done-t span { font-size: 14px; color: var(--muted); }

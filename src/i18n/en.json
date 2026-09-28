@@ -119,7 +119,7 @@
   "service.forcedSub": "{name} only works on its own subdomain, so the template uses a subdomain instead of a path URL.",
   "service.step1": "Create the folder",
   "service.step1Text": "Create the stack folder.",
-  "service.step1TextNet": "Create the stack folder. You only need to create the shared proxy network for your first service.",
+  "service.networkText": "Only for your first service: create the shared proxy network. If it already exists, skip this command.",
   "service.step2": "Create the files",
   "service.step2Text": "Copy the files into the folder. Random values for passwords and keys are already filled into the .env, generated only in your browser.",
   "service.step3": "Start",

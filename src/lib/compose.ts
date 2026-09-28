@@ -39,9 +39,8 @@ export interface Variant {
   url: string;
   /** Service needs a subdomain although the visitor picked path URLs */
   forcedSub: boolean;
-  /** The proxy network has to exist (and noNet as its inverse, for toggling texts) */
+  /** The proxy network has to exist (shown as a separate one-time command) */
   net: boolean;
-  noNet: boolean;
 }
 
 export type VariantKey = `${Proxy}.${'sub' | 'path'}.${'stack' | 'central'}`;
@@ -188,10 +187,7 @@ function buildVariant(
   }
 
   const net = proxy !== 'none' || meta.reverseProxy;
-  const mkdir = [
-    `mkdir -p __ROOT__/${meta.id}${dataMode === 'central' && dirs.length ? ` __DATA_ROOT__/${meta.id}` : ''}`,
-    ...(net ? ['docker network create __NETWORK__'] : []),
-  ].join('\n');
+  const mkdir = `mkdir -p __ROOT__/${meta.id}${dataMode === 'central' && dirs.length ? ` __DATA_ROOT__/${meta.id}` : ''}`;
   const up = [`cd __ROOT__/${meta.id}`, 'docker compose up -d'].join('\n');
 
   return {
@@ -205,7 +201,6 @@ function buildVariant(
     url,
     forcedSub: urlMode === 'path' && (meta.subdomainOnly || meta.reverseProxy),
     net,
-    noNet: !net,
   };
 }
 

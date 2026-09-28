@@ -47,12 +47,12 @@
     "hash": "53fb7aed617bbbfa",
     "by": "claude"
   },
-  "content/guides/02-securing/03-hardening-ssh/de.mdx": {
-    "hash": "5ac10d0bf0605303",
-    "by": "claude"
-  },
   "content/guides/02-securing/02-users-sudo/de.mdx": {
     "hash": "f62488fada6311a7",
+    "by": "claude"
+  },
+  "content/guides/02-securing/03-hardening-ssh/de.mdx": {
+    "hash": "5ac10d0bf0605303",
     "by": "claude"
   },
   "content/guides/02-securing/04-firewall-ufw/de.mdx": {
@@ -785,6 +785,10 @@
   },
   "src/i18n/de.json#service.image": {
     "hash": "1aa4cb0bcca76e92",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.networkText": {
+    "hash": "d1ff5fd62e929781",
     "by": "claude"
   },
   "src/i18n/de.json#service.npm": {

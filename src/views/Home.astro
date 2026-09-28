@@ -175,6 +175,48 @@ const doors = [
   <GuidesData lang={lang} />
 </Base>
 
+<script>
+  // FAQ accordion: animate open/close with the Web Animations API (works in every browser,
+  // unlike ::details-content). Only one answer is open at a time, like name="faq" without JS.
+  const items = [...document.querySelectorAll<HTMLDetailsElement>('details.qa')];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const opts = { duration: 260, easing: 'cubic-bezier(0.2, 0, 0, 1)' };
+
+  function setOpen(d: HTMLDetailsElement, open: boolean) {
+    const body = d.querySelector<HTMLElement>('.qa-a')!;
+    body.getAnimations().forEach((a) => a.cancel());
+    if (reduce.matches) {
+      d.open = open;
+      return;
+    }
+    if (open) {
+      d.classList.remove('is-closing');
+      d.open = true;
+      const h = body.offsetHeight;
+      body.animate([{ height: '0px', paddingBottom: '0px', opacity: 0 }, { height: `${h}px`, opacity: 1 }], opts);
+    } else {
+      d.classList.add('is-closing');
+      const h = body.offsetHeight;
+      const a = body.animate([{ height: `${h}px` }, { height: '0px', paddingBottom: '0px', opacity: 0 }], opts);
+      a.onfinish = () => {
+        d.open = false;
+        d.classList.remove('is-closing');
+      };
+    }
+  }
+
+  for (const d of items) {
+    // Closing the others is done here, animated; the native exclusive group would snap them shut
+    d.removeAttribute('name');
+    d.querySelector('summary')!.addEventListener('click', (e) => {
+      e.preventDefault();
+      const open = !d.open || d.classList.contains('is-closing');
+      if (open) items.filter((o) => o !== d && o.open && !o.classList.contains('is-closing')).forEach((o) => setOpen(o, false));
+      setOpen(d, open);
+    });
+  }
+</script>
+
 <style>
   .home { padding-bottom: 80px; display: flex; flex-direction: column; gap: 72px; }
   .hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 56px; align-items: center; padding-top: 72px; }
@@ -228,16 +270,14 @@ const doors = [
   .faq-intro h2 { font-size: 32px; font-weight: 700; letter-spacing: -0.025em; }
   .faq-intro p { font-size: 16px; line-height: 1.6; color: var(--text-3); }
   .faq-list { display: flex; flex-direction: column; gap: 8px; }
-  .qa { border-radius: 16px; overflow: hidden; interpolate-size: allow-keywords; }
-  .qa summary { list-style: none; padding: 18px 20px 18px 22px; display: flex; justify-content: space-between; align-items: center; gap: 16px; cursor: pointer; font-size: 16px; font-weight: 600; line-height: 1.4; }
+  .qa { border-radius: 16px; overflow: hidden; }
+  .qa summary { -webkit-tap-highlight-color: transparent; list-style: none; padding: 18px 20px 18px 22px; display: flex; justify-content: space-between; align-items: center; gap: 16px; cursor: pointer; font-size: 16px; font-weight: 600; line-height: 1.4; }
   .qa summary::-webkit-details-marker { display: none; }
   .qa summary:hover { color: var(--accent-600); }
   .chev { width: 20px; height: 20px; flex: none; display: flex; align-items: center; justify-content: center; transition: transform 0.25s ease; }
   .chev::before { content: ''; width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: translateY(-2px) rotate(45deg); }
-  .qa[open] .chev { transform: rotate(180deg); }
-  .qa::details-content { block-size: 0; overflow: hidden; transition: block-size 0.28s ease, content-visibility 0.28s allow-discrete; }
-  .qa[open]::details-content { block-size: auto; }
-  .qa-a { padding: 0 64px 20px 22px; font-size: 15px; line-height: 1.65; color: var(--text-3); text-wrap: pretty; }
+  .qa[open]:not(.is-closing) .chev { transform: rotate(180deg); }
+  .qa-a { overflow: hidden; padding: 0 64px 20px 22px; font-size: 15px; line-height: 1.65; color: var(--text-3); text-wrap: pretty; }
   .qa-a :global(p) { margin: 0; }
   .qa-a :global(code) { font-family: var(--mono); font-size: 0.9em; }
 
