@@ -90,7 +90,8 @@ sudo chown -R __PUID__:__PGID__ __DATA(myapp)__
 mkdir -p __DATA(myapp)__
 ```
 
-Die Doku des Images nennt meist, welche UID es erwartet. Oft steht dort auch ein fertiger `chown`-Befehl.
+Die Doku des Images nennt meist, welche UID es erwartet. Oft steht dort auch ein fertiger `chown`-Befehl. Welche
+Bind Mounts und Variablen deine `compose.yaml` setzt, zeigt dir der [Compose-Erklärer](/de/werkzeuge/compose-erklaerer/) Zeile für Zeile.
 
 <Callout type="warning" title="Kein chmod 777">
   `chmod -R 777` macht den Fehler scheinbar weg, erlaubt aber jedem Prozess auf dem Server, die Daten zu lesen und

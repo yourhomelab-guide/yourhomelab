@@ -162,7 +162,7 @@ http:
 Ab Version 2026.8 übernimmt Home Assistant einen vorhandenen Block beim Update in die Oberfläche und bittet dich unter **Einstellungen → System → Reparaturen**, ihn danach aus der Datei zu löschen.
 </Callout>
 
-Unter `https://home.__DOMAIN__` sollte Home Assistant jetzt laden. Trag die Adresse zum Schluss unter **Einstellungen → System → Netzwerk** als Home-Assistant-URL ein und nutze sie auch in der Companion-App auf dem Handy. Die Regel für dein Heimnetz auf Port `8123` kannst du danach wieder löschen, wenn du den direkten Zugang nicht mehr brauchst (`sudo ufw status numbered`, dann `sudo ufw delete <Nummer>`).
+Unter `https://home.__DOMAIN__` sollte Home Assistant jetzt laden. Meldet der Proxy stattdessen `502 Bad Gateway`, erreicht er Port `8123` nicht. Meist fehlt die Firewall-Regel von eben, mehr unter [Bad Gateway und 404 vom Proxy](/de/nachschlagen/bad-gateway/). Trag die Adresse zum Schluss unter **Einstellungen → System → Netzwerk** als Home-Assistant-URL ein und nutze sie auch in der Companion-App auf dem Handy. Die Regel für dein Heimnetz auf Port `8123` kannst du danach wieder löschen, wenn du den direkten Zugang nicht mehr brauchst (`sudo ufw status numbered`, dann `sudo ufw delete <Nummer>`).
 
 Soll Home Assistant auch von unterwegs erreichbar sein, gelten dieselben Überlegungen wie bei jedem Dienst: Ein [VPN](/de/einrichten/vpn-wireguard/) ist der sicherste Weg. Login-Schutz wie Tinyauth vor Home Assistant verträgt sich nicht mit der Companion-App.
 </Step>

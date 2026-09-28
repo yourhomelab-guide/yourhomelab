@@ -80,6 +80,9 @@ Das erzeugt 64 Zeichen aus `0-9` und `a-f`. Die Variante `openssl rand -base64 3
 
 Nimm für jeden Dienst und jede Datenbank ein eigenes Secret. Wird eins bekannt, ist nur ein Dienst betroffen.
 
+Manche Dienste wie Tinyauth oder Traefiks Basic Auth erwarten statt des Passworts einen **bcrypt-Hash**. Den erzeugst du
+mit dem Werkzeug [Passwort-Hash](/de/werkzeuge/passwort-hash/), direkt im Browser.
+
 ## Wo du den Überblick behältst
 
 Die `.env` auf dem Server ist die Stelle, an der der Dienst das Secret liest. Sie ist aber kein guter Ort, um sich zu

@@ -150,7 +150,7 @@ Auf deinem Laptop oder PC hinterlegst du deinen normalen öffentlichen SSH-Schl�
 git clone ssh://git@git.__DOMAIN__:2222/DEIN-NAME/homelab.git
 ```
 
-Ab jetzt gilt: Änderungen machst du hier, committest und pushst sie. Auf dem Server bearbeitest du die Compose-Dateien nicht mehr direkt, sonst gibt es Konflikte beim nächsten `git pull`. Nur die `.env`-Dateien pflegst du weiterhin auf dem Server.
+Ab jetzt gilt: Änderungen machst du hier, committest und pushst sie. Auf dem Server bearbeitest du die Compose-Dateien nicht mehr direkt, sonst gibt es Konflikte beim nächsten `git pull`. Nur die `.env`-Dateien pflegst du weiterhin auf dem Server. Einen neuen Stack legst du als Ordner im Repository an. Die passende `compose.yaml` erzeugt dir der [Stack-Builder](/de/werkzeuge/stack-builder/), und eine fremde aus einer Projekt-Doku erklärt dir der [Compose-Erklärer](/de/werkzeuge/compose-erklaerer/).
 </Step>
 
 <Step title="Deploy-Skript auf dem Server">
@@ -242,7 +242,7 @@ Ein Runner, der direkt auf dem Host läuft und Docker steuern darf, hat praktisc
 
 - **`git pull` bricht ab mit „Not possible to fast-forward“:** Auf dem Server wurde eine Datei geändert, die auch im Repository geändert wurde. Mit `git status` und `git diff` siehst du, was es ist. Übernimm die Änderung in dein Repository auf dem Rechner und setz die Datei auf dem Server mit `git checkout -- <datei>` zurück.
 - **Ein Update ist kaputt:** Mach den Commit auf deinem Rechner mit `git revert` rückgängig und pushe. Beim nächsten Lauf rollt das Skript die alte Version wieder aus.
-- **Neuer Stack startet nicht:** Wahrscheinlich fehlt die `.env`. Die legst du auf dem Server von Hand an, zum Beispiel aus der `.env.example`.
+- **Neuer Stack startet nicht:** Wahrscheinlich fehlt die `.env`. Die legst du auf dem Server von Hand an, zum Beispiel aus der `.env.example`. Liegt es nicht daran, hilft [Fehlersuche: erste Schritte](/de/nachschlagen/fehlersuche-erste-schritte/).
 
 ## Weiterlesen
 

@@ -102,6 +102,8 @@ Streng genommen bräuchten 80 und 443 für einen Proxy im Container deshalb gar 
 
 <Callout title="Selbst nachprüfen">
 Was wirklich erreichbar ist, siehst du nur von außen. Auf dem Server zeigt `sudo ss -tlnp` alle Ports, auf denen etwas lauscht. Von einem anderen Rechner im Netz testest du einen Port zum Beispiel mit `nc -zv 192.168.1.10 8080`. Kommt dort eine Verbindung zustande, obwohl UFW den Port nicht erlaubt, hat ein Container ihn veröffentlicht.
+
+Meldet Docker später beim Start, dass ein Port schon vergeben ist, findest du mit demselben Befehl heraus, wer ihn belegt. Mehr dazu unter [Port belegt](/de/nachschlagen/port-belegt/).
 </Callout>
 
 Es gibt Projekte wie [ufw-docker](https://github.com/chaifeng/ufw-docker), die UFW und Docker zusammenbringen. Für den Einstieg ist die einfache Regel oben aber robuster: keine unnötigen Ports veröffentlichen. Warum das so viel bringt, erklärt [Angriffsfläche klein halten](/de/nachschlagen/angriffsflaeche/).

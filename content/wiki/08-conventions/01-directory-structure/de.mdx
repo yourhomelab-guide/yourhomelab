@@ -86,14 +86,17 @@ Für den Einstieg empfehlen wir **einen einzigen Wurzelordner** mit **einem Unte
 Das ist Variante (e) unter `/srv`. Die Vorteile:
 
 - **Ein Ordner fürs Backup.** Sicherst du `/srv/homelab`, hast du Konfiguration, Secrets und Daten aller Dienste.
-- **Alles beieinander.** Willst du einen Dienst umziehen oder löschen, nimmst du genau einen Ordner.
+- **Alles beieinander.** Willst du einen Dienst umziehen oder löschen, nimmst du genau einen Ordner. Das gilt auch
+  für den [Umzug auf neue Hardware](/de/einrichten/umzug-neue-hardware/).
 - **Kurze Pfade in der `compose.yaml`.** Persistente Daten mountest du als Bind Mount nach `./data/…`. Der Pfad ist
   relativ zum Stack-Ordner, die Datei funktioniert also überall.
 
 Den Namen `homelab` darfst du natürlich durch deinen eigenen ersetzen, etwa `/srv/docker` oder `/srv/zuhause`. Trag
 den Ordner unter "Mein Setup" ein, dann passen sich alle Befehle und Vorlagen dieser Seite an. Dort heißt er
 `__ROOT__`, der Standard ist `/srv/homelab`. Wie du die Struktur anlegst und die Rechte setzt, zeigt der Guide
-[Verzeichnisstruktur anlegen](/de/einrichten/verzeichnisstruktur-anlegen/).
+[Verzeichnisstruktur anlegen](/de/einrichten/verzeichnisstruktur-anlegen/). Willst du gleich mehrere Dienste
+einrichten, erzeugt der [Stack-Builder](/de/werkzeuge/stack-builder/) die Ordner mit `compose.yaml` und `.env` in
+genau dieser Struktur.
 
 ## Alternative für Fortgeschrittene
 

@@ -59,6 +59,8 @@ Relative Pfade wie `./data` beziehen sich immer auf den Ordner, in dem die `comp
 
 Variablen wie `${TZ}` liest Compose aus einer Datei `.env` im selben Ordner. So bleibt die `compose.yaml` frei von Passwörtern und du kannst sie teilen.
 
+Hast du eine `compose.yaml` aus der Doku eines Projekts vor dir, erklärt dir der [Compose-Erklärer](/de/werkzeuge/compose-erklaerer/) jede Zeile und zeigt, was du für dein Setup anpassen musst.
+
 ## Die wichtigsten Befehle
 
 Alle Befehle führst du im Ordner des Stacks aus:
@@ -86,6 +88,8 @@ docker compose up -d
 ```
 
 Compose erstellt nur die Container neu, deren Image oder Konfiguration sich geändert hat.
+
+Startet ein Stack nicht wie erwartet, zeigt [Fehlersuche: erste Schritte](/de/nachschlagen/fehlersuche-erste-schritte/), wie du mit `ps`, `logs` und `config` der Ursache auf die Spur kommst.
 
 ## docker compose oder docker-compose?
 

@@ -75,6 +75,8 @@ vault.__DOMAIN__ {
 
 Beim Nginx Proxy Manager trägst du dieselben Angaben in ein Formular ein: Domain, Ziel-Container, Port.
 
+Für einen Dienst, der nicht im [Dienste-Katalog](/de/dienste/) steht, erzeugt die [Proxy-Konfiguration](/de/werkzeuge/proxy-konfiguration/) diese Angaben für deinen Proxy. Antwortet der Proxy danach nur mit „Bad Gateway“ oder 404, hilft [Bad Gateway und 404 vom Proxy](/de/nachschlagen/bad-gateway/).
+
 ## Welchen nehme ich?
 
 - **Du willst lernen und später automatisieren?** Nimm **Traefik**. Die ersten Labels wirken ungewohnt, aber danach gehört die Proxy-Konfiguration zu jedem Dienst dazu, liegt in Dateien und lässt sich mit Git versionieren. Login-Schutz mit Tinyauth oder Pocket ID und CrowdSec binden sich sauber ein. Alle Guides dieser Seite bauen auf Traefik auf: [Reverse Proxy mit Traefik](/de/einrichten/reverse-proxy-traefik/).
@@ -86,7 +88,7 @@ Die Wahl ist nicht endgültig. Deine Dienste merken kaum, welcher Proxy vor ihne
 Mehr zu den einzelnen Proxys findest du auf den Dienstseiten: [Traefik](/de/dienste/traefik/), [Nginx Proxy Manager](/de/dienste/nginx-proxy-manager/) und [Caddy](/de/dienste/caddy/).
 
 <Callout type="warning" title="Nur ein Proxy pro Server">
-Port 80 und 443 kann immer nur ein Programm belegen. Betreibe also nicht zwei Proxys gleichzeitig auf demselben Server. Wenn du umsteigst, stoppe den alten Proxy zuerst.
+Port 80 und 443 kann immer nur ein Programm belegen. Betreibe also nicht zwei Proxys gleichzeitig auf demselben Server. Wenn du umsteigst, stoppe den alten Proxy zuerst. Meldet Docker trotzdem einen belegten Port, siehe [Port belegt](/de/nachschlagen/port-belegt/).
 </Callout>
 
 ## Kurz zusammengefasst

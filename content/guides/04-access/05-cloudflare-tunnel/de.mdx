@@ -102,7 +102,7 @@ Jetzt sagst du Cloudflare, welcher Name zu welchem Dienst führt. Öffne den Tun
 
 Bei der URL trägst du den **Containernamen** und den Port **im Container** ein. Das klappt, weil `cloudflared` und der Dienst im selben Netzwerk `__NETWORK__` hängen. Cloudflare legt den passenden DNS-Eintrag selbst an und kümmert sich um das Zertifikat.
 
-Öffne danach `https://status.__DOMAIN__`. Du solltest Uptime Kuma sehen.
+Öffne danach `https://status.__DOMAIN__`. Du solltest Uptime Kuma sehen. Zeigt Cloudflare stattdessen einen „Bad Gateway“-Fehler, stimmen meist Containername, Port oder Netzwerk nicht, siehe [Bad Gateway](/de/nachschlagen/bad-gateway/).
 </Step>
 
 <Step title="Zugriff absichern">

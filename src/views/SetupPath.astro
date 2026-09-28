@@ -7,6 +7,7 @@ import GuidesData from '../components/GuidesData.astro';
 import { getSetupPath } from '../lib/content';
 import { t, type Lang } from '../lib/i18n';
 import { url } from '../lib/routes';
+import type { ToolId } from '../config/site';
 
 interface Props {
   lang: Lang;
@@ -14,6 +15,17 @@ interface Props {
 const { lang } = Astro.props;
 const { stages, guides } = await getSetupPath(lang);
 const pad = (n: number) => String(n).padStart(2, '0');
+/** Tools that help in each stage, keyed by the stage folder name (English slug) */
+const stageTools: Record<string, ToolId[]> = {
+  preparation: ['assistant', 'ram-planner', 'power-calculator'],
+  securing: ['security-check'],
+  docker: ['stack-builder', 'compose-explainer'],
+  access: ['proxy-config'],
+  'login-protection': ['password-hash', 'security-check'],
+  operations: ['borgmatic', 'docs-export'],
+  deployment: ['compose-explainer', 'stack-builder'],
+  apps: ['stack-builder', 'ram-planner'],
+};
 ---
 
 <Base lang={lang} title={t(lang, 'setup.title')} description={t(lang, 'setup.lead')} alternates={{ de: url.section('de', 'setup'), en: url.section('en', 'setup') }} nav="setup">
@@ -32,6 +44,11 @@ const pad = (n: number) => String(n).padStart(2, '0');
           <div class="bar"><span data-total-bar></span></div>
         </div>
       </div>
+      <p class="helper">
+        {t(lang, 'setup.helper')} <a href={url.tool(lang, 'assistant')}>{t(lang, 'tools.assistant.title')} →</a>
+        <span class="sep">·</span>
+        <a href={url.section(lang, 'tools')}>{t(lang, 'setup.allTools')}</a>
+      </p>
       <StageStrip lang={lang} stages={stages} current={stages[0]?.slug} mode="tabs" />
     </div>
   </div>
@@ -42,6 +59,16 @@ const pad = (n: number) => String(n).padStart(2, '0');
           <div class="kicker">{t(lang, 'setup.stageMeta', { n: pad(s.n), min: s.minutes })}</div>
           <h2>{s.title}</h2>
           <p class="lead">{s.description}</p>
+          {(stageTools[s.slugs.en] ?? []).length > 0 && (
+            <p class="tools">
+              <span>{t(lang, 'setup.stageTools')}</span>
+              {stageTools[s.slugs.en].map((id) => (
+                <a class="chip" href={url.tool(lang, id)}>
+                  {t(lang, `tools.${id}.title`)}
+                </a>
+              ))}
+            </p>
+          )}
           <div class="list">
             {s.guides.map((g, gi) => (
               <a class:list={['guide card', { stub: g.source.data.status === 'stub' }]} href={url.guide(lang, g.slug)} data-guide-item={g.id}>
@@ -89,6 +116,11 @@ const pad = (n: number) => String(n).padStart(2, '0');
 </script>
 
 <style>
+  .helper { font-size: 14.5px; color: var(--text-3); display: flex; gap: 6px 10px; flex-wrap: wrap; align-items: baseline; }
+  .helper a { font-weight: 600; }
+  .helper .sep { color: var(--faint); }
+  .tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 13.5px; color: var(--muted); }
+  .tools .chip:hover { background: var(--accent-50); color: var(--accent-600); text-decoration: none; }
   .top { background: var(--surface); border-bottom: 1px solid var(--line); }
   .top-in { padding-top: 48px; padding-bottom: 28px; display: flex; flex-direction: column; gap: 24px; }
   .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }

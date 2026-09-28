@@ -31,7 +31,7 @@ P=__ROOT__/vaultwarden
 sudo borgmatic list --archive latest --path "${P#/}"
 ```
 
-Prüfe hier, ob alle Stacks, alle `.env`-Dateien und die Datenbank-Dumps enthalten sind.
+Prüfe hier, ob alle Stacks, alle `.env`-Dateien und die Datenbank-Dumps enthalten sind. Fehlt etwas, ergänze die Konfiguration auf dem Server. Das Werkzeug [borgmatic-Konfiguration](/de/werkzeuge/borgmatic-konfiguration/) erzeugt dir auf Wunsch eine neue Fassung.
 </Step>
 
 <Step title="Einzelne Datei zurückholen">
@@ -88,7 +88,7 @@ sudo borgmatic extract --archive latest --path "${P#/}" --destination /tmp/resto
 sudo ls -lh /tmp/restore-test__DATA(authentik)__/db-dump/
 ```
 
-Ist die Datei nur wenige Bytes groß, stimmt etwas mit dem Dump-Befehl in der Konfiguration nicht. Starte dann eine leere Datenbank. Nimm dasselbe Image wie im Stack (steht in der `compose.yaml`), damit die Versionen zusammenpassen:
+Ist die Datei nur wenige Bytes groß, stimmt etwas mit dem Dump-Befehl in der Konfiguration nicht. Starte dann eine leere Datenbank. Nimm dasselbe Image wie im Stack (steht in der `compose.yaml`), damit die Versionen zusammenpassen. Warum das wichtig ist, erklärt [Datenbank startet nach Update nicht](/de/nachschlagen/datenbank-version/):
 
 ```bash
 docker run -d --name restore-test-db \
@@ -140,7 +140,12 @@ repositories:
       label: remote
 
 encryption_passphrase: "{credential file /etc/borgmatic/passphrase}"
+
+# Show archives of every host name, not just this computer's
+match_archives: "*"
 ```
+
+Die letzte Zeile ist wichtig: borgmatic benennt Archive nach dem Hostnamen und zeigt standardmäßig nur die Archive des eigenen Rechners. Der Testrechner heißt anders als dein Server, ohne diese Zeile fänden `repo-list` und `--archive latest` also nichts. Sie gehört nur in diese Restore-Konfiguration, nicht auf den Server.
 
 <Callout type="warning" title="Kein Backup vom Testrechner">
 Richte auf dem Testrechner keinen Timer ein und starte `borgmatic` nicht ohne Aktion. Sonst landen Archive der Testumgebung im selben Repository, und die Aufräumregeln löschen womöglich echte Stände.

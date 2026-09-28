@@ -48,10 +48,12 @@ Was die Zeilen bedeuten:
 - `services:` listet die Container des Stacks. Hier gibt es nur einen, `whoami`.
 - `image:` sagt, welches Image Docker von Docker Hub holt. Für einen Testcontainer ist `latest` in Ordnung. Für echte Dienste nutzt du besser eine feste Version, siehe [Images & Tags](/de/nachschlagen/images-tags/).
 - `container_name:` gibt dem Container einen festen, gut lesbaren Namen.
-- `restart: unless-stopped` startet den Container nach einem Absturz oder Neustart des Servers automatisch wieder, außer du hast ihn selbst gestoppt.
-- `ports:` verbindet Port `8080` des Servers mit Port `80` im Container. Links steht immer der Server, rechts der Container.
+- `restart: unless-stopped` startet den Container nach einem Absturz oder Neustart des Servers automatisch wieder, außer du hast ihn selbst gestoppt. Startet ein Container immer wieder neu, hilft [Container in der Neustart-Schleife](/de/nachschlagen/container-neustart-schleife/).
+- `ports:` verbindet Port `8080` des Servers mit Port `80` im Container. Links steht immer der Server, rechts der Container. Ist der Port auf dem Server schon vergeben, startet der Container nicht, siehe [Port belegt](/de/nachschlagen/port-belegt/).
 
 Achte auf die Einrückung. YAML nutzt Leerzeichen, keine Tabs, und die Einrückung bestimmt die Struktur.
+
+Findest du später eine `compose.yaml` in der Doku eines Projekts, erklärt dir der [Compose-Erklärer](/de/werkzeuge/compose-erklaerer/) jede Zeile und markiert typische Probleme.
 </Step>
 
 <Step title="Stack starten">
@@ -99,6 +101,8 @@ docker compose logs -f
 ```
 
 Mit `-f` (follow) laufen neue Zeilen live mit. Lade die Seite im Browser neu und schau zu. Beenden mit `Strg+C`. Der Container läuft dabei weiter.
+
+Wie du von einer Fehlermeldung im Log zur Ursache kommst, zeigt [Fehlersuche: erste Schritte](/de/nachschlagen/fehlersuche-erste-schritte/).
 </Step>
 
 <Step title="Aktualisieren">

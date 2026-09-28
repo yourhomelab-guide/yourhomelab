@@ -96,6 +96,9 @@ docker compose config
 Der Befehl gibt die fertige Konfiguration aus, mit allen eingesetzten Werten. Fehlt eine Variable, siehst du eine
 Warnung. Achtung: Die Ausgabe enthält deine Passwörter im Klartext. Kopier sie nicht ungeprüft in ein Forum.
 
+Hast du eine `compose.yaml` aus der Doku eines Projekts übernommen und verstehst nicht jede Zeile, hilft der
+[Compose-Erklärer](/de/werkzeuge/compose-erklaerer/). Er erklärt die Datei Zeile für Zeile und markiert typische Probleme.
+
 ## .env.example für Git
 
 Die `.env` enthält Secrets und gehört nie in ein öffentliches Repository. Trotzdem soll jemand, der deine
@@ -109,7 +112,8 @@ DB_PASSWORD=change-me
 ```
 
 Die `.env.example` kommt ins Git, die `.env` in die `.gitignore`. Die Dienst-Vorlagen dieser Seite sind genauso
-aufgebaut. Wie du Secrets darüber hinaus schützt, steht unter [Secrets verwalten](/de/nachschlagen/secrets-verwalten/).
+aufgebaut. Der [Stack-Builder](/de/werkzeuge/stack-builder/) liefert zu jedem Dienst gleich eine fertige `.env` mit
+zufällig erzeugten Secrets. Wie du Secrets darüber hinaus schützt, steht unter [Secrets verwalten](/de/nachschlagen/secrets-verwalten/).
 
 <Callout type="warning" title="Rechte setzen">
   Die `.env` sollte nur für dich lesbar sein. Mit `chmod 600 .env` stellst du das sicher. Und denk daran: Wer die

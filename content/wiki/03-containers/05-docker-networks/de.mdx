@@ -65,7 +65,7 @@ networks:
     external: true
 ```
 
-So hängt nur die Web-App im Proxy-Netzwerk. Die Datenbank bleibt im Stack-Netzwerk und ist für Traefik und andere Stacks unsichtbar. Gibst du bei einem Dienst `networks` an, musst du `default` mit aufführen, wenn er weiter mit den anderen Containern des Stacks reden soll.
+So hängt nur die Web-App im Proxy-Netzwerk. Die Datenbank bleibt im Stack-Netzwerk und ist für Traefik und andere Stacks unsichtbar. Gibst du bei einem Dienst `networks` an, musst du `default` mit aufführen, wenn er weiter mit den anderen Containern des Stacks reden soll. Fehlt ein Dienst im Proxy-Netzwerk, antwortet der Proxy meist mit „Bad Gateway“, siehe [Bad Gateway und 404 vom Proxy](/de/nachschlagen/bad-gateway/).
 
 Die Vorlagen unter [Dienste](/de/dienste/) ergänzen das Proxy-Netzwerk automatisch, wenn du in "Mein Setup" einen Reverse Proxy gewählt hast. Wie ein Reverse Proxy grundsätzlich arbeitet, erklärt [Reverse Proxy erklärt](/de/nachschlagen/reverse-proxy-erklaert/).
 
@@ -79,7 +79,7 @@ ports:
   - "127.0.0.1:8081:80"    # only reachable from the server itself
 ```
 
-Ohne Angabe einer Adresse lauscht der Port auf allen Netzwerkschnittstellen des Servers. Er ist dann aus deinem Heimnetz erreichbar, bei einem VPS sogar aus dem ganzen Internet.
+Ohne Angabe einer Adresse lauscht der Port auf allen Netzwerkschnittstellen des Servers. Er ist dann aus deinem Heimnetz erreichbar, bei einem VPS sogar aus dem ganzen Internet. Jeder Server-Port kann nur einmal vergeben werden. Meldet Docker beim Start, dass er schon belegt ist, hilft [Port belegt](/de/nachschlagen/port-belegt/).
 
 Die Faustregel für dieses Homelab:
 
@@ -96,7 +96,7 @@ Docker trägt veröffentlichte Ports direkt in die Firewall-Regeln des Kernels (
 
 Mit `network_mode: host` verzichtet ein Container auf eigene Netzwerke und nutzt direkt die Netzwerkschnittstellen des Servers. Jeder Port, auf dem das Programm lauscht, ist sofort auf dem Server offen. Ein `ports`-Eintrag wird dann ignoriert, und Docker-DNS über Containernamen gibt es auch nicht.
 
-Das braucht man selten. Typische Fälle sind Programme, die Geräte im Heimnetz automatisch finden sollen, etwa Home Assistant oder ein Medienserver mit DLNA. Deren Suche arbeitet mit Broadcasts, die nicht durch ein Bridge-Netzwerk kommen. Für alles andere ist das Bridge-Netzwerk die bessere Wahl, weil es die Dienste voneinander trennt.
+Das braucht man selten. Typische Fälle sind Programme, die Geräte im Heimnetz automatisch finden sollen, etwa [Home Assistant](/de/einrichten/home-assistant/) oder ein Medienserver mit DLNA. Deren Suche arbeitet mit Broadcasts, die nicht durch ein Bridge-Netzwerk kommen. Für alles andere ist das Bridge-Netzwerk die bessere Wahl, weil es die Dienste voneinander trennt.
 
 ## Nützliche Befehle
 

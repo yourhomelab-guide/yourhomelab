@@ -112,8 +112,12 @@ Für Linux-Server gibt es drei bewährte Werkzeuge. Alle drei verschlüsseln, de
 Alle sind gute Wahl. Wichtiger als das Tool ist, dass das Backup **automatisch** läuft, etwa per Cronjob oder
 systemd-Timer, und dass du regelmäßig prüfst, ob es funktioniert.
 
+Eine passende `config.yaml` für borgmatic, inklusive Datenbank-Dumps und Aufbewahrungsregeln, erzeugt das Werkzeug
+[borgmatic-Konfiguration](/de/werkzeuge/borgmatic-konfiguration/) aus deinem Setup.
+
 ## Restore testen
 
 Probe regelmäßig den Ernstfall: Stelle einen Dienst aus dem Backup auf einem anderen Rechner oder in einem anderen
 Ordner wieder her und prüfe, ob er startet und deine Daten da sind. Erst dann weißt du, dass dein Backup taugt.
-Wie das geht, zeigt der Guide [Restore testen](/de/einrichten/restore-testen/).
+Wie das geht, zeigt der Guide [Restore testen](/de/einrichten/restore-testen/). Was du tust, wenn der ganze Server
+ausfällt, legst du am besten vorher in einem [Notfallplan](/de/einrichten/notfallplan/) fest.

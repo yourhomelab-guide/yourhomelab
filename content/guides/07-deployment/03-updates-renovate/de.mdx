@@ -165,7 +165,7 @@ Patch-Updates werden danach spätestens beim nächsten Lauf gemergt. Dein Deploy
 Für Minor- und Major-Updates schaust du in den PR:
 
 - Renovate verlinkt die Release Notes, wenn es sie findet. Lies sie, bevor du mergst, besonders bei **Major-Updates** (erste Zahl ändert sich). Die bringen oft Änderungen, die Handarbeit erfordern.
-- **Datenbanken** wie PostgreSQL oder MariaDB kannst du bei einem Major-Update meist nicht einfach austauschen. Die Daten müssen migriert werden. Mach vorher ein Backup und folge der Anleitung des Projekts.
+- **Datenbanken** wie PostgreSQL oder MariaDB kannst du bei einem Major-Update meist nicht einfach austauschen. Die Daten müssen migriert werden. Mach vorher ein Backup und folge der Anleitung des Projekts. Wie das per Dump und Restore geht und wie du zurückkommst, wenn es schon passiert ist, steht unter [Datenbank startet nach Update nicht](/de/nachschlagen/datenbank-version/).
 - Passt alles, merge den PR in Forgejo. Den Rest erledigt das Deploy-Skript.
 
 Geht etwas schief, machst du den Merge-Commit per `git revert` rückgängig und pushst. Danach läuft wieder die alte Version.

@@ -86,10 +86,16 @@ Trag die Ausgabe auf dem Zielrechner in `~/.ssh/authorized_keys` des Benutzers `
 ```bash
 sudo ssh backup@192.168.1.20 borg --version
 ```
+
+Plane auf dem Ziel großzügig Platz ein, mindestens das Doppelte deiner aktuellen Daten. Läuft es trotzdem voll, hilft [Festplatte voll](/de/nachschlagen/festplatte-voll/).
 </Step>
 
 <Step title="Konfiguration schreiben">
 borgmatic liest seine Einstellungen aus `/etc/borgmatic/config.yaml`. Lege die Datei mit `sudo nano /etc/borgmatic/config.yaml` an. Wähle bei `repositories` **eine** der beiden Varianten und lösch die andere oder lass sie auskommentiert:
+
+<Callout title="Lass dir die Datei erzeugen">
+Das Werkzeug [borgmatic-Konfiguration](/de/werkzeuge/borgmatic-konfiguration/) baut dir diese Datei aus deinen Angaben zusammen, auf Wunsch gleich mit Datenbank-Dumps und Uptime-Kuma-Meldung. Die Erklärungen unten gelten trotzdem: Lies sie, damit du weißt, was in deiner Datei steht.
+</Callout>
 
 ```yaml
 # What to back up
@@ -304,7 +310,7 @@ uptime_kuma:
         - fail
 ```
 
-Mit `finish` und `fail` meldet borgmatic nach jedem Lauf, ob er geklappt hat. Prüfe die Datei mit `sudo borgmatic config validate` und starte einen Testlauf mit `sudo systemctl start borgmatic.service`. Im Monitor sollte kurz darauf ein grüner Balken erscheinen. Weitere Wege, etwa ntfy oder Healthchecks, findest du in der [Monitoring-Doku von borgmatic](https://torsion.org/borgmatic/how-to/monitor-your-backups/).
+Mit `finish` und `fail` meldet borgmatic nach jedem Lauf, ob er geklappt hat. Prüfe die Datei mit `sudo borgmatic config validate` und starte einen Testlauf mit `sudo systemctl start borgmatic.service`. Im Monitor sollte kurz darauf ein grüner Balken erscheinen. Wie die Meldungen über einen eigenen ntfy-Server aufs Handy kommen, zeigt der Guide [Benachrichtigungen](/de/einrichten/benachrichtigungen/). Weitere Wege, etwa ntfy oder Healthchecks, findest du in der [Monitoring-Doku von borgmatic](https://torsion.org/borgmatic/how-to/monitor-your-backups/).
 </Step>
 
 </Steps>

@@ -51,10 +51,11 @@ export const ui = (): Record<string, string> => {
 };
 export const fmt = (s: string, vars: Record<string, string | number>) => s.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? ''));
 
-function randomSecret() {
-  const b = new Uint8Array(24);
+/** Random hex string; `length` in characters (default 48, `__SECRET(32)__` asks for 32) */
+export function randomSecret(length = 48) {
+  const b = new Uint8Array(Math.ceil(length / 2));
   crypto.getRandomValues(b);
-  return Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
+  return Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('').slice(0, length);
 }
 
 /** Fills every `[data-ph]` element with the visitor's values. */
@@ -62,10 +63,10 @@ export function applyPlaceholders(root: ParentNode = document, s = getSetup()) {
   const map = placeholders as Record<string, keyof Setup>;
   root.querySelectorAll<HTMLElement>('[data-ph]').forEach((el) => {
     const ph = el.dataset.ph!;
-    if (el.dataset.arg !== undefined) el.textContent = appDataDir(s, el.dataset.arg);
+    if (ph === 'DATA' && el.dataset.arg !== undefined) el.textContent = appDataDir(s, el.dataset.arg);
     else if (ph === 'SECRET') {
       if (!el.dataset.generated) {
-        el.textContent = randomSecret();
+        el.textContent = randomSecret(Number(el.dataset.arg) || undefined);
         el.dataset.generated = '1';
       }
     } else if (map[ph]) el.textContent = String(s[map[ph]]);

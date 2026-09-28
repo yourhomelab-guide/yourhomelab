@@ -24,7 +24,7 @@ Tinyauth verschlüsselt seine Session-Cookies mit einem Secret. Tinyauth v3 verl
 openssl rand -hex 16
 ```
 
-Den Wert trägst du im nächsten Schritt als `TINYAUTH_SECRET` in die `.env` ein.
+Den Wert trägst du im nächsten Schritt als `TINYAUTH_SECRET` in die `.env` ein. Die `.env` weiter unten enthält schon einen passenden Zufallswert mit 32 Zeichen, den du auch einfach übernehmen kannst.
 </Step>
 
 <Step title="Benutzer anlegen">
@@ -40,6 +40,8 @@ htpasswd -nB admin
 `htpasswd` fragt zweimal nach dem Passwort und gibt dann eine Zeile wie `admin:$2y$05$...` aus. Diese ganze Zeile ist dein Benutzer. Mehrere Benutzer trennst du mit Komma.
 
 Alternativ erzeugt Tinyauth den Benutzer selbst: `docker run --rm -it ghcr.io/steveiliop56/tinyauth:v3 user create --interactive`. Wähle dabei **kein** Docker-Format, denn im nächsten Schritt schützen einfache Anführungszeichen den Hash.
+
+Ohne Installation geht es mit dem Werkzeug [Passwort-Hash](/de/werkzeuge/passwort-hash/). Es rechnet den Hash direkt in deinem Browser aus und gibt dir die fertige Zeile für die `.env`.
 </Step>
 
 <Step title="compose.yaml und .env schreiben">
@@ -73,7 +75,7 @@ docker compose up -d
 docker compose logs -f tinyauth
 ```
 
-Öffne `https://login.__DOMAIN__` und melde dich mit deinem Benutzer an. Klappt das, läuft Tinyauth. Geschützt ist aber noch nichts.
+Öffne `https://login.__DOMAIN__` und melde dich mit deinem Benutzer an. Klappt das, läuft Tinyauth. Geschützt ist aber noch nichts. Startet der Container immer wieder neu, ist oft das Secret nicht genau 32 Zeichen lang, siehe auch [Container in der Neustart-Schleife](/de/nachschlagen/container-neustart-schleife/).
 </Step>
 
 <Step title="Einen Dienst schützen">

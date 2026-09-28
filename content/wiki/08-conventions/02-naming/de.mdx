@@ -29,6 +29,9 @@ Bindestriche, keine Leerzeichen.
 Ohne `container_name` würde Compose Namen wie `vaultwarden-vaultwarden-1` erzeugen (Projekt, Dienst, Nummer). Das
 funktioniert, ist aber lang und schwer zu tippen. Mit festem Namen reicht `docker logs vaultwarden`.
 
+Der [Stack-Builder](/de/werkzeuge/stack-builder/) hält sich an dieses Schema. Die Ordner und `compose.yaml`-Dateien,
+die er erzeugt, sind also schon passend benannt.
+
 ## Hilfscontainer
 
 Viele Dienste bestehen aus mehreren Containern, etwa einer App, einer Datenbank und einem Cache. Der Hauptcontainer

@@ -33,14 +33,14 @@ Eine Registry ist ein Server, der Images speichert und ausliefert. Die wichtigst
 - **LinuxServer.io** (`lscr.io`): eine Community, die viele beliebte Programme in einheitlich aufgebauten Images verpackt.
 - **Quay** (`quay.io`): vor allem Projekte aus dem Red-Hat-Umfeld.
 
-Welche Registry ein Projekt nutzt, steht in seiner Dokumentation. Nimm möglichst das offizielle Image des Projekts. Images von Unbekannten können veraltet sein oder im schlimmsten Fall Schadcode enthalten.
+Welche Registry ein Projekt nutzt, steht in seiner Dokumentation. Nimm möglichst das offizielle Image des Projekts. Images von Unbekannten können veraltet sein oder im schlimmsten Fall Schadcode enthalten. Welches Image und welchen Tag eine fremde `compose.yaml` verwendet, zeigt dir der [Compose-Erklärer](/de/werkzeuge/compose-erklaerer/).
 
 ## Das Problem mit latest
 
 `latest` klingt nach "immer die neueste Version". Tatsächlich ist es nur ein Name, den der Herausgeber vergibt, meist für den letzten stabilen Stand. Das hat zwei Tücken:
 
 1. **Du weißt nicht, welche Version läuft.** `latest` heute und `latest` in drei Monaten sind verschiedene Programme. Steht in der Datei nur `latest`, kannst du nicht nachvollziehen, wann sich was geändert hat.
-2. **Große Sprünge passieren unbemerkt.** Bei einem `docker compose pull` bekommst du auch Versionen, die Daten umbauen oder Einstellungen ändern. Das geht bei manchen Diensten gut, bei Datenbanken oft nicht.
+2. **Große Sprünge passieren unbemerkt.** Bei einem `docker compose pull` bekommst du auch Versionen, die Daten umbauen oder Einstellungen ändern. Das geht bei manchen Diensten gut, bei Datenbanken oft nicht. Was dann passiert, beschreibt [Datenbank startet nach Update nicht](/de/nachschlagen/datenbank-version/).
 
 `latest` lädt übrigens nicht von selbst nach. Docker holt eine neue Version nur, wenn du `pull` ausführst oder ein Tool das für dich tut.
 
@@ -91,7 +91,7 @@ Alte Images bleiben nach einem Update auf der Platte liegen. Aufräumen kannst d
 docker image prune
 ```
 
-Der Befehl löscht Images, die keinen Namen mehr haben und von keinem Container benutzt werden. Mit `-a` entfernt er alle Images, die gerade kein Container verwendet.
+Der Befehl löscht Images, die keinen Namen mehr haben und von keinem Container benutzt werden. Mit `-a` entfernt er alle Images, die gerade kein Container verwendet. Ist die Platte schon voll, hilft [Festplatte voll](/de/nachschlagen/festplatte-voll/) weiter.
 
 ## Weiterlesen
 

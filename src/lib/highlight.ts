@@ -14,12 +14,12 @@ export interface Token {
   arg?: string;
 }
 
-/** Matches `__DOMAIN__`, `__DATA_ROOT__`, `__SECRET__` … and `__DATA(<app>)__` (group 2 = app) */
+/** Matches `__DOMAIN__`, `__DATA_ROOT__`, `__SECRET__` … and `__DATA(<app>)__` / `__SECRET(<length>)__` (group 2 = argument) */
 export const PH_RE = /__([A-Z][A-Z_]*[A-Z])(?:\(([a-z0-9][a-z0-9-]*)\))?__/g;
 
 /** Build-time text of a placeholder token; the browser replaces it with the visitor's value. */
 const phText = (tk: Token, values: Record<string, string>) =>
-  tk.arg !== undefined ? appDataDir(defaultSetup, tk.arg) : (values[tk.ph!] ?? tk.t);
+  tk.arg !== undefined && tk.ph === 'DATA' ? appDataDir(defaultSetup, tk.arg) : (values[tk.ph!] ?? tk.t);
 
 /** Attributes the browser uses to fill a placeholder, see applyPlaceholders() */
 export const phAttrs = (ph: string, arg?: string) => `data-ph="${ph}"${arg !== undefined ? ` data-arg="${arg}"` : ''}`;

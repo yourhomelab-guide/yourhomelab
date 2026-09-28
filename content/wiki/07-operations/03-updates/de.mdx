@@ -70,7 +70,8 @@ machst.
 Viele Projekte nummerieren nach dem Schema `Major.Minor.Patch` (zum Beispiel `2.4.1`). Patch- und Minor-Updates
 sollten nichts kaputt machen. Ein Sprung in der ersten Zahl (Major) darf das dagegen. Besonders heikel sind
 **Datenbanken**: Ein PostgreSQL-Container von Version 15 auf 16 zu heben, funktioniert nicht einfach per neuem Tag,
-weil sich das Datenformat ändert. Dafür brauchst du einen Dump und ein Restore. Pinne Datenbank-Images deshalb immer
+weil sich das Datenformat ändert. Dafür brauchst du einen Dump und ein Restore, siehe
+[Datenbank startet nach Update nicht](/de/nachschlagen/datenbank-version/). Pinne Datenbank-Images deshalb immer
 auf eine Major-Version, etwa `postgres:16`.
 
 <Callout type="warning" title="Vor größeren Updates: Backup">

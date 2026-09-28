@@ -34,7 +34,7 @@ Die Menüs heißen bei jedem Router anders, der Ablauf ist aber immer ähnlich:
 1. **Feste IP für den Server:** Der Router muss wissen, wohin er weiterleiten soll. Gib deinem Server eine feste Adresse im Heimnetz (siehe [Feste IP & Hostname](/de/einrichten/feste-ip-hostname/)).
 2. **Freigabe anlegen:** Im Router den Server auswählen und die Ports 80 und 443 (TCP) freigeben. Bei einer FRITZ!Box findest du das unter "Internet → Freigaben".
 3. **Firewall auf dem Server:** Auch dort müssen 80 und 443 offen sein, etwa mit UFW (siehe [Firewall mit UFW](/de/einrichten/firewall-ufw/)).
-4. **Von außen testen:** Rufe deine Domain über das Mobilnetz auf, nicht aus dem WLAN. Aus dem eigenen Netz klappt der Aufruf über die öffentliche Adresse bei manchen Routern nicht, obwohl von außen alles funktioniert.
+4. **Von außen testen:** Rufe deine Domain über das Mobilnetz auf, nicht aus dem WLAN. Aus dem eigenen Netz klappt der Aufruf über die öffentliche Adresse bei manchen Routern nicht, obwohl von außen alles funktioniert. Warnt der Browser vor einem ungültigen Zertifikat, hilft [Zertifikat fehlt](/de/nachschlagen/zertifikat-fehlt/) weiter.
 
 Damit deine Domain immer auf die richtige Adresse zeigt, brauchst du bei wechselnder IPv4-Adresse außerdem **DynDNS**. Dabei meldet der Router oder ein kleines Programm die neue Adresse automatisch an deinen DNS-Anbieter. Mehr dazu in [DNS & Domains](/de/nachschlagen/dns-domains/).
 

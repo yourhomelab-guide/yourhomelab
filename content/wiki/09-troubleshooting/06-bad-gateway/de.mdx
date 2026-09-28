@@ -95,6 +95,8 @@ networks:
     external: true
 ```
 
+In welchen Netzwerken ein Dienst hängt und ob ein Netzwerk als `external` eingebunden ist, zeigt dir der [Compose-Erklärer](/de/werkzeuge/compose-erklaerer/).
+
 Hängt der Container in mehreren Netzwerken, etwa zusätzlich in einem internen Netz zur Datenbank, sag Traefik, welches
 es nehmen soll. Sonst wählt es womöglich eine IP, die es nicht erreicht, und du bekommst `504`:
 

@@ -31,19 +31,22 @@ export interface StackFile {
   mode?: number;
 }
 
-/** 32 random bytes as hex */
-export function randomSecret() {
-  const b = new Uint8Array(32);
+/** Random hex string, `length` characters (default: 32 bytes = 64 characters) */
+export function randomSecret(length = 64) {
+  const b = new Uint8Array(Math.ceil(length / 2));
   crypto.getRandomValues(b);
-  return Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
+  return Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('').slice(0, length);
 }
 
-/** Replaces all placeholders with the visitor's values. `__SECRET__` gets a new value per occurrence. */
-export function fill(text: string, s: Setup, secret: () => string = randomSecret) {
+/**
+ * Replaces all placeholders with the visitor's values. `__SECRET__` gets a new value per occurrence,
+ * `__SECRET(32)__` one with exactly 32 characters.
+ */
+export function fill(text: string, s: Setup, secret: (length?: number) => string = randomSecret) {
   const map = placeholders as Record<string, keyof Setup>;
   return text.replace(PH_RE, (m, ph: string, arg?: string) => {
-    if (arg !== undefined) return appDataDir(s, arg);
-    if (ph === 'SECRET') return secret();
+    if (ph === 'DATA' && arg !== undefined) return appDataDir(s, arg);
+    if (ph === 'SECRET') return secret(arg ? Number(arg) : undefined);
     return map[ph] ? String(s[map[ph]]) : m;
   });
 }

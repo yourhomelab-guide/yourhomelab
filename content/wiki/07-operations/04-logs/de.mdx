@@ -129,8 +129,12 @@ ungeschützt ins Internet, sondern nur ins Heimnetz, per VPN oder hinter einen L
 ## Tipps zur Fehlersuche
 
 - **Container startet ständig neu?** `docker compose ps` zeigt den Status, `docker compose logs --tail 50` den Grund.
+  Typische Ursachen und Lösungen stehen unter [Container in der Neustart-Schleife](/de/nachschlagen/container-neustart-schleife/).
 - **Nach einem Update geht etwas nicht?** Suche in den Logs nach der ersten Fehlermeldung, nicht nach der letzten.
   Folgefehler verdecken oft die eigentliche Ursache.
 - **Dienst nicht erreichbar, aber Container läuft?** Dann lohnt ein Blick in die Logs des Reverse Proxys.
 - **Fehlermeldung unverständlich?** Kopiere sie in eine Suchmaschine oder in die Issues des Projekts. Du bist selten
   der Erste.
+
+Eine Schritt-für-Schritt-Anleitung für die Suche findest du unter
+[Fehlersuche: erste Schritte](/de/nachschlagen/fehlersuche-erste-schritte/).

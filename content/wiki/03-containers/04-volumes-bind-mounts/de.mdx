@@ -37,7 +37,7 @@ volumes:
   app-data:                         # named volumes must be declared here
 ```
 
-Die Regel: Beginnt der linke Teil mit `/` oder `./`, ist es ein Bind Mount. Sonst ist es ein Named Volume.
+Die Regel: Beginnt der linke Teil mit `/` oder `./`, ist es ein Bind Mount. Sonst ist es ein Named Volume. Bei einer fremden `compose.yaml` zeigt dir der [Compose-Erklärer](/de/werkzeuge/compose-erklaerer/), welche Einträge was einbinden.
 
 | | Named Volume | Bind Mount |
 | --- | --- | --- |
@@ -62,7 +62,7 @@ __ROOT__/
         └── data/        ← mounted into the container as /data
 ```
 
-Für ein Backup musst du dann nur einen Ordner sichern: `__ROOT__`. Darin stecken Konfiguration, Secrets und Daten aller Dienste. Ziehst du auf einen neuen Server um, kopierst du den Ordner und startest die Stacks neu. Mehr dazu in [Verzeichnisstruktur](/de/nachschlagen/verzeichnisstruktur/) und [Backup-Strategien](/de/nachschlagen/backup-strategien/).
+Für ein Backup musst du dann nur einen Ordner sichern: `__ROOT__`. Darin stecken Konfiguration, Secrets und Daten aller Dienste. Ziehst du auf einen neuen Server um, kopierst du den Ordner und startest die Stacks neu, siehe [Umzug auf neue Hardware](/de/einrichten/umzug-neue-hardware/). Mehr dazu in [Verzeichnisstruktur](/de/nachschlagen/verzeichnisstruktur/) und [Backup-Strategien](/de/nachschlagen/backup-strategien/).
 
 Alle Vorlagen unter [Dienste](/de/dienste/) folgen diesem Muster. Wählst du in "Mein Setup" einen zentralen Datenordner, wird aus `./data/…` automatisch `__DATA_ROOT__/<dienst>/…`.
 
@@ -77,7 +77,7 @@ Bei Bind Mounts gilt auf dem Server und im Container dieselbe Rechteverwaltung. 
 Daraus ergeben sich zwei typische Probleme:
 
 - **Der Ordner fehlt.** Existiert der Pfad links noch nicht, legt Docker ihn beim Start an, und zwar als root. Ein Programm, das im Container nicht als root läuft, darf dann nicht hineinschreiben. Lege die Ordner deshalb vorher selbst an.
-- **Die Nummern passen nicht.** Das Programm läuft als eine andere UID als der Besitzer des Ordners. Im Log steht dann meist "Permission denied".
+- **Die Nummern passen nicht.** Das Programm läuft als eine andere UID als der Besitzer des Ordners. Im Log steht dann meist "Permission denied". Wie du das Schritt für Schritt behebst, zeigt [Permission denied](/de/nachschlagen/permission-denied/).
 
 Deine eigene UID und GID zeigt der Befehl `id`. Beim ersten angelegten Benutzer ist das in der Regel 1000.
 

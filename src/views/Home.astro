@@ -45,6 +45,9 @@ const doors = [
           <a class="btn btn-primary btn-lg" href={url.section(lang, 'setup')}>{t(lang, 'home.ctaStart')}</a>
           <a class="btn btn-outline btn-lg" href={url.section(lang, 'services')}>{t(lang, 'home.ctaServices')}</a>
         </div>
+        <p class="helper">
+          {t(lang, 'setup.helper')} <a href={url.tool(lang, 'assistant')}>{t(lang, 'tools.assistant.title')} →</a>
+        </p>
       </div>
       <div class="path card">
         <div class="path-head">
@@ -251,6 +254,8 @@ const doors = [
   .hero h1 { font-size: 60px; line-height: 1.02; font-weight: 700; letter-spacing: -0.035em; text-wrap: balance; }
   .hero p { font-size: 19px; line-height: 1.6; color: var(--text-2); max-width: 560px; text-wrap: pretty; }
   .ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+  .helper { font-size: 15px; color: var(--text-3); }
+  .helper a { font-weight: 600; }
 
   .path { border-radius: 24px; padding: 28px; display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow-lg); }
   .path-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 12px; font-size: 13px; }

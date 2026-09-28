@@ -50,7 +50,7 @@ docker compose up -d
 docker compose logs -f nginx-proxy-manager
 ```
 
-Mit `Strg+C` beendest du die Log-Anzeige. Öffne dann im Browser `http://192.168.1.10:81` (ersetze die IP durch die deines Servers).
+Meldet Docker beim Start, dass ein Port schon belegt ist, läuft dort bereits ein anderer Dienst, siehe [Port belegt](/de/nachschlagen/port-belegt/). Mit `Strg+C` beendest du die Log-Anzeige. Öffne dann im Browser `http://192.168.1.10:81` (ersetze die IP durch die deines Servers).
 
 Aktuelle Versionen zeigen beim ersten Aufruf einen Einrichtungsassistenten, in dem du dein Admin-Konto anlegst. Ältere Versionen haben stattdessen ein Standardkonto (`admin@example.com` / `changeme`). Wenn du das siehst, ändere E-Mail und Passwort sofort nach dem Login. Nimm ein langes, zufälliges Passwort aus deinem Passwortmanager.
 </Step>
@@ -69,7 +69,7 @@ Klicke auf „Hosts → Proxy Hosts → Add Proxy Host“ und fülle aus:
 | Block Common Exploits | an |
 | Websockets Support | an |
 
-Als Hostname trägst du den **Containernamen** ein, nicht die IP des Servers. Das klappt, weil beide Container im selben Netzwerk hängen und Docker die Namen dort auflöst. Der Port ist der Port **im Container**, wie er in der Dokumentation des Dienstes steht. Der Dienst selbst braucht deshalb keine eigene Portfreigabe in seiner `compose.yaml`.
+Als Hostname trägst du den **Containernamen** ein, nicht die IP des Servers. Das klappt, weil beide Container im selben Netzwerk hängen und Docker die Namen dort auflöst. Der Port ist der Port **im Container**, wie er in der Dokumentation des Dienstes steht. Der Dienst selbst braucht deshalb keine eigene Portfreigabe in seiner `compose.yaml`. Stimmt Name oder Port nicht, antwortet NPM mit „502 Bad Gateway“, siehe [Bad Gateway](/de/nachschlagen/bad-gateway/).
 
 Websockets brauchen viele moderne Weboberflächen für Live-Updates. Es schadet nicht, sie immer einzuschalten.
 </Step>
@@ -82,7 +82,7 @@ Wechsle im selben Dialog auf den Reiter „SSL“:
 3. **HTTP/2 Support** kannst du ebenfalls einschalten.
 4. Bestätige die Nutzungsbedingungen von Let's Encrypt, falls gefragt, und speichere.
 
-Let's Encrypt prüft über Port 80, ob dir die Domain gehört. Klappt das nicht, stimmt meist der DNS-Eintrag oder die Portfreigabe noch nicht. Prüfe beides im Guide [Domain & DNS](/de/einrichten/domain-dns/).
+Let's Encrypt prüft über Port 80, ob dir die Domain gehört. Klappt das nicht, stimmt meist der DNS-Eintrag oder die Portfreigabe noch nicht. Prüfe beides im Guide [Domain & DNS](/de/einrichten/domain-dns/). Weitere Ursachen findest du unter [Zertifikat fehlt](/de/nachschlagen/zertifikat-fehlt/).
 
 Öffne danach `https://status.__DOMAIN__`. Du solltest Uptime Kuma mit gültigem Zertifikat sehen. NPM erneuert die Zertifikate automatisch.
 </Step>
@@ -122,6 +122,6 @@ docker compose up -d
 
 ## Wie geht es weiter?
 
-Für jeden weiteren Dienst legst du einen Proxy-Host an: neue Subdomain, Containername, interner Port, Zertifikat. Die Traefik-Labels in anderen Guides dieser Seite brauchst du mit NPM nicht, stell dafür unter „Mein Setup“ Nginx Proxy Manager als Reverse Proxy ein.
+Für jeden weiteren Dienst legst du einen Proxy-Host an: neue Subdomain, Containername, interner Port, Zertifikat. Welche Werte ein Dienst außerhalb des Katalogs braucht, zeigt dir das Werkzeug [Proxy-Konfiguration](/de/werkzeuge/proxy-konfiguration/). Die Traefik-Labels in anderen Guides dieser Seite brauchst du mit NPM nicht, stell dafür unter „Mein Setup“ Nginx Proxy Manager als Reverse Proxy ein.
 
 Sichere den Ordner `__DATA(nginx-proxy-manager)__` regelmäßig mit. Darin stecken alle Proxy-Hosts und Zertifikate. Details zu weiteren Funktionen wie Access Lists findest du in der [offiziellen Dokumentation](https://nginxproxymanager.com/guide/).

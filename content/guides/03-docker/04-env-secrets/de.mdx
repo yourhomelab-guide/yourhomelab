@@ -65,6 +65,8 @@ Unter `environment:` sollten jetzt deine echten Werte stehen, etwa `WHOAMI_NAME:
 <Callout type="warning" title="Die Ausgabe enthält Klartext">
 `docker compose config` zeigt auch alle Passwörter im Klartext. Kopiere die Ausgabe nicht ungeprüft in ein Forum oder einen Chat.
 </Callout>
+
+Was die einzelnen Zeilen einer `compose.yaml` bedeuten, erklärt dir der [Compose-Erklärer](/de/werkzeuge/compose-erklaerer/). Füge dort aber nur die `compose.yaml` ein, nicht die Ausgabe mit deinen Secrets.
 </Step>
 
 <Step title="Stack neu starten und testen">
@@ -77,7 +79,7 @@ curl http://localhost:8080
 
 In der Antwort steht jetzt die Zeile `Name: homelab`. Der Wert kam aus der `.env` über die `compose.yaml` in den Container.
 
-Ein einfacher Neustart mit `docker compose restart` reicht übrigens nicht. Er übernimmt keine geänderten Variablen. Nimm nach Änderungen an `.env` oder `compose.yaml` immer `docker compose up -d`.
+Ein einfacher Neustart mit `docker compose restart` reicht übrigens nicht. Er übernimmt keine geänderten Variablen. Nimm nach Änderungen an `.env` oder `compose.yaml` immer `docker compose up -d`. Startet der Container danach immer wieder neu, fehlt oft eine Variable, siehe [Container in der Neustart-Schleife](/de/nachschlagen/container-neustart-schleife/).
 </Step>
 
 <Step title="Sichere Secrets erzeugen">

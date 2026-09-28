@@ -399,8 +399,16 @@
     "hash": "2456bb8ed72ffaa4",
     "by": "claude"
   },
+  "src/i18n/de.json#category.media": {
+    "hash": "0031e3624efbc466",
+    "by": "claude"
+  },
   "src/i18n/de.json#category.monitoring": {
     "hash": "1dc83f605edf0ae2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#category.network": {
+    "hash": "7831c04124b640f8",
     "by": "claude"
   },
   "src/i18n/de.json#category.proxy": {
@@ -423,6 +431,10 @@
     "hash": "b8a6051923e6a649",
     "by": "claude"
   },
+  "src/i18n/de.json#footer.news": {
+    "hash": "382e47fa31db032c",
+    "by": "claude"
+  },
   "src/i18n/de.json#footer.owner": {
     "hash": "ac9f509e3e26b2de",
     "by": "claude"
@@ -441,6 +453,14 @@
   },
   "src/i18n/de.json#footer.texts": {
     "hash": "bbb0bd5ff551e76b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#glossary.aliases": {
+    "hash": "7b42502e99b95df7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#glossary.letters": {
+    "hash": "377e063d0dbecd43",
     "by": "claude"
   },
   "src/i18n/de.json#header.home": {
@@ -532,7 +552,7 @@
     "by": "claude"
   },
   "src/i18n/de.json#home.door2.text": {
-    "hash": "af10fe17abb0c934",
+    "hash": "8be067bb5b16ad19",
     "by": "claude"
   },
   "src/i18n/de.json#home.door2.title": {
@@ -572,7 +592,7 @@
     "by": "claude"
   },
   "src/i18n/de.json#home.lead": {
-    "hash": "84aa676930e7bc99",
+    "hash": "d5641cd147e9a33c",
     "by": "claude"
   },
   "src/i18n/de.json#home.pathProgress": {
@@ -835,6 +855,18 @@
     "hash": "a6f5acc69db6b9a0",
     "by": "claude"
   },
+  "src/i18n/de.json#homelabs.stats.lead": {
+    "hash": "cfed4e2e2e2e3c55",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.stats.median": {
+    "hash": "728441ecb50cc40c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#homelabs.stats.title": {
+    "hash": "88f31d0c056c1134",
+    "by": "claude"
+  },
   "src/i18n/de.json#homelabs.story": {
     "hash": "2a0cd48deab58f42",
     "by": "claude"
@@ -900,7 +932,7 @@
     "by": "claude"
   },
   "src/i18n/de.json#meta.description": {
-    "hash": "c697efb44a345c02",
+    "hash": "0545ed61dbde7099",
     "by": "claude"
   },
   "src/i18n/de.json#nav.homelabs": {
@@ -919,8 +951,36 @@
     "hash": "e4bb9f1ece9af926",
     "by": "claude"
   },
+  "src/i18n/de.json#nav.tools": {
+    "hash": "3f0eefe1fd3c2630",
+    "by": "claude"
+  },
   "src/i18n/de.json#nav.wiki": {
     "hash": "e6a38fd5bc2eb72b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#news.empty": {
+    "hash": "cce9abef7a435226",
+    "by": "claude"
+  },
+  "src/i18n/de.json#news.lead": {
+    "hash": "8e9cd573aa33ae86",
+    "by": "claude"
+  },
+  "src/i18n/de.json#news.new": {
+    "hash": "d9b1e13f3b97c8b0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#news.rss": {
+    "hash": "ce3156925eeb2062",
+    "by": "claude"
+  },
+  "src/i18n/de.json#news.title": {
+    "hash": "382e47fa31db032c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#news.updated": {
+    "hash": "1b4933191f5e2f5c",
     "by": "claude"
   },
   "src/i18n/de.json#notFound.back": {
@@ -1055,6 +1115,10 @@
     "hash": "293b391fffd0dbed",
     "by": "claude"
   },
+  "src/i18n/de.json#service.db": {
+    "hash": "4cc80701da55c69a",
+    "by": "claude"
+  },
   "src/i18n/de.json#service.docs": {
     "hash": "2a9d508bdc770606",
     "by": "claude"
@@ -1071,6 +1135,18 @@
     "hash": "bf80815c3081b49b",
     "by": "claude"
   },
+  "src/i18n/de.json#service.gpu": {
+    "hash": "ea49523d744c40bc",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.gpu.optional": {
+    "hash": "ec91fdd9256cb75a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.gpu.recommended": {
+    "hash": "ab8b5fe6ab84f4a7",
+    "by": "claude"
+  },
   "src/i18n/de.json#service.image": {
     "hash": "1aa4cb0bcca76e92",
     "by": "claude"
@@ -1083,8 +1159,20 @@
     "hash": "3cbb1d5d72269263",
     "by": "claude"
   },
+  "src/i18n/de.json#service.pairsWith": {
+    "hash": "d5f3a1c39b7e7777",
+    "by": "claude"
+  },
   "src/i18n/de.json#service.port": {
     "hash": "72e9a59f5a1d6289",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.ram": {
+    "hash": "0b5ee6aeba41abe4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.ramTitle": {
+    "hash": "71905edd2a25f887",
     "by": "claude"
   },
   "src/i18n/de.json#service.reachable": {
@@ -1109,6 +1197,14 @@
   },
   "src/i18n/de.json#service.sourceCurated": {
     "hash": "92e5887d3ae1596a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.staleReport": {
+    "hash": "ca0ab46a9ec4e132",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.staleSince": {
+    "hash": "e1ea0681aca7e8ba",
     "by": "claude"
   },
   "src/i18n/de.json#service.step1": {
@@ -1143,8 +1239,20 @@
     "hash": "697cf59a6265909a",
     "by": "claude"
   },
+  "src/i18n/de.json#service.tools": {
+    "hash": "3f0eefe1fd3c2630",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.toolsHint": {
+    "hash": "b7f61407883ab4a5",
+    "by": "claude"
+  },
   "src/i18n/de.json#service.tree": {
     "hash": "49d7690f3cac715a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#service.untested": {
+    "hash": "b00f115db01be91f",
     "by": "claude"
   },
   "src/i18n/de.json#service.upstream": {
@@ -1207,6 +1315,10 @@
     "hash": "7d242f86af109a41",
     "by": "claude"
   },
+  "src/i18n/de.json#setup.allTools": {
+    "hash": "92c332e5ac27dc28",
+    "by": "claude"
+  },
   "src/i18n/de.json#setup.back": {
     "hash": "548611ce58f71a17",
     "by": "claude"
@@ -1231,12 +1343,16 @@
     "hash": "4aa863167a372a42",
     "by": "claude"
   },
+  "src/i18n/de.json#setup.helper": {
+    "hash": "652576a00e148d2c",
+    "by": "claude"
+  },
   "src/i18n/de.json#setup.inStage": {
     "hash": "8003135f9ee1ce76",
     "by": "claude"
   },
   "src/i18n/de.json#setup.lead": {
-    "hash": "82b214a384b95b37",
+    "hash": "a3fce609166d742a",
     "by": "claude"
   },
   "src/i18n/de.json#setup.markDone": {
@@ -1269,6 +1385,10 @@
   },
   "src/i18n/de.json#setup.stageMeta": {
     "hash": "46d44efeca2cb42a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setup.stageTools": {
+    "hash": "d0dd68679f383f8a",
     "by": "claude"
   },
   "src/i18n/de.json#setup.steps": {
@@ -1423,6 +1543,3262 @@
     "hash": "29974a4ab3f9a623",
     "by": "claude"
   },
+  "src/i18n/de.json#tools.assistant.applied": {
+    "hash": "a9118e1d965feaf2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.apply": {
+    "hash": "26a00d45b5f4f837",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.applyTitle": {
+    "hash": "b462f6904661bf92",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.area.access": {
+    "hash": "cc7bb91dd765b24f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.area.data": {
+    "hash": "a7efecccf445b41c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.area.platform": {
+    "hash": "cdf648878bc01354",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.area.proxy": {
+    "hash": "8f5358d2e288b0ad",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.area.url": {
+    "hash": "d930c34a164600eb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.back": {
+    "hash": "548611ce58f71a17",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.desc": {
+    "hash": "f8f0d046603a85ed",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.edit": {
+    "hash": "e22e6dfc0127020b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.finish": {
+    "hash": "0702bfbb2d0a8ff2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.more": {
+    "hash": "9e68bcd8242646a3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.next": {
+    "hash": "1e14bdf34c3bdead",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.note.caddy": {
+    "hash": "db7f49621ace109f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.note.later": {
+    "hash": "0013b264dfad1850",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.note.nasDocker": {
+    "hash": "b52bff55332591bb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.note.nasFirewall": {
+    "hash": "5da747ec208b9a87",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.note.nasOs": {
+    "hash": "0878476964cadd45",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.note.needDomain": {
+    "hash": "c553d803992bbae3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.note.portforward": {
+    "hash": "cf4f111410374a72",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.note.proxmoxFirst": {
+    "hash": "c414a466899b6a67",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.note.tailscale": {
+    "hash": "f95f807cacc25fad",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.note.vpsIp": {
+    "hash": "9b46f9c5707e4498",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.note.vpsLink": {
+    "hash": "10f33c3cba8e38c6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.note.vpsOs": {
+    "hash": "5cb0d1401bd84817",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.optional": {
+    "hash": "ec91fdd9256cb75a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.orderAll": {
+    "hash": "a1bc815448ce970f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.orderLead": {
+    "hash": "dd4f1f817f04f144",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.orderTitle": {
+    "hash": "3304b41f9f0ce002",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.progress": {
+    "hash": "c7cf452bfe31d486",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.domain": {
+    "hash": "78d175586d9f14d6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.domain.hint": {
+    "hash": "20506a247fed8f2f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.domain.no": {
+    "hash": "90ebc1bde6f3b1ff",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.domain.yes": {
+    "hash": "cde9e58a9a4e1f36",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.hardware": {
+    "hash": "a5078f640bcfe8e6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.hardware.hint": {
+    "hash": "fa97f9ad6aa317c3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.hardware.minipc": {
+    "hash": "1e444175743bd027",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.hardware.nas": {
+    "hash": "23e4835641ad1066",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.hardware.none": {
+    "hash": "a998d0b9cac85822",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.hardware.oldpc": {
+    "hash": "761f854633120ef4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.hardware.server": {
+    "hash": "1969fb2f5e7049ba",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.ipv4": {
+    "hash": "56227223da6d8932",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.ipv4.hint": {
+    "hash": "327d2ade9997d4d9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.ipv4.no": {
+    "hash": "90ebc1bde6f3b1ff",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.ipv4.unknown": {
+    "hash": "583f476bc0cf5456",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.ipv4.yes": {
+    "hash": "cde9e58a9a4e1f36",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.learn": {
+    "hash": "da2132a2565c2958",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.learn.hint": {
+    "hash": "2d1746e0775f8474",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.learn.quick": {
+    "hash": "12fb302c606784fb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.learn.understand": {
+    "hash": "5d853a84497bc12d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.location": {
+    "hash": "f4ca0fc3441ac29f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.location.both": {
+    "hash": "c5552f6a9bebb0a2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.location.hint": {
+    "hash": "3e85f8c7437ae817",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.location.home": {
+    "hash": "6f5c5f0e5a9f2cde",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.location.vps": {
+    "hash": "353d6db8c08958c0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.remote": {
+    "hash": "233d1f8722e85842",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.remote.family": {
+    "hash": "27a3fbd271b1fdd6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.remote.hint": {
+    "hash": "c81428c5ca9d5380",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.remote.lan": {
+    "hash": "09c3d6300e5998d1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.remote.me": {
+    "hash": "bc46061381dcc9c8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.remote.public": {
+    "hash": "0c5a5694011fbc62",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.style": {
+    "hash": "682136668d9d19a7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.style.files": {
+    "hash": "6bb5ddb3390bd71c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.style.hint": {
+    "hash": "65ffc2329e0038fc",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.style.web": {
+    "hash": "c8a00a7a0ffad7b2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.vms": {
+    "hash": "694859fc61884e64",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.vms.hint": {
+    "hash": "bbf86f509546c620",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.vms.no": {
+    "hash": "fc5620a84f31a31b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.q.vms.yes": {
+    "hash": "cde9e58a9a4e1f36",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.access.lan": {
+    "hash": "042f7a80b7ff3d3a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.access.portforward": {
+    "hash": "16aa7bfe203adc59",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.access.tailscale": {
+    "hash": "ff4d36652fc64792",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.access.tunnel": {
+    "hash": "94dadfe09b615568",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.access.vpn": {
+    "hash": "9486a965eb9ea3d1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.access.vps": {
+    "hash": "831cf640a02f0424",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.data.central": {
+    "hash": "fd4c119deb1a2e0c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.data.stack": {
+    "hash": "5da853c910c1c47e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.platform.bare": {
+    "hash": "7ec71a713897913c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.platform.nas": {
+    "hash": "058ce5d15394ae1f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.platform.proxmox": {
+    "hash": "925ea4940d2399bd",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.platform.vps": {
+    "hash": "f2e295e23c2e7830",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.proxy.caddy": {
+    "hash": "da12414e87375439",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.proxy.none": {
+    "hash": "4c1c1a50a79240b8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.proxy.npm": {
+    "hash": "4ea5dcaa2c72c4eb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.proxy.traefik": {
+    "hash": "54ace6970a10f182",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.url.path": {
+    "hash": "4aaa7e6180279043",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.r.url.sub": {
+    "hash": "1345d24867688258",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.restart": {
+    "hash": "3611a239a9525baf",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.resultEyebrow": {
+    "hash": "bfbf48b0e97887a3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.resultLead": {
+    "hash": "3206dad973fa72bc",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.resultTitle": {
+    "hash": "7e541e70f51f10b8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.title": {
+    "hash": "b8b900f4f68ab908",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.toGuides": {
+    "hash": "204570474887c23f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.access.checkIpv4": {
+    "hash": "c9aef1c4b5ce02d0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.access.lan": {
+    "hash": "94d4e539e1df11d8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.access.portforward": {
+    "hash": "5fcc52ae9736bc5c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.access.publicProtect": {
+    "hash": "f13b97f739ae5d91",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.access.tailscaleCgnat": {
+    "hash": "a811c8445352cd75",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.access.tailscaleFamily": {
+    "hash": "9ac39e9616d96a3f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.access.tunnel": {
+    "hash": "4cfd636389eb448b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.access.vpn": {
+    "hash": "c304c61ae861db7a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.access.vps": {
+    "hash": "e6bb5128e3ca6926",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.access.vpsBoth": {
+    "hash": "6bcb06239911e541",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.data.central": {
+    "hash": "daedf30c2393aed3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.data.stack": {
+    "hash": "5c254da9464b6550",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.platform.bare": {
+    "hash": "37aead093fa0f247",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.platform.both": {
+    "hash": "2122aaf8212486bf",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.platform.buy": {
+    "hash": "7bae873a62431695",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.platform.nas": {
+    "hash": "f522e90c0ab7bd77",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.platform.nasVms": {
+    "hash": "1a97da376d9d1670",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.platform.oldpcRam": {
+    "hash": "8833b008ed8a1a8c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.platform.proxmox": {
+    "hash": "9a7735cbfc63aca3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.platform.vps": {
+    "hash": "1d3ecc1a27baa60c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.proxy.caddy": {
+    "hash": "ec0101a61c8e00b7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.proxy.none": {
+    "hash": "8bf6a377867529e3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.proxy.npm": {
+    "hash": "88eedc11f249414d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.proxy.traefik": {
+    "hash": "eac19638f99afdea",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.url.noProxy": {
+    "hash": "188b9ad1e80326f4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.url.path": {
+    "hash": "e497813e28cda3c9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.assistant.why.url.sub": {
+    "hash": "3bf29d4540547739",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.check.data": {
+    "hash": "179afd2212b01f3f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.check.repo": {
+    "hash": "d2a5c2d87ce3ad9c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.db.lead": {
+    "hash": "dc6509d18dd57622",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.db.mode": {
+    "hash": "8f107c4267618c02",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.db.more": {
+    "hash": "801bcecc2cebd8ac",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.db.title": {
+    "hash": "88b35326544379cf",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.default": {
+    "hash": "ef6691545d2c5523",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.desc": {
+    "hash": "ca4a789e40c52de7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.download": {
+    "hash": "6e615e7ca17c3fb7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.enc.archiveName": {
+    "hash": "a22ce8541a3228a2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.enc.archiveNameHint": {
+    "hash": "2ae2579f0b781755",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.enc.compression": {
+    "hash": "b192ee18fafd0384",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.enc.keyHint": {
+    "hash": "b4f4a1602f44dfbf",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.enc.passphrase": {
+    "hash": "088fd79cd386d879",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.enc.title": {
+    "hash": "405c225bb54f1c88",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.freq.1month": {
+    "hash": "493b36aec5f454e1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.freq.1week": {
+    "hash": "acc45ac2ec4c26ed",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.freq.2weeks": {
+    "hash": "2b73b678a5ba5269",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.freq.3months": {
+    "hash": "44ad1b6b72b57560",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.freq.6months": {
+    "hash": "3e1cf8c4aba2e37e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.freq.always": {
+    "hash": "93b994d616a6a24a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.freq.off": {
+    "hash": "cd5b158f21b7588b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.keep.daily": {
+    "hash": "39d3b69ffd2d15ab",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.keep.lead": {
+    "hash": "4d49e0d78a0439a2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.keep.monthly": {
+    "hash": "fd0039eccd62fd0d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.keep.title": {
+    "hash": "d8636b3b5a0ce586",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.keep.weekly": {
+    "hash": "d4bb0d9ce0bd9ae0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.keep.yearly": {
+    "hash": "71c2c31bbc342a9f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.link.backup": {
+    "hash": "66a7a53a82f4753e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.link.restore": {
+    "hash": "74b0ff635dc93cff",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.mode.dump": {
+    "hash": "a803cb41971f5857",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.mode.none": {
+    "hash": "772b3e005b409e7f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.mode.sqlite": {
+    "hash": "aba8f2670a9b1021",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.mode.stop": {
+    "hash": "5481e88c03fc5094",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.modeHint.dump": {
+    "hash": "e3b0c44298fc1c14",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.modeHint.none": {
+    "hash": "94febc3f9512460c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.modeHint.sqlite": {
+    "hash": "52e6e3bc08145967",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.modeHint.stop": {
+    "hash": "8f92234e50e8542c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.modeHint.stopNotify": {
+    "hash": "f52c761430574745",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.notify.hcUrl": {
+    "hash": "fbe9ad172290f3aa",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.notify.kumaHint": {
+    "hash": "09837c9fd6cc0d41",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.notify.kumaUrl": {
+    "hash": "33bd6c082a679e34",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.notify.lead": {
+    "hash": "bad2eb3dec54c378",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.notify.ntfyServer": {
+    "hash": "4cf1677f9ae71e7e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.notify.ntfySuccess": {
+    "hash": "be98d6dc2587f643",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.notify.ntfyToken": {
+    "hash": "20fbe8c92ed0a5f0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.notify.ntfyTopic": {
+    "hash": "7e61847d61d65d9e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.notify.title": {
+    "hash": "846cc8a56688aaaa",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.add": {
+    "hash": "ecc7169cf810cc92",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.host": {
+    "hash": "e3bcf270bac3591a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.kind": {
+    "hash": "afa9aba1ec908ccd",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.label": {
+    "hash": "db421498394df233",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.lead": {
+    "hash": "5fe183d0f1c25ce1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.local": {
+    "hash": "5f81fda08564d957",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.localHint": {
+    "hash": "2c11155690636257",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.path": {
+    "hash": "33029ba1208b3dd1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.port": {
+    "hash": "5cdd0d617b4d736c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.remotePath": {
+    "hash": "62666c25bda91f7d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.remove": {
+    "hash": "3828375a2d45384b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.ssh": {
+    "hash": "1bd625a884389253",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.sshHint": {
+    "hash": "1b0d73094b2375f9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.title": {
+    "hash": "766ada2704f236a7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.url": {
+    "hash": "9080a78b3e99c70f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.urlField": {
+    "hash": "3307556bc2d13ef8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.urlHint": {
+    "hash": "48bda2838fc86ca9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.repo.user": {
+    "hash": "80033f8258eb0e27",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.src.dataRoot": {
+    "hash": "e4acedde936740d2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.src.excludeCaches": {
+    "hash": "74128bf6500587c1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.src.excludes": {
+    "hash": "48fe0938c54dfdbb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.src.excludesHint": {
+    "hash": "4dc59c5cc5564b3c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.src.extra": {
+    "hash": "ce0f50e619ad28df",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.src.extraHint": {
+    "hash": "a005a63d53ab0aa0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.src.immich": {
+    "hash": "c0691a3253063368",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.src.immichThumbs": {
+    "hash": "10706f3f03003be7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.src.immichVideo": {
+    "hash": "4b36c2fbd69221d7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.src.lead": {
+    "hash": "512075de6e05e541",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.src.title": {
+    "hash": "108f2a95a0c37c2d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.steps.init": {
+    "hash": "b3e8e7ed2d2d6f45",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.steps.install": {
+    "hash": "064b2ce60d28bdea",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.steps.passphrase": {
+    "hash": "822d78778dae893f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.steps.sqlite": {
+    "hash": "bff8521a5e630dbb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.steps.test": {
+    "hash": "4129decd5a08307b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.steps.title": {
+    "hash": "eaef7327fbc3dd2d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.borgmatic.title": {
+    "hash": "6fc44258901b85e1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.autoHint": {
+    "hash": "b0174e9fb82eb276",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.clear": {
+    "hash": "9de63c78485ea94a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.count.good.one": {
+    "hash": "ce8d344cf5d83ef0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.count.good.other": {
+    "hash": "35064b0e1d5c8c94",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.count.info.one": {
+    "hash": "391decf5eb763e6e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.count.info.other": {
+    "hash": "ee11e135fa44847c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.count.warn.one": {
+    "hash": "a73396e99da43dbe",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.count.warn.other": {
+    "hash": "c920a475ba215a4b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.desc": {
+    "hash": "91807ed617a32917",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.details": {
+    "hash": "e728c23033104c47",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.empty": {
+    "hash": "a38e18d2e55e37dd",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.err.BAD_ALIAS": {
+    "hash": "64d6b2760bb5e027",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.err.BAD_DQ_ESCAPE": {
+    "hash": "08a30e51f8a7b61d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.err.BAD_INDENT": {
+    "hash": "88b3c05d01f37beb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.err.BAD_SCALAR_START": {
+    "hash": "e133192873352640",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.err.BLOCK_AS_IMPLICIT_KEY": {
+    "hash": "a9d3ddb908cafb6e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.err.BLOCK_IN_FLOW": {
+    "hash": "67f35be81a7950f7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.err.DUPLICATE_KEY": {
+    "hash": "5112bcfd00992291",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.err.MISSING_CHAR": {
+    "hash": "4312fe934699368c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.err.MULTILINE_IMPLICIT_KEY": {
+    "hash": "44aaad2d5a66812c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.err.MULTIPLE_DOCS": {
+    "hash": "5f89e03c1514b9c8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.err.TAB_AS_INDENT": {
+    "hash": "91d5ee7330952808",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.err.UNEXPECTED_TOKEN": {
+    "hash": "1a5ade2737d2e1c7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.err.generic": {
+    "hash": "f876e3507d3e4790",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.example": {
+    "hash": "3c058cfff6ef4f74",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.explain": {
+    "hash": "e558e6b8713eafe0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.external": {
+    "hash": "6d58c986f159d1e9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.anonVolume.fix": {
+    "hash": "93972edb2bc78880",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.anonVolume.t": {
+    "hash": "8f5b1ff32e098003",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.anonVolume.why": {
+    "hash": "56ac10f66a183ff3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.capAdd.fix": {
+    "hash": "1da8ba9761e3cfcf",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.capAdd.t": {
+    "hash": "3999d19008b31f7d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.capAdd.why": {
+    "hash": "cd6d578e80cef71d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.capAddStrong.fix": {
+    "hash": "d36e35ef30ee9f26",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.capAddStrong.t": {
+    "hash": "393a130b3c731697",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.capAddStrong.why": {
+    "hash": "bfebd114fec1516e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.dataOutside.fix": {
+    "hash": "5c94a22195115efe",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.dataOutside.t": {
+    "hash": "427e06487b8a21c4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.dataOutside.why": {
+    "hash": "16eae14496e90835",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.dbMajor.fix": {
+    "hash": "dccf602a88db8b49",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.dbMajor.t": {
+    "hash": "7b0bbd7bc211a302",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.dbMajor.why": {
+    "hash": "6759891c3cf943a4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.dockerSock.fix": {
+    "hash": "94da54b6cae29f0f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.dockerSock.t": {
+    "hash": "0c80edeacefffccb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.dockerSock.why": {
+    "hash": "bb2fe4206e8fce47",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.floatingTag.fix": {
+    "hash": "ed10a71f7c3a498b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.floatingTag.t": {
+    "hash": "9df505ad850ed17f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.floatingTag.why": {
+    "hash": "826f0d6a245a2dbf",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.healthcheck.t": {
+    "hash": "28db6310408bf25d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.healthcheck.why": {
+    "hash": "c9a62184dd39b707",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.homePath.fix": {
+    "hash": "eac4ab2a39101524",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.homePath.t": {
+    "hash": "d216b9717b926132",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.homePath.why": {
+    "hash": "39f746964c6528a7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.hostNetwork.fix": {
+    "hash": "32802ca3450e45a9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.hostNetwork.t": {
+    "hash": "b02867ac4df68af1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.hostNetwork.why": {
+    "hash": "4e066c15b3b3a42c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.latest.fix": {
+    "hash": "dd1f55ce0af6cf7e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.latest.t": {
+    "hash": "ef574da423b2fa06",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.latest.why": {
+    "hash": "cd1fe257211a6ef8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.localPort.t": {
+    "hash": "3d96175526c57e52",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.localPort.why": {
+    "hash": "e26f0564167a8a7c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.namedVolume.fix": {
+    "hash": "a5c5d1e966c5c8d7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.namedVolume.t": {
+    "hash": "f29de2219fb27e20",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.namedVolume.why": {
+    "hash": "d65f58589d9b9aac",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.noImage.fix": {
+    "hash": "a692a4e6990faf96",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.noImage.t": {
+    "hash": "880c3b2e6a8d4162",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.noImage.why": {
+    "hash": "9a61abde734656d9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.noNewPrivileges.t": {
+    "hash": "4aa273e08c2417cc",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.noNewPrivileges.why": {
+    "hash": "48efeb637d930a0f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.noRestart.fix": {
+    "hash": "bb8b6f984f6c6c8f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.noRestart.t": {
+    "hash": "7f05329559453646",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.noRestart.why": {
+    "hash": "e5be3590a324c41f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.pidHost.fix": {
+    "hash": "4d535f1c5e5c7f13",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.pidHost.t": {
+    "hash": "21e26842f93cccfc",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.pidHost.why": {
+    "hash": "480aee46ac67be2a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.pinned.t": {
+    "hash": "29ebb5e8dd923b8e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.pinned.why": {
+    "hash": "38a1e406d765b99e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.plainSecret.fix": {
+    "hash": "ca0872b134cf51ba",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.plainSecret.t": {
+    "hash": "c593df89dddf2286",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.plainSecret.why": {
+    "hash": "dcfa8ce5fc29baa1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.portsWithProxy.fix": {
+    "hash": "bdddb14d2a61806c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.portsWithProxy.t": {
+    "hash": "eda927f3f4dc8a38",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.portsWithProxy.why": {
+    "hash": "3e1bea14742e071c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.privileged.fix": {
+    "hash": "c39d703ef340dcfd",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.privileged.t": {
+    "hash": "70f7c1e37b3ed0cc",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.privileged.why": {
+    "hash": "5068236742ef316f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.publicPort.fix": {
+    "hash": "68f76831ebbdd501",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.publicPort.t": {
+    "hash": "997d11f6e6ccd120",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.publicPort.why": {
+    "hash": "bfd418941ed3cdfd",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.restartSet.t": {
+    "hash": "58f3a64243b8f8bc",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.restartSet.why": {
+    "hash": "7f00cfbb2b6111b1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.secretRef.t": {
+    "hash": "01f257cfd327618d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.secretRef.why": {
+    "hash": "7dc8c855c6acbd5d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.undeclaredNetwork.fix": {
+    "hash": "246a6916005f4a60",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.undeclaredNetwork.t": {
+    "hash": "5e37f41287a9371a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.undeclaredNetwork.why": {
+    "hash": "3e35e280a98edfd6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.undeclaredVolume.fix": {
+    "hash": "a74c9d58cb509c71",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.undeclaredVolume.t": {
+    "hash": "6f30c22c899bef70",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.undeclaredVolume.why": {
+    "hash": "9deb68bebc12af8e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.unknownDep.fix": {
+    "hash": "2d2521fcd3cd4796",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.unknownDep.t": {
+    "hash": "ee222ad8d85f4d87",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.unknownDep.why": {
+    "hash": "64b215eaebdc8430",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.unquotedPort.fix": {
+    "hash": "57000e853555a605",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.unquotedPort.t": {
+    "hash": "3ad2145a8948de38",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.unquotedPort.why": {
+    "hash": "29c4e90fb6633a68",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.version.fix": {
+    "hash": "28c767d8d7abba11",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.version.t": {
+    "hash": "a04608632321247a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.f.version.why": {
+    "hash": "09751da7f44f82d0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.findings": {
+    "hash": "c013ad9e5a133fee",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.fix": {
+    "hash": "bddac3562ee12237",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.input": {
+    "hash": "cacfa3405401e8d9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.jump": {
+    "hash": "e95042b84dbaed41",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.line": {
+    "hash": "8275350558c355a9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.link.database-version": {
+    "hash": "f7bd3d935843cf1b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.more": {
+    "hash": "9e68bcd8242646a3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.cap": {
+    "hash": "e87817d72b21c9c6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.cap.ALL": {
+    "hash": "4ecd69a2187fb87b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.cap.CHOWN": {
+    "hash": "1ec6e52e316c4ed6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.cap.DAC_OVERRIDE": {
+    "hash": "ddf73b9beae39135",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.cap.NET_ADMIN": {
+    "hash": "f0c6326d32ba59f3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.cap.NET_BIND_SERVICE": {
+    "hash": "f98294bf4897dbdd",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.cap.NET_RAW": {
+    "hash": "0e3e14f14e27247a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.cap.SETGID": {
+    "hash": "bbcad2b99123cc1a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.cap.SETUID": {
+    "hash": "fe6e38ce07e428ef",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.cap.SYS_ADMIN": {
+    "hash": "87152011be89da1f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.cap.SYS_MODULE": {
+    "hash": "de8988071a1e7277",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.cap.SYS_NICE": {
+    "hash": "5091361b3435ce95",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.cap.SYS_PTRACE": {
+    "hash": "b0dd73021ce1b061",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.cap.SYS_TIME": {
+    "hash": "365bdc6fa6ab48b4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.cap_drop": {
+    "hash": "59b6fdaaa7102152",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.container_name": {
+    "hash": "978b0a0632dd9626",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.dep": {
+    "hash": "2246635f346f51fe",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.dep.completed": {
+    "hash": "da409305b4797f6a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.dep.healthy": {
+    "hash": "c127a8201b0ecc19",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.devices": {
+    "hash": "a9dda4d7497381d1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.devices.dri": {
+    "hash": "30a8b6274a5b47ea",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.devices.serial": {
+    "hash": "3664579a4a4f6f11",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.env.pass": {
+    "hash": "5d2b2f41c0fb3f1b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.env.ref": {
+    "hash": "6186d0f823cbe129",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.env.value": {
+    "hash": "302cd5712809bc5d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.env_file": {
+    "hash": "a4ef5f4031d16d08",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.expose": {
+    "hash": "ec64f17e096d4612",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.generic": {
+    "hash": "b2442b2dc634afb6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.healthcheck": {
+    "hash": "dccea55bfe6caa96",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.healthcheck.disabled": {
+    "hash": "d10c49f816b5fc8e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.image.db": {
+    "hash": "7367d8dc3ad543b2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.image.digest": {
+    "hash": "9528c314d74cb51c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.image.floating": {
+    "hash": "77210326767af846",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.image.hub": {
+    "hash": "3a096a2831635b82",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.image.latest": {
+    "hash": "f132ade73fb06511",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.image.major": {
+    "hash": "79eb9aaea0d33502",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.image.minor": {
+    "hash": "5d6d4aca97457e7e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.image.noTag": {
+    "hash": "68b3d440195feb43",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.image.official": {
+    "hash": "3b672baaf6508568",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.image.registry": {
+    "hash": "f45719aaf67842f9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.image.repo": {
+    "hash": "9acc7bee984bd7c0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.image.tag": {
+    "hash": "a3c18a6f21bda919",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.image.var": {
+    "hash": "aa7f8986cd85fa5c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.build": {
+    "hash": "a6d59b8faf9dfa0a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.command": {
+    "hash": "8a06b9755819ce83",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.configs": {
+    "hash": "a4bb4b8916ddfc12",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.cpus": {
+    "hash": "bae228848a4b161b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.deploy": {
+    "hash": "86c962a82817b2cf",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.dns": {
+    "hash": "50e3ed43e2627d22",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.domainname": {
+    "hash": "dd64b4efaf58878b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.entrypoint": {
+    "hash": "a611f40002e9665c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.extra_hosts": {
+    "hash": "a45c2724552521cc",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.group_add": {
+    "hash": "4cd3517cc6a76d92",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.hostname": {
+    "hash": "975c54ffe308bdfd",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.init": {
+    "hash": "38f98b115e25e89c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.ipc": {
+    "hash": "e8f4683ce11bb1d0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.logging": {
+    "hash": "82b779dd89ffce7c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.mem_limit": {
+    "hash": "b0c8423a45c47c8d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.platform": {
+    "hash": "6a900e5f8f9d7d82",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.profiles": {
+    "hash": "22192a7ee98e98a5",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.pull_policy": {
+    "hash": "10affc4dbb0fe500",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.read_only": {
+    "hash": "8d1c9ff426141b45",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.secrets": {
+    "hash": "dc784eb28cbeec7a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.shm_size": {
+    "hash": "a6b02428e3a0b017",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.stdin_open": {
+    "hash": "4c8d481a59bfd013",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.stop_grace_period": {
+    "hash": "1942c18839b7d734",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.stop_signal": {
+    "hash": "d23cb0cfa1e4a01b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.sysctls": {
+    "hash": "4d1982da0f372ff0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.tmpfs": {
+    "hash": "9d9026dd131efb6d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.tty": {
+    "hash": "1b81d0b3dc62a2ca",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.ulimits": {
+    "hash": "423fc963c4949942",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.unknown": {
+    "hash": "9a10eac9eee7f6ec",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.working_dir": {
+    "hash": "c0ef8dcec360af7f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.key.x": {
+    "hash": "02c9ebbb69b7d5c4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.label": {
+    "hash": "afd4fb72d5ce64f1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.net": {
+    "hash": "aa6f117b7ff7e8fc",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.net.external": {
+    "hash": "24a8599cab38d9c7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.network_mode.host": {
+    "hash": "b6b595bde5d1b28a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.network_mode.none": {
+    "hash": "4473dce92a5eb049",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.network_mode.other": {
+    "hash": "5b914ef54df80915",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.network_mode.shared": {
+    "hash": "73f42ab8029a76d6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.pid.host": {
+    "hash": "5a81bee72e7c9c22",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.port.all": {
+    "hash": "549abf9efa683612",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.port.containerOnly": {
+    "hash": "f252c1626eb1d8c5",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.port.ip": {
+    "hash": "95f2c55c7e3097d8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.port.local": {
+    "hash": "3a01fd4be1c1c9a4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.port.map": {
+    "hash": "f53a4d220a15db78",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.privileged": {
+    "hash": "6d2c6beffacc7909",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.privileged.off": {
+    "hash": "0b4ba0a130d30a74",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.restart.always": {
+    "hash": "272f61a915869eb0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.restart.no": {
+    "hash": "d41e4496472235ea",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.restart.on-failure": {
+    "hash": "e16c6aa730a0eaae",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.restart.other": {
+    "hash": "e54fe91a78297e2d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.restart.unless-stopped": {
+    "hash": "b348c201f6079012",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.security_opt": {
+    "hash": "de5dc872693dfa4f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.security_opt.nnp": {
+    "hash": "e0827d2d4482079a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.traefik.certresolver": {
+    "hash": "8abea8ab1cf32a9e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.traefik.disable": {
+    "hash": "94d230d326db999b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.traefik.enable": {
+    "hash": "81a97b317433bdcd",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.traefik.entrypoints": {
+    "hash": "1f5867cbdb1911b0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.traefik.middleware": {
+    "hash": "25005ad468d6f6ff",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.traefik.middlewares": {
+    "hash": "96a3c4bc8eef7a8f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.traefik.network": {
+    "hash": "ea89012498b5b8c6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.traefik.other": {
+    "hash": "f35528501712b37a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.traefik.port": {
+    "hash": "2cc93e99bfe004c7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.traefik.router": {
+    "hash": "b343a3412522c546",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.traefik.rule": {
+    "hash": "39c9ce08dd4b0386",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.traefik.ruleOther": {
+    "hash": "855a469cc3570d68",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.traefik.rulePath": {
+    "hash": "48619ea4748844b0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.traefik.scheme": {
+    "hash": "aa9e5b6ed7d86330",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.traefik.service": {
+    "hash": "cf09469943b81c4f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.traefik.tls": {
+    "hash": "384dc3b3423d1eb1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.user": {
+    "hash": "29b5c22a371008cf",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.user.root": {
+    "hash": "6dff03892fc34016",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.vol.anon": {
+    "hash": "4238de2151c603f2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.vol.bind": {
+    "hash": "8b22ed2dec05d78c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.vol.named": {
+    "hash": "5be73934be33cb64",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.vol.relative": {
+    "hash": "7ed04e53d7178451",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.vol.ro": {
+    "hash": "6244872dc9391767",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.vol.tmpfs": {
+    "hash": "2acf967bd4d76de2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.n.vol.var": {
+    "hash": "d1fa17257f794e69",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.name": {
+    "hash": "29ff0bdf52180e0d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.networks": {
+    "hash": "f12e542c4afccfd3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.noFindings": {
+    "hash": "e1a1b45680100bc3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.none": {
+    "hash": "db028eeb570f2485",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.overview": {
+    "hash": "2d2baea43a0e9429",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.partial": {
+    "hash": "cc3aca2bccd853e9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.placeholder": {
+    "hash": "c4d57969c6560be6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.refs": {
+    "hash": "19ade3da671f64b5",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.s.noServices": {
+    "hash": "24d396a75ac56a24",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.s.notMap": {
+    "hash": "6d60702120dd9e96",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.s.serviceNotMap": {
+    "hash": "067b6572fd19cb18",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.s.servicesNotMap": {
+    "hash": "c985a013261cb144",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.services": {
+    "hash": "a6f5acc69db6b9a0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.sev.err": {
+    "hash": "f6cc01cb7edbf0a8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.sev.good": {
+    "hash": "7a26d266bf0c4e4d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.sev.info": {
+    "hash": "2e2011d96a411698",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.sev.warn": {
+    "hash": "48078085b7270fe8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.syntaxErr": {
+    "hash": "edc1032ca80d6049",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.syntaxOk": {
+    "hash": "2741e8f5d5270c21",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.title": {
+    "hash": "1eca6f5d9b7a41db",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.volumes": {
+    "hash": "53a480e304c08274",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.compose-explainer.why": {
+    "hash": "0ccef7ba5c157ddf",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.desc": {
+    "hash": "6326788833946349",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.detailsText": {
+    "hash": "00cad6dd5ec6dc32",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.detailsTitle": {
+    "hash": "4239d7e46a453647",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.download": {
+    "hash": "b3025b16bfa6b124",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.field.backup": {
+    "hash": "1d54db100d7ba592",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.field.hardware": {
+    "hash": "7975300f01bc46f8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.field.ip": {
+    "hash": "61e9301253cb5301",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.field.notes": {
+    "hash": "7800bd538c3766af",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.field.title": {
+    "hash": "e9670e2fb83053a9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.backup": {
+    "hash": "838557924a5cdfb2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.backupDump": {
+    "hash": "42a32122ac120196",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.backupSqlite": {
+    "hash": "08d899650417d22a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.backupTarget": {
+    "hash": "1d54db100d7ba592",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.backupText": {
+    "hash": "c3026cb31ea13502",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.backupsGuide": {
+    "hash": "77460dd11ffe2698",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.dataCentral": {
+    "hash": "749c0872fc1bbfee",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.dataDir": {
+    "hash": "c4dbcc77bffaa868",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.dataMode": {
+    "hash": "43bf4ac31f53b059",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.dataStack": {
+    "hash": "cd13733bf863d288",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.database": {
+    "hash": "4cc80701da55c69a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.dbContainer": {
+    "hash": "9c743defda342645",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.defaultTitle": {
+    "hash": "212a797f7ca6f61e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.domain": {
+    "hash": "79fa33618d8eaa1f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.emergency": {
+    "hash": "5c960dcb9f3518de",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.emergencyPlan": {
+    "hash": "dc65cb66c13efbd4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.emergencyProxy": {
+    "hash": "b31754eba32c2fa9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.emergencyText": {
+    "hash": "806b445dc9135167",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.field": {
+    "hash": "9f276c3991cc8cd2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.generated": {
+    "hash": "92ffadd28795e090",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.guide": {
+    "hash": "efbd1c4defe41e98",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.hardware": {
+    "hash": "7975300f01bc46f8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.ip": {
+    "hash": "577efd57794e34c8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.network": {
+    "hash": "f7539b53f23ae7dd",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.noServices": {
+    "hash": "abe5f3374829eb0c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.notes": {
+    "hash": "7800bd538c3766af",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.overview": {
+    "hash": "2d2baea43a0e9429",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.port": {
+    "hash": "bf44d341890593f6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.proxy": {
+    "hash": "8f5358d2e288b0ad",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.restore": {
+    "hash": "a76e13b9839270eb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.restore1": {
+    "hash": "e766161f9e54f784",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.restore2": {
+    "hash": "02c704f9261fff12",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.restore3": {
+    "hash": "87ac40fe59261963",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.restore3Db": {
+    "hash": "c87521ade2a52c11",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.restore3Sqlite": {
+    "hash": "79e08441220f225a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.restore4": {
+    "hash": "d40540065daaba17",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.restoreGuide": {
+    "hash": "19442ec0fff82ee6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.service": {
+    "hash": "ecc4f77cf2131334",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.services": {
+    "hash": "a6f5acc69db6b9a0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.stackDir": {
+    "hash": "142fe6f49d08d95e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.stacks": {
+    "hash": "142fe6f49d08d95e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.title": {
+    "hash": "99d4367d26352bf3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.tz": {
+    "hash": "00507b23a11ba675",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.update": {
+    "hash": "c1c1009d3f37ec05",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.url": {
+    "hash": "e7a241debad56609",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.urls": {
+    "hash": "1240054e2040d953",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.urlsPath": {
+    "hash": "a1b9bf82d0c04d41",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.urlsSub": {
+    "hash": "27b6609e66f6b8ad",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.md.value": {
+    "hash": "7e347daa5ec7fbe8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.phBackup": {
+    "hash": "52a4aea51e85368a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.phHardware": {
+    "hash": "cd7a1d4b09f04c42",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.phNotes": {
+    "hash": "3b7628bf8f93da05",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.phTitle": {
+    "hash": "3825687abd7925e7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.previewTitle": {
+    "hash": "61a52a4457dc7374",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.servicesText": {
+    "hash": "1a7f8a82020aae22",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.servicesTitle": {
+    "hash": "1a7b905b61328770",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.docs-export.title": {
+    "hash": "7533600efae4f63a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.group.build": {
+    "hash": "5767c0541e4e6ad5",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.group.operate": {
+    "hash": "ae3f315fdc1bd4e6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.group.plan": {
+    "hash": "febebc5e678557a2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.group.start": {
+    "hash": "1d6ad4654c8155b1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.lead": {
+    "hash": "0108dc762fc179d1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.more": {
+    "hash": "98a2e678e049fa9f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.open": {
+    "hash": "bc385a30b5378841",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.cost": {
+    "hash": "acd4686ca9428f5c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.costHint": {
+    "hash": "ae1cfac2c2adb25a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.desc": {
+    "hash": "8478d8a3bc9997c2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.errName": {
+    "hash": "2a09c51b96000633",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.errPassword": {
+    "hash": "6d521cbed41c7f98",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.errUser": {
+    "hash": "08c9234e6e702a1e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.failed": {
+    "hash": "fcf4b57d6a9acd00",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.formatNote": {
+    "hash": "0c195bde925b277b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.generate": {
+    "hash": "67755e54157c89f4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.guideLink": {
+    "hash": "4af2c161a5df45ac",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.hide": {
+    "hash": "a710cb328fd47770",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.htpasswdText": {
+    "hash": "23bfc4a98ed2fdf0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.htpasswdTitle": {
+    "hash": "592e89e224a5a1d5",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.local": {
+    "hash": "aa8cfcb38bbb77c8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.localTag": {
+    "hash": "f69c25b51b80211c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.name": {
+    "hash": "6c3e4d6f4b4c1b03",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.nameHint": {
+    "hash": "98b208b4c1b40280",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.outputs": {
+    "hash": "cd8e22cf7439433d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.password": {
+    "hash": "a36c101570cc4410",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.random": {
+    "hash": "eca5bdd3bb0a8c9f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.show": {
+    "hash": "ccb27f03f03ed866",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.stale": {
+    "hash": "5dc29b7e255471b8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.tinyauthMore": {
+    "hash": "fd78480d38cfb023",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.tinyauthText": {
+    "hash": "d82ea1cbb86baa8f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.tinyauthTitle": {
+    "hash": "d2111ba7484efb2b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.title": {
+    "hash": "4b5a3b4df0612a19",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.tooLong": {
+    "hash": "cee4f823937ce0e1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.traefikMore": {
+    "hash": "d55212f7be98b6e9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.traefikText": {
+    "hash": "b6d21f762b387ce8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.traefikTitle": {
+    "hash": "1cfe3e2ed562b538",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.user": {
+    "hash": "fc309e30dbbe8a43",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.working": {
+    "hash": "e496c22000572075",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.picker.changeInBuilder": {
+    "hash": "55e9a9477ce0d48c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.picker.clear": {
+    "hash": "25f776818680c837",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.picker.none": {
+    "hash": "abe5f3374829eb0c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.picker.ramUnknown": {
+    "hash": "ec201df37046b38d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.picker.toggle": {
+    "hash": "5481663a2d5e54cf",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.always": {
+    "hash": "4d8974777af17995",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.avg": {
+    "hash": "4c1a72dbda4348fc",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.colCost": {
+    "hash": "52461d6966539417",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.colDevice": {
+    "hash": "b32db78620d9fa3b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.colKwh": {
+    "hash": "32c6c1ae9e0adb98",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.colWatts": {
+    "hash": "9e1dd51bd2597cd6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.compare": {
+    "hash": "79a63c24b8cc2200",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.compareHint": {
+    "hash": "a0d2ae2d73c1a48d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.currency": {
+    "hash": "3bdd23b6724ec031",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.current": {
+    "hash": "86ce7255fdf3556f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.desc": {
+    "hash": "8e147e6cfc101579",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.device": {
+    "hash": "b32db78620d9fa3b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.devices": {
+    "hash": "ad01b26a4ac27027",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.hours": {
+    "hash": "53af7f20e11a78ba",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.hoursMode": {
+    "hash": "53af7f20e11a78ba",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.idle": {
+    "hash": "f4b6788b4bf20f70",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.kwhYear": {
+    "hash": "6a7d4400c934833f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.linkHw": {
+    "hash": "6165af2b942f82ff",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.linkRam": {
+    "hash": "7020939b3050ad49",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.linkWiki": {
+    "hash": "04a7bfef96190e2f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.load": {
+    "hash": "39dad7be86098323",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.loadHint": {
+    "hash": "b034ffb1d671e791",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.loadShare": {
+    "hash": "f6b8e6f7e791c53b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.loadToggle": {
+    "hash": "a5e327cb7633ed14",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.perMonth": {
+    "hash": "0ecfd1b97823e4e4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.perWatt": {
+    "hash": "3e2924bacd955de8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.perYear": {
+    "hash": "e29e5602908688b1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.preset.business": {
+    "hash": "65b57e99fb286519",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.preset.desktop": {
+    "hash": "24396bc2b3c488ff",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.preset.n100": {
+    "hash": "a85332d27bd54f99",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.preset.nas": {
+    "hash": "e613fd3095f755a7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.preset.pi": {
+    "hash": "d8d3e93c9367f244",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.preset.server": {
+    "hash": "aef7de28d52977f1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.presets": {
+    "hash": "716bf478d16d0796",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.price": {
+    "hash": "5524b7fdfe1b6baf",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.priceAssumption": {
+    "hash": "47f153c226cbaa9d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.priceRuntime": {
+    "hash": "473e6a3c683fefe9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.result": {
+    "hash": "cd8e22cf7439433d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.runtime": {
+    "hash": "956ba2f5f97188e6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.power-calculator.title": {
+    "hash": "c59c03aacd6bc72c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.privacy": {
+    "hash": "b54c4c0c0690f264",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.checkDnsPath": {
+    "hash": "0874e21b816fe8f9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.checkDnsSub": {
+    "hash": "fd41157a47dd83ca",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.checkNet": {
+    "hash": "bdb89b3c7e98d895",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.checkPorts": {
+    "hash": "5d041f745443a7ab",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.checkStart": {
+    "hash": "4830de528b99e060",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.checkStartCaddy": {
+    "hash": "fc2481b044e22f5a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.checkStartNpm": {
+    "hash": "5d558f8e745b5a28",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.checkTinyauth": {
+    "hash": "3dd8b4b2b12693fb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.checklist": {
+    "hash": "ab242651b32579eb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.container": {
+    "hash": "435b64689d583f6b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.containerHint": {
+    "hash": "deeaf8b33069131a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.desc": {
+    "hash": "ae128beb79886581",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.errContainer": {
+    "hash": "f51fa9e8b5f34d2a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.errId": {
+    "hash": "5c5a6f442f9c880b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.errPort": {
+    "hash": "8f4f2c343f77074a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.errSub": {
+    "hash": "b9f160b3f8bfe427",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.https": {
+    "hash": "cb96cd3abb5999fc",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.httpsHint": {
+    "hash": "5e7cc52d8c460146",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.id": {
+    "hash": "2184631b7a906e29",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.idHint": {
+    "hash": "5425cba5620f44d6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.leadCaddy": {
+    "hash": "635ee1cba9931a1b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.leadNet": {
+    "hash": "734a4145d2c72734",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.leadNpm": {
+    "hash": "f1fa3fa5997a3f9d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.leadTraefik": {
+    "hash": "094d856ff6dc0a42",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.linkExplainer": {
+    "hash": "1eca6f5d9b7a41db",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.linkGuide": {
+    "hash": "5b63c7be850b64ca",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.linkWiki": {
+    "hash": "c708f03a98ff49e2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.modePath": {
+    "hash": "be2fbefc5c271535",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.modeSub": {
+    "hash": "ba4520ab4f2581c2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.moreText": {
+    "hash": "9e68bcd8242646a3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.noteCaddyAuth": {
+    "hash": "5209d453bc3a86dd",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.noteCaddyHttps": {
+    "hash": "bf849ed9a6ecf4e3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.noteCaddyPath": {
+    "hash": "8a9831e0deceaac2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.noteCaddyReload": {
+    "hash": "12c3dc4d7bcb2f4b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.noteNoProxy": {
+    "hash": "141f248442929d10",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.noteNpmAuth": {
+    "hash": "724d97a129487615",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.noteNpmHttps": {
+    "hash": "37d375756c581dc8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.noteNpmPath": {
+    "hash": "2f2a6467b2c8b009",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.notePath": {
+    "hash": "3835011b084c9110",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.noteTraefikAuth": {
+    "hash": "27fcc8d4be91df4e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.noteTraefikHttps": {
+    "hash": "23e4e80ff25385f3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.noteWsAuto": {
+    "hash": "2aaa6f541fbe4737",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.npmCache": {
+    "hash": "5d47762e99849e16",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.npmCert": {
+    "hash": "3a21208d17389a90",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.npmCertNew": {
+    "hash": "7a0ec11185173022",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.npmDomain": {
+    "hash": "dd43aade6b6b9874",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.npmExploits": {
+    "hash": "b169cf0eb3703339",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.npmForce": {
+    "hash": "4ea2755cef0f471e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.npmHost": {
+    "hash": "2f63aba2318d127b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.npmHsts": {
+    "hash": "70c6cce21584d1e6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.npmHttp2": {
+    "hash": "2c82e09742d4117d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.npmLocation": {
+    "hash": "15b61974b2707a7b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.npmPort": {
+    "hash": "5402aa1d06085424",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.npmScheme": {
+    "hash": "dca65687b97af5d9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.npmTabDetails": {
+    "hash": "06438fd7fc1dd000",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.npmTabLocations": {
+    "hash": "392bf7cc5fabe5b9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.npmTabSsl": {
+    "hash": "3318d6e025870fa4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.npmWs": {
+    "hash": "2e15b6d4fe58bc5d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.off": {
+    "hash": "2337c37f0721980b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.on": {
+    "hash": "ea325d761f98c6b7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.optional": {
+    "hash": "ec91fdd9256cb75a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.options": {
+    "hash": "f1daae3521fedae5",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.port": {
+    "hash": "522ef2bd106a0325",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.portHint": {
+    "hash": "7deb0f3b7cd7fa71",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.proxy": {
+    "hash": "8f5358d2e288b0ad",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.service": {
+    "hash": "40de530022fb22bb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.sub": {
+    "hash": "abdddd711141e903",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.subHint": {
+    "hash": "1f5464fa7553c3ea",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.tinyauth": {
+    "hash": "33a1641323fca429",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.tinyauthHint": {
+    "hash": "f8377dc8ab97e38b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.title": {
+    "hash": "9dd1093af4dee3b1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.url": {
+    "hash": "d319ecee443ab063",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.urlMode": {
+    "hash": "79e5cf20de0ba454",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.websockets": {
+    "hash": "7cc572bfaa1c1001",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.proxy-config.websocketsHint": {
+    "hash": "4cb49c6dfcec93ee",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.barLabel": {
+    "hash": "12d2814801089570",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.base": {
+    "hash": "8513f5c2e8e8d2d6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.buffer": {
+    "hash": "68bab85e82c9cd98",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.bufferHint": {
+    "hash": "0aff4a1aad35a128",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.clear": {
+    "hash": "25f776818680c837",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.desc": {
+    "hash": "d4d6969c8b0bee59",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.docker": {
+    "hash": "e6169e958b37ce86",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.estNote": {
+    "hash": "8da78e9dedcc56e8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.estimated": {
+    "hash": "49f7b6cad7eade33",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.gpuOptional": {
+    "hash": "76b51abf9a2776f1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.gpuRecommended": {
+    "hash": "33730755a1f65e56",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.immich": {
+    "hash": "073357da0f38c09b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.linkHw": {
+    "hash": "6165af2b942f82ff",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.linkPower": {
+    "hash": "75972c2092fbe946",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.os": {
+    "hash": "64945cc3b4ecc91d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.pick": {
+    "hash": "1a7b905b61328770",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.pickHint": {
+    "hash": "ce69d90699d7d7e5",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.proxmox": {
+    "hash": "765a7a8035a60091",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.proxmoxHint": {
+    "hash": "fcfa23c81f6097aa",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.proxmoxNote": {
+    "hash": "b27d287e8304e2db",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.selected": {
+    "hash": "bf67e1f5873b5424",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.tier16": {
+    "hash": "59565bbc7ad32b3c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.tier32": {
+    "hash": "bb19223c9a714628",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.tier4": {
+    "hash": "0b6b4c1069d320a4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.tier8": {
+    "hash": "5b7687d7ee5c2fd0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.title": {
+    "hash": "bfbad51f06e9c954",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.total": {
+    "hash": "6cf48d46e202a968",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.why": {
+    "hash": "ab6260bd91764e5f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.ram-planner.why32": {
+    "hash": "242dfd46ebebc5a8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.a.no": {
+    "hash": "90ebc1bde6f3b1ff",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.a.partial": {
+    "hash": "296f1fe2c06d79ed",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.a.unknown": {
+    "hash": "aed6fc58450585f1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.a.yes": {
+    "hash": "cde9e58a9a4e1f36",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.answered": {
+    "hash": "0c00a79e3b66e26e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.desc": {
+    "hash": "f90c5145138a55f5",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.group.access": {
+    "hash": "d1622b9baa985411",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.group.backups": {
+    "hash": "3334fee2c77fef82",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.group.docker": {
+    "hash": "e6169e958b37ce86",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.group.login": {
+    "hash": "93feccbe398e1b06",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.group.monitoring": {
+    "hash": "fa54f34f77fc3801",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.group.network": {
+    "hash": "e4ffc4c4c446f914",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.group.updates": {
+    "hash": "22e2bada8f1c65cd",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.admin-uis": {
+    "hash": "ef6456fde3c48fb7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.auto-updates": {
+    "hash": "dc374111bef9b4a1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.backup-auto": {
+    "hash": "953d3323793089c6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.backup-offsite": {
+    "hash": "5c0357aaddd215c6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.crowdsec": {
+    "hash": "039ca8f81f82c9b6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.docker-ports": {
+    "hash": "53b4bf497c97b917",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.docker-sock": {
+    "hash": "71463953ba181822",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.emergency-plan": {
+    "hash": "949720cfa0a53163",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.image-tags": {
+    "hash": "2855b43a2f6f2e4a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.login-protection": {
+    "hash": "82b7744c9ef63c4f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.monitoring": {
+    "hash": "14ac7cb1f21223c9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.open-ports": {
+    "hash": "3041c4bc797b313f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.restore-tested": {
+    "hash": "c7212bce0cf63209",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.root-login": {
+    "hash": "8cae6d8db0cdb5ad",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.secrets": {
+    "hash": "896c4ae529470eeb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.ssh-keys": {
+    "hash": "41e13754d2b4d183",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.sudo-user": {
+    "hash": "b90494d166d9c150",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.h.ufw": {
+    "hash": "c17989a0e54d5c67",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.how": {
+    "hash": "b3e8eb3813f95e04",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.admin-uis": {
+    "hash": "c17352f3e4e5eb19",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.auto-updates": {
+    "hash": "24e81bec7d261d72",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.backup-auto": {
+    "hash": "23dff9264d00b54e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.backup-offsite": {
+    "hash": "58fab0194f7cff6e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.crowdsec": {
+    "hash": "de0213bd887e04b9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.docker-ports": {
+    "hash": "1100e921117bab09",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.docker-sock": {
+    "hash": "7dcd261adb5fc6b8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.emergency-plan": {
+    "hash": "f90ddde4145a102e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.image-tags": {
+    "hash": "9c97a81eb6ba5a22",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.login-protection": {
+    "hash": "df350907a6e4533d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.monitoring": {
+    "hash": "7f41e704e04aa04b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.open-ports": {
+    "hash": "81f872df1a99f19b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.restore-tested": {
+    "hash": "9da77d9806bb2c85",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.root-login": {
+    "hash": "44d6c2bc0b0e12b6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.secrets": {
+    "hash": "f903acfde485985f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.ssh-keys": {
+    "hash": "3cb7d03133943b14",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.sudo-user": {
+    "hash": "ccfe1afcae400e98",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.i.ufw": {
+    "hash": "847bafe5c4198f77",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.light.green": {
+    "hash": "e61c19c4f6a477f0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.light.none": {
+    "hash": "2673989c0ab9049a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.light.red": {
+    "hash": "0fda1464afe8c887",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.light.yellow": {
+    "hash": "29ef9b07cd1e43c0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.next": {
+    "hash": "7d75c06611d6bd61",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.nextEmpty": {
+    "hash": "ce52333ade2201df",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.note": {
+    "hash": "8ae4fc4d5fe267ea",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.reset": {
+    "hash": "1ba0463c46e6cafa",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.resultTitle": {
+    "hash": "c6a64c223871e28f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.title": {
+    "hash": "8de0c493b06b734f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.weight.2": {
+    "hash": "51dcbe84957689ab",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.security-check.weight.3": {
+    "hash": "61b6f3365997880e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.add": {
+    "hash": "cbb95cf02b7d0216",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.desc": {
+    "hash": "36d828b21e409a3a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.download": {
+    "hash": "12f541b870d3bc30",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.downloadText": {
+    "hash": "d58331e5dcb2007e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.downloadTitle": {
+    "hash": "decefd3563b960d3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.empty": {
+    "hash": "f6d6de985034c463",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.missingRam": {
+    "hash": "cd76184e76f8c136",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.pickText": {
+    "hash": "64439d7d41dde8f2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.pickTitle": {
+    "hash": "b8db52a625f9eb99",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.preview": {
+    "hash": "33471ae4b523032b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.proxyFile.caddy": {
+    "hash": "cae7251e56d92112",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.proxyFile.npm": {
+    "hash": "cb0df68d2b5c2cd2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.proxyIncluded": {
+    "hash": "83c45d2422f3b28c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.proxyMismatch": {
+    "hash": "b955a20b47eb587a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.proxyMulti": {
+    "hash": "bc0e29e9d762f838",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.proxySuggest": {
+    "hash": "2c0e235f585bf8db",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.ramPlanner": {
+    "hash": "74b11c361308ce32",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.ramTotal": {
+    "hash": "e9677a8aa22cf54e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.readme.intro": {
+    "hash": "563c31c5839893c7",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.readme.more": {
+    "hash": "772eea2d3eb3a22b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.readme.service": {
+    "hash": "19cff8f409764029",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.readme.services": {
+    "hash": "1a7b905b61328770",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.readme.step1": {
+    "hash": "057ef12aca445d76",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.readme.step2": {
+    "hash": "71e7059de7047b1e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.readme.step3": {
+    "hash": "3835f80e313d97da",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.readme.step4": {
+    "hash": "296404041ce0b8ca",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.readme.steps": {
+    "hash": "a39b6808eb1e7d9d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.readme.title": {
+    "hash": "9541db1a0fa8ae6d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.regen": {
+    "hash": "6a9c48cd2ae536a8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.remove": {
+    "hash": "a906c4fafc65ceb6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.secretsNote": {
+    "hash": "14f5dcc02b0e439f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.title": {
+    "hash": "683297535ec8751a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.stack-builder.yourStack": {
+    "hash": "d25769e15add2278",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.title": {
+    "hash": "3f0eefe1fd3c2630",
+    "by": "claude"
+  },
   "src/i18n/de.json#wiki.articles": {
     "hash": "dab4b031c2af0bd2",
     "by": "claude"
@@ -1465,6 +4841,10 @@
   },
   "src/i18n/de.json#wiki.group.systems": {
     "hash": "504596546375608e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#wiki.group.troubleshooting": {
+    "hash": "ad802ba838a4b5e6",
     "by": "claude"
   },
   "src/i18n/de.json#wiki.lead": {

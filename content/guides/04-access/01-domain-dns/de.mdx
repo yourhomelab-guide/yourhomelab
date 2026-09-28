@@ -96,13 +96,13 @@ Unter Windows und macOS funktioniert auch `nslookup`:
 nslookup test.__DOMAIN__
 ```
 
-Neue Einträge sind oft nach wenigen Minuten sichtbar. Hast du gerade erst die Nameserver geändert, kann es auch einige Stunden dauern.
+Neue Einträge sind oft nach wenigen Minuten sichtbar. Hast du gerade erst die Nameserver geändert, kann es auch einige Stunden dauern. Solange DNS nicht stimmt, bekommt der Reverse Proxy später kein Zertifikat, siehe [Zertifikat fehlt](/de/nachschlagen/zertifikat-fehlt/).
 </Step>
 
 <Step title="Ports 80 und 443 freigeben">
 Damit Anfragen aus dem Internet bei deinem Server ankommen, leitet der Router die Ports 80 (HTTP) und 443 (HTTPS) an die feste IP deines Servers weiter. Diese beiden Ports braucht der Reverse Proxy, und Let's Encrypt prüft darüber, ob dir die Domain gehört. Wie das geht und was es für die Sicherheit bedeutet, steht unter [Portfreigabe](/de/nachschlagen/portfreigabe/).
 
-Gib nur diese beiden Ports frei, keine Ports einzelner Dienste. Alles Weitere regelt der Reverse Proxy.
+Gib nur diese beiden Ports frei, keine Ports einzelner Dienste. Alles Weitere regelt der Reverse Proxy. Kommt später trotzdem kein Zertifikat zustande, hilft [Zertifikat fehlt](/de/nachschlagen/zertifikat-fehlt/) bei der Suche.
 
 Weiter geht es mit dem [Reverse Proxy mit Traefik](/de/einrichten/reverse-proxy-traefik/) oder dem einfacheren [Nginx Proxy Manager](/de/einrichten/reverse-proxy-npm/).
 </Step>

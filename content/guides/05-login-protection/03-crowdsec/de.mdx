@@ -203,6 +203,8 @@ Die wichtigsten Befehle:
 
 Das Traefik-Zugriffslog wächst stetig. Rotiere es, z. B. mit `logrotate`. Traefik öffnet die Logdatei nach dem Signal `USR1` neu. Mehr dazu im Artikel [Logs](/de/nachschlagen/logs/).
 
+Willst du erfahren, wenn CrowdSec jemanden sperrt, kann es Meldungen über seine Notification-Plugins verschicken, etwa per HTTP an ntfy. Wie du ntfy aufsetzt, zeigt der Guide [Benachrichtigungen](/de/einrichten/benachrichtigungen/).
+
 <Callout type="warning" title="Hinter Cloudflare oder einem anderen Proxy">
 Läuft Traefik hinter einem [Cloudflare Tunnel](/de/einrichten/cloudflare-tunnel/) oder einem weiteren Proxy, sieht es nicht die IP des Besuchers, sondern die des Proxys. Dann würde CrowdSec im Zweifel den Proxy sperren. Traefik und das Plugin müssen in diesem Fall den weitergeleiteten Headern vertrauen. Wie das geht, beschreibt die [Doku des Plugins](https://github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin).
 </Callout>
@@ -218,6 +220,12 @@ Damit er den CrowdSec-Container erreicht, veröffentlichst du dessen API nur lok
       - "127.0.0.1:8080:8080"
 ```
 
+Port 8080 nutzen auch viele andere Dienste. Meldet Docker, dass er belegt ist, hilft [Port belegt](/de/nachschlagen/port-belegt/).
+
 In der Bouncer-Konfiguration `/etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml` setzt du dann `api_url: http://127.0.0.1:8080/` und als `api_key` einen Schlüssel aus `docker exec crowdsec cscli bouncers add firewall-bouncer`.
 
 Wichtig bei Docker: Verkehr zu Containern läuft nicht durch die normale Eingangskette der Firewall. Bei iptables musst du deshalb die Kette `DOCKER-USER` in `iptables_chains` aufnehmen, sonst erreichen gesperrte IPs deine Container trotzdem. Die Doku beschreibt die Details.
+
+<Callout title="Alles abgesichert?">
+Mit CrowdSec ist die Stufe Login-Schutz komplett. Ob du an alles gedacht hast, von SSH über die Firewall bis zum Login vor deinen Diensten, prüfst du mit dem [Sicherheits-Check](/de/werkzeuge/sicherheits-check/).
+</Callout>

@@ -74,7 +74,8 @@ ports:
 ```
 
 Hinter einem Reverse Proxy brauchst du für Web-Dienste meist gar keine `ports:`. Der Proxy erreicht den Container über
-das Netzwerk `__NETWORK__`. Dann fällt der Konflikt ganz weg.
+das Netzwerk `__NETWORK__`. Dann fällt der Konflikt ganz weg. Welche Ports eine übernommene `compose.yaml`
+veröffentlicht und an welche Adresse sie gebunden sind, zeigt dir der [Compose-Erklärer](/de/werkzeuge/compose-erklaerer/).
 
 ### Alter Webserver auf Port 80/443
 

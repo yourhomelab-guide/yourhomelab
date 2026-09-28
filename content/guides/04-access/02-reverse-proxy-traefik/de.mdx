@@ -45,6 +45,8 @@ cd __ROOT__/traefik
 docker compose up -d
 docker compose logs -f traefik
 ```
+
+Meldet das Log Fehler bei der Challenge oder zeigt der Browser das Standardzertifikat von Traefik, hilft [Zertifikat fehlt](/de/nachschlagen/zertifikat-fehlt/) weiter.
 </Step>
 
 <Step title="Ersten Dienst anbinden">
@@ -56,6 +58,12 @@ labels:
   - traefik.http.routers.whoami.rule=Host(`whoami.__DOMAIN__`)
   - traefik.http.routers.whoami.tls.certresolver=le
 ```
+
+Antwortet die Subdomain mit „Bad Gateway“, erreicht Traefik den Container nicht. Die üblichen Ursachen stehen unter [Bad Gateway](/de/nachschlagen/bad-gateway/).
+
+<Callout title="Eigene Dienste anbinden">
+Für Dienste aus dem [Katalog](/de/dienste/) setzt „Mein Setup“ die Labels automatisch. Für alles andere erzeugt das Werkzeug [Proxy-Konfiguration](/de/werkzeuge/proxy-konfiguration/) die passenden Labels aus Subdomain, Containername und Port.
+</Callout>
 </Step>
 
 </Steps>

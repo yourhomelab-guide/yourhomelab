@@ -70,7 +70,7 @@ ls -ld __ROOT__
 In der Ausgabe sollten jetzt dein Benutzername und `drwxr-x---` stehen.
 
 <Callout title="Dateien, die root gehören">
-Manche Container legen Dateien in `data/` als root oder mit einer eigenen Benutzer-ID an. Das ist normal. Solche Dateien kannst du nur mit `sudo` lesen oder löschen. Auch das Backup läuft später deshalb mit `sudo`.
+Manche Container legen Dateien in `data/` als root oder mit einer eigenen Benutzer-ID an. Das ist normal. Solche Dateien kannst du nur mit `sudo` lesen oder löschen. Auch das Backup läuft später deshalb mit `sudo`. Meldet ein Container `Permission denied`, hilft [Permission denied](/de/nachschlagen/permission-denied/) weiter.
 </Callout>
 </Step>
 
@@ -84,6 +84,8 @@ mkdir -p __ROOT__/whoami
 ```
 
 Persistente Daten landen immer im Unterordner `data/` des Dienstes. In der `compose.yaml` steht dann zum Beispiel `./data/db:/var/lib/postgresql/data`. Der Punkt am Anfang bedeutet: relativ zum Ordner, in dem die `compose.yaml` liegt.
+
+Weißt du schon, welche Dienste du betreiben willst? Der [Stack-Builder](/de/werkzeuge/stack-builder/) stellt dir die passenden Ordner samt `compose.yaml` und `.env` als Paket zusammen.
 </Step>
 
 <Step title="„Mein Setup“ prüfen">

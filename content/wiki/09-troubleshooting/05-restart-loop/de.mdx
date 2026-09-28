@@ -49,6 +49,7 @@ WARN[0000] The "POSTGRES_PASSWORD" variable is not set. Defaulting to a blank st
 Prüfe, ob die `.env` im Stack-Ordner liegt und alle Variablen enthält, die die `compose.yaml` nutzt. Die fertig
 eingesetzten Werte zeigt `docker compose config`. Achte auf Tippfehler im Variablennamen und darauf, dass Werte mit
 Sonderzeichen wie `$` oder `#` in einfache Anführungszeichen gehören. Mehr unter [.env-Dateien](/de/nachschlagen/env-dateien/).
+Welche Variablen eine `compose.yaml` aus der `.env` erwartet, listet dir der [Compose-Erklärer](/de/werkzeuge/compose-erklaerer/) auf.
 Nach einer Änderung an der `.env`:
 
 ```bash
@@ -131,7 +132,7 @@ oder stoppe andere Dienste. Wie viel RAM deine Dienste brauchen, schätzt der [R
 
 ### Nach einem Update
 
-Startet eine Datenbank nach einem Update nicht mehr, siehe [Datenbank-Version passt nicht](/de/nachschlagen/datenbank-version/).
+Startet eine Datenbank nach einem Update nicht mehr, siehe [Datenbank startet nach Update nicht](/de/nachschlagen/datenbank-version/).
 Bei Apps hilft es, in den Release Notes nach Breaking Changes zu suchen oder vorübergehend den alten Tag einzutragen.
 
 ## Die Schleife anhalten
