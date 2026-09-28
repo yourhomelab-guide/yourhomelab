@@ -22,7 +22,7 @@ Deutschland
 
 ## Kontakt
 
-E-Mail: <mark>kontakt@yourhomelab.guide</mark>
+E-Mail: hello@yourhomelab.guide
 
 ## Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV
 

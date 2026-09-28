@@ -9,7 +9,7 @@ updated: September 2026
 
 <mark>Flystart Solutions GbR</mark>, represented by <mark>First name Last name</mark> and <mark>First name Last name</mark><br>
 <mark>Street Number, Postcode City</mark><br>
-Email: <mark>datenschutz@yourhomelab.guide</mark>
+Email: hello@yourhomelab.guide
 
 ## 2. Hosting and server logs
 

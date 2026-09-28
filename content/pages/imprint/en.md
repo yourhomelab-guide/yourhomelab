@@ -14,7 +14,7 @@ Germany
 
 ## Contact
 
-Email: <mark>kontakt@yourhomelab.guide</mark>
+Email: hello@yourhomelab.guide
 
 ## Responsible for content according to § 18 (2) MStV
 
