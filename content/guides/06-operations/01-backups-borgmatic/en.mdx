@@ -1,6 +1,317 @@
 ---
-title: "Backups with borgmatic"
+title: Backups with borgmatic
+description: Every night, borgmatic backs up your entire Homelab folder—including database dumps—to an external destination in encrypted form, automatically deletes old backups, and regularly checks to make sure the backup is intact.
 level: 2
-minutes: 30
-status: stub
+minutes: 40
+requires:
+  - Linux Server
+  - Docker Compose
+  - external backup destination
 ---
+
+<OneWay />
+
+Hard drives fail, updates go wrong, and sometimes you just delete the wrong folder. That’s why a backup is the most important service in your home lab. It just needs to be able to do three things: run regularly, be stored off-site, and be restorable.
+
+To do this, you'll use two programs that go together:
+
+- **[BorgBackup](https://www.borgbackup.org)** (Borg for short) does the actual work. It **deduplicates** (stores identical data blocks only once), **compresses**, and **encrypts** everything before it leaves the server. In Borg, the destination is called **a repository**; each backup point within it is an **archive**.
+- **[borgmatic](https://torsion.org/borgmatic/)** wraps Borg in a configuration file and an automation system. A single call creates the backup, cleans up old archives according to your rules, and checks the repository. Using **hooks**, it runs custom commands before and after the process—such as database dumps—and reports the results to your monitoring system.
+
+Since everything in this guide `__ROOT__`is located under , essentially a single path is all you need. For more information on the 3-2-1 rule and retention periods, see [Backup Strategies](/en/wiki/backup-strategies/).
+
+<Steps>
+
+<Step title="Install Borg and Borgmatic">
+Borg comes from the Debian and Ubuntu package repositories. To install it, install **pipx**, a tool that installs Python programs in their own isolated environment:
+
+```bash
+sudo apt update
+sudo apt install borgbackup pipx
+borg --version
+```
+
+You install borgmatic itself using pipx, not via apt. The reason: Depending on the distribution, the package repositories contain very different versions of borgmatic—some of which are still from the 1.x series. The configuration file has changed significantly between these versions. With pipx, you’ll get the latest version, and the configuration in this guide is guaranteed to work with it. It’s written for **borgmatic 2.x**.
+
+These two variables ensure that pipx borgmatic is installed system-wide and sets`/usr/local/bin` the command to . Here's how it works right`sudo borgmatic` away:
+
+```bash
+sudo PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/local/bin pipx install borgmatic
+sudo borgmatic --version
+```
+
+The output should start`2.` with . Later, you'll update borgmatic using the same pattern:
+
+```bash
+sudo PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/local/bin pipx upgrade borgmatic
+```
+
+The [official installation guide](https://torsion.org/borgmatic/how-to/install-borgmatic/) now uses the tool `uv`instead of pipx. The result is the same. pipx has the advantage here that it is available directly from the package repositories.
+</Step>
+
+<Step title="Create a passphrase">
+The backup runs as `root`. This is the only way Borg can read files created by containers with their own user IDs, such as database folders. The settings are therefore stored in `/etc/borgmatic`, which is readable only by root.
+
+Borg encrypts the repository with a **passphrase**. Generate a random one and save it in a file that only root is allowed to read:
+
+```bash
+sudo mkdir -p /etc/borgmatic
+sudo chmod 700 /etc/borgmatic
+openssl rand -base64 32 | sudo tee /etc/borgmatic/passphrase > /dev/null
+sudo chmod 600 /etc/borgmatic/passphrase
+```
+
+<Callout type="warning" title="Keep a backup of your passphrase">
+Without this passphrase, all backups are worthless—even to you. There is no way to reset it. Copy it to your password manager right away. It must not be stored only on the server you want to back up.
+
+```bash
+sudo cat /etc/borgmatic/passphrase
+```
+</Callout>
+</Step>
+
+<Step title="Prepare the Backup Destination">
+Borg can back up to a local folder or to another computer via SSH. Select a destination:
+
+- **USB drive**: quick and easy. Plug it in securely, for example, under  `/mnt/backup`(via an entry in `/etc/fstab`). However, it doesn't protect against fire or theft if it's left next to the server. Tip: Use two drives alternately, keeping one of them off-site.
+- **Another computer via SSH**, such as a NAS or a friend's computer. **Borg** must **also** be **installed** on that computer (`sudo apt install borgbackup`), because Borg communicates with itself on both ends. Create a separate user account on the target computer, for example `backup`.
+- **Storage providers with Borg support**: Some hosting providers offer storage that works directly with Borg. The [borgmatic documentation](https://torsion.org/borgmatic/how-to/set-up-backups/) lists BorgBase, Hetzner, and rsync.net, for example. You’ll receive an SSH address from them and enter it just as you would for your own computer. The provider only sees encrypted data.
+
+For SSH destinations, the following applies: Since the backup runs as root, you must be able to log `root`in there using an SSH key. Generate a key and view the public key:
+
+```bash
+sudo ssh-keygen -t ed25519
+sudo cat /root/.ssh/id_ed25519.pub
+```
+
+Enter`backup` the output on the destination computer in the`~/.ssh/authorized_keys` user's account (or in the provider's web interface). Then test the connection. This will immediately verify the host key and check whether Borg is running on the other end:
+
+```bash
+sudo ssh backup@192.168.1.20 borg --version
+```
+</Step>
+
+<Step title="Write the configuration">
+borgmatic reads its settings from `/etc/borgmatic/config.yaml`. Create`sudo nano /etc/borgmatic/config.yaml` the file using . In , choose **one**`repositories` of the two options and delete the other, or leave it commented out:
+
+```yaml
+# What to back up
+source_directories:
+    - __ROOT__
+
+# Where the backups go. Pick ONE of these:
+repositories:
+    # a) USB disk mounted at /mnt/backup
+    - path: /mnt/backup/borg
+      label: usb
+    # b) Second computer via SSH (Borg must be installed there)
+    # - path: ssh://backup@192.168.1.20/./borg
+    #   label: remote
+
+# Read the passphrase from the file you created
+encryption_passphrase: "{credential file /etc/borgmatic/passphrase}"
+
+compression: zstd
+
+# Keep 7 daily, 4 weekly and 6 monthly archives, delete the rest
+keep_daily: 7
+keep_weekly: 4
+keep_monthly: 6
+
+# Consistency checks and how often they run
+checks:
+    - name: repository
+      frequency: 2 weeks
+    - name: archives
+      frequency: 2 weeks
+    - name: data
+      frequency: 3 months
+```
+
+What the sections mean:
+
+- **source_directories**: what is backed up. This is your entire Homelab folder`compose.yaml`, including all `.env`files and data.
+- **repositories**: where the data is saved. This refers`ssh://backup@192.168.1.20/./borg` to the folder `borg`in the user's home directory`backup`. This is`label` a short name that Borgmatic displays in its output.
+- **encryption_passphrase**: borgmatic reads the passphrase from the file. Therefore, it does not appear in plain text in the configuration.
+- **compression**:  `zstd`Compresses well and quickly. Without this line, Borg uses the faster but less effective `lz4`.
+- **keep_…**: the retention rules. You can go back one day at a time for a week, one week at a time for a month, and one month at a time for half a year. Borgmatic automatically deletes older archives.
+- **checks**:  `repository`and  check`archives` the structure of the repository and the archives—every two weeks in this case.  actually `data`reads and decrypts all the data. This takes a long time for large backups, so it’s done only every three months. borgmatic keeps track of when a check was last run and skips it until then.
+
+<Callout title="Is the data stored somewhere else?">
+If you selected “central” mode in “My Setup,” your data is located under `__DATA_ROOT__`. If this folder isn’t already located under `__ROOT__`, add`source_directories` it as the second line under . The same applies to external paths that you’ve integrated into Stacks, such as a media collection on a second disk.
+</Callout>
+
+Pay attention to the indentation: YAML only allows spaces, not tabs. Check the file:
+
+```bash
+sudo borgmatic config validate
+```
+
+The message says`All configuration files are valid`: Everything is set up correctly. If needed, you can generate a complete sample file with all options and comments using `sudo borgmatic config generate --destination /root/borgmatic-beispiel.yaml`. The [configuration reference](https://torsion.org/borgmatic/reference/configuration/) is also available for reference.
+</Step>
+
+<Step title="Create a repository and save the key">
+Now create the repository. You only need to do this once:
+
+```bash
+sudo borgmatic repo-create --encryption repokey
+```
+
+`repokey` This is the mode that the [Borg](https://borgbackup.readthedocs.io/en/stable/usage/init.html) [documentation](https://borgbackup.readthedocs.io/en/stable/usage/init.html) recommends as a rule of thumb. If your server has an older CPU, this mode may be faster`repokey-blake2`. Once selected, this mode cannot be changed later.
+
+With , the actual key is`repokey` stored **in the repository**, protected by your passphrase. So in everyday use, you only need the passphrase. However, if that specific key file in the repository is damaged, everything will be lost unless you have a copy of the key. Therefore, export it once:
+
+```bash
+sudo borgmatic key export
+```
+
+The output begins with `BORG_KEY`. Copy it in its entirety as a secure note in your password manager, next to the passphrase. Click  to get`--paper` a printable version.
+
+<Callout type="warning" title="The key and passphrase go together">
+To decrypt data, you always need **both** the key (in the repository or as an export) and the passphrase. Store both of them off the server you are backing up.
+</Callout>
+</Step>
+
+<Step title="Back up databases beforehand">
+Most services store their data as files that Borg can easily copy. With databases like PostgreSQL or MariaDB, this is risky: they are constantly writing data, and a copy taken in the middle of a write operation may be unusable. That’s why you should first create a **dump**—a consistent export of the database as a file. Borg will then back up this dump as well.
+
+A **command** **hook** in borgmatic handles this: commands that run before the backup. Since your databases run in containers, you call the dump program from `docker compose exec`within the container. This shuts`-T` down the terminal so that the output is written cleanly to the file. The dump is saved to the service’s data folder, i.e., the secured area.
+
+Add this block to the configuration. The example backs up the PostgreSQL database for [Authentik](/en/services/authentik/) and the MariaDB database for [Nextcloud](/en/services/nextcloud/):
+
+```yaml
+commands:
+    - before: action
+      when: [create]
+      run:
+          # Authentik (PostgreSQL)
+          - mkdir -p -m 700 __DATA(authentik)__/db-dump
+          - docker compose -f __ROOT__/authentik/compose.yaml exec -T postgresql pg_dump -U authentik -d authentik > __DATA(authentik)__/db-dump/authentik.sql
+          # Nextcloud (MariaDB)
+          - mkdir -p -m 700 __DATA(nextcloud)__/db-dump
+          - docker compose -f __ROOT__/nextcloud/compose.yaml exec -T db sh -c 'mariadb-dump --single-transaction -u root -p"$MARIADB_ROOT_PASSWORD" nextcloud' > __DATA(nextcloud)__/db-dump/nextcloud.sql
+```
+
+`before: action` "with" means`when: [create]`: The commands run immediately before each backup. If any of them fails, Borgmatic aborts and reports an error. So it does not silently back up a corrupted state. In MariaDB, the single quotes ensure that the variable containing the password is not evaluated until it is inside the container.
+
+The dumps are intentionally left uncompressed. Borg performs its own compression and can only recognize unchanged parts of a dump if it hasn't been compressed beforehand. Container and database names are listed in the documentation for`compose.yaml` the respective service. If you don't have any databases, omit that section. Many projects also describe their own backup method in their documentation. That method takes precedence.
+
+By the way, borgmatic also has its own [database hooks](https://torsion.org/borgmatic/how-to/backup-your-databases/), such as  `postgresql_databases`and `mariadb_databases`. These stream the dump directly to the archive. For databases in containers, however, you’ll need additional settings: either the appropriate client programs on the server or custom dump commands using `docker exec`, along with the database passwords in the configuration. Using  `docker compose exec`to write to a file is easier to understand when you’re just starting out.
+
+**The simple alternative:** Pause the stack briefly, back it up, and then restart it. This approach is always consistent, but the service will be unavailable during the backup. At night, this usually doesn't bother anyone. A `after`-Hook runs even if the backup fails. So the stack will restart in any case:
+
+```yaml
+commands:
+    - before: action
+      when: [create]
+      run:
+          - docker compose -f __ROOT__/nextcloud/compose.yaml stop
+    - after: action
+      when: [create]
+      run:
+          - docker compose -f __ROOT__/nextcloud/compose.yaml start
+```
+
+There is only one `commands:`-block per file. If you use both, all entries will go into the same block. Check the file again afterward using `sudo borgmatic config validate`.
+</Step>
+
+<Step title="First Backup">
+Now back up the entire Homelab folder.  `--verbosity 1`shows what borgmatic is currently doing,  and `--stats`summarizes at the end how much data was backed up:
+
+```bash
+sudo borgmatic create --verbosity 1 --stats
+sudo borgmatic repo-list
+```
+
+The first backup takes a while, depending on the amount of data. Subsequent backups are much faster because Borg only transfers changed blocks.  `repo-list`shows you the new archive with the computer name, date, and time.
+
+The `.env`files containing your secrets are included in the backup. This is by design, because without them, no service can restart. Borg encrypts them before they leave the server.
+
+In your daily routine, you run borgmatic without any additional actions. It then takes care of everything in one go: creating a backup (`create`), deleting old archives according to your rules (`prune`), freeing up space (`compact`), and verifying (`check`if necessary). Try doing it manually:
+
+```bash
+sudo borgmatic --verbosity 1
+```
+</Step>
+
+<Step title="Start automatically every night">
+A **systemd** **timer** starts borgmatic at a set time. It makes up for a missed run if the server was down at the scheduled time and logs everything to the system log. The borgmatic project provides [sample files](https://torsion.org/borgmatic/how-to/set-up-backups/#systemd) for this. The version shown here is intentionally streamlined: it omits additional security settings that can interfere with Docker commands in hooks, and uses the path from the pipx installation. Create two files.
+
+`/etc/systemd/system/borgmatic.service`:
+
+```ini
+[Unit]
+Description=borgmatic backup
+Wants=network-online.target
+After=network-online.target docker.service
+Documentation=https://torsion.org/borgmatic/
+
+[Service]
+Type=oneshot
+# Lower CPU and I/O priority so the server stays responsive
+Nice=19
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+# Don't drop log lines during long runs
+LogRateLimitIntervalSec=0
+ExecStart=/usr/local/bin/borgmatic --verbosity -2 --syslog-verbosity 1
+```
+
+`/etc/systemd/system/borgmatic.timer`:
+
+```ini
+[Unit]
+Description=Nightly borgmatic backup
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+RandomizedDelaySec=15min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+Enable and check:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now borgmatic.timer
+systemctl list-timers borgmatic.timer
+```
+
+Start a run right away and view the log:
+
+```bash
+sudo systemctl start borgmatic.service
+sudo journalctl -u borgmatic.service -e
+```
+
+Prefer cron? Then all it takes is one line in the root crontab (`sudo crontab -e`):
+
+```bash
+0 3 * * * /usr/local/bin/borgmatic --verbosity -1 --syslog-verbosity 1
+```
+</Step>
+
+<Step title="Get notified about errors">
+You won't notice that a backup has been silently failing for weeks until you need it. That's why you should set up notifications. borgmatic can report the results directly to a **push monitor** in [Uptime Kuma](/en/setup/uptime-kuma/). If no report is received or if borgmatic reports an error, Uptime Kuma triggers an alert.
+
+Create a "Push" monitor in Uptime Kuma. Set the heartbeat interval to  `90000`seconds (25 hours, with a little buffer for one day). Copy the Push URL and add it to the configuration. Enter the URL **without** the part starting with the question mark; borgmatic will append that itself:
+
+```yaml
+uptime_kuma:
+    push_url: https://status.__DOMAIN__/api/push/DEIN-PUSH-TOKEN
+    states:
+        - finish
+        - fail
+```
+
+Using  and`finish` , borgmatic reports`fail` whether a run was successful after each run. Check the file with  `sudo borgmatic config validate`and start a test run with `sudo systemctl start borgmatic.service`. A green bar should appear in the monitor shortly thereafter. You can find other methods, such as ntfy or health checks, in the [borgmatic monitoring documentation](https://torsion.org/borgmatic/how-to/monitor-your-backups/).
+</Step>
+
+</Steps>
+
+## What happens next?
+
+A backup isn't really a backup unless you can restore it. In the next guide, "[Testing the Restore](/en/setup/testing-restores/)," you'll restore individual files and entire services to check whether everything is really there.

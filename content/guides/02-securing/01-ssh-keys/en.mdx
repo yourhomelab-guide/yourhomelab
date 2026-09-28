@@ -1,6 +1,127 @@
 ---
-title: "Setting up SSH keys"
+title: Set Up SSH Keys
+description: In the end, you'll log in to the server using an ed25519 key instead of a password, and a short command like `ssh homelab` is all it takes to connect.
 level: 1
 minutes: 15
-status: stub
+requires:
+  - Linux Server
+  - SSH Access with a Password
 ---
+
+A password can be guessed, intercepted, or cracked through trial and error. An SSH key cannot: It consists of two parts. The **private key** stays on your computer and never leaves it. The **public key** is uploaded to the server. When you log in, your computer proves that it has the corresponding private key without actually transmitting it.
+
+This guide sets up the key. After configuring "[Users & sudo](/en/setup/users-sudo/)," you'll [harden](/en/setup/hardening-ssh/) the [SSH](/en/setup/hardening-ssh/) connection by completely disabling password-based login. For more information, see "[SSH](/en/wiki/ssh-basics/) [Basics](/en/wiki/ssh-basics/)."
+
+In the examples, the server is called  and`192.168.1.10` your user on the server is `alex`. Replace both with your own values.
+
+<Steps>
+
+<Step title="Check to see if you already have a key">
+Maybe you've already generated a key, for example, for GitHub. You can continue to use that one. Look in the folder  in`.ssh` your home directory.
+
+On macOS and Linux:
+
+```bash
+ls -l ~/.ssh
+```
+
+On Windows in PowerShell:
+
+```powershell
+ls $env:USERPROFILE\.ssh
+```
+
+If both  and`id_ed25519`  are listed there`id_ed25519.pub`, skip the next step. If only  is listed`id_rsa`, it's an older RSA key. It works, but a new ed25519 key is shorter and more modern.
+</Step>
+
+<Step title="Generate a key pair">
+Windows 10 and 11, macOS, and virtually every Linux distribution already come with OpenSSH. The command is the same everywhere. On Windows, type it into PowerShell; otherwise, type it into the Terminal.
+
+```bash
+ssh-keygen -t ed25519 -C "laptop-alex"
+```
+
+- `-t ed25519` Select the key type. ed25519 is the current standard: secure, fast, and short.
+- `-C` It's just a comment. It will help you identify later which device a key came from.
+
+Press Enter to confirm the suggested storage location. You will then be prompted for`ssh-keygen` a **passphrase**. Choose one. It encrypts the private key on your hard drive. If your laptop is stolen, no one will be able to use the key without the passphrase.
+
+You now have two files:
+
+- `id_ed25519` This is the private key. Never share it, and never copy it to a server.
+- `id_ed25519.pub` This is the public key. You can store it anywhere.
+</Step>
+
+<Step title="Copy the public key to the server">
+On the server, the public key is stored in your`~/.ssh/authorized_keys` user's file. Each line in that file represents a key that is authorized to log in.
+
+On **macOS and Linux**, this is what does it`ssh-copy-id`. It asks for your password on the server one last time:
+
+```bash
+ssh-copy-id -i ~/.ssh/id_ed25519.pub alex@192.168.1.10
+```
+
+It doesn't`ssh-copy-id` exist on **Windows**. This one-liner in PowerShell does the same thing: It sends the key to the server via SSH, creates the folder there, and appends the key to `authorized_keys`it.
+
+```powershell
+type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh alex@192.168.1.10 "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+```
+
+The permissions  and`700`  `600`are important. If anyone other than you can write to the files, the SSH server will ignore them for security reasons.
+
+<Callout title="Is there only a root user on the server?">
+On some rented servers, the only user available at first is root. In that case, copy the key to the root user first, and then create your own user following the instructions in the "[Users & sudo"](/en/setup/users-sudo/) guide.
+</Callout>
+</Step>
+
+<Step title="Testing Login with a Key">
+Sign up:
+
+```bash
+ssh alex@192.168.1.10
+```
+
+If you've set a passphrase, SSH will now ask for **your key's passphrase**, not the server's password. If SSH asks for `alex@192.168.1.10's password`, it didn't work. Common causes: the key is associated with the wrong user, or the permissions on the server are incorrect. Use  to see`ssh -v alex@192.168.1.10` which keys SSH offers and what the server responds with.
+</Step>
+
+<Step title="Create a short name in ~/.ssh/config">
+Instead of typing in the username and IP address every time, `~/.ssh/config`create an entry in  on your computer. On Windows, the file is located at  `C:\Users\<dein Name>\.ssh\config`(without the file extension). If it doesn't exist yet, create it.
+
+```text
+Host homelab
+    HostName 192.168.1.10
+    User alex
+    IdentityFile ~/.ssh/id_ed25519
+    AddKeysToAgent yes
+```
+
+From now on, this is enough:
+
+```bash
+ssh homelab
+```
+
+The short name also works with  `scp`and  `rsync`as well as in editors such as VS Code (Remote SSH).
+</Step>
+
+<Step title="Don't have to enter the passphrase every time">
+So you don't have to type the passphrase every time you connect, the **SSH agent** remembers the unlocked key until you log out.  The key `AddKeysToAgent yes`from the previous step is automatically passed to the agent the first time you connect.
+
+- **Linux:** Most desktops start the agent automatically.
+- **macOS:** The agent is always running. If you want macOS to permanently store the passphrase in the keychain, add the line to the entry`UseKeychain yes`. This option is available only on macOS.
+- **Windows:** The service is turned off by default. Enable it once in PowerShell, which you should open **as an administrator**:
+
+```powershell
+Get-Service ssh-agent | Set-Service -StartupType Automatic
+Start-Service ssh-agent
+ssh-add $env:USERPROFILE\.ssh\id_ed25519
+```
+</Step>
+
+</Steps>
+
+## Multiple devices
+
+Use a separate key for each device instead of copying a private key around. Each device gets its own line in the file`authorized_keys`. If a laptop is lost, you simply delete its line, and all other devices can still log in. The comment with  is useful`-C` for this.
+
+Also, make sure to secure your private key or store at least one backup key on a different device. Once password-based login is disabled, the key is your only way to access the server, aside from the screen and keyboard directly on the device or your hosting provider's web console.

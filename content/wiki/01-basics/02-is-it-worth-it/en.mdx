@@ -1,5 +1,87 @@
 ---
-title: "When is it worth it?"
+title: When is it worth it?
+description: Self-hosting offers control, a learning experience, and often lower ongoing costs. In return, you take on the time commitment and responsibility—especially when it comes to backups. An honest look at both sides.
 level: 1
-status: stub
+related:
+  - what-is-self-hosting
+  - costs-power
+  - backup-strategies
+  - attack-surface
 ---
+
+## The short answer
+
+Self-hosting is worth it if you enjoy tinkering, want to be in control of your own data, and are willing to,
+to take care of your system on a regular basis. It's not as worthwhile if you just want to save money or use a service
+must be accessible under all circumstances.
+
+## Arguments in favor of this
+
+- **Control over your data.** Photos, passwords, and documents are stored on your device. No service provider analyzes them
+  ... suddenly changes the terms or discontinues the service.
+- **No subscription trap.** Many cloud services charge monthly, per person, or per unit of storage. Your own server
+  The main costs are electricity and, initially, hardware. The exact amount is shown in
+  [Costs & Electricity Consumption](/en/wiki/costs-power/).
+- **You'll learn a lot.** Linux, networks, DNS, certificates, containers: This knowledge will also help you in your career or when
+  An understanding of how the Internet works.
+- **Freedom of choice.** You can combine the software that works best for you and aren't tied to a single ecosystem.
+- **Storage is inexpensive.** Large amounts of data, such as photo archives or media files, are often significantly
+  cheaper than in the cloud.
+
+## Arguments against it
+
+- **Time required.** Setup takes a few evenings. After that, you'll need time for updates and occasional bug fixes.
+  and new versions that do things a little differently than the old ones. Expect to spend about half an hour to an hour per week,
+  when everything is going well, and more when it isn't.
+- **You're the support person.** If a hard drive fails in the middle of the night or a container stops starting up, you're the one who handles it.
+  When others (family, friends) use your services, they depend on you.
+- **Availability.** Power outages, router reboots, moving, vacations: A home server isn't as reliable as a
+  Data center. That's fine for most consumer services, but not for everything.
+- **Security is up to you.** A service you post online will be accessed within hours by automated
+  Found by scanners. Updates and a small [attack surface](/en/wiki/attack-surface/) are a must.
+- **Hardware and electricity also cost money.** You won't save anything compared to a free service.
+
+## The Most Important Responsibility: Backups
+
+With a cloud provider, someone else makes sure your data survives a hard drive failure. With the
+Self-hosting is all about you. That's the point beginners most often underestimate.
+
+<Callout type="warning" title="No Backup, No Self-Hosting">
+If you store photos or passwords only on your server, without backing them up somewhere else, they are
+less secure in the cloud than before. Set up backups before you move important data, and test the
+Restore at least once.
+</Callout>
+
+A tried-and-true rule of thumb is **3-2-1**: three copies of your data, on two different types of media, with one of them stored off-site.
+[Backup strategies](/en/wiki/backup-strategies/) and the guide explain how this works in practice
+[Backups with borgmatic](/en/setup/backups-borgmatic/).
+
+## When It's Best to Avoid It
+
+Not every service is equally suitable. In these cases, you should think carefully:
+
+- **Email server.** Technically feasible, but practically a hassle. Many Internet service providers block outgoing port 25 for
+  Residential connections—and the dynamic IP addresses associated with them—are often blacklisted. To prevent your emails from ending up in the spam folder,
+  Among other things, you'll need correct SPF, DKIM, and DMARC records, a valid reverse DNS record, and a
+  A clean IP reputation. And if your server goes down, in the worst-case scenario, important emails won't be delivered. For email
+  A reputable provider with its own domain is usually the better choice.
+- **Services that must always be running.** If an outage causes real damage—for example, to business data or
+  For services that others rely on, you need more than just a single server at home.
+- **The only place to store irreplaceable data.** As long as there's no working backup, keep the originals
+  I'd rather have them there as well, where they are now.
+- **If you don't have time.** A server that hasn't received any updates for months is a risk. In that case, a
+  A well-maintained cloud service is the safer choice.
+
+## A Good Middle Ground
+
+You don't have to choose between everything and nothing. Many people run services at home where data sovereignty and
+Keep track of your storage space—such as photos, files, and passwords—and store your email with a provider. Also, a
+A rented server might be the right way to get started—see "[Cloud, Hybrid, or On-Premises?](/en/wiki/cloud-hybrid-local/)"
+
+Accessing your [data](/en/wiki/vpn/) while on the go isn't an all-or-nothing situation either: You can access your
+Services, without making them publicly available on the Internet. This significantly reduces the risk.
+
+<Callout title="Honest Self-Assessment">
+Ask yourself: Do I enjoy setting this up? Do I have a little time each week? Am I willing to take backups seriously?
+Ready? If you say “yes” three times, nothing stands in the way of getting started.
+</Callout>

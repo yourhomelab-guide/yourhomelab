@@ -28,132 +28,136 @@
     "by": "claude"
   },
   "content/guides/01-preparation/01-choosing-hardware/de.mdx": {
-    "hash": "93d3815249b18a40",
-    "by": "claude"
+    "hash": "ea8482ac7cd2b350",
+    "by": "deepl"
   },
   "content/guides/01-preparation/02-installing-the-os/de.mdx": {
-    "hash": "a28789348e47bba2",
-    "by": "claude"
+    "hash": "047b2248755074ff",
+    "by": "deepl"
   },
   "content/guides/01-preparation/03-static-ip-hostname/de.mdx": {
-    "hash": "f4a3116e05935429",
-    "by": "claude"
+    "hash": "8daac8b5c5897bc6",
+    "by": "deepl"
   },
   "content/guides/01-preparation/de.md": {
     "hash": "f4fca49cb2d22cac",
     "by": "claude"
   },
   "content/guides/02-securing/01-ssh-keys/de.mdx": {
-    "hash": "53fb7aed617bbbfa",
-    "by": "claude"
+    "hash": "ffdc51ae838ee84f",
+    "by": "deepl"
   },
   "content/guides/02-securing/02-users-sudo/de.mdx": {
-    "hash": "f62488fada6311a7",
-    "by": "claude"
+    "hash": "3e15a3e1af066136",
+    "by": "deepl"
   },
   "content/guides/02-securing/03-hardening-ssh/de.mdx": {
-    "hash": "5ac10d0bf0605303",
-    "by": "claude"
+    "hash": "4ca29e30bf0c5b3f",
+    "by": "deepl"
   },
   "content/guides/02-securing/04-firewall-ufw/de.mdx": {
-    "hash": "b6248ffcadf9a4de",
-    "by": "claude"
+    "hash": "7243862ac1d811da",
+    "by": "deepl"
   },
   "content/guides/02-securing/05-automatic-updates/de.mdx": {
-    "hash": "de72353e9f59cba5",
-    "by": "claude"
+    "hash": "7e1d759206577348",
+    "by": "deepl"
   },
   "content/guides/02-securing/de.md": {
     "hash": "740fc136fc41e7be",
     "by": "claude"
   },
   "content/guides/03-docker/01-installing-docker/de.mdx": {
-    "hash": "fbc4fcad16bf1932",
-    "by": "claude"
+    "hash": "95c3f95bdcb950cd",
+    "by": "deepl"
   },
   "content/guides/03-docker/02-creating-the-directory-structure/de.mdx": {
-    "hash": "c11d3502aac3c2b0",
-    "by": "claude"
+    "hash": "1bb05222d5425a45",
+    "by": "deepl"
   },
   "content/guides/03-docker/03-first-stack/de.mdx": {
-    "hash": "3a31c2a8a53a4cd2",
-    "by": "claude"
+    "hash": "ae99e6d3e220621c",
+    "by": "deepl"
   },
   "content/guides/03-docker/04-env-secrets/de.mdx": {
-    "hash": "994b180f58beaf4f",
-    "by": "claude"
+    "hash": "1b71f06d4980e60f",
+    "by": "deepl"
   },
   "content/guides/03-docker/de.md": {
     "hash": "328d333ed6be4196",
     "by": "claude"
   },
   "content/guides/04-access/01-domain-dns/de.mdx": {
-    "hash": "6cff90ac038572c2",
-    "by": "claude"
+    "hash": "edb3d8531ab1eedc",
+    "by": "deepl"
   },
   "content/guides/04-access/02-reverse-proxy-traefik/de.mdx": {
-    "hash": "f364c15dd8412062",
-    "by": "claude"
+    "hash": "d27ec4f2f14848a0",
+    "by": "deepl"
+  },
+  "content/guides/04-access/03-reverse-proxy-npm/de.mdx": {
+    "hash": "4d8537211f570190",
+    "by": "deepl"
   },
   "content/guides/04-access/04-vpn-wireguard/de.mdx": {
-    "hash": "c549033ae99d52f5",
-    "by": "claude"
+    "hash": "41a7194c4944acce",
+    "by": "deepl"
   },
   "content/guides/04-access/05-cloudflare-tunnel/de.mdx": {
-    "hash": "767f986cc76f6b12",
-    "by": "claude"
+    "hash": "22d091fb91ae6267",
+    "by": "deepl"
   },
   "content/guides/04-access/de.md": {
     "hash": "edc652d1f27bb7f9",
     "by": "claude"
   },
   "content/guides/05-login-protection/01-pocket-id/de.mdx": {
-    "hash": "f8c51b03fa2b2d94",
-    "by": "claude"
+    "hash": "2f0c27ffec1f6e0b",
+    "by": "deepl"
   },
   "content/guides/05-login-protection/02-tinyauth/de.mdx": {
-    "hash": "4658535243d0febc",
-    "by": "claude"
+    "hash": "9b508c276bc1bf44",
+    "by": "deepl"
   },
   "content/guides/05-login-protection/03-crowdsec/de.mdx": {
-    "hash": "181293ae784efec0",
-    "by": "claude"
+    "hash": "0c6678baf70ba6a1",
+    "by": "deepl"
   },
   "content/guides/05-login-protection/de.md": {
     "hash": "7b553860a38eba07",
     "by": "claude"
   },
   "content/guides/06-operations/01-backups-borgmatic/de.mdx": {
-    "hash": "d19be75c899d3785",
-    "by": "claude"
+    "hash": "1e7f25a38738ea51",
+    "by": "deepl"
   },
   "content/guides/06-operations/02-testing-restores/de.mdx": {
-    "hash": "09864dcca9b52486",
-    "by": "claude"
+    "hash": "2067019f71c19a66",
+    "by": "deepl"
   },
   "content/guides/06-operations/03-monitoring-beszel/de.mdx": {
-    "hash": "ea18c4572b856789",
-    "by": "claude"
+    "hash": "67d4b279894fb123",
+    "by": "deepl"
   },
   "content/guides/06-operations/04-uptime-kuma/de.mdx": {
-    "hash": "41399c393d27dd8f",
-    "by": "claude"
+    "hash": "c9179217d413fe35",
+    "by": "deepl"
   },
   "content/guides/06-operations/de.md": {
     "hash": "31d2421ee386f465",
     "by": "claude"
   },
   "content/guides/07-deployment/01-portainer-dockhand/de.mdx": {
-    "hash": "39c10fcc9ceb035a",
-    "by": "claude"
+    "hash": "0482a4bdd8a95bf3",
+    "by": "deepl"
   },
   "content/guides/07-deployment/02-git-deployments-forgejo/de.mdx": {
-    "hash": "17a49fac65c77785",
-    "by": "claude"
+    "hash": "c8d40ef3c021f8d6",
+    "by": "deepl"
   },
   "content/guides/07-deployment/03-updates-renovate/de.mdx": {
-    "hash": "11faa844ec9448c6",
-    "by": "claude"
+    "hash": "c2b2bb8062de3f93",
+    "by": "deepl"
   },
   "content/guides/07-deployment/de.md": {
     "hash": "a969a1c0ac34035e",
@@ -224,144 +228,148 @@
     "by": "claude"
   },
   "content/wiki/01-basics/01-what-is-self-hosting/de.mdx": {
-    "hash": "de87f9a0439ddc2d",
-    "by": "claude"
+    "hash": "2dccb1609d8289cb",
+    "by": "deepl"
   },
   "content/wiki/01-basics/02-is-it-worth-it/de.mdx": {
-    "hash": "5b49cd73d29b5d01",
-    "by": "claude"
+    "hash": "4c0d003928c77ad4",
+    "by": "deepl"
   },
   "content/wiki/01-basics/03-cloud-hybrid-local/de.mdx": {
     "hash": "394baec3d25a4058",
     "by": "claude"
   },
   "content/wiki/01-basics/04-hardware-overview/de.mdx": {
-    "hash": "576d0b1471737312",
-    "by": "claude"
+    "hash": "5cb8d5a59763c98f",
+    "by": "deepl"
   },
   "content/wiki/01-basics/05-costs-power/de.mdx": {
-    "hash": "58630a57199c8cc4",
-    "by": "claude"
+    "hash": "af032d6a9000d767",
+    "by": "deepl"
   },
   "content/wiki/02-systems/01-bare-metal-linux/de.mdx": {
-    "hash": "326d04c05156beb3",
-    "by": "claude"
+    "hash": "ec3adbd901f3f9fb",
+    "by": "deepl"
   },
   "content/wiki/02-systems/02-proxmox-ve/de.mdx": {
-    "hash": "6b15293d5809ecd0",
-    "by": "claude"
+    "hash": "01eb67083ce9e4d7",
+    "by": "deepl"
   },
   "content/wiki/02-systems/03-truenas-unraid/de.mdx": {
-    "hash": "327ae4bdeef7881b",
-    "by": "claude"
+    "hash": "af0f2fe13d283b2d",
+    "by": "deepl"
   },
   "content/wiki/02-systems/04-vms-or-containers/de.mdx": {
-    "hash": "19a00b5a237bbea1",
-    "by": "claude"
+    "hash": "164ce74b4d64a902",
+    "by": "deepl"
+  },
+  "content/wiki/02-systems/05-operating-models/de.mdx": {
+    "hash": "03545bcddb43ad30",
+    "by": "deepl"
   },
   "content/wiki/03-containers/01-what-is-docker/de.mdx": {
-    "hash": "2a41d423bd3fe482",
-    "by": "claude"
+    "hash": "30418bac2877286a",
+    "by": "deepl"
   },
   "content/wiki/03-containers/02-docker-compose/de.mdx": {
-    "hash": "ad2af20e3be796c9",
-    "by": "claude"
+    "hash": "3c1fc0b9ac610dcd",
+    "by": "deepl"
   },
   "content/wiki/03-containers/03-images-tags/de.mdx": {
-    "hash": "fa587e38cb00587e",
-    "by": "claude"
+    "hash": "d2ef8330ce43d6cd",
+    "by": "deepl"
   },
   "content/wiki/03-containers/04-volumes-bind-mounts/de.mdx": {
-    "hash": "42d5e8d3e7727712",
-    "by": "claude"
+    "hash": "25136f148a0812aa",
+    "by": "deepl"
   },
   "content/wiki/03-containers/05-docker-networks/de.mdx": {
-    "hash": "061c05585bbecd31",
-    "by": "claude"
+    "hash": "f9bb59aab69b1906",
+    "by": "deepl"
   },
   "content/wiki/04-networking/01-ip-ports-nat/de.mdx": {
-    "hash": "0aea72f15e97b5d9",
-    "by": "claude"
+    "hash": "9af5806f4286f023",
+    "by": "deepl"
   },
   "content/wiki/04-networking/02-dns-domains/de.mdx": {
-    "hash": "5eb2afb908942c8b",
-    "by": "claude"
+    "hash": "9447dbacc696ed66",
+    "by": "deepl"
   },
   "content/wiki/04-networking/03-reverse-proxy-explained/de.mdx": {
-    "hash": "882fa463d59e0125",
-    "by": "claude"
+    "hash": "da3604aa0c9a856c",
+    "by": "deepl"
   },
   "content/wiki/04-networking/04-tls-certificates/de.mdx": {
-    "hash": "29bde6f03d17575a",
-    "by": "claude"
+    "hash": "2e7644b500797d10",
+    "by": "deepl"
   },
   "content/wiki/04-networking/05-cgnat-ds-lite/de.mdx": {
-    "hash": "8e3a506296e2aed2",
-    "by": "claude"
+    "hash": "7b1b9c6a1f665500",
+    "by": "deepl"
   },
   "content/wiki/05-remote-access/01-port-forwarding/de.mdx": {
-    "hash": "67afcc8e98dcf41f",
-    "by": "claude"
+    "hash": "5246f4f206b1996c",
+    "by": "deepl"
   },
   "content/wiki/05-remote-access/02-vpn/de.mdx": {
-    "hash": "e827b1a6bfaf97ea",
-    "by": "claude"
+    "hash": "66476e64150cfbfb",
+    "by": "deepl"
   },
   "content/wiki/05-remote-access/03-tunnels/de.mdx": {
-    "hash": "af21363f263937b9",
-    "by": "claude"
+    "hash": "a4cec0e00a750102",
+    "by": "deepl"
   },
   "content/wiki/05-remote-access/04-access-methods-compared/de.mdx": {
-    "hash": "7a1af75faa134578",
-    "by": "claude"
+    "hash": "328ed95c57e95573",
+    "by": "deepl"
   },
   "content/wiki/06-security/01-ssh-basics/de.mdx": {
-    "hash": "b1f1d576c8a4d6de",
-    "by": "claude"
+    "hash": "087da76bac299d86",
+    "by": "deepl"
   },
   "content/wiki/06-security/02-single-sign-on/de.mdx": {
-    "hash": "12a51c62f5f2c987",
-    "by": "claude"
+    "hash": "50b62228bd634dcd",
+    "by": "deepl"
   },
   "content/wiki/06-security/03-managing-secrets/de.mdx": {
-    "hash": "5da830f4c7caca36",
-    "by": "claude"
+    "hash": "275a3cf4b6aadca8",
+    "by": "deepl"
   },
   "content/wiki/06-security/04-attack-surface/de.mdx": {
-    "hash": "cdd35551faa697b8",
-    "by": "claude"
+    "hash": "ca49c5ac8d677262",
+    "by": "deepl"
   },
   "content/wiki/07-operations/01-backup-strategies/de.mdx": {
-    "hash": "f5070f1a616f85d4",
-    "by": "claude"
+    "hash": "3ffbd89420e8e854",
+    "by": "deepl"
   },
   "content/wiki/07-operations/02-monitoring/de.mdx": {
-    "hash": "308a9d12d09295d8",
-    "by": "claude"
+    "hash": "672aeeeaf00f21b0",
+    "by": "deepl"
   },
   "content/wiki/07-operations/03-updates/de.mdx": {
-    "hash": "ebf40bb310ccc390",
-    "by": "claude"
+    "hash": "47ff34db3cf42e1b",
+    "by": "deepl"
   },
   "content/wiki/07-operations/04-logs/de.mdx": {
-    "hash": "5a06477eee095023",
-    "by": "claude"
+    "hash": "7d4f9bb61613ed51",
+    "by": "deepl"
   },
   "content/wiki/08-conventions/01-directory-structure/de.mdx": {
-    "hash": "2f28b36fee6ce370",
-    "by": "claude"
+    "hash": "7d8a0b1911b83342",
+    "by": "deepl"
   },
   "content/wiki/08-conventions/02-naming/de.mdx": {
-    "hash": "b10c7e724501cfaf",
-    "by": "claude"
+    "hash": "e8f1ab738d149e23",
+    "by": "deepl"
   },
   "content/wiki/08-conventions/03-env-files/de.mdx": {
-    "hash": "395355afb830d28f",
-    "by": "claude"
+    "hash": "f340b53ed635b66c",
+    "by": "deepl"
   },
   "content/wiki/08-conventions/04-documentation/de.mdx": {
-    "hash": "757857481c65d9b1",
-    "by": "claude"
+    "hash": "ad1cdc4819ef9f66",
+    "by": "deepl"
   },
   "src/i18n/de.json#banner.label": {
     "hash": "2362c7ffde83a464",

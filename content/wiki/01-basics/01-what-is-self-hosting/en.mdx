@@ -1,5 +1,95 @@
 ---
-title: "What is self-hosting?"
+title: What is self-hosting?
+description: Self-hosting means you run services such as password managers, photo archives, or cloud storage on a computer that you control yourself, rather than using them through a large provider.
 level: 1
-status: stub
+related:
+  - is-it-worth-it
+  - cloud-hybrid-local
+  - hardware-overview
+  - what-is-docker
+practice: choosing-hardware
 ---
+
+## The idea in a sentence
+
+You probably use a lot of services today that run on third-party servers: photos in the cloud, passwords in a
+Online vault, files stored with a hosting provider. With self-hosting, you install similar software on a
+your own server. The data is then stored on your server, and you decide who has access to it.
+
+A **server** is nothing out of the ordinary. It simply refers to a computer that runs around the clock and provides services in the
+network. This could be an energy-efficient mini-PC sitting on a shelf, an old laptop, or a rented virtual
+Server in a data center.
+
+## What you can do with it
+
+There is a wide selection of free software. Typical projects for beginners:
+
+<Cards>
+  <Card title="Passwords">
+    A standalone password manager like [Vaultwarden](/en/services/vaultwarden/) that's compatible with the Bitwarden apps.
+  </Card>
+  <Card title="Photos">
+    A private photo archive like [Immich](/en/services/immich/), which automatically backs up photos from your cell phone.
+  </Card>
+  <Card title="Files">
+    Your own cloud for files, calendars, and contacts—for example, [Nextcloud](/en/services/nextcloud/).
+  </Card>
+  <Card title="Overview">
+    Monitoring tools like [Uptime Kuma](/en/services/uptime-kuma/), which notify you when something goes down.
+  </Card>
+</Cards>
+
+Many people start with a service and quickly realize how much money they can make from it. This hobby is often called
+**Homelab**: a small, personal IT environment at home for running, learning, and experimenting.
+
+## How this works from a technical standpoint
+
+A typical setup on this page consists of just a few components:
+
+1. **Hardware**: a computer that runs continuously. The devices that are suitable are listed in the
+   [Hardware Overview](/en/wiki/hardware-overview/).
+2. **Operating system**: usually a lightweight Linux distribution such as Debian or Ubuntu Server, without a graphical user interface. You
+   Manage it via [SSH](/en/wiki/ssh-basics/) from your regular computer.
+3. **Docker**: Each service runs in its own **container**, an isolated environment that contains everything the
+   Software requires. It is described in a short file named `compose.yaml`. More on this in
+   [What is Docker?](/en/wiki/what-is-docker/)
+4. **Reverse Proxy**: a service that accepts requests and forwards them to the appropriate container. It also ensures that
+   HTTPS certificates, so you can use addresses like  `vault.__DOMAIN__`instead of an IP address and port. See
+   [Reverse Proxy Explained](/en/wiki/reverse-proxy-explained/).
+5. **Backups**: a way to safeguard your data in a different location. Without this, self-hosting is a risk.
+
+All services are located in a shared folder, by default`__ROOT__`. For each service, there is a subfolder containing
+`compose.yaml`,  and`.env` `data/`. That way, you'll always know where everything is, and you'll end up backing up exactly one folder.
+
+## Where the server is located
+
+Self-hosting doesn't necessarily mean that the computer is sitting in your living room. There are three models: locally at home,
+in the cloud on a rented server, or a combination of both. This article explains which option is right for you
+[Cloud, hybrid](/en/wiki/cloud-hybrid-local/), [or on-premises?](/en/wiki/cloud-hybrid-local/)
+
+What matters isn't the location, but control: You choose the software, decide on updates, and know that
+where your data is stored.
+
+## What You Should Bring
+
+You don't have to be a pro. The following are helpful:
+
+- **Curiosity and patience.** Not everything works on the first try. Reading error messages is part of the process.
+- **A little time.** Setup takes a few evenings, and after that, a few minutes a week are usually enough for updates.
+  and a quick look at the system.
+- **Terminal Basics.** Copying commands, editing files, changing directories. You'll learn the rest as you go.
+- **A sense of responsibility.** You're now your own IT department. If something breaks, there's no support,
+  who you can call.
+
+The article ["When Is It Worth It?](/en/wiki/is-it-worth-it/)" honestly explores whether the effort is worth it for you,
+with pros and cons.
+
+## Here's what happens next
+
+If you're ready to get started, follow the instructions under "Setup" in order. You'll start by choosing the
+Hardware and guide you through installation, security, and Docker, all the way to your first service with its own domain.
+
+<Callout title="Start small">
+Start with a single service that you actually use. Once it's running reliably and is secure, then
+One at a time. That's less stressful than doing ten at once.
+</Callout>

@@ -1,6 +1,148 @@
 ---
-title: "Creating the directory structure"
+title: Create a directory structure
+description: In the end, you'll have a single root folder for your entire home lab—one that belongs to you. Each service gets its own folder within it, containing a `compose.yaml` file, a `.env` file, and data, and you only need to remember one path for the backup.
 level: 1
 minutes: 10
-status: stub
+requires:
+  - Docker is installed
 ---
+
+Before you start your first container, it’s worth deciding where to store your Compose files and service data. This might sound like a minor detail, but it determines how easy backups, migrations, and troubleshooting will be later on. For more background information and other options, see the article [“Directory Structure](/en/wiki/directory-structure/).”
+
+## There are several common variations
+
+Docker itself doesn't dictate anything to you. In guides and forums, you'll mainly come across these folders:
+
+| Location | Typical of | Note |
+| --- | --- | --- |
+| `/opt/stacks` or `/opt/docker` | Dockge (used `/opt/stacks`by default), many blog posts | Works well.  However, according to Linux conventions, it's`/opt` intended more for additional software than for data. |
+| `~/docker` in the home directory | Quick Tests, Guides for Beginners | Not necessary`sudo`. However, it is associated with a user account, and the home directory contains a lot of other things as well. |
+| `/srv/…` | Servers that provide data | `/srv` According to the Filesystem Hierarchy Standard, it is intended specifically for “data provided by this server.” |
+| Separate: Compose files here, data there | Larger setups, Git workflows | It's flexible, but there are two places you need to keep an eye on. |
+
+All of these approaches are valid. What's more important than the exact path is that you choose **a** place and stick with it.
+
+<OneWay />
+
+## Recommendation for this page
+
+To get started, we recommend using **a single root folder**: `/srv/homelab`. In the commands on this page, it is referred to as  `__ROOT__`and is replaced by the value from “My Setup.” Within this folder, each service gets its own folder, and that folder contains everything related to that service:
+
+```
+/srv/homelab/            ← __ROOT__
+├── traefik/
+│   ├── compose.yaml     ← welche Container, welche Einstellungen
+│   ├── .env             ← Variablen und Secrets
+│   └── data/            ← persistente Daten (Zertifikate, Datenbanken …)
+└── vaultwarden/
+    ├── compose.yaml
+    ├── .env
+    └── data/
+```
+
+This has three advantages:
+
+- **A backup destination.** Once you've backed it up`/srv/homelab`, you have everything: configuration, secrets, and data for all services.
+- **Everything in one place.** If you want to know how a service is set up, you just look in one specific folder.
+- **Easy to migrate.** Moving a service to another server means: stop the stack, copy the folder, and start it there.
+
+The file is named `compose.yaml`. That is the current default name used by Docker Compose. The old name  still works`docker-compose.yml`, too.
+
+<Steps>
+
+<Step title="Create a root folder">
+`/srv` It belongs to root. That's why you need `sudo`to create the folder once.
+
+```bash
+sudo mkdir -p __ROOT__
+```
+</Step>
+
+<Step title="Transfer the folder to your user">
+So that you can create and edit files`sudo` later, transfer the folder to your user. This ensures`chmod 750` that other users on the server cannot access it. This is important because passwords will be stored in `.env`files here later on.
+
+```bash
+sudo chown "$USER":"$(id -gn)" __ROOT__
+chmod 750 __ROOT__
+ls -ld __ROOT__
+```
+
+The output should now show`drwxr-x---` your username and .
+
+<Callout title="Files owned by root">
+Some containers create files as`data/` root or with their own user ID. This is normal. You can only read`sudo` or delete such files using . That's also why the backup will run with later on`sudo`.
+</Callout>
+</Step>
+
+<Step title="One folder per service">
+For each new service, create a subfolder with the service's name. Use lowercase letters and no spaces. The folder name is also the project name that Docker Compose uses for containers and networks.
+
+You do this each time you set up the service. For the first stack, it looks like this:
+
+```bash
+mkdir -p __ROOT__/whoami
+```
+
+Persistent data is always stored in the service's`data/` subfolder. For example, the folder might contain`compose.yaml` `./data/db:/var/lib/postgresql/data`. The period at the beginning indicates that the path is relative to the folder where the  is `compose.yaml`located.
+</Step>
+
+<Step title="Check &quot;My Setup&quot;">
+Open "My Setup" at the top of the page and check under "Paths":
+
+- **Folder for Stacks:**  `/srv/homelab`(or your own path)
+- **Persistent Data:** “In the Stack Folder”
+
+From now on, all commands and Compose files on this page will use your path.
+</Step>
+
+</Steps>
+
+<Callout title="The proxy network will come later">
+Many guides create a Docker network for the reverse proxy at this point. You won't need that until you set up a reverse proxy. That's why it's part of the "[Reverse Proxy with Traefik"](/en/setup/reverse-proxy-traefik/) guide.
+</Callout>
+
+## Alternative: Separate configuration and data
+
+Some people keep Compose files and data in two separate folders. This is worth doing if you
+
+- if you want to manage the Compose files as a Git repository without including databases or uploads in it,
+- you want to move the data to another, larger disk,
+- You may want to back up your configuration and data at different intervals.
+
+In the same root folder, it looks like this:
+
+```
+/srv/homelab/
+├── compose/             ← Ordner für Stacks
+│   ├── traefik/
+│   │   ├── compose.yaml
+│   │   └── .env
+│   └── vaultwarden/
+│       ├── compose.yaml
+│       └── .env
+└── data/                ← zentraler Datenordner
+    ├── traefik/
+    └── vaultwarden/
+```
+
+You set this up exactly as described above, except with two subfolders:
+
+```bash
+sudo mkdir -p /srv/homelab/compose /srv/homelab/data
+sudo chown -R "$USER":"$(id -gn)" /srv/homelab
+chmod 750 /srv/homelab
+```
+
+Then, in "My Setup" under "Paths," set the following:
+
+- **Folders for Stacks:** `/srv/homelab/compose`
+- **Persistent Data:** “Central Data Folder”
+- **Data folder:** `/srv/homelab/data`
+
+The Compose files on this page will then no longer point to `./data/…`, but to the appropriate subfolder in the data folder. The backup destination remains `/srv/homelab`.
+
+<Callout type="warning" title="The .env file does not belong in a public repository">
+Even if you manage the Compose folder with Git: It contains`.env` passwords and keys. Enter them in the `.gitignore`file. For more information, see the [.env & Secrets](/en/setup/env-secrets/) guide.
+</Callout>
+
+Next up is the [first stack](/en/setup/first-stack/). There, you'll create the first service in your new structure.
