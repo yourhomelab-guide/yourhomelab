@@ -2,17 +2,35 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "enabledManagers": ["docker-compose"],
+  "ignorePaths": ["content/services/_template/**"],
   "docker-compose": {
-    "managerFilePatterns": ["/^content/services/[^_][^/]*/compose\\.yaml$/"]
+    "managerFilePatterns": ["/^content/services/[^/]+/compose\\.yaml$/"]
   },
   "labels": ["dienst", "update"],
   "prConcurrentLimit": 5,
   "schedule": ["before 6am on monday"],
   "packageRules": [
     {
+      "description": "Every template update needs a manual test before merging",
       "matchManagers": ["docker-compose"],
       "commitMessageTopic": "{{depName}}",
       "prBodyNotes": ["Vor dem Merge: Vorlage testen und `reviewed` in service.yaml aktualisieren."]
+    },
+    {
+      "description": "Major versions often need config or data migrations: only on request via the Dependency Dashboard",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Database majors are never a drop-in update (Postgres/MariaDB need a dump & restore)",
+      "matchPackageNames": ["postgres", "mariadb", "redis", "docker.io/valkey/valkey"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "Immich pins its own Postgres build; follow Immich's release notes instead",
+      "matchPackageNames": ["ghcr.io/immich-app/postgres"],
+      "enabled": false
     }
   ]
 }

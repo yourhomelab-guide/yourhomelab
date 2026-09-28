@@ -3,13 +3,11 @@ title: Datenschutzerklärung
 summary: "Diese Seite setzt keine Cookies und lädt nichts von fremden Anbietern. Die Reichweitenmessung mit Umami läuft auf unserem eigenen Server und erkennt dich nicht wieder. Dein Setup und dein Fortschritt bleiben in deinem Browser."
 updated: September 2026
 ---
-<!-- TODO: Markierte Stellen ersetzen. Betreibst du die Seite privat statt über die GbR, siehe Hinweis in Abschnitt 4. -->
-
 ## 1. Verantwortlicher
 
-<mark>Flystart Solutions GbR</mark>, vertreten durch <mark>Vorname Nachname</mark> und <mark>Vorname Nachname</mark><br>
-<mark>Straße Hausnummer, PLZ Ort</mark><br>
-E-Mail: <mark>datenschutz@yourhomelab.guide</mark>
+Anastasia Ishchenko und Elias Müller GbR FlyStart Solutions, vertreten durch Elias Müller und Anastasia Ishchenko<br>
+Bautzner Straße 13b, 01099 Dresden<br>
+E-Mail: hello@yourhomelab.guide
 
 ## 2. Hosting und Server-Logs
 
@@ -21,13 +19,12 @@ Diese Website setzt keine Cookies und bindet keine Werbe- oder Trackingdienste D
 
 ## 4. Reichweitenmessung mit Umami
 
-Um zu sehen, welche Guides gelesen werden und wo Inhalte fehlen, nutzen wir die Open-Source-Software Umami. Sie läuft auf unserem eigenen Server unter stats.flystart-solutions.com in <mark>Deutschland</mark>; von dort wird auch das Messskript geladen. Die Daten werden nicht an Dritte weitergegeben.
+Um zu sehen, welche Guides gelesen werden und wo Inhalte fehlen, nutzen wir die Open-Source-Software Umami. Sie läuft auf unserem eigenen Server unter stats.flystart-solutions.com, gehostet bei der Hetzner Online GmbH in Nürnberg; von dort wird auch das Messskript geladen. Mit Hetzner besteht ein Vertrag zur Auftragsverarbeitung. Die Daten werden nicht an Dritte weitergegeben.
 
 Umami setzt keine Cookies, speichert nichts in deinem Browser und speichert keine IP-Adressen. Aus IP-Adresse, Browser und einem regelmäßig wechselnden Zufallswert wird eine Kennung gebildet, die nur Seitenaufrufe desselben Besuchs zusammenfasst. Eine Wiedererkennung über längere Zeit oder über andere Websites hinweg ist nicht möglich. Erfasst werden aufgerufene Seite, Referrer, Browser, Betriebssystem, Gerätetyp, Bildschirmgröße, Sprache und Land. Sendet dein Browser »Do Not Track«, wird nichts erfasst.
 
-Rechtsgrundlage ist unser berechtigtes Interesse an einer bedarfsgerechten Weiterentwicklung der Inhalte (Art. 6 Abs. 1 lit. f DSGVO). Du kannst jederzeit widersprechen, etwa indem du »Do Not Track« aktivierst oder einen Inhaltsblocker nutzt. Die Statistikdaten werden nach <mark>24 Monaten</mark> gelöscht.
+Rechtsgrundlage ist unser berechtigtes Interesse an einer bedarfsgerechten Weiterentwicklung der Inhalte (Art. 6 Abs. 1 lit. f DSGVO). Du kannst jederzeit widersprechen, etwa indem du »Do Not Track« aktivierst oder einen Inhaltsblocker nutzt. Die Statistikdaten speichern wir, bis wir sie nicht mehr benötigen und löschen; einzelnen Personen zuordnen lassen sie sich zu keinem Zeitpunkt.
 
-<!-- Falls die Seite privat betrieben wird: Satz 2 ersetzen durch »Sie läuft auf einem Server der Flystart Solutions GbR, mit der ein Vertrag zur Auftragsverarbeitung nach Art. 28 DSGVO besteht.« -->
 
 ## 5. Speicherung im Browser
 

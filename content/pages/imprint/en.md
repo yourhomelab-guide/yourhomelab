@@ -1,24 +1,22 @@
 ---
 title: Legal notice
 ---
-<!-- TODO: Replace all marked values and remove the <mark> tags afterwards. Keep in sync with de/impressum.md. -->
-
 ## Information according to § 5 DDG (German Digital Services Act)
 
-<mark>Flystart Solutions GbR</mark><br>
-<mark>Street Number</mark><br>
-<mark>Postcode City</mark><br>
+Anastasia Ishchenko und Elias Müller GbR FlyStart Solutions<br>
+Bautzner Straße 13b<br>
+01099 Dresden<br>
 Germany
 
-**Represented by the partners:** <mark>First name Last name</mark>, <mark>First name Last name</mark>
+**Represented by the partners:** Elias Müller and Anastasia Ishchenko
 
 ## Contact
 
-Email: <mark>kontakt@yourhomelab.guide</mark>
+Email: hello@yourhomelab.guide
 
 ## Responsible for content according to § 18 (2) MStV
 
-<mark>First name Last name</mark>, address as above
+Elias Müller, address as above
 
 ## Liability for content and templates
 

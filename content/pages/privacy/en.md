@@ -3,13 +3,11 @@ title: Privacy policy
 summary: "This site sets no cookies and loads nothing from third-party providers. Analytics with Umami run on our own server and cannot recognize you. Your setup and your progress stay in your browser."
 updated: September 2026
 ---
-<!-- TODO: Replace marked values. Keep in sync with de/datenschutz.md. -->
-
 ## 1. Controller
 
-<mark>Flystart Solutions GbR</mark>, represented by <mark>First name Last name</mark> and <mark>First name Last name</mark><br>
-<mark>Street Number, Postcode City</mark><br>
-Email: <mark>datenschutz@yourhomelab.guide</mark>
+Anastasia Ishchenko und Elias Müller GbR FlyStart Solutions, represented by Elias Müller and Anastasia Ishchenko<br>
+Bautzner Straße 13b, 01099 Dresden, Germany<br>
+Email: hello@yourhomelab.guide
 
 ## 2. Hosting and server logs
 
@@ -21,11 +19,11 @@ This website sets no cookies and embeds no third-party advertising or tracking s
 
 ## 4. Analytics with Umami
 
-To see which guides are read and where content is missing, we use the open-source software Umami. It runs on our own server at stats.flystart-solutions.com in <mark>Germany</mark>, which also serves the tracking script. The data is not shared with third parties.
+To see which guides are read and where content is missing, we use the open-source software Umami. It runs on our own server at stats.flystart-solutions.com, hosted by Hetzner Online GmbH in Nuremberg, Germany, which also serves the tracking script. A data processing agreement is in place with Hetzner. The data is not shared with third parties.
 
 Umami sets no cookies, stores nothing in your browser and does not store IP addresses. An identifier is derived from IP address, browser and a regularly changing random value; it only groups page views of the same visit. Recognizing you over a longer period or across other websites is not possible. Collected are the page visited, referrer, browser, operating system, device type, screen size, language and country. If your browser sends "Do Not Track", nothing is collected.
 
-The legal basis is our legitimate interest in improving the content based on actual needs (Art. 6 (1) (f) GDPR). You can object at any time, for example by enabling "Do Not Track" or using a content blocker. Statistics are deleted after <mark>24 months</mark>.
+The legal basis is our legitimate interest in improving the content based on actual needs (Art. 6 (1) (f) GDPR). You can object at any time, for example by enabling "Do Not Track" or using a content blocker. We keep the statistics until we no longer need them and delete them; at no point can they be linked to individual people.
 
 ## 5. Storage in your browser
 

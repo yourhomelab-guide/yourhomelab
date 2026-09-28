@@ -20,20 +20,28 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # "Zuletzt bearbeitet am" comes from git history
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - run: npm run build
 
+      - name: Check deploy credentials
+        id: creds
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          if [ -z "$HOST" ]; then echo "::warning::DEPLOY_HOST secret missing, build ok but nothing uploaded"; echo "ok=false" >> "$GITHUB_OUTPUT"; else echo "ok=true" >> "$GITHUB_OUTPUT"; fi
+
       - name: Upload to Hetzner Webhosting
+        if: steps.creds.outputs.ok == 'true'
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
           USER: ${{ secrets.DEPLOY_USER }}
           PASS: ${{ secrets.DEPLOY_PASSWORD }}
-          TARGET: ${{ vars.DEPLOY_PATH || 'public_html' }}
-          PROTOCOL: ${{ vars.DEPLOY_PROTOCOL || 'sftp' }}
+          TARGET: ${{ vars.DEPLOY_PATH || secrets.DEPLOY_PATH || 'public_html' }}
+          PROTOCOL: ${{ vars.DEPLOY_PROTOCOL || secrets.DEPLOY_PROTOCOL || 'sftp' }}
         run: |
           sudo apt-get install -y -qq lftp >/dev/null
           # Hashed assets first, HTML last, so visitors never get HTML pointing to missing files.
@@ -48,12 +56,13 @@ jobs:
           bye
           LFTP
       - name: Clean up old assets
+        if: steps.creds.outputs.ok == 'true'
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
           USER: ${{ secrets.DEPLOY_USER }}
           PASS: ${{ secrets.DEPLOY_PASSWORD }}
-          TARGET: ${{ vars.DEPLOY_PATH || 'public_html' }}
-          PROTOCOL: ${{ vars.DEPLOY_PROTOCOL || 'sftp' }}
+          TARGET: ${{ vars.DEPLOY_PATH || secrets.DEPLOY_PATH || 'public_html' }}
+          PROTOCOL: ${{ vars.DEPLOY_PROTOCOL || secrets.DEPLOY_PROTOCOL || 'sftp' }}
         run: |
           lftp -u "$USER","$PASS" "$PROTOCOL://$HOST" <<LFTP
           set sftp:auto-confirm yes
