@@ -12,8 +12,7 @@ Deutschland
 
 ## Kontakt
 
-E-Mail: hello@yourhomelab.guide<br>
-Telefon: +49 174 8109928
+E-Mail: hello@yourhomelab.guide
 
 ## Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV
 

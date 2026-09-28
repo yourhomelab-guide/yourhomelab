@@ -23,7 +23,7 @@ To see which guides are read and where content is missing, we use the open-sourc
 
 Umami sets no cookies, stores nothing in your browser and does not store IP addresses. An identifier is derived from IP address, browser and a regularly changing random value; it only groups page views of the same visit. Recognizing you over a longer period or across other websites is not possible. Collected are the page visited, referrer, browser, operating system, device type, screen size, language and country. If your browser sends "Do Not Track", nothing is collected.
 
-The legal basis is our legitimate interest in improving the content based on actual needs (Art. 6 (1) (f) GDPR). You can object at any time, for example by enabling "Do Not Track" or using a content blocker. Statistics are deleted after <mark>24 months</mark>.
+The legal basis is our legitimate interest in improving the content based on actual needs (Art. 6 (1) (f) GDPR). You can object at any time, for example by enabling "Do Not Track" or using a content blocker. We keep the statistics until we no longer need them and delete them; at no point can they be linked to individual people.
 
 ## 5. Storage in your browser
 

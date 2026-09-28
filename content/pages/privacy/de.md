@@ -23,7 +23,7 @@ Um zu sehen, welche Guides gelesen werden und wo Inhalte fehlen, nutzen wir die 
 
 Umami setzt keine Cookies, speichert nichts in deinem Browser und speichert keine IP-Adressen. Aus IP-Adresse, Browser und einem regelmäßig wechselnden Zufallswert wird eine Kennung gebildet, die nur Seitenaufrufe desselben Besuchs zusammenfasst. Eine Wiedererkennung über längere Zeit oder über andere Websites hinweg ist nicht möglich. Erfasst werden aufgerufene Seite, Referrer, Browser, Betriebssystem, Gerätetyp, Bildschirmgröße, Sprache und Land. Sendet dein Browser »Do Not Track«, wird nichts erfasst.
 
-Rechtsgrundlage ist unser berechtigtes Interesse an einer bedarfsgerechten Weiterentwicklung der Inhalte (Art. 6 Abs. 1 lit. f DSGVO). Du kannst jederzeit widersprechen, etwa indem du »Do Not Track« aktivierst oder einen Inhaltsblocker nutzt. Die Statistikdaten werden nach <mark>24 Monaten</mark> gelöscht.
+Rechtsgrundlage ist unser berechtigtes Interesse an einer bedarfsgerechten Weiterentwicklung der Inhalte (Art. 6 Abs. 1 lit. f DSGVO). Du kannst jederzeit widersprechen, etwa indem du »Do Not Track« aktivierst oder einen Inhaltsblocker nutzt. Die Statistikdaten speichern wir, bis wir sie nicht mehr benötigen und löschen; einzelnen Personen zuordnen lassen sie sich zu keinem Zeitpunkt.
 
 
 ## 5. Speicherung im Browser

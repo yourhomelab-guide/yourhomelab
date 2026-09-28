@@ -12,8 +12,7 @@ Germany
 
 ## Contact
 
-Email: hello@yourhomelab.guide<br>
-Phone: +49 174 8109928
+Email: hello@yourhomelab.guide
 
 ## Responsible for content according to § 18 (2) MStV
 
