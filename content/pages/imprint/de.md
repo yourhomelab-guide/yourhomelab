@@ -1,32 +1,23 @@
 ---
 title: Impressum
 ---
-<!--
-  TODO: Markierte Stellen ersetzen und danach die <mark>-Tags entfernen.
-  Vorlage für den Betrieb durch die GbR. Betreibst du die Seite privat: GbR-Zeile und
-  »Vertreten durch« löschen und deinen vollen Namen mit Anschrift eintragen.
--->
-
 ## Angaben gemäß § 5 DDG
 
-<mark>Flystart Solutions GbR</mark><br>
-<mark>Straße Hausnummer</mark><br>
-<mark>PLZ Ort</mark><br>
+Anastasia Ishchenko und Elias Müller GbR FlyStart Solutions<br>
+Bautzner Straße 13b<br>
+01099 Dresden<br>
 Deutschland
 
-**Vertreten durch die Gesellschafter:** <mark>Vorname Nachname</mark>, <mark>Vorname Nachname</mark>
-
-<!-- Nur falls im Gesellschaftsregister eingetragen (eGbR): -->
-<!-- Registergericht: … · Registernummer: GsR … -->
-<!-- Nur falls vorhanden: Umsatzsteuer-Identifikationsnummer nach § 27a UStG: DE … -->
+**Vertreten durch die Gesellschafter:** Elias Müller und Anastasia Ishchenko
 
 ## Kontakt
 
-E-Mail: hello@yourhomelab.guide
+E-Mail: hello@yourhomelab.guide<br>
+Telefon: +49 174 8109928
 
 ## Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV
 
-<mark>Vorname Nachname</mark>, Anschrift wie oben
+Elias Müller, Anschrift wie oben
 
 ## Haftung für Inhalte und Vorlagen
 

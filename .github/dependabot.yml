@@ -3,6 +3,10 @@ updates:
   - package-ecosystem: npm
     directory: /
     schedule: { interval: weekly }
+    ignore:
+      # @astrojs/check does not support TypeScript 7 yet
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
     groups:
       astro: { patterns: ['astro', '@astrojs/*'] }
       all: { patterns: ['*'], exclude-patterns: ['astro', '@astrojs/*'] }
