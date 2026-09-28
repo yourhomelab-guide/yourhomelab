@@ -78,7 +78,7 @@ Weil Uptime Kuma im Netzwerk `__NETWORK__` hängt, kannst du Dienste auch intern
 <Step title="Backups überwachen">
 Manche Dinge kann Uptime Kuma nicht abfragen, sie melden sich selbst. Dafür gibt es den Monitortyp **Push**: Uptime Kuma zeigt dir eine Push-URL und wartet darauf, dass sie regelmäßig aufgerufen wird. Bleibt der Aufruf aus, schlägt es Alarm.
 
-Ideal für dein nächtliches Backup: Lege einen Push-Monitor „Backup“ mit einem Heartbeat-Intervall von `90000` Sekunden an (25 Stunden, etwas Puffer für einen Tag). Die Push-URL trägst du am Ende deines Backup-Skripts ein, wie in [Backups mit restic](/de/einrichten/backups-restic/) beschrieben.
+Ideal für dein nächtliches Backup: Lege einen Push-Monitor „Backup“ mit einem Heartbeat-Intervall von `90000` Sekunden an (25 Stunden, etwas Puffer für einen Tag). Die Push-URL trägst du in deine borgmatic-Konfiguration ein, wie in [Backups mit borgmatic](/de/einrichten/backups-borgmatic/) beschrieben.
 </Step>
 
 <Step title="Statusseite erstellen">

@@ -28,7 +28,7 @@ const guideLink = (id: string) => {
 };
 const doors = [
   { n: 1, href: url.section(lang, 'wiki'), links: ['what-is-docker', 'cloud-hybrid-local', 'reverse-proxy-explained'].map(wikiLink) },
-  { n: 2, href: url.section(lang, 'setup'), links: ['hardening-ssh', 'creating-the-directory-structure', 'backups-restic'].map(guideLink) },
+  { n: 2, href: url.section(lang, 'setup'), links: ['hardening-ssh', 'creating-the-directory-structure', 'backups-borgmatic'].map(guideLink) },
   { n: 3, href: url.section(lang, 'services'), links: ['vaultwarden', 'immich', 'forgejo'].map((id) => services.find((s) => s.id === id)).map((s) => (s ? { t: s.name, href: url.service(lang, s.id) } : null)) },
 ];
 ---

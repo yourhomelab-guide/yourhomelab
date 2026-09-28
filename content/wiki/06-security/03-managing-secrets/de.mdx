@@ -87,9 +87,9 @@ merken, was es alles gibt. Zwei Ergänzungen haben sich bewährt:
 
 - **Passwortmanager:** Lege wichtige Secrets zusätzlich in deinem Passwortmanager ab, etwa in
   [Vaultwarden](/de/dienste/vaultwarden/) oder KeePassXC. Besonders wichtig ist das für alles, ohne das du ein Backup
-  nicht wiederherstellen kannst, zum Beispiel das Passwort deines restic-Repositorys.
+  nicht wiederherstellen kannst, zum Beispiel die Passphrase deines Borg-Repositorys.
 - **Verschlüsselte Backups:** Dein Backup von `__ROOT__` enthält alle `.env`-Dateien. Es muss daher verschlüsselt sein.
-  restic erledigt das automatisch, siehe [Backup-Strategien](/de/nachschlagen/backup-strategien/).
+  borgmatic erledigt das automatisch, siehe [Backup-Strategien](/de/nachschlagen/backup-strategien/).
 
 <Callout type="warning" title="Vorsicht beim Teilen von Ausgaben">
   `docker compose config` zeigt die fertige Konfiguration mit allen eingesetzten Werten, also auch mit deinen

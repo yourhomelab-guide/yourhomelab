@@ -4,7 +4,7 @@ title: "Backup-Strategien"
 description: "Irgendwann geht etwas kaputt: eine Festplatte, ein Update oder ein falscher Befehl. Mit einer einfachen Strategie sind deine Daten trotzdem sicher, und du weißt genau, was du wohin sicherst."
 level: 1
 related: [directory-structure, volumes-bind-mounts, managing-secrets, env-files]
-practice: backups-restic
+practice: backups-borgmatic
 ---
 
 ## Warum Backups Pflicht sind
@@ -95,13 +95,14 @@ Viele Dienste beschreiben in ihrer Doku, wie man sie richtig sichert. Ein Blick 
 Für Linux-Server gibt es drei bewährte Werkzeuge. Alle drei verschlüsseln, deduplizieren und verwalten Snapshots.
 
 <Cards>
+  <Card title="BorgBackup + borgmatic">
+    Borg ist sehr ausgereift und effizient. borgmatic ergänzt eine einzige Konfigurationsdatei für Quellen,
+    Aufbewahrung, Prüfungen und Hooks. Das Ziel ist eine lokale Platte oder ein Rechner mit SSH und Borg, es gibt
+    auch spezialisierte Anbieter dafür. Die Guides dieser Seite nutzen borgmatic.
+  </Card>
   <Card title="restic">
     Ein einzelnes Programm, Verschlüsselung immer aktiv. Speichert lokal, per SFTP oder direkt in S3-kompatiblen
-    Cloud-Speicher. Die Guides dieser Seite nutzen restic.
-  </Card>
-  <Card title="BorgBackup">
-    Sehr ausgereift und effizient. Das Ziel braucht SSH-Zugang und idealerweise ebenfalls Borg, es gibt aber
-    spezialisierte Anbieter dafür.
+    Cloud-Speicher, ohne dass auf dem Ziel etwas installiert sein muss.
   </Card>
   <Card title="Kopia">
     Ähnlich wie restic, bringt aber zusätzlich eine Weboberfläche und eine Desktop-App mit.

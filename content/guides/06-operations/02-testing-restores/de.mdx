@@ -1,84 +1,79 @@
 ---
 slug: restore-testen
 title: "Restore testen"
-description: "Du holst einzelne Dateien und einen kompletten Dienst aus deinem restic-Backup zurück, prüfst einen Datenbank-Dump und planst den Test als festen Termin ein. Danach weißt du, dass deine Backups im Ernstfall wirklich funktionieren."
+description: "Du holst einzelne Dateien und einen kompletten Dienst aus deinem borgmatic-Backup zurück, prüfst einen Datenbank-Dump und planst den Test als festen Termin ein. Danach weißt du, dass deine Backups im Ernstfall wirklich funktionieren."
 level: 2
-minutes: 30
-requires: [Backups mit restic, Docker Compose]
+minutes: 40
+requires: [Backups mit borgmatic, Docker Compose]
 ---
 
-Ein Backup, das du nie zurückgespielt hast, ist nur eine Hoffnung. Vielleicht fehlt ein Ordner, weil er außerhalb von `__ROOT__` lag. Vielleicht ist der Datenbank-Dump leer, weil der Befehl still gescheitert ist. Oder das Passwort ist doch nicht im Passwortmanager gelandet. All das findest du nur heraus, indem du wiederherstellst. Am besten jetzt, in Ruhe, und nicht erst, wenn die Platte schon tot ist.
+Ein Backup, das du nie zurückgespielt hast, ist nur eine Hoffnung. Vielleicht fehlt ein Ordner, weil er außerhalb von `__ROOT__` lag. Vielleicht ist der Datenbank-Dump leer, weil der Befehl nicht getan hat, was du dachtest. Oder die Passphrase ist doch nicht im Passwortmanager gelandet. All das findest du nur heraus, indem du wiederherstellst. Am besten jetzt, in Ruhe, und nicht erst, wenn die Platte schon tot ist.
 
-Dieser Guide baut auf [Backups mit restic](/de/einrichten/backups-restic/) auf. Du stellst immer in einen **separaten Ordner** oder auf einen **anderen Rechner** wieder her, nie über die laufenden Dienste.
+Dieser Guide baut auf [Backups mit borgmatic](/de/einrichten/backups-borgmatic/) auf. Du stellst immer in einen **separaten Ordner** oder auf einen **anderen Rechner** wieder her, nie über die laufenden Dienste.
 
 <Steps>
 
-<Step title="Einstellungen laden">
-Wie beim Backup arbeitest du als root und lädst die Einstellungen aus `/etc/restic/env`:
-
-```bash
-sudo -i
-set -a; source /etc/restic/env; set +a
-```
-
-Alle folgenden Befehle laufen in dieser Shell. Mit `exit` verlässt du sie am Ende.
-</Step>
-
-<Step title="Snapshots ansehen">
+<Step title="Archive ansehen">
 Zuerst prüfst du, ob die Backups überhaupt regelmäßig ankommen:
 
 ```bash
-restic snapshots
+sudo borgmatic repo-list
 ```
 
-Du siehst eine Liste mit ID, Datum, Rechnername und gesichertem Pfad. Stimmt das Datum des neuesten Snapshots? Fehlen Tage, obwohl der Timer jede Nacht laufen sollte? Dann schau zuerst ins Log (`journalctl -u homelab-backup.service`).
+Du siehst eine Liste der Archive mit Rechnername, Datum und Uhrzeit. Stimmt das Datum des neuesten Archivs? Fehlen Tage, obwohl der Timer jede Nacht laufen sollte? Dann schau zuerst ins Log (`sudo journalctl -u borgmatic.service`).
 
-Den Inhalt eines Snapshots listest du mit `restic ls`. `latest` steht für den neuesten Snapshot, du kannst aber auch jede ID aus der Liste nehmen:
+Bevor du in ein Archiv hineinschaust, eine Eigenheit von Borg: Es speichert Pfade **ohne führenden Schrägstrich**. Aus `/srv/homelab` wird im Archiv `srv/homelab`. Die borgmatic-Befehle erwarten den Pfad bei `--path` genau so, wie er im Archiv steht. In den Beispielen erledigt das die Shell: Du legst den gewohnten Pfad in der Variablen `P` ab, und der Ausdruck hinter `--path` setzt ihn ohne den ersten Schrägstrich ein.
+
+Den Inhalt des neuesten Archivs listest du mit `list`. `latest` steht für das neueste Archiv, du kannst aber auch jeden Namen aus `repo-list` nehmen:
 
 ```bash
-restic ls latest __ROOT__/vaultwarden
+P=__ROOT__/vaultwarden
+sudo borgmatic list --archive latest --path "${P#/}"
 ```
 
 Prüfe hier, ob alle Stacks, alle `.env`-Dateien und die Datenbank-Dumps enthalten sind.
 </Step>
 
 <Step title="Einzelne Datei zurückholen">
-Der häufigste Fall im Alltag: Eine Datei ist kaputt oder gelöscht. Mit `--include` holst du nur diesen Pfad zurück, `--target` gibt den Zielordner an:
+Der häufigste Fall im Alltag: Eine Datei ist kaputt oder gelöscht. Mit `--path` holst du nur diesen Pfad zurück, `--destination` gibt den Zielordner an. Den Ordner musst du vorher anlegen:
 
 ```bash
-restic restore latest --target /tmp/restore-test --include __ROOT__/vaultwarden/.env
+mkdir -p /tmp/restore-test
+P=__ROOT__/vaultwarden/.env
+sudo borgmatic extract --archive latest --path "${P#/}" --destination /tmp/restore-test
 ```
 
-restic legt dabei den vollen Pfad unterhalb des Zielordners an. Die Datei liegt also unter `/tmp/restore-test` plus dem ursprünglichen Pfad. Vergleiche sie mit dem Original:
+Borg legt dabei den vollen Pfad unterhalb des Zielordners an. Die Datei liegt also unter `/tmp/restore-test` plus dem ursprünglichen Pfad. Vergleiche sie mit dem Original:
 
 ```bash
-diff /tmp/restore-test__ROOT__/vaultwarden/.env __ROOT__/vaultwarden/.env && echo "identisch"
+sudo diff /tmp/restore-test__ROOT__/vaultwarden/.env __ROOT__/vaultwarden/.env && echo "identisch"
 ```
 
-Für einen schnellen Blick in eine einzelne Datei geht es auch ohne Zielordner. `restic dump` gibt sie direkt im Terminal aus:
-
-```bash
-restic dump latest __ROOT__/vaultwarden/compose.yaml
-```
+Achte auf die Ausgabe von `extract`: Meldet Borg `never matched`, gibt es den Pfad im Archiv nicht. Meist ist dann ein Tippfehler im Pfad schuld, oder die Datei lag nie im gesicherten Bereich.
 </Step>
 
 <Step title="Backup als Ordner durchstöbern">
-Willst du dich erst umsehen, bevor du etwas zurückholst? `restic mount` bindet das ganze Repository als Ordner ein. Darin findest du jeden Snapshot als eigenes Verzeichnis. Dafür braucht es FUSE:
+Willst du dich erst umsehen, bevor du etwas zurückholst? `borgmatic mount` bindet ein Archiv als Ordner ein. Dafür braucht es **FUSE**, eine Technik, mit der Programme eigene Dateisysteme bereitstellen. Je nach Distribution ist sie beim Paket `borgbackup` schon dabei. Mit diesem Befehl gehst du sicher:
 
 ```bash
-apt install fuse3
-mkdir -p /mnt/restic
-restic mount /mnt/restic
+sudo apt install fuse3 python3-pyfuse3
+sudo mkdir -p /mnt/borg
+sudo borgmatic mount --archive latest --mount-point /mnt/borg
 ```
 
-Der Befehl bleibt im Vordergrund. Öffne eine zweite SSH-Sitzung und schau dich um:
+Der Befehl kehrt sofort zurück, das Archiv bleibt eingebunden. Schau dich um:
 
 ```bash
-sudo ls /mnt/restic/snapshots/
-sudo ls /mnt/restic/snapshots/latest__ROOT__/
+sudo ls /mnt/borg__ROOT__/
 ```
 
-Einzelne Dateien kopierst du einfach mit `cp` heraus. Mit `Strg+C` im ersten Fenster hängst du das Repository wieder aus. Für große Datenmengen ist `restic restore` deutlich schneller als Kopieren aus dem Mount.
+Einzelne Dateien kopierst du einfach mit `sudo cp` heraus. Zum Schluss hängst du das Archiv wieder aus:
+
+```bash
+sudo borgmatic umount --mount-point /mnt/borg
+```
+
+Für große Datenmengen ist `extract` deutlich schneller als Kopieren aus dem Mount.
 </Step>
 
 <Step title="Datenbank-Dump einspielen">
@@ -87,10 +82,13 @@ Ein Dump ist erst dann gut, wenn er sich einspielen lässt. Du testest das mit e
 Hole den Dump aus dem Backup:
 
 ```bash
-restic restore latest --target /tmp/restore-test --include __ROOT__/authentik/backup
+mkdir -p /tmp/restore-test
+P=__DATA(authentik)__/db-dump
+sudo borgmatic extract --archive latest --path "${P#/}" --destination /tmp/restore-test
+sudo ls -lh /tmp/restore-test__DATA(authentik)__/db-dump/
 ```
 
-Starte eine leere Datenbank. Nimm dasselbe Image wie im Stack (steht in der `compose.yaml`), damit die Versionen zusammenpassen:
+Ist die Datei nur wenige Bytes groß, stimmt etwas mit dem Dump-Befehl in der Konfiguration nicht. Starte dann eine leere Datenbank. Nimm dasselbe Image wie im Stack (steht in der `compose.yaml`), damit die Versionen zusammenpassen:
 
 ```bash
 docker run -d --name restore-test-db \
@@ -98,10 +96,10 @@ docker run -d --name restore-test-db \
   postgres:16-alpine
 ```
 
-Warte ein paar Sekunden, bis die Datenbank bereit ist, und spiele den Dump ein:
+Warte ein paar Sekunden, bis die Datenbank bereit ist, und spiele den Dump ein. Der Dump-Ordner gehört root, deshalb liest `sudo cat` die Datei:
 
 ```bash
-gunzip -c /tmp/restore-test__ROOT__/authentik/backup/authentik.sql.gz \
+sudo cat /tmp/restore-test__DATA(authentik)__/db-dump/authentik.sql \
   | docker exec -i restore-test-db psql -U authentik -d authentik
 ```
 
@@ -111,7 +109,7 @@ Jetzt schaust du, ob Tabellen und Daten da sind:
 docker exec restore-test-db psql -U authentik -d authentik -c '\dt'
 ```
 
-Siehst du eine lange Liste von Tabellen, ist der Dump in Ordnung. Ist die Liste leer oder die Datei nur wenige Bytes groß, stimmt etwas mit dem Dump-Befehl im Backup-Skript nicht. Zum Schluss räumst du den Test-Container weg:
+Siehst du eine lange Liste von Tabellen, ist der Dump in Ordnung. Zum Schluss räumst du den Test-Container weg:
 
 ```bash
 docker rm -f restore-test-db
@@ -123,41 +121,86 @@ Für MariaDB funktioniert es genauso, mit dem Image `mariadb` und dem Befehl `ma
 <Step title="Kompletten Dienst wiederherstellen">
 Der wichtigste Test: Läuft ein Dienst nach einem Totalausfall wieder? Das prüfst du am besten auf einem **anderen Rechner**, zum Beispiel einer VM auf deinem PC oder einem alten Notebook. So simulierst du ehrlich den Ernstfall, und der Test kommt deinem echten Server nicht in die Quere. Auf demselben Server geht das nur umständlich, weil Containernamen und Ports schon belegt sind.
 
-Auf dem Testrechner brauchst du Docker und restic. Kopiere das Passwort **aus deinem Passwortmanager**, nicht vom Server. Genau das musst du im Ernstfall auch tun. Lege `/etc/restic/password` und `/etc/restic/env` wie im Backup-Guide an, mit demselben Repository.
+Auf dem Testrechner brauchst du Docker, Borg und borgmatic. Installiere Borg und borgmatic wie im Backup-Guide beschrieben. Liegt dein Repository auf einem anderen Rechner, muss auch der Testrechner per SSH-Schlüssel darauf zugreifen können. Teste die Verbindung dann einmal wie im Backup-Guide mit `sudo ssh`. Eine USB-Platte hängst du einfach am Testrechner ein, am selben Pfad wie auf dem Server.
+
+Leg dann die Passphrase an. Kopiere sie **aus deinem Passwortmanager**, nicht vom Server. Genau das musst du im Ernstfall auch tun:
+
+```bash
+sudo mkdir -p /etc/borgmatic
+sudo chmod 700 /etc/borgmatic
+sudo nano /etc/borgmatic/passphrase
+sudo chmod 600 /etc/borgmatic/passphrase
+```
+
+Für den Restore genügt eine kurze Konfiguration in `/etc/borgmatic/config.yaml`, nur mit dem Repository und der Passphrase. Trag dasselbe Repository ein wie auf dem Server:
+
+```yaml
+repositories:
+    - path: ssh://backup@192.168.1.20/./borg
+      label: remote
+
+encryption_passphrase: "{credential file /etc/borgmatic/passphrase}"
+```
 
 <Callout type="warning" title="Kein Backup vom Testrechner">
-Richte auf dem Testrechner keinen Backup-Timer ein. Sonst landen Snapshots der Testumgebung im selben Repository, und `forget` räumt womöglich echte Stände weg.
+Richte auf dem Testrechner keinen Timer ein und starte `borgmatic` nicht ohne Aktion. Sonst landen Archive der Testumgebung im selben Repository, und die Aufräumregeln löschen womöglich echte Stände.
 </Callout>
+
+Prüfe als Nächstes deinen exportierten Schlüssel. Bei `repokey` liegt der Schlüssel im Repository, im Normalfall brauchst du also nur die Passphrase. Der Export ist deine Rückversicherung, falls genau diese Datei im Repository beschädigt wird. Lass dir den Schlüssel anzeigen und vergleiche ihn mit dem Export in deinem Passwortmanager:
+
+```bash
+sudo borgmatic key export
+```
+
+Beide sollten übereinstimmen. Hast du die Passphrase seit dem Export geändert, exportiere den Schlüssel neu.
 
 Stelle dann einen Dienst an seinem gewohnten Pfad wieder her, hier Vaultwarden:
 
 ```bash
-restic restore latest --target / --include __ROOT__/vaultwarden
+P=__ROOT__/vaultwarden
+sudo borgmatic extract --archive latest --path "${P#/}" --destination /
+```
+
+<Callout title="Daten liegen woanders?">
+Im Modus „zentral“ liegen die Daten nicht im Stack-Ordner. Hol sie dann mit einem zweiten Aufruf zurück, mit `P=__DATA(vaultwarden)__` und demselben `extract`-Befehl.
+</Callout>
+
+`--destination /` schreibt die Dateien an ihren Originalpfad. Das ist nur auf dem Testrechner in Ordnung, nie auf deinem Server, solange dort die echten Daten liegen. Borg stellt auch Besitzer und Rechte wieder her, deshalb läuft der Befehl mit `sudo`. Jetzt startest du den Dienst:
+
+```bash
 docker network create __NETWORK__
 cd __ROOT__/vaultwarden
 docker compose up -d
 docker compose logs -f
 ```
 
-`--target /` schreibt die Dateien an ihren Originalpfad. Das ist nur auf dem Testrechner in Ordnung, nie auf deinem Server, solange dort die echten Daten liegen. `restic restore` stellt auch Besitzer und Rechte wieder her, deshalb läuft der Befehl als root.
-
 Startet der Container ohne Fehler im Log und findet er seine Daten? Um die Weboberfläche zu sehen, kannst du vorübergehend einen Port in die `compose.yaml` eintragen (etwa `ports: ["8080:80"]` beim Dienst `vaultwarden`) und `http://<IP des Testrechners>:8080` öffnen. Melde dich an und prüfe, ob deine Einträge da sind. Ohne HTTPS verweigern manche Dienste den Login. Dann genügt dir fürs Erste, dass der Container sauber startet und die Datenbank findet.
 
-Ganz genau nimmst du es, wenn du den kompletten Ordner inklusive Reverse Proxy zurückholst: `restic restore latest --target /`. Das ist der echte Ernstfall.
+Ganz genau nimmst du es, wenn du den kompletten Homelab-Ordner inklusive Reverse Proxy zurückholst, also `extract` ohne `--path`. Das ist der echte Ernstfall.
+</Step>
+
+<Step title="Alle Daten prüfen">
+Die nächtlichen Prüfungen aus dem Backup-Guide lesen die Daten nur alle drei Monate komplett. Beim Restore-Test kannst du diese Prüfung auch sofort anstoßen, auf dem Server oder dem Testrechner. `--only data` wählt die gründlichste Prüfung, `--force` ignoriert den eingestellten Rhythmus:
+
+```bash
+sudo borgmatic check --only data --force --progress
+```
+
+borgmatic liest und entschlüsselt dabei alle Archive. Bei großen Repositorys oder einem Ziel im Internet dauert das lange. Starte die Prüfung deshalb, wenn du Zeit hast, zum Beispiel am Wochenende.
 </Step>
 
 <Step title="Aufräumen und regelmäßig wiederholen">
 Lösche die Testdaten, damit keine Kopien deiner Secrets herumliegen:
 
 ```bash
-rm -rf /tmp/restore-test
-exit
+sudo rm -rf /tmp/restore-test
 ```
 
 Ein Restore-Test ist keine einmalige Sache. Dienste kommen dazu, Pfade ändern sich, ein Dump-Befehl bricht nach einem Update. Plane den Test deshalb fest ein:
 
-- **Monatlich**: Snapshots ansehen, eine Datei zurückholen, `restic check --read-data-subset=5%` laufen lassen.
-- **Alle drei bis sechs Monate**: einen Datenbank-Dump einspielen und einen kompletten Dienst auf dem Testrechner starten.
+- **Monatlich**: `repo-list` ansehen, eine Datei zurückholen, die Meldungen in Uptime Kuma prüfen.
+- **Alle drei bis sechs Monate**: einen Datenbank-Dump einspielen und die Datenprüfung laufen lassen.
+- **Jährlich**: einen kompletten Dienst auf dem Testrechner starten, nur mit Passphrase und Schlüssel aus dem Passwortmanager.
 - **Nach jeder größeren Änderung**: neuer Stack, neue Datenbank, neues Backup-Ziel.
 
 Trag dir die Termine in deinen Kalender ein. Schreib dir außerdem kurz auf, welche Schritte du gebraucht hast und was gehakt hat. Im Ernstfall bist du nervös, dann hilft eine fertige Anleitung mehr als jede Erinnerung. Mehr dazu unter [Dokumentation](/de/nachschlagen/dokumentation/).
