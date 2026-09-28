@@ -1,0 +1,62 @@
+---
+/** Frame for one tool: breadcrumb, title, lead, "Mein Setup" bar, the tool, and the other tools. */
+import Base from '../layouts/Base.astro';
+import SetupSummary from '../components/SetupSummary.astro';
+import { tools, type ToolId } from '../config/site';
+import { t, type Lang } from '../lib/i18n';
+import { url } from '../lib/routes';
+
+interface Props {
+  lang: Lang;
+  id: ToolId;
+  /** Show the "Mein Setup" bar (tools that use its values) */
+  setup?: boolean;
+}
+const { lang, id, setup = true } = Astro.props;
+const others = tools.filter((x) => x.id !== id);
+---
+
+<Base lang={lang} title={t(lang, `tools.${id}.title`)} description={t(lang, `tools.${id}.desc`)} alternates={{ de: url.tool('de', id), en: url.tool('en', id) }} nav="tools">
+  <main class="wrap tool">
+    <div class="crumbs">
+      <a href={url.section(lang, 'tools')}>{t(lang, 'tools.title')}</a><span>/</span><span class="here">{t(lang, `tools.${id}.title`)}</span>
+    </div>
+    <div class="head">
+      <h1 class="h1">{t(lang, `tools.${id}.title`)}</h1>
+      <p class="lead">{t(lang, `tools.${id}.desc`)}</p>
+    </div>
+    {
+      setup && (
+        <div class="setupbar card">
+          <span class="sb-l">{t(lang, 'services.yourSetup')}</span>
+          <SetupSummary lang={lang} />
+          <button type="button" class="btn btn-outline btn-sm" data-setup-open>{t(lang, 'services.change')}</button>
+        </div>
+      )
+    }
+    <div class="body">
+      <slot />
+    </div>
+    <p class="privacy">{t(lang, 'tools.privacy')}</p>
+    <nav class="more" aria-label={t(lang, 'tools.more')}>
+      <span class="eyebrow">{t(lang, 'tools.more')}</span>
+      <div class="more-list">
+        {others.map((o) => <a href={url.tool(lang, o.id)}>{t(lang, `tools.${o.id}.title`)}</a>)}
+      </div>
+    </nav>
+  </main>
+</Base>
+
+<style>
+  .tool { padding-top: 36px; padding-bottom: 88px; display: flex; flex-direction: column; gap: 24px; }
+  .crumbs { font-size: 13.5px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+  .crumbs .here { color: var(--text-2); }
+  .head { display: flex; flex-direction: column; gap: 10px; max-width: 760px; }
+  .setupbar { border-radius: 18px; padding: 14px 18px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .setupbar :global(.chips) { flex: 1; }
+  .sb-l { font-size: 14px; font-weight: 600; }
+  .body { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .privacy { font-size: 13.5px; color: var(--muted); }
+  .more { display: flex; flex-direction: column; gap: 10px; padding-top: 20px; border-top: 1px solid var(--line-2); }
+  .more-list { display: flex; gap: 8px 18px; flex-wrap: wrap; font-size: 14.5px; }
+</style>

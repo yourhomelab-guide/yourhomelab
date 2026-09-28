@@ -53,6 +53,25 @@ export const homelabFacets = {
 } as const;
 export type HomelabFacet = keyof typeof homelabFacets;
 
+/**
+ * Tools under /de/werkzeuge/ and /en/tools/, in display order. Title and description live in src/i18n/*.json as
+ * `tools.<id>.title` / `tools.<id>.desc`; the tool itself is src/components/tools/<Component>.astro.
+ */
+export const tools = [
+  { id: 'assistant', slug: { de: 'einstiegs-assistent', en: 'getting-started' }, group: 'start' },
+  { id: 'stack-builder', slug: { de: 'stack-builder', en: 'stack-builder' }, group: 'build' },
+  { id: 'compose-explainer', slug: { de: 'compose-erklaerer', en: 'compose-explainer' }, group: 'build' },
+  { id: 'proxy-config', slug: { de: 'proxy-konfiguration', en: 'proxy-config' }, group: 'build' },
+  { id: 'password-hash', slug: { de: 'passwort-hash', en: 'password-hash' }, group: 'build' },
+  { id: 'borgmatic', slug: { de: 'borgmatic-konfiguration', en: 'borgmatic-config' }, group: 'operate' },
+  { id: 'docs-export', slug: { de: 'doku-export', en: 'docs-export' }, group: 'operate' },
+  { id: 'security-check', slug: { de: 'sicherheits-check', en: 'security-check' }, group: 'operate' },
+  { id: 'ram-planner', slug: { de: 'ram-planer', en: 'ram-planner' }, group: 'plan' },
+  { id: 'power-calculator', slug: { de: 'stromrechner', en: 'power-calculator' }, group: 'plan' },
+] as const;
+export type ToolId = (typeof tools)[number]['id'];
+export const toolGroups = ['start', 'plan', 'build', 'operate'] as const;
+
 /** Reverse proxies a visitor can pick in "Mein Setup". */
 export const proxies = ['traefik', 'caddy', 'npm', 'none'] as const;
 export type Proxy = (typeof proxies)[number];

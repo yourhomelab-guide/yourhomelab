@@ -113,6 +113,31 @@ const services = defineCollection({
       .optional(),
     /** Date the template was last tested (YYYY-MM-DD) */
     reviewed: z.coerce.date().optional(),
+    /** Rough needs, shown on the service page and used by the RAM planner and the stack builder */
+    resources: z
+      .object({
+        /** Typical RAM use of the whole stack in MB, in normal use (not peak) */
+        ram: z.number().int().positive(),
+        /** Does a GPU help (transcoding, machine learning)? */
+        gpu: z.enum(['no', 'optional', 'recommended']).default('no'),
+      })
+      .optional(),
+    /**
+     * Database of the stack, used for backup dumps (borgmatic generator, backup guide).
+     * `service` is the database container's service name in compose.yaml; `user` / `name` may be literals or `${VAR}` from .env.
+     */
+    db: z
+      .object({
+        type: z.enum(['postgres', 'mariadb', 'mysql', 'sqlite']),
+        service: z.string().optional(),
+        user: z.string().optional(),
+        name: z.string().optional(),
+        /** sqlite: path of the database file below the stack's data folder, e.g. `data/db.sqlite3` */
+        path: z.string().optional(),
+      })
+      .optional(),
+    /** Ids of services that go well with this one ("Passt gut zu") */
+    pairsWith: z.array(z.string()).default([]),
   }),
 });
 

@@ -1,0 +1,52 @@
+---
+import Base from '../layouts/Base.astro';
+import { toolGroups, tools } from '../config/site';
+import { t, type Lang } from '../lib/i18n';
+import { url } from '../lib/routes';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<Base lang={lang} title={t(lang, 'tools.title')} description={t(lang, 'tools.lead')} alternates={{ de: url.section('de', 'tools'), en: url.section('en', 'tools') }} nav="tools">
+  <main class="wrap tools">
+    <div class="head">
+      <h1 class="h1">{t(lang, 'tools.title')}</h1>
+      <p class="lead">{t(lang, 'tools.lead')}</p>
+    </div>
+    {
+      toolGroups.map((g) => (
+        <section class="group">
+          <h2 class="eyebrow">{t(lang, `tools.group.${g}`)}</h2>
+          <div class="grid">
+            {tools
+              .filter((x) => x.group === g)
+              .map((x) => (
+                <a class="card tl" href={url.tool(lang, x.id)}>
+                  <strong>{t(lang, `tools.${x.id}.title`)}</strong>
+                  <p>{t(lang, `tools.${x.id}.desc`)}</p>
+                  <span class="go">{t(lang, 'tools.open')} →</span>
+                </a>
+              ))}
+          </div>
+        </section>
+      ))
+    }
+    <p class="privacy">{t(lang, 'tools.privacy')}</p>
+  </main>
+</Base>
+
+<style>
+  .tools { padding-top: 48px; padding-bottom: 88px; display: flex; flex-direction: column; gap: 32px; }
+  .head { display: flex; flex-direction: column; gap: 10px; max-width: 700px; }
+  .group { display: flex; flex-direction: column; gap: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 16px; }
+  .tl { padding: 22px; display: flex; flex-direction: column; gap: 8px; color: var(--text); }
+  .tl:hover { box-shadow: var(--ring); text-decoration: none; color: var(--text); }
+  .tl strong { font-size: 17px; font-weight: 700; }
+  .tl p { font-size: 14.5px; line-height: 1.55; color: var(--text-3); flex: 1; }
+  .go { font-size: 14px; font-weight: 600; color: var(--accent-600); }
+  .privacy { font-size: 13.5px; color: var(--muted); }
+</style>

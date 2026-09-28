@@ -1,0 +1,15 @@
+---
+import ToolPage from '../../../views/ToolPage.astro';
+import { noSetupBar, toolComponents } from '../../../components/tools';
+import { tools, type ToolId } from '../../../config/site';
+
+export function getStaticPaths() {
+  return tools.map((t) => ({ params: { tool: t.slug.de }, props: { id: t.id as ToolId } }));
+}
+const { id } = Astro.props;
+const Tool = toolComponents[id];
+---
+
+<ToolPage lang="de" id={id} setup={!noSetupBar.includes(id)}>
+  <Tool lang="de" />
+</ToolPage>
