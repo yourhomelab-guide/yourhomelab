@@ -1172,7 +1172,7 @@
     "by": "claude"
   },
   "src/i18n/de.json#quiz.hint": {
-    "hash": "41100f07fa37654a",
+    "hash": "2ea9429945a0a5bc",
     "by": "claude"
   },
   "src/i18n/de.json#quiz.recommendation": {
@@ -1180,7 +1180,11 @@
     "by": "claude"
   },
   "src/i18n/de.json#quiz.reset": {
-    "hash": "a3301d60bdd86c3b",
+    "hash": "1ba0463c46e6cafa",
+    "by": "claude"
+  },
+  "src/i18n/de.json#quiz.runnerUp": {
+    "hash": "ebe6d544040d50bb",
     "by": "claude"
   },
   "src/i18n/de.json#quiz.start": {
