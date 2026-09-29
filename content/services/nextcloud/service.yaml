@@ -15,9 +15,6 @@ upstream:
   label: "nextcloud/docker: .examples"
   url: https://github.com/nextcloud/docker/tree/master/.examples
 reviewed: 2026-09-12
-resources:
-  ram: 500
-  gpu: no
 db:
   type: mariadb
   service: db

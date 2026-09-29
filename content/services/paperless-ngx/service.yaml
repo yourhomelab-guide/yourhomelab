@@ -14,9 +14,6 @@ links:
 upstream:
   label: docker/compose/docker-compose.postgres.yml
   url: https://github.com/paperless-ngx/paperless-ngx/blob/main/docker/compose/docker-compose.postgres.yml
-resources:
-  ram: 1000
-  gpu: no
 db:
   type: postgres
   service: db

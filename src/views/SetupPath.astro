@@ -17,14 +17,14 @@ const { stages, guides } = await getSetupPath(lang);
 const pad = (n: number) => String(n).padStart(2, '0');
 /** Tools that help in each stage, keyed by the stage folder name (English slug) */
 const stageTools: Record<string, ToolId[]> = {
-  preparation: ['assistant', 'ram-planner', 'power-calculator'],
+  preparation: ['assistant', 'power-calculator'],
   securing: ['security-check'],
   docker: ['stack-builder', 'compose-explainer'],
   access: ['proxy-config'],
   'login-protection': ['password-hash', 'security-check'],
   operations: ['borgmatic', 'docs-export'],
   deployment: ['compose-explainer', 'stack-builder'],
-  apps: ['stack-builder', 'ram-planner'],
+  apps: ['stack-builder'],
 };
 ---
 

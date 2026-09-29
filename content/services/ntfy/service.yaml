@@ -13,9 +13,6 @@ links:
 upstream:
   label: docs/config.md
   url: https://docs.ntfy.sh/config/
-resources:
-  ram: 30
-  gpu: no
 db:
   type: sqlite
   path: data/data/auth.db

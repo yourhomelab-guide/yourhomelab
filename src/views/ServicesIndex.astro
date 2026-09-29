@@ -15,7 +15,6 @@ const { lang } = Astro.props;
 const services = await getServices(lang);
 const cats = categories.filter((c) => services.some((s) => s.category === c));
 const hostOf = (u: string) => new URL(u).hostname.replace(/^www\./, '');
-const ramLabel = (mb: number) => (mb >= 1000 ? `~${(mb / 1000).toLocaleString(lang === 'de' ? 'de-DE' : 'en-US', { maximumFractionDigits: 1 })} GB RAM` : `~${mb} MB RAM`);
 ---
 
 <Base lang={lang} title={t(lang, 'services.title')} description={t(lang, 'services.lead')} alternates={{ de: url.section('de', 'services'), en: url.section('en', 'services') }} nav="services">
@@ -65,11 +64,6 @@ const ramLabel = (mb: number) => (mb >= 1000 ? `~${(mb / 1000).toLocaleString(la
             <div class="svc-links">
               <a href={s.repoUrl}>{s.repoLabel} ↗</a>
               <a href={s.links.website}>{hostOf(s.links.website)} ↗</a>
-              {s.resources && (
-                <span class="svc-ram" title={t(lang, 'service.ramTitle')}>
-                  {ramLabel(s.resources.ram)}
-                </span>
-              )}
               <Level lang={lang} level={s.level} class="svc-lvl" />
             </div>
             <a class="deploy" href={url.service(lang, s.id)} aria-label={`${s.name}: ${t(lang, 'services.deploy')}`}>
@@ -139,7 +133,6 @@ const ramLabel = (mb: number) => (mb >= 1000 ? `~${(mb / 1000).toLocaleString(la
   .svc p { font-size: 14.5px; line-height: 1.55; color: var(--text-3); flex: 1; text-wrap: pretty; }
   .svc-links { display: flex; gap: 14px; font-size: 13px; flex-wrap: wrap; align-items: center; }
   .svc-links a { color: var(--text-4); }
-  .svc-ram { color: var(--muted); font-size: 12.5px; }
   .svc-links :global(.svc-lvl) { margin-left: auto; font-size: 12px; padding: 3px 8px; }
   .deploy { background: var(--accent-50); color: var(--accent-600); border-radius: 12px; padding: 11px; font-size: 14.5px; font-weight: 600; text-align: center; }
   .deploy:hover { background: var(--accent); color: #fff; text-decoration: none; }

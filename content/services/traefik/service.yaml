@@ -15,7 +15,4 @@ upstream:
   label: docs/content/user-guides/docker-compose
   url: https://github.com/traefik/traefik/tree/master/docs/content/user-guides/docker-compose
 reviewed: 2026-09-12
-resources:
-  ram: 60
-  gpu: no
 pairsWith: [tinyauth, pocket-id, authentik, uptime-kuma]

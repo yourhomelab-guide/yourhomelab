@@ -25,10 +25,8 @@ upstream:
   url: https://github.com/owner/myservice/blob/main/docker-compose.yml
 # Date you last tested this template (YYYY-MM-DD)
 reviewed: 2026-01-01
-# Rough needs, used by the service page, the RAM planner and the stack builder
-# resources:
-#   ram: 300          # typical RAM use of the whole stack in MB, normal use (not peak)
-#   gpu: no           # no | optional | recommended
+# Does a GPU help (transcoding, machine learning)? Shown on the service page
+# gpu: no            # no | optional | recommended
 # Database of the stack, used for backup dumps (borgmatic tool)
 # db:
 #   type: postgres    # postgres | mariadb | mysql | sqlite

@@ -13,9 +13,6 @@ upstream:
   label: compose.yaml
   url: https://github.com/louislam/uptime-kuma/blob/master/compose.yaml
 reviewed: 2026-09-12
-resources:
-  ram: 150
-  gpu: no
 db:
   type: sqlite
   path: data/data/kuma.db

@@ -463,6 +463,10 @@
     "hash": "377e063d0dbecd43",
     "by": "claude"
   },
+  "src/i18n/de.json#glossary.more": {
+    "hash": "bd7e0462022ea222",
+    "by": "claude"
+  },
   "src/i18n/de.json#header.home": {
     "hash": "ebc5fc6705afa615",
     "by": "claude"
@@ -1529,6 +1533,14 @@
   },
   "src/i18n/de.json#summary.urls": {
     "hash": "1240054e2040d953",
+    "by": "claude"
+  },
+  "src/i18n/de.json#table.label": {
+    "hash": "d521d22b049b175d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#table.scrollHint": {
+    "hash": "949c995ce81fab1b",
     "by": "claude"
   },
   "src/i18n/de.json#tag.new": {
@@ -3696,7 +3708,7 @@
     "by": "claude"
   },
   "src/i18n/de.json#tools.password-hash.desc": {
-    "hash": "8478d8a3bc9997c2",
+    "hash": "60b67cb90bb2eac3",
     "by": "claude"
   },
   "src/i18n/de.json#tools.password-hash.errName": {
@@ -3725,6 +3737,14 @@
   },
   "src/i18n/de.json#tools.password-hash.guideLink": {
     "hash": "4af2c161a5df45ac",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.hashLead": {
+    "hash": "c9d1badc29848770",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.password-hash.hashTitle": {
+    "hash": "f2676b699a2ff769",
     "by": "claude"
   },
   "src/i18n/de.json#tools.password-hash.hide": {
@@ -3788,7 +3808,7 @@
     "by": "claude"
   },
   "src/i18n/de.json#tools.password-hash.title": {
-    "hash": "4b5a3b4df0612a19",
+    "hash": "2373ea0e8cf09e11",
     "by": "claude"
   },
   "src/i18n/de.json#tools.password-hash.tooLong": {
@@ -4415,6 +4435,78 @@
     "hash": "242dfd46ebebc5a8",
     "by": "claude"
   },
+  "src/i18n/de.json#tools.secret.bits": {
+    "hash": "e352d74a112e8da8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.secret.charset": {
+    "hash": "e6a8d073a5267888",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.secret.count": {
+    "hash": "7174de22bac6508a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.secret.lead": {
+    "hash": "5697e6433699e864",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.secret.length": {
+    "hash": "fdc9e8e5ddc49512",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.secret.presets": {
+    "hash": "972cdc06ac74004c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.secret.regenerate": {
+    "hash": "68d85d39d31d0641",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.secret.set.alnum": {
+    "hash": "e379dd219711323d",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.secret.set.base64url": {
+    "hash": "080a96f224c9e3b1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.secret.set.hex": {
+    "hash": "b867c76be80d7794",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.secret.set.symbols": {
+    "hash": "38319992d196ac46",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.secret.setHint.alnum": {
+    "hash": "b2dc8b24104690ed",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.secret.setHint.base64url": {
+    "hash": "d5d46ba4859a4589",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.secret.setHint.hex": {
+    "hash": "fb1ef48e8409542a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.secret.setHint.symbols": {
+    "hash": "6e70385f3cd14f3f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.secret.shell": {
+    "hash": "afee37a9253c4f60",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.secret.title": {
+    "hash": "245d52ff4ae15fb5",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.secret.where": {
+    "hash": "711c4d945e93bffe",
+    "by": "claude"
+  },
   "src/i18n/de.json#tools.security-check.a.no": {
     "hash": "90ebc1bde6f3b1ff",
     "by": "claude"
@@ -4692,7 +4784,7 @@
     "by": "claude"
   },
   "src/i18n/de.json#tools.stack-builder.pickText": {
-    "hash": "64439d7d41dde8f2",
+    "hash": "165f990bbd71bc36",
     "by": "claude"
   },
   "src/i18n/de.json#tools.stack-builder.pickTitle": {

@@ -14,7 +14,5 @@ links:
 upstream:
   label: "jellyfin.org: Installation > Container"
   url: https://jellyfin.org/docs/general/installation/container
-resources:
-  ram: 600
-  gpu: optional
+gpu: optional
 pairsWith: [immich]

@@ -29,6 +29,13 @@ const SKIP = new Set([
 ]);
 
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** Glossary text as plain text for the hover popup: `code`, **bold** and [links](…) lose their markup */
+const plain = (s = '') =>
+  String(s)
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/[`*_]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 const isCaseSensitive = (p) => (/[A-Z]/.test(p) && !/[a-z]/.test(p)) || /^[a-z]+$/.test(p);
 
 const cache = new Map();
@@ -44,13 +51,13 @@ function load(lang) {
   if (hit && hit.mtime === mtime) return hit;
 
   const entries = parse(fs.readFileSync(file, 'utf8')) ?? [];
-  /** lower-case pattern -> { id, pattern, caseSensitive } */
+  /** lower-case pattern -> { id, pattern, caseSensitive, term, tip } */
   const byPattern = new Map();
   for (const e of entries) {
     for (const p of [e.term, ...(e.aliases ?? [])]) {
       if (!p) continue;
       const key = p.toLowerCase();
-      if (!byPattern.has(key)) byPattern.set(key, { id: e.id, pattern: p, caseSensitive: isCaseSensitive(p) });
+      if (!byPattern.has(key)) byPattern.set(key, { id: e.id, pattern: p, caseSensitive: isCaseSensitive(p), term: e.term, tip: plain(e.text) });
     }
   }
   // Longest first, so "Reverse Proxy" wins over "Proxy" and "Carrier-Grade NAT" over "NAT"
@@ -95,7 +102,8 @@ function linkTree(tree, lang, replace) {
       nodes.push({
         type: 'link',
         url: `${TARGET[lang]}#${hit.id}`,
-        data: { hProperties: { className: ['glossary-link'] } },
+        // data-term / data-tip feed the hover popup (src/client/glossary.ts)
+        data: { hProperties: { className: ['glossary-link'], dataTerm: hit.term, dataTip: hit.tip } },
         children: [{ type: 'text', value: m[0] }],
       });
       last = m.index + m[0].length;

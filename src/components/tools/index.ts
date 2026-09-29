@@ -7,7 +7,6 @@ import DocsExport from './DocsExport.astro';
 import PasswordHash from './PasswordHash.astro';
 import PowerCalculator from './PowerCalculator.astro';
 import ProxyConfig from './ProxyConfig.astro';
-import RamPlanner from './RamPlanner.astro';
 import SecurityCheck from './SecurityCheck.astro';
 import StackBuilder from './StackBuilder.astro';
 
@@ -20,7 +19,6 @@ export const toolComponents = {
   borgmatic: Borgmatic,
   'docs-export': DocsExport,
   'security-check': SecurityCheck,
-  'ram-planner': RamPlanner,
   'power-calculator': PowerCalculator,
 } satisfies Record<ToolId, unknown>;
 

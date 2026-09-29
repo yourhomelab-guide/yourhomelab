@@ -2,6 +2,11 @@
 import { applyPlaceholders, codeText, copyText, getSetup } from './store';
 import { renderVariants } from './variants';
 import { renderSummaries } from './summary';
+import { initTables } from './tables';
+import { initGlossary } from './glossary';
+
+initTables();
+initGlossary();
 
 function refresh() {
   const s = getSetup();

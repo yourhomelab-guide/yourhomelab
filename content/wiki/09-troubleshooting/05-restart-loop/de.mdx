@@ -124,7 +124,7 @@ sudo dmesg -T | grep -i -E "out of memory|oom-kill"
 ```
 
 Steht dort `true` oder eine OOM-Meldung, gib dem Dienst mehr RAM, entferne ein gesetztes `mem_limit` bzw. erhöhe es,
-oder stoppe andere Dienste. Wie viel RAM deine Dienste brauchen, schätzt der [RAM-Planer](/de/werkzeuge/ram-planer/).
+oder stoppe andere Dienste. Wie viel RAM deine Container gerade tatsächlich belegen, zeigt `docker stats`.
 
 ### Keine Schreibrechte
 

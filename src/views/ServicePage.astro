@@ -32,10 +32,8 @@ const pairs = s.pairsWith.map((id) => allServices.find((o) => o.id === id)).filt
 /** Templates not tested for this many days get a hint */
 const STALE_DAYS = 180;
 const stale = !s.reviewed || Date.now() - s.reviewed.getTime() > STALE_DAYS * 86_400_000;
-const ramLabel = (mb: number) => (mb >= 1000 ? `~${(mb / 1000).toLocaleString(lang === 'de' ? 'de-DE' : 'en-US', { maximumFractionDigits: 1 })} GB` : `~${mb} MB`);
 const dbLabel = { postgres: 'PostgreSQL', mariadb: 'MariaDB', mysql: 'MySQL', sqlite: 'SQLite' } as const;
 const toolLinks = [
-  { id: 'ram-planner', show: true },
   { id: 'stack-builder', show: true },
   { id: 'borgmatic', show: !!s.db },
 ] as const;
@@ -166,18 +164,10 @@ const toolLinks = [
             <dt>{t(lang, 'service.port')}</dt>
             <dd>{s.port}</dd>
             {
-              s.resources && (
-                <>
-                  <dt>{t(lang, 'service.ram')}</dt>
-                  <dd>{ramLabel(s.resources.ram)}</dd>
-                </>
-              )
-            }
-            {
-              s.resources && s.resources.gpu !== 'no' && (
+              s.gpu !== 'no' && (
                 <>
                   <dt>{t(lang, 'service.gpu')}</dt>
-                  <dd>{t(lang, `service.gpu.${s.resources.gpu}`)}</dd>
+                  <dd>{t(lang, `service.gpu.${s.gpu}`)}</dd>
                 </>
               )
             }

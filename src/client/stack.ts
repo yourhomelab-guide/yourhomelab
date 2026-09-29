@@ -1,5 +1,5 @@
 /**
- * "Mein Stack": the services a visitor picked in the tools (stack builder, RAM planner, docs export, borgmatic
+ * "Mein Stack": the services a visitor picked in the tools (stack builder, docs export, borgmatic
  * generator). Shared via localStorage so a selection made in one tool shows up in the others.
  */
 const KEY = 'yhl-stack';

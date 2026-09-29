@@ -66,7 +66,6 @@ export const tools = [
   { id: 'borgmatic', slug: { de: 'borgmatic-konfiguration', en: 'borgmatic-config' }, group: 'operate' },
   { id: 'docs-export', slug: { de: 'doku-export', en: 'docs-export' }, group: 'operate' },
   { id: 'security-check', slug: { de: 'sicherheits-check', en: 'security-check' }, group: 'operate' },
-  { id: 'ram-planner', slug: { de: 'ram-planer', en: 'ram-planner' }, group: 'plan' },
   { id: 'power-calculator', slug: { de: 'stromrechner', en: 'power-calculator' }, group: 'plan' },
 ] as const;
 export type ToolId = (typeof tools)[number]['id'];

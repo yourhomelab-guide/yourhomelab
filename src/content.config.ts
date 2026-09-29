@@ -113,15 +113,8 @@ const services = defineCollection({
       .optional(),
     /** Date the template was last tested (YYYY-MM-DD) */
     reviewed: z.coerce.date().optional(),
-    /** Rough needs, shown on the service page and used by the RAM planner and the stack builder */
-    resources: z
-      .object({
-        /** Typical RAM use of the whole stack in MB, in normal use (not peak) */
-        ram: z.number().int().positive(),
-        /** Does a GPU help (transcoding, machine learning)? */
-        gpu: z.enum(['no', 'optional', 'recommended']).default('no'),
-      })
-      .optional(),
+    /** Does a GPU help (transcoding, machine learning)? */
+    gpu: z.enum(['no', 'optional', 'recommended']).default('no'),
     /**
      * Database of the stack, used for backup dumps (borgmatic generator, backup guide).
      * `service` is the database container's service name in compose.yaml; `user` / `name` may be literals or `${VAR}` from .env.

@@ -190,10 +190,42 @@ mark { background: var(--warn-bg); color: var(--warn-fg); border-radius: 4px; pa
 .prose blockquote { margin: 0; padding: 16px 20px; border-radius: 16px; background: var(--accent-50); color: #23465a; }
 .prose hr { border: none; border-top: 1px solid var(--line-2); }
 .prose img { border-radius: 16px; }
-.prose .table-wrap { overflow-x: auto; background: var(--surface); border-radius: 18px; }
-.prose table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 14.5px; line-height: 1.45; }
+/* Tables wrap their text and fit the column where possible. Wider tables scroll sideways: then a hint appears
+   and the side with more content fades out (src/client/tables.ts sets the classes). */
+.prose .table-wrap { display: flex; flex-direction: column; gap: 6px; }
+.prose .table-hint { display: none; align-self: flex-end; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--accent-600); }
+.prose .table-hint::before { content: '⇆'; font-size: 15px; }
+.prose .table-wrap.is-scrollable .table-hint { display: flex; }
+.prose .table-frame { position: relative; background: var(--surface); border-radius: 18px; overflow: hidden; }
+.prose .table-frame::before,
+.prose .table-frame::after { content: ''; position: absolute; top: 0; bottom: 0; width: 36px; pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 1; }
+.prose .table-frame::before { left: 0; background: linear-gradient(to right, var(--surface), transparent); }
+.prose .table-frame::after { right: 0; background: linear-gradient(to left, var(--surface), transparent); }
+.prose .table-wrap.is-scrollable:not(.at-start) .table-frame::before,
+.prose .table-wrap.is-scrollable:not(.at-end) .table-frame::after { opacity: 1; }
+.prose .table-scroll { overflow-x: auto; scrollbar-width: thin; }
+.prose .table-scroll:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 18px; }
+.prose table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.45; }
 .prose th { text-align: left; font-weight: 700; background: var(--surface-2); padding: 14px 20px; border-bottom: 1px solid var(--line); color: var(--text); }
 .prose td { padding: 13px 20px; border-bottom: 1px solid var(--line-3); vertical-align: top; }
+.prose th, .prose td { min-width: 6.5em; hyphens: auto; }
+@media (max-width: 720px) {
+  .prose table { font-size: 14px; }
+  .prose th { padding: 11px 10px; }
+  .prose td { padding: 10px 10px; }
+  .prose th, .prose td { min-width: 5em; }
+}
 .prose tr:last-child td { border-bottom: none; }
 .prose td strong { color: var(--text-4); font-weight: 600; }
-.prose a.glossary-link { color: inherit; text-decoration-style: dotted; text-decoration-color: var(--accent-300); text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+.prose a.glossary-link { color: inherit; text-decoration-style: dotted; text-decoration-color: var(--accent-300); text-decoration-thickness: 1.5px; text-underline-offset: 4px; cursor: help; -webkit-tap-highlight-color: transparent; }
+/* Glossary popup (src/client/glossary.ts) */
+.gl-tip {
+  position: absolute; z-index: 40; width: max-content; max-width: min(320px, calc(100vw - 16px)); padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 6px; background: var(--text); color: #eef4f7; border-radius: 12px;
+  font-size: 13.5px; line-height: 1.5; box-shadow: 0 12px 32px rgba(10, 30, 50, 0.25);
+}
+.gl-tip strong { font-size: 14px; color: #fff; }
+.gl-tip a { font-weight: 600; color: #8fdcf2; }
+.gl-tip::after { content: ''; position: absolute; left: var(--arrow, 50%); width: 10px; height: 10px; margin-left: -5px; background: inherit; transform: rotate(45deg); }
+.gl-tip[data-side='top']::after { bottom: -5px; }
+.gl-tip[data-side='bottom']::after { top: -5px; }

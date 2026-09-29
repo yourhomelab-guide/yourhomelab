@@ -16,9 +16,7 @@ upstream:
   label: docker/docker-compose.yml
   url: https://github.com/immich-app/immich/blob/main/docker/docker-compose.yml
 reviewed: 2026-09-12
-resources:
-  ram: 1500
-  gpu: optional
+gpu: optional
 db:
   type: postgres
   service: database

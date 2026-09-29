@@ -13,9 +13,6 @@ upstream:
   label: docs/admin/installation-docker.md
   url: https://forgejo.org/docs/latest/admin/installation/docker/
 reviewed: 2026-09-12
-resources:
-  ram: 200
-  gpu: no
 db:
   type: sqlite
   path: data/data/gitea/gitea.db

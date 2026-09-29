@@ -1,6 +1,6 @@
 ---
 /**
- * Stack builder: pick services, see the RAM sum and download everything as a ZIP
+ * Stack builder: pick services and download everything as a ZIP
  * (compose.yaml + .env with fresh secrets per service, extra files, PROXY.txt, setup.sh, README.md).
  * Everything is generated in the browser, see src/lib/tools/stack.ts and src/lib/tools/zip.ts.
  */
@@ -30,7 +30,6 @@ const data = services.map((s) => {
     id: s.id,
     name: s.name,
     isProxy: s.category === 'proxy',
-    ram: s.resources?.ram ?? null,
     page: site.url + url.service(lang, s.id),
     files: s.files.map((f) => ({ name: f, content: ref(readServiceFile(s.id, f) ?? '') })),
     v: Object.fromEntries(
@@ -45,7 +44,6 @@ const data = services.map((s) => {
 const proxyServices: Record<string, string> = { traefik: 'traefik', caddy: 'caddy', npm: 'nginx-proxy-manager' };
 const k = (key: string) => t(lang, `tools.stack-builder.${key}`);
 const texts = {
-  missingRam: k('missingRam'),
   proxySuggest: k('proxySuggest'),
   proxyIncluded: k('proxyIncluded'),
   proxyMulti: k('proxyMulti'),
@@ -87,18 +85,12 @@ const payload = { lang, pool, services: data, proxyServices, texts, toolUrl: sit
   </section>
 
   <section class="card box" aria-live="polite">
-    <div class="box-head row">
+    <div class="box-head">
       <h2>{k('yourStack')}</h2>
-      <a class="link-btn" href={url.tool(lang, 'ram-planner')}>{k('ramPlanner')} →</a>
     </div>
     <p class="muted" data-empty>{k('empty')}</p>
     <div data-filled hidden>
       <ul class="sel" data-sel></ul>
-      <div class="total">
-        <span>{k('ramTotal')}</span>
-        <b data-ram-total></b>
-      </div>
-      <p class="hint" data-ram-missing hidden></p>
     </div>
   </section>
 
@@ -138,7 +130,7 @@ const payload = { lang, pool, services: data, proxyServices, texts, toolUrl: sit
   interface Data {
     lang: 'de' | 'en';
     pool: string[];
-    services: { id: string; name: string; isProxy: boolean; ram: number | null; page: string; files: { name: string; content: number }[]; v: Record<string, Raw> }[];
+    services: { id: string; name: string; isProxy: boolean; page: string; files: { name: string; content: number }[]; v: Record<string, Raw> }[];
     proxyServices: Record<string, string>;
     texts: Record<string, string> & { proxyNames: Record<string, string>; zip: StackTexts };
     toolUrl: string;
@@ -156,9 +148,6 @@ const payload = { lang, pool, services: data, proxyServices, texts, toolUrl: sit
     const PROXY_KEY = 'yhl-stack-proxy';
     let files: StackFile[] = [];
     let active = 0;
-
-    const ramText = (mb: number) =>
-      mb >= 1000 ? `~${(mb / 1000).toLocaleString(D.lang === 'de' ? 'de-DE' : 'en-US', { maximumFractionDigits: 1 })} GB` : `~${mb} MB`;
 
     const picked = () => getStack().filter((id) => byId.has(id)).map((id) => byId.get(id)!);
 
@@ -214,25 +203,16 @@ const payload = { lang, pool, services: data, proxyServices, texts, toolUrl: sit
           const a = document.createElement('a');
           a.href = x.page.replace(/^https?:\/\/[^/]+/, '');
           a.textContent = x.name;
-          const ram = document.createElement('span');
-          ram.className = 'ram';
-          ram.textContent = x.ram === null ? '?' : ramText(x.ram);
           const rm = document.createElement('button');
           rm.type = 'button';
           rm.className = 'rm';
           rm.textContent = '×';
           rm.setAttribute('aria-label', fmt(T.remove, { name: x.name }));
           rm.addEventListener('click', () => setStack(getStack().filter((id) => id !== x.id)));
-          li.append(a, ram, rm);
+          li.append(a, rm);
           return li;
         }),
       );
-      const sum = list.reduce((a, x) => a + (x.ram ?? 0), 0);
-      const missing = list.filter((x) => x.ram === null);
-      $('[data-ram-total]').textContent = ramText(sum) + (missing.length ? ' + ?' : '');
-      const m = $('[data-ram-missing]');
-      m.hidden = !missing.length;
-      m.textContent = fmt(T.missingRam, { names: missing.map((x) => x.name).join(', ') });
     }
 
     function build() {
@@ -313,7 +293,6 @@ const payload = { lang, pool, services: data, proxyServices, texts, toolUrl: sit
   .sb { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
   .box { padding: 24px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
   .box-head { display: flex; flex-direction: column; gap: 6px; }
-  .box-head.row { flex-direction: row; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px 16px; }
   h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
   h3 { font-size: 15px; font-weight: 700; margin: 6px 0 0; }
   .box-head p { font-size: 14.5px; line-height: 1.5; margin: 0; }
@@ -324,13 +303,9 @@ const payload = { lang, pool, services: data, proxyServices, texts, toolUrl: sit
   .sel { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
   .sel :global(li) { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line-3); font-size: 15px; }
   .sel :global(a) { flex: 1; min-width: 0; color: var(--text); font-weight: 600; overflow-wrap: anywhere; }
-  .sel :global(.ram) { font-family: var(--mono); font-size: 13px; color: var(--text-4); white-space: nowrap; }
   .sel :global(.rm) { border: none; background: var(--bg); width: 28px; height: 28px; border-radius: 50%; color: var(--text-4); font-size: 16px; line-height: 1; flex: none; }
   .sel :global(.rm:hover) { background: var(--accent-50); color: var(--accent-600); }
   .sel :global(.rm:focus-visible), .note .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .total { display: flex; justify-content: space-between; gap: 12px; padding-top: 12px; font-weight: 700; font-size: 15px; }
-  .total b { font-family: var(--mono); color: var(--accent-600); }
-  .hint { font-size: 13.5px; color: var(--muted); margin: 6px 0 0; }
   .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .files-bar.end { justify-content: flex-end; }
   .file-body { max-height: 520px; overflow: auto; }

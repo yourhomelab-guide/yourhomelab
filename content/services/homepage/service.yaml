@@ -13,7 +13,4 @@ links:
 upstream:
   label: docs/installation/docker.md
   url: https://gethomepage.dev/installation/docker/
-resources:
-  ram: 170
-  gpu: no
 pairsWith: [uptime-kuma, beszel, adguard-home]

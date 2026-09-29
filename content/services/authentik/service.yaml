@@ -13,9 +13,6 @@ upstream:
   label: docker-compose.yml
   url: https://goauthentik.io/docker-compose.yml
 reviewed: 2026-09-12
-resources:
-  ram: 900
-  gpu: no
 db:
   type: postgres
   service: postgresql

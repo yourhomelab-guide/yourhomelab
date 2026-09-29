@@ -13,7 +13,4 @@ links:
 upstream:
   label: wiki/Docker
   url: https://github.com/AdguardTeam/AdGuardHome/wiki/Docker
-resources:
-  ram: 100
-  gpu: no
 pairsWith: [homepage, uptime-kuma]

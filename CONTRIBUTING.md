@@ -92,7 +92,7 @@ creates `content/services/jellyfin/` from the template. Then:
 | `links.website`, `links.docs` | yes | URLs |
 | `upstream.label`, `upstream.url` | | Where the official Compose file lives |
 | `reviewed` | | Date you last tested the template |
-| `resources.ram`, `resources.gpu` | | Typical RAM use of the whole stack in MB (normal use, not peak); GPU: `no`, `optional` or `recommended`. Used by the RAM planner and stack builder |
+| `gpu` | | Does a GPU help (transcoding, machine learning)? `no` (default), `optional` or `recommended`. Shown on the service page |
 | `db` | | Database for backup dumps: `type` (`postgres`, `mariadb`, `mysql`, `sqlite`), `service` (DB container in `compose.yaml`), `user`, `name` (literal or `${VAR}` from `.env`); for SQLite only `path` below the stack folder, e.g. `data/data/db.sqlite3` |
 | `pairsWith` | | Ids of services that go well with this one, shown as "Passt gut zu" |
 
