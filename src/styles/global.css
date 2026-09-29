@@ -145,9 +145,12 @@ mark { background: var(--warn-bg); color: var(--warn-fg); border-radius: 4px; pa
   display: flex; gap: 12px; align-items: flex-start;
 }
 .code pre, .file-body pre { margin: 0; flex: 1; min-width: 0; overflow-x: auto; font-family: var(--mono); font-size: 13.5px; line-height: 1.7; color: var(--tk-plain); }
-.code .line, .file-body .line { display: block; white-space: pre; min-height: 1.7em; }
+/* Long lines wrap like in a terminal instead of scrolling sideways. Continuation lines start 2ch right of the line's own indent (--i,
+   set by renderCode), so they read as one line. Copy keeps the original text. */
+.code .line, .file-body .line { display: block; white-space: pre-wrap; word-break: break-all; min-height: 1.7em; padding-left: calc(var(--i, 0ch) + 2ch); text-indent: calc(-1 * (var(--i, 0ch) + 2ch)); }
 .file-body pre { font-size: 13px; padding: 14px 0; }
-.file-body .line { display: flex; }
+.file-body .line { display: flex; padding-left: 0; text-indent: 0; }
+.file-body .lc { min-width: 0; padding-left: calc(var(--i, 0ch) + 2ch); text-indent: calc(-1 * (var(--i, 0ch) + 2ch)); }
 .ln { width: 42px; flex: none; text-align: right; padding-right: 16px; color: #b7c3cc; user-select: none; }
 .lc { padding-right: 16px; }
 .tk-key { color: var(--tk-key); }
@@ -161,6 +164,12 @@ mark { background: var(--warn-bg); color: var(--warn-fg); border-radius: 4px; pa
 }
 .copy-btn:hover { background: var(--accent-50); }
 .copy-btn.is-copied { background: var(--accent); color: #fff; }
+/* Narrow screens: copy button above the command, so the code gets the full width */
+@media (max-width: 600px) {
+  .code { flex-wrap: wrap; gap: 4px; padding-top: 10px; }
+  .code .copy-btn { order: -1; margin-left: auto; }
+  .code pre { flex-basis: 100%; }
+}
 
 /* -------------------------------------------------------------- file tabs */
 .files { background: var(--code-bg); border-radius: 16px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
