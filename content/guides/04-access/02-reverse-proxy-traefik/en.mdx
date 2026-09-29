@@ -11,13 +11,13 @@ services:
 ---
 
 <Callout title="Traefik or Nginx Proxy Manager?">
-Traefik is a bit more complicated at first, but it offers the most options: The configuration is stored as labels directly within each`compose.yaml` service; you can enable middleware such as login protection by adding a label before it; and everything can be versioned as a file. If you want to keep things simple at first, use [Nginx Proxy Manager](/en/setup/reverse-proxy-npm/) with its web interface.
+Traefik is a bit more complicated at first, but it offers the most options: The configuration is available as labels directly within each`compose.yaml` service; you can enable middleware such as login protection by applying a label to it, and everything can be versioned as a file. If you want to keep things simple at first, use [Nginx Proxy Manager](/en/setup/reverse-proxy-npm/) with its web interface.
 </Callout>
 
 <Steps>
 
 <Step title="Create a proxy network">
-All services that Traefik is supposed to reach are connected via a shared Docker network. You create it once and then reference it in each stack.
+All services that Traefik is supposed to reach are connected to a shared Docker network. You create it once and then reference it in each stack.
 
 ```bash
 docker network create __NETWORK__
@@ -34,7 +34,7 @@ chmod 600 __DATA(traefik)__/letsencrypt/acme.json
 ```
 </Step>
 
-<Step title="Write `compose.yaml` and `.env`">
+<Step title="Write the `compose.yaml` and `.env` files">
 The configuration is located in `compose.yaml`. Values that differ between servers are specified in the `.env`.
 
 <ServiceFiles id="traefik" />
@@ -49,11 +49,11 @@ docker compose up -d
 docker compose logs -f traefik
 ```
 
-If the log reports errors during the challenge or if the browser displays Traefik's default certificate, see "[Certificate Missing"](/en/wiki/certificate/) for further assistance.
+If the log reports errors during the challenge or if the browser displays Traefik's default certificate, [the "Certificate Missing"](/en/wiki/certificate/) section will help.
 </Step>
 
 <Step title="Connect the first service">
-A container is attached to Traefik via labels. It can then be accessed at its subdomain with a valid certificate.
+A container is attached to Traefik via labels. After that, it can be accessed at its subdomain with a valid certificate.
 
 ```yaml
 labels:
@@ -66,6 +66,10 @@ If the subdomain returns a "Bad Gateway" response, Traefik cannot reach the cont
 
 <Callout title="Integrate Your Own Services">
 For services from the [catalog](/en/services/), “My Setup” automatically sets the labels. For everything else, the [Proxy Configuration](/en/werkzeuge/proxy-konfiguration/) tool generates the appropriate labels based on the subdomain, container name, and port.
+</Callout>
+
+<Callout title="Services on another device?">
+Traefik reads labels only from containers on this Docker host. If a service is running on a second device, such as a Raspberry Pi, you can either set up a separate reverse proxy for it there or enter it here with its IP address and port. The "[Multiple Devices: Assign Roles" section](/en/wiki/multiple-devices/) compares both approaches.
 </Callout>
 </Step>
 

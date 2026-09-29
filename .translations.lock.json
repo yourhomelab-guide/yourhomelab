@@ -28,15 +28,15 @@
     "by": "claude"
   },
   "content/guides/01-preparation/01-choosing-hardware/de.mdx": {
-    "hash": "d2555b77db077e78",
+    "hash": "adc8bcd3b7eaab26",
     "by": "deepl"
   },
   "content/guides/01-preparation/02-installing-the-os/de.mdx": {
-    "hash": "047b2248755074ff",
+    "hash": "45b4ea1f974dc475",
     "by": "deepl"
   },
   "content/guides/01-preparation/03-static-ip-hostname/de.mdx": {
-    "hash": "8daac8b5c5897bc6",
+    "hash": "c1962da6147eca46",
     "by": "deepl"
   },
   "content/guides/01-preparation/de.md": {
@@ -44,19 +44,19 @@
     "by": "claude"
   },
   "content/guides/02-securing/01-ssh-keys/de.mdx": {
-    "hash": "ffdc51ae838ee84f",
+    "hash": "432be3b28926cdca",
     "by": "deepl"
   },
   "content/guides/02-securing/02-users-sudo/de.mdx": {
-    "hash": "3e15a3e1af066136",
+    "hash": "369b64bfa199bb72",
     "by": "deepl"
   },
   "content/guides/02-securing/03-hardening-ssh/de.mdx": {
-    "hash": "4ca29e30bf0c5b3f",
+    "hash": "affe8376beea439c",
     "by": "deepl"
   },
   "content/guides/02-securing/04-firewall-ufw/de.mdx": {
-    "hash": "96c90922e29cff4e",
+    "hash": "d24dda785e80c567",
     "by": "deepl"
   },
   "content/guides/02-securing/05-automatic-updates/de.mdx": {
@@ -76,7 +76,7 @@
     "by": "deepl"
   },
   "content/guides/03-docker/03-first-stack/de.mdx": {
-    "hash": "0e42846c68febc90",
+    "hash": "cd6dcd049f05595e",
     "by": "deepl"
   },
   "content/guides/03-docker/04-env-secrets/de.mdx": {
@@ -92,15 +92,15 @@
     "by": "deepl"
   },
   "content/guides/04-access/02-reverse-proxy-traefik/de.mdx": {
-    "hash": "71f6fd73831a4dbb",
+    "hash": "3f3ac92799f51d78",
     "by": "deepl"
   },
   "content/guides/04-access/03-reverse-proxy-npm/de.mdx": {
-    "hash": "dcc4c8c55baca3a6",
+    "hash": "4a6d43e62aa68173",
     "by": "deepl"
   },
   "content/guides/04-access/04-vpn-wireguard/de.mdx": {
-    "hash": "acc3ae0df06d61d3",
+    "hash": "fd3a653eff482167",
     "by": "deepl"
   },
   "content/guides/04-access/05-cloudflare-tunnel/de.mdx": {
@@ -128,7 +128,7 @@
     "by": "claude"
   },
   "content/guides/06-operations/01-backups-borgmatic/de.mdx": {
-    "hash": "3612165a67290b8f",
+    "hash": "d8e33d9968edcb6e",
     "by": "deepl"
   },
   "content/guides/06-operations/02-testing-restores/de.mdx": {
@@ -136,7 +136,7 @@
     "by": "deepl"
   },
   "content/guides/06-operations/03-monitoring-beszel/de.mdx": {
-    "hash": "ee27f8368dda5342",
+    "hash": "f9ff8a0b7c63dd74",
     "by": "deepl"
   },
   "content/guides/06-operations/04-uptime-kuma/de.mdx": {
@@ -176,11 +176,11 @@
     "by": "claude"
   },
   "content/guides/08-apps/01-adguard-home/de.mdx": {
-    "hash": "d6008097882fc463",
+    "hash": "32188bcc645bee7b",
     "by": "deepl"
   },
   "content/guides/08-apps/02-dashboard-homepage/de.mdx": {
-    "hash": "88b601834a1d1c41",
+    "hash": "c6ecfedee09e3eea",
     "by": "deepl"
   },
   "content/guides/08-apps/03-jellyfin/de.mdx": {
@@ -192,7 +192,7 @@
     "by": "deepl"
   },
   "content/guides/08-apps/05-home-assistant/de.mdx": {
-    "hash": "65bb7b89f896ca64",
+    "hash": "b0f942a159d1606f",
     "by": "deepl"
   },
   "content/guides/08-apps/de.md": {
@@ -284,7 +284,7 @@
     "by": "claude"
   },
   "content/wiki/01-basics/01-what-is-self-hosting/de.mdx": {
-    "hash": "e2f4f8b1ca1d0006",
+    "hash": "712a5d84bbf86b9e",
     "by": "deepl"
   },
   "content/wiki/01-basics/02-is-it-worth-it/de.mdx": {
@@ -292,7 +292,7 @@
     "by": "deepl"
   },
   "content/wiki/01-basics/03-cloud-hybrid-local/de.mdx": {
-    "hash": "1e7f00cd50126c08",
+    "hash": "5bf6ad461ea7fdc0",
     "by": "deepl"
   },
   "content/wiki/01-basics/04-hardware-overview/de.mdx": {
@@ -331,6 +331,10 @@
     "hash": "87a742243b75f307",
     "by": "deepl"
   },
+  "content/wiki/02-systems/06-multiple-devices/de.mdx": {
+    "hash": "1a1463cbf111df1f",
+    "by": "deepl"
+  },
   "content/wiki/03-containers/01-what-is-docker/de.mdx": {
     "hash": "38f15f686d645efd",
     "by": "deepl"
@@ -348,7 +352,7 @@
     "by": "deepl"
   },
   "content/wiki/03-containers/05-docker-networks/de.mdx": {
-    "hash": "e58f5f88c1f8d1c3",
+    "hash": "7ccbbddbcb41edbb",
     "by": "deepl"
   },
   "content/wiki/04-networking/01-ip-ports-nat/de.mdx": {
@@ -388,7 +392,7 @@
     "by": "deepl"
   },
   "content/wiki/06-security/01-ssh-basics/de.mdx": {
-    "hash": "0c2079475a94b474",
+    "hash": "46c999d11feee208",
     "by": "deepl"
   },
   "content/wiki/06-security/02-single-sign-on/de.mdx": {
@@ -444,7 +448,7 @@
     "by": "deepl"
   },
   "content/wiki/09-troubleshooting/03-port-in-use/de.mdx": {
-    "hash": "fcac4062ef8abb5a",
+    "hash": "a53d460ed8eea310",
     "by": "deepl"
   },
   "content/wiki/09-troubleshooting/04-certificate/de.mdx": {

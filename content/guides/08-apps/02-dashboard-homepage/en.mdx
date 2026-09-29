@@ -12,14 +12,14 @@ services:
 
 As you add more services, the list of addresses you need to remember keeps growing. [Homepage](https://gethomepage.dev) collects them all on a single page. Each service gets a tile with an icon, a link, and—if desired—real-time data: how many requests AdGuard Home has blocked, whether everything is green in Uptime Kuma, and whether a container is running. The page works well as a browser homepage, even for the whole family.
 
-The website doesn't have a click-based interface for configuration. You define everything in YAML files, just like in a `compose.yaml`. That might sound like more work, but it has one advantage: The files are stored in `__ROOT__`, are included in backups, and can be versioned with Git.
+The website has no click-based interface for configuration. You define everything in YAML files, just like in a [...]`compose.yaml`. That sounds like more work, but it has one advantage: The files are stored in [...]`__ROOT__`, are included in backups, and can be versioned with Git.
 
 <OneWay />
 
 If you prefer to build using drag-and-drop in your browser, check out [Homarr](https://homarr.dev). Homarr has a graphical editor, user accounts, and many integrations, but it’s a bit more resource-intensive. Both approaches lead to a good dashboard.
 
 <Callout type="warning" title="Dashboards show a lot">
-A dashboard with widgets reveals which services you're running and displays data from them. The login credentials for the widgets are stored in the configuration. Therefore, do not make your homepage publicly accessible on the Internet. Set up a login screen (last step) or make it accessible only on your home network and via [VPN](/en/setup/vpn-wireguard/).
+A dashboard with widgets reveals which services you're running and displays data from them. The login credentials for the widgets are stored in the configuration. Therefore, don't make your homepage publicly accessible on the Internet. Set up a login screen (last step) or make it accessible only on your home network and via [VPN](/en/setup/vpn-wireguard/).
 </Callout>
 
 <Steps>
@@ -34,16 +34,16 @@ cd __ROOT__/homepage
 
 <ServiceFiles id="homepage" />
 
-The stack consists of two containers.  `homepage`is the dashboard.  `socket-proxy`gives it read access to Docker; see the “Integrate Docker” step for more details.
+The stack consists of two containers.  `homepage`is the dashboard.  `socket-proxy`gives it read access to Docker; see the “Integrate Docker” step for more information.
 
-The variable is important`.env`. For security reasons, the`HOMEPAGE_ALLOWED_HOSTS` homepage only responds to requests sent to addresses listed there. It must contain exactly the address you type into the browser, without the "`https://`." Separate multiple entries with commas, without spaces. If you are not using a reverse proxy, include the server’s IP address and port, for example `192.168.1.10:3002`.
+The variable is important`.env`. For security reasons, the`HOMEPAGE_ALLOWED_HOSTS` homepage only responds to requests sent to addresses listed there. It must contain exactly the address you type into the browser, without the period`https://`. Separate multiple entries with commas, without spaces. If you are not using a reverse proxy, include the server’s IP address with the port, i.e., `__SERVER_IP__:3002`.
 
 ```bash
 docker compose up -d
 docker compose logs -f homepage
 ```
 
-When you start Homepage for the first time, it creates`__DATA(homepage)__/config` sample files in . Open `https://home.__DOMAIN__`. You'll see a page with placeholder tiles. If you see an error message about the host check instead, compare the address in the log with `HOMEPAGE_ALLOWED_HOSTS`.
+When you start it for the first time, Homepage creates`__DATA(homepage)__/config` sample files in . Open `https://home.__DOMAIN__`. You'll see a page with placeholder tiles. If you see an error message about the host check instead, compare the address in the log with `HOMEPAGE_ALLOWED_HOSTS`.
 </Step>
 
 <Step title="The configuration files">
@@ -57,7 +57,7 @@ All your settings are stored in `__DATA(homepage)__/config`. The most important 
 | `bookmarks.yaml` | Simple link lists without status |
 | `docker.yaml` | Connection to Docker |
 
-The files belong to your user (via  `PUID`and  `PGID`in the `.env`), so you can edit them without `sudo`. Homepage reloads them every time the page is refreshed; restarting the container is not necessary. Pay attention to indentation: YAML uses spaces, never tabs. Homepage displays a broken entry as an error on the page.
+The files belong to your user (via  `PUID`and  `PGID`in the `.env`), so you can edit them without `sudo`. Homepage reloads them every time the page is refreshed; there's no need to restart the container. Pay attention to indentation: YAML uses spaces, never tabs. Homepage displays a broken entry as an error on the page.
 
 Start with`settings.yaml`:
 
@@ -68,7 +68,7 @@ language: de
 </Step>
 
 <Step title="List Services">
-In  you create`services.yaml` groups, and within them, the services. Replace the example content with, for example:
+In  you create`services.yaml` groups, and within them, the services. Replace the sample content with, for example:
 
 ```yaml
 - Werkzeuge:
@@ -92,8 +92,8 @@ In  you create`services.yaml` groups, and within them, the services. Replace the
 The fields in detail:
 
 - `href` is the link that the tile opens.
-- `icon` Retrieves an icon from the [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons). Use  davor`sh-` to use icons from [selfh.st/icons](https://selfh.st/icons/), and  to use general`mdi-` icons.
-- `siteMonitor` Checks an address and displays a dot along with the response time. Use the **internal** address consisting of the container name and port here. The homepage is hosted on the proxy network and`__NETWORK__` can reach the other containers directly. This also works if the service is behind a login screen.
+- `icon` Retrieves an icon from the [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons). Use  `sh-`davor to use the icons from selfh.st/icons, and  to use general`mdi-` icons.
+- `siteMonitor` Checks an address and displays a dot along with the response time. Use the **internal** address from the container name and port here. The homepage is hosted on the proxy network and`__NETWORK__` can reach the other containers directly. This also works if the service is behind a login.
 
 All options are listed in the [documentation for services.yaml](https://gethomepage.dev/configs/services/).
 </Step>
@@ -143,15 +143,15 @@ Do not write passwords directly into the YAML file. Replace "Homepage" `{{HOMEPA
       - HOMEPAGE_VAR_ADGUARD_PASSWORD=${HOMEPAGE_VAR_ADGUARD_PASSWORD}
 ```
 
-Enter`.env` the value in the  field and restart`docker compose up -d` with . This keeps secrets in one place; see [.env & Secrets](/en/setup/env-secrets/). The list of all widgets is in the [homepage documentation](https://gethomepage.dev/widgets/).
+Enter`.env` the value into the  and restart`docker compose up -d` with . This keeps secrets in one place; see [.env & Secrets](/en/setup/env-secrets/). The list of all widgets is in the [homepage documentation](https://gethomepage.dev/widgets/).
 </Step>
 
 <Step title="Integrate Docker">
-The homepage can display information for each tile showing whether the container is running and how much CPU and RAM it is using. To do this, it must be able to query Docker.
+The homepage can display, for each tile, whether the container is running and how much CPU and RAM it is using. To do this, it must be able to query Docker.
 
 The obvious approach would be to mount the Docker socket into`/var/run/docker.sock` the container. This file is used to control Docker. **Anyone with access to the socket has root privileges on the server**: they can start containers that mount the entire file system. The (`:ro`read-only) attribute does not change this. It only protects the file itself, not the commands sent through it.
 
-That is why the stack contains the `socket-proxy`. It has the socket, but only allows read requests (`POST=0`) and only to containers (`CONTAINERS=1`). The homepage communicates with the proxy instead of with Docker. It is accessible only from within the stack, not from the outside.
+That is why the stack contains the `socket-proxy`. It has the socket, but only allows read requests (`POST=0`) and only to containers (`CONTAINERS=1`). The website communicates with the proxy instead of with Docker. It is accessible only from within the stack, not from the outside.
 
 Enter`docker.yaml` the proxy here:
 
@@ -161,7 +161,7 @@ my-docker:
   port: 2375
 ```
 
-Now you can connect a tile to a container. In the Service field`services.yaml`, enter:
+Now you can connect a tile to a container. In the service, enter the following in the `services.yaml`: field:
 
 ```yaml
         server: my-docker
@@ -186,8 +186,8 @@ If you use Traefik, the service already has a `labels`-block. You just add the h
 Finally, make sure not everyone can see your dashboard. Here are three ways to do that, from the simplest to the most convenient:
 
 - **Only on your home network**: You do not create a public DNS entry, or you can only access the website via [VPN](/en/setup/vpn-wireguard/).
-- **Login first**: With Traefik, you can set up [Tinyauth](/en/setup/tinyauth/) or [Pocket ID](/en/setup/pocket-id/) as middleware in front of your homepage. A single login then protects all services equally.
-- **Built-in Password**: Starting with version 2, Homepage offers a simple login using a password or OIDC. The variables for this are listed in the [installation guide](https://gethomepage.dev/installation/#security-authentication).
+- **Login first**: With Traefik, you can configure [Tinyauth](/en/setup/tinyauth/) or [Pocket ID](/en/setup/pocket-id/) as middleware in front of your homepage. A single login then protects all services equally.
+- **Built-in Password**: Starting with version 2, Homepage has supported simple login via password or OIDC. The variables for this are listed in the [installation instructions](https://gethomepage.dev/installation/#security-authentication).
 
 You can find more on this topic under "[Minimizing Your Attack Surface](/en/wiki/attack-surface/)."
 </Step>

@@ -1,5 +1,5 @@
 ---
-title: Set Up SSH Keys
+title: Set Up an SSH Key
 description: In the end, you'll log in to the server using an ed25519 key instead of a password, and a short command like `ssh homelab` is all it takes to connect.
 level: 1
 minutes: 15
@@ -10,14 +10,18 @@ requires:
 
 A password can be guessed, intercepted, or cracked through trial and error. An SSH key cannot: It consists of two parts. The **private key** stays on your computer and never leaves it. The **public key** is uploaded to the server. When you log in, your computer proves that it has the corresponding private key without actually transmitting it.
 
-This guide sets up the key. After configuring "[Users & sudo](/en/setup/users-sudo/)," you'll [harden](/en/setup/hardening-ssh/) the [SSH](/en/setup/hardening-ssh/) connection by completely disabling password-based login. For more information, see "[SSH](/en/wiki/ssh-basics/) [Basics](/en/wiki/ssh-basics/)."
+This guide sets up the key. After [configuring "](/en/setup/hardening-ssh/)[Users & sudo](/en/setup/users-sudo/)," you can then completely disable password-based login in [SSH](/en/setup/hardening-ssh/). For more information, see "[SSH](/en/wiki/ssh-basics/) [Basics](/en/wiki/ssh-basics/)."
 
-In the examples, the server is called  and`192.168.1.10` your user on the server is `alex`. Replace both with your own values.
+The commands use the server IP and`__SERVER_IP__` your username from`__USER__` "My Setup." If the values are incorrect, enter your own there.
+
+<Callout title="Multiple devices?">
+Repeat the guides on security and Docker on each device. Before each run, enter the device's IP address in "My Setup" so that all commands work correctly. The section "[Multiple Devices: Assigning Roles](/en/wiki/multiple-devices/)" explains which device handles which task.
+</Callout>
 
 <Steps>
 
 <Step title="Check to see if you already have a key">
-Maybe you've already generated a key, for example, for GitHub. You can continue to use that one. Look in the folder  in`.ssh` your home directory.
+Maybe you've already generated a key, for example for GitHub. You can continue to use that one. Look in the folder  `.ssh`in your home directory.
 
 On macOS and Linux:
 
@@ -35,10 +39,10 @@ If both  and`id_ed25519`  are listed there`id_ed25519.pub`, skip the next step. 
 </Step>
 
 <Step title="Generate a key pair">
-Windows 10 and 11, macOS, and virtually every Linux distribution already come with OpenSSH. The command is the same everywhere. On Windows, type it into PowerShell; otherwise, type it into the Terminal.
+Windows 10 and 11, macOS, and virtually every Linux distribution come with OpenSSH preinstalled. The command is the same everywhere. On Windows, type it into PowerShell; otherwise, type it into the Terminal.
 
 ```bash
-ssh-keygen -t ed25519 -C "laptop-alex"
+ssh-keygen -t ed25519 -C "laptop-__USER__"
 ```
 
 - `-t ed25519` Select the key type. ed25519 is the current standard: secure, fast, and short.
@@ -58,19 +62,19 @@ On the server, the public key is stored in your`~/.ssh/authorized_keys` user's f
 On **macOS and Linux**, this is what does it`ssh-copy-id`. It asks for your password on the server one last time:
 
 ```bash
-ssh-copy-id -i ~/.ssh/id_ed25519.pub alex@192.168.1.10
+ssh-copy-id -i ~/.ssh/id_ed25519.pub __USER__@__SERVER_IP__
 ```
 
 It doesn't`ssh-copy-id` exist on **Windows**. This one-liner in PowerShell does the same thing: It sends the key to the server via SSH, creates the folder there, and appends the key to `authorized_keys`it.
 
 ```powershell
-type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh alex@192.168.1.10 "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh __USER__@__SERVER_IP__ "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 ```
 
 The permissions  and`700`  `600`are important. If anyone other than you can write to the files, the SSH server will ignore them for security reasons.
 
 <Callout title="Is there only a root user on the server?">
-On some rented servers, the only user available at first is root. In that case, copy the key to the root user first, and then create your own user following the instructions in the "[Users & sudo"](/en/setup/users-sudo/) guide.
+On some rented servers, the only user available at first is root. In that case, copy the key to the root user first, and then create your own user as described in the "[Users & sudo"](/en/setup/users-sudo/) guide.
 </Callout>
 </Step>
 
@@ -78,24 +82,24 @@ On some rented servers, the only user available at first is root. In that case, 
 Sign up:
 
 ```bash
-ssh alex@192.168.1.10
+ssh __USER__@__SERVER_IP__
 ```
 
-If you've set a passphrase, SSH will now ask for **your key's passphrase**, not the server's password. If SSH asks for `alex@192.168.1.10's password`, it didn't work. Common causes: the key is associated with the wrong user, or the permissions on the server are incorrect. Use  to see`ssh -v alex@192.168.1.10` which keys SSH offers and what the server responds with.
+If you've set a passphrase, SSH will now ask for **your key's passphrase**, not the server's password. If SSH asks for `__USER__@__SERVER_IP__'s password`, it didn't work. Common causes: the key is associated with the wrong user, or the permissions on the server are incorrect. Use  to see`ssh -v __USER__@__SERVER_IP__` which keys SSH offers and what the server responds with.
 </Step>
 
-<Step title="Create a short name in ~/.ssh/config">
+<Step title="Create an alias in ~/.ssh/config">
 Instead of typing in the username and IP address every time, `~/.ssh/config`create an entry in  on your computer. On Windows, the file is located at  `C:\Users\<dein Name>\.ssh\config`(without the file extension). If it doesn't exist yet, create it.
 
 ```text
 Host homelab
-    HostName 192.168.1.10
-    User alex
+    HostName __SERVER_IP__
+    User __USER__
     IdentityFile ~/.ssh/id_ed25519
     AddKeysToAgent yes
 ```
 
-From now on, this is enough:
+From now on, just:
 
 ```bash
 ssh homelab
@@ -122,6 +126,6 @@ ssh-add $env:USERPROFILE\.ssh\id_ed25519
 
 ## Multiple devices
 
-Use a separate key for each device instead of copying a private key around. Each device gets its own line in the file`authorized_keys`. If a laptop is lost, you simply delete its line, and all other devices can still log in. The comment with  is useful`-C` for this.
+Use a separate key for each device instead of copying a private key around. Each device gets its own line in `authorized_keys`. If a laptop is lost, just delete its line, and all other devices will still be able to log in. The comment with  is useful`-C` for this.
 
-Also, make sure to secure your private key or store at least one backup key on a different device. Once password-based login is disabled, the key is your only way to access the server, aside from the screen and keyboard directly on the device or your hosting provider's web console.
+Also, make sure to secure your private key or store at least one backup key on a different device. Once password-based login is disabled, the key is your only way to access the server, aside from the screen and keyboard directly on the device or your host’s web console.

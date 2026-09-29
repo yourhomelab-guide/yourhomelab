@@ -1,6 +1,6 @@
 ---
 title: Cloud, hybrid, or on-premises?
-description: Before you buy hardware or rent a server, it’s worth asking yourself where your services should run. There are three models, and each has different strengths in terms of cost, data sovereignty, and availability.
+description: Before you buy hardware or rent a server, it’s worth asking yourself where your services should run. There are three models, and each has different strengths in terms of cost, data sovereignty, and accessibility.
 level: 1
 related:
   - hardware-overview
@@ -18,7 +18,7 @@ practice: choosing-hardware
     The server is located in your home—perhaps a mini-PC or an old laptop. Your data never leaves your home.
   </Card>
   <Card title="Hybrid">
-    The data is stored at home, and a small cloud server or a tunnel handles requests from the Internet.
+    The data is stored at home; a small cloud server or a tunnel handles requests from the Internet.
   </Card>
   <Card title="Cloud">
     You rent a virtual server (VPS) in a data center. Static IP, no hardware at home, monthly fees.
@@ -67,7 +67,7 @@ practice: choosing-hardware
   results={{
     lokal: {
       title: "Local",
-      text: "A server at your home is all you need. To access it while on the go, use a VPN like WireGuard or Tailscale without having to open any ports.",
+      text: "A server at your home is enough. To access it while on the go, use a VPN like WireGuard or Tailscale without opening any ports.",
     },
     hybrid: {
       title: "Hybrid",
@@ -80,6 +80,7 @@ practice: choosing-hardware
   }}
 />
 
-The quiz only identifies the location. It compares the types of subgrade on which it is built
-[An Overview of Operating Models](/en/wiki/operating-models/): Everything You Need to Know, from Hardware to Access
+The quiz only identifies the location. It compares which infrastructure runs on top of it.
+[An Overview of Operating Models](/en/wiki/operating-models/). Do you have multiple devices, such as a Pi, a mini PC, and
+A VPS helps with [multiple devices: assigning roles](/en/wiki/multiple-devices/). The entire setup process, from hardware to access
 The [setup wizard](/en/werkzeuge/einstiegs-assistent/) will walk you through the process.

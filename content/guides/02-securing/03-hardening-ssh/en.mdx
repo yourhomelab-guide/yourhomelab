@@ -1,6 +1,6 @@
 ---
 title: Hardening SSH
-description: In the end, your SSH server will only accept keys, root will no longer be able to log in directly, and the settings will be stored in a separate, well-organized file.
+description: In the end, your SSH server will only accept keys, root will no longer be able to log in directly, and the settings will be stored in a separate, easy-to-read file.
 level: 2
 minutes: 20
 requires:
@@ -8,24 +8,24 @@ requires:
   - Users with sudo privileges
 ---
 
-As soon as a server is accessible on the Internet, bots try out usernames and passwords on port 22 around the clock. This isn't a targeted attack—it happens to everyone. With password-based login alone, you're already well protected. However, as long as password-based login is still allowed, a weak password is all it takes for a breach.
+As soon as a server is accessible on the Internet, bots try out usernames and passwords on port 22 around the clock. This isn't a targeted attack—it happens to everyone. With password-based login alone, you're already well protected. However, as long as password login is still allowed, even a weak password is enough for a breach.
 
-This guide therefore disables two things: password-based login and direct login as root. After that, only users who have a stored key will be able to log in—as regular users.
+This guide therefore disables two things: logging in with a password and direct login as root. After that, only users who have a stored key will be able to log in—and they'll do so as regular users.
 
 <Callout type="warning" title="Before You Begin">
-Logging in with a key must work ([set up an SSH key](/en/setup/ssh-keys/)), using a regular user who `sudo`has the necessary permissions. If you've only been logging in as root so far, set up [your user account and ](/en/setup/users-sudo/)configure [sudo](/en/setup/users-sudo/) first. Otherwise, you'll lock yourself out.
+Logging in with a key must work ([set up an SSH key](/en/setup/ssh-keys/)), and it must work for a regular user who `sudo`has the necessary permissions. If you've only been logging in as root so far, set up [your user account and sudo](/en/setup/users-sudo/) first. Otherwise, you'll lock yourself out.
 </Callout>
 
 <Steps>
 
 <Step title="Leave the second session open">
-Open **two** SSH connections to the server and simply leave one of them open until the end of this guide. Existing sessions will remain open even if you restart the SSH service. If something goes wrong during configuration, you can fix it using that session.
+Open **two** SSH connections to the server and leave one of them open until the end of this guide. Existing sessions will remain open even if you restart the SSH service. If something goes wrong during configuration, you can fix it through this session.
 
 ```bash
 ssh homelab
 ```
 
-On a rented server, it’s also best to know in advance how to access your host’s web console. At home, a screen on your device can be helpful in an emergency.
+On a rented server, it's also best to know in advance how to access your host's web console. At home, a screen on your device can help in an emergency.
 </Step>
 
 <Step title="Create Your Own Configuration File">
@@ -37,7 +37,7 @@ Quickly check whether the main file mounts the folder:
 grep -i '^Include' /etc/ssh/sshd_config
 ```
 
-The output should include`Include /etc/ssh/sshd_config.d/*.conf` . Then create the file:
+The output should include`Include /etc/ssh/sshd_config.d/*.conf` [...]. Then create the file:
 
 ```bash
 sudo nano /etc/ssh/sshd_config.d/10-hardening.conf
@@ -59,8 +59,8 @@ X11Forwarding no
 
 Save with Ctrl+O, press Enter, and exit with Ctrl+X.
 
-<Callout title="Why is there a &quot;10-&quot; in the file name?">
-For the SSH server, the following applies to most options: The first value found takes precedence, not the last. The files in the folder are read in alphabetical order, before the rest of the main file. On cloud servers, there is often already a file named  `50-cloud-init.conf`with a `PasswordAuthentication yes`. A file named  would come`hardening.conf` after that and have no effect. `10-`Starting your file with  ensures it is read first. To see what else is in the folder, use `ls /etc/ssh/sshd_config.d/`.
+<Callout title="Why is there a &quot;10-&quot; in the filename?">
+For the SSH server, the following applies to most options: The first value found takes precedence, not the last. The files in the folder are read in alphabetical order, before the rest of the main file. On cloud servers, there is often already a file named  `50-cloud-init.conf`with a `PasswordAuthentication yes`. A file named  would come`hardening.conf` after that and have no effect. With  `10-`at the beginning, your file will be read first. To see what else is in the folder, use `ls /etc/ssh/sshd_config.d/`.
 </Callout>
 </Step>
 
@@ -71,7 +71,7 @@ Before you restart the service, check the syntax. Otherwise, a typo could preven
 sudo sshd -t
 ```
 
-If there is no output, everything is fine. Next, check which values the server will actually use.  `sshd -T`displays the final configuration, with names in lowercase:
+If nothing is displayed, everything is fine. Next, check which values the server will actually use.  `sshd -T`displays the final configuration, with names in lowercase:
 
 ```bash
 sudo sshd -T | grep -Ei '^(passwordauthentication|kbdinteractiveauthentication|permitrootlogin|pubkeyauthentication)'
@@ -86,7 +86,7 @@ passwordauthentication no
 kbdinteractiveauthentication no
 ```
 
-If there's still a "`yes`," somewhere where a "." should be`no`, another file takes precedence. Search for it using `sudo grep -ri passwordauthentication /etc/ssh/`.
+If there's still something written somewhere where it shouldn't be`yes``no`, another file takes precedence. Search for it using `sudo grep -ri passwordauthentication /etc/ssh/`.
 </Step>
 
 <Step title="Restart the SSH service">
@@ -96,7 +96,7 @@ On Debian and Ubuntu, the service is called `ssh`, not `sshd`:
 sudo systemctl restart ssh
 ```
 
-Your open sessions will remain active.
+Your open sessions will remain as they are.
 </Step>
 
 <Step title="Test in a new terminal">
@@ -112,27 +112,27 @@ Next, check to see if passwords are actually being rejected. This command preven
 ssh -o PubkeyAuthentication=no homelab
 ```
 
-You will, without`Permission denied (publickey).` a doubt, be prompted for a password. Finally, check the root account:
+It will definitely`Permission denied (publickey).` ask for a password. Finally, check "root":
 
 ```bash
-ssh root@192.168.1.10
+ssh root@__SERVER_IP__
 ```
 
-That must also be rejected. Only when all three tests are correct can you close the second session.
+That must be rejected as well. Only when all three tests are correct can you close the second session.
 </Step>
 
 </Steps>
 
 ## When something goes wrong
 
-If you can no longer access the new terminal, switch to the session that's still open. There, rename the file and restart the service:
+If you can no longer log in to the new terminal, switch to the session that is still open. There, rename the file and restart the service:
 
 ```bash
 sudo mv /etc/ssh/sshd_config.d/10-hardening.conf /root/10-hardening.conf.off
 sudo systemctl restart ssh
 ```
 
-Then things will go back to the way they were, and you can search at your leisure. The SSH server's log shows why a login fails:
+Then things will go back to the way they were, and you can search at your leisure. The SSH server log shows why a login fails:
 
 ```bash
 sudo journalctl -u ssh -n 50
@@ -140,6 +140,6 @@ sudo journalctl -u ssh -n 50
 
 ## What about the port?
 
-You often see advice to set SSH to a port other than 22. This reduces the number of log entries because fewer bots try to connect. However, it hardly makes the server any more secure, since brute-force attacks are ineffective anyway with key-based authentication. This guide therefore leaves the port set to 22.
+You often see advice to set SSH to a port other than 22. This reduces log traffic because fewer bots will try to connect. However, it does little to improve server security, since brute-force attacks are ineffective anyway when using key-based authentication. This guide therefore leaves the port set to 22.
 
-It's even better if SSH isn't accessible from the internet at all. At home, simply don't open port 22 on your router, and connect to your home network via [VPN](/en/setup/vpn-wireguard/) when you're away. The next step is to use your [firewall](/en/setup/firewall-ufw/) to restrict who is allowed to connect at all. For more on this, see "[Minimizing Your Attack Surface](/en/wiki/attack-surface/)."
+It's even better if SSH isn't accessible from the Internet at all. At home, simply don't open port 22 on your router, and connect to your home network via [VPN](/en/setup/vpn-wireguard/) when you're away. The next step is to use your [firewall](/en/setup/firewall-ufw/) to restrict who is allowed to connect at all. For more on this, see "[Minimizing Your Attack Surface](/en/wiki/attack-surface/)."

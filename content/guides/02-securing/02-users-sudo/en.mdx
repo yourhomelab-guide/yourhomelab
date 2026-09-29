@@ -1,6 +1,6 @@
 ---
 title: Users & sudo
-description: Ultimately, you'll be working with your own user account, which logs in using an SSH key and executes admin commands with `sudo`. The `root` user no longer logs in directly.
+description: Ultimately, you'll be working with your own user account, which logs in using an SSH key and executes admin commands with `sudo`. The `root` user will no longer log in directly.
 level: 1
 minutes: 10
 requires:
@@ -8,18 +8,18 @@ requires:
   - SSH Access
 ---
 
-As root, you can do anything on a Linux system without being prompted. A single typo while logged in as root can wipe the entire system, and an attacker who gains root access immediately has full control. That’s why you should work as **a regular user** on a daily basis and only obtain admin privileges for specific commands using `sudo``sudo`. It takes a few extra characters, but it makes mistakes less likely and easier to spot. Plus, `sudo` logs who executed which command and when.
+As root, you can do anything on a Linux system without being prompted. A single typo while logged in as root can wipe the entire system, and an attacker who gains root access immediately has full control. That’s why, in your day-to-day work, you should operate as **a regular user** and only obtain admin privileges for specific commands using `sudo``sudo`. It takes a few extra characters, but it makes mistakes less likely and more obvious. Plus, `sudo` logs who executed which command and when.
 
 ## Do you need this guide?
 
 That depends on how your server was set up:
 
-- **Ubuntu Server:** The installer always creates a user with sudo privileges; root has no password. You're done. At most, check briefly with `sudo whoami`.
-- **Debian without a root password:** If you left the root password field blank in the installer, your user account will automatically be granted sudo privileges. All set.
-- **Debian with a root password:** Your user account exists, but you don't have sudo privileges. Often, sudo isn't even installed. Switch to`su -` root using  (the minus sign is important—the shell won't recognize commands like  without it`usermod`) and continue with Step 2.
-- **Rented server with only root access:** Many hosting providers only provide servers with root access. Follow all the steps.
+- **Ubuntu Server:** The installer always creates a user with sudo privileges; root has no password. You're done. If anything, just check briefly with `sudo whoami`.
+- **Debian without a root password:** If you left the root password blank during installation, your user account will automatically be granted sudo privileges. All set.
+- **Debian with a root password:** Your user account exists, but you don't have sudo privileges. Often, sudo isn't even installed. Switch to`su -` root using  (the minus sign is important—the shell won't recognize commands like  until you use it`usermod`), and continue with Step 2.
+- **Rented server with only root access:** Many hosting providers deliver servers with only root access. Follow all the steps.
 
-In the examples, the new user's name is `alex`. Use your own name, in lowercase and without spaces.
+In the examples`__USER__`, the new user is named as entered in “My Setup.” Use your own name, in lowercase and without spaces, and enter it there.
 
 <Steps>
 
@@ -27,33 +27,33 @@ In the examples, the new user's name is `alex`. Use your own name, in lowercase 
 Log in as root and create the user:
 
 ```bash
-adduser alex
+adduser __USER__
 ```
 
 `adduser` It asks for a password and a few optional details, such as your full name, which you can skip by pressing Enter. Choose a strong password. You won't need it later when connecting via SSH, but it asks`sudo` for it anyway.
 </Step>
 
 <Step title="Install sudo and grant permissions to users">
-On Debian, `sudo` is missing if you set a root password during installation. Install it as root and `sudo`add the user to the group. On Debian and Ubuntu, members of this group can run any command using `sudo`.
+On Debian, `sudo` is missing if you set a root password during installation. Install it as root and `sudo`add the user to the group. On Debian and Ubuntu, members of this group are allowed to run any command using `sudo`.
 
 ```bash
 apt update
 apt install sudo
-usermod -aG sudo alex
+usermod -aG sudo __USER__
 ```
 
-`-aG` means "Add to group." Without it, the user would`-a` be removed from all other groups.
+`-aG` means "Add to Group." Without it, the user would`-a` be removed from all other groups.
 </Step>
 
 <Step title="Import SSH Keys">
-If you've stored your key under "root" so far, copy it to the new user. The commands are still run as root:
+If you've stored your key under root so far, copy it to the new user. The commands are still run as root:
 
 ```bash
-mkdir -p /home/alex/.ssh
-cp /root/.ssh/authorized_keys /home/alex/.ssh/
-chown -R alex:alex /home/alex/.ssh
-chmod 700 /home/alex/.ssh
-chmod 600 /home/alex/.ssh/authorized_keys
+mkdir -p /home/__USER__/.ssh
+cp /root/.ssh/authorized_keys /home/__USER__/.ssh/
+chown -R __USER__:__USER__ /home/__USER__/.ssh
+chmod 700 /home/__USER__/.ssh
+chmod 600 /home/__USER__/.ssh/authorized_keys
 ```
 
 Without it, the files belong`chown` to root, and the SSH server ignores them. If you don't have a key on the server yet, set one up`alex` directly as described in the "[Setting Up SSH Keys](/en/setup/ssh-keys/)" guide.
@@ -63,7 +63,7 @@ Without it, the files belong`chown` to root, and the SSH server ignores them. If
 Leave the root session open and open a new terminal on your computer:
 
 ```bash
-ssh alex@192.168.1.10
+ssh __USER__@__SERVER_IP__
 ```
 
 Next, check `sudo`. Group membership takes effect only after you log in again, so test it in this new session:
@@ -72,25 +72,25 @@ Next, check `sudo`. Group membership takes effect only after you log in again, s
 sudo whoami
 ```
 
-After entering your password,  should appear`root`. If both steps work, you'll be working as  from now on`alex`. Remember to enter`User alex`  in  on`~/.ssh/config` your computer.
+After entering your password,  should appear`root`. If both steps work, you'll be working as  from now on`__USER__`. Remember to enter`User alex`  in  on`~/.ssh/config` your computer.
 </Step>
 
 <Step title="Disable root login">
 You can disable`PermitRootLogin no` direct root login via SSH. You'll do this in the next guide, "[Hardening SSH](/en/setup/hardening-ssh/)."
 
-Optionally, you can also lock the root password. Then root will no longer be able to log in, even on the local console. This is the default setting in Ubuntu.
+Optionally, you can also lock the root password. Then root will no longer be able to log in, even on the local console. Ubuntu does this by default.
 
 ```bash
 sudo passwd -l root
 ```
 
 <Callout type="warning" title="The other side">
-If the root password is locked, rescue mode no longer works when booting Debian because it prompts for the root password. In an emergency, you’ll need a USB drive with a live system. On a home server, you can therefore keep the password as long as SSH is disabled for root. To disable the lock, use `sudo passwd -u root`.
+If the root password is locked, rescue mode no longer works when booting into Debian because it prompts for the root password. In an emergency, you'll need a USB drive with a live system. On a home server, you can therefore keep the password as long as SSH is disabled for root. To disable the lock, use `sudo passwd -u root`.
 </Callout>
 </Step>
 
 </Steps>
 
-## A Word About the Docker Group
+## A Word About the docker Group
 
-Later, you'll add`docker` your user to the group so you can use it without`docker` `sudo`. This is convenient, but keep in mind: Anyone who is allowed to start containers can also mount the server's entire file system. `docker`Being a member of this group is therefore practically as powerful as being root. Only add users to this group whom you would also grant sudo privileges to. For more information, see the guide on [installing Docker](/en/setup/installing-docker/).
+Later, you'll add`docker` your user to the group so you can use it without`docker` `sudo`. This is convenient, but keep in mind: Anyone who can start containers can also mount the server's entire file system. `docker`Being a member of this group is therefore practically as powerful as being root. Only add users to this group whom you would also grant sudo privileges to. For more information, see the guide on [installing Docker](/en/setup/installing-docker/).

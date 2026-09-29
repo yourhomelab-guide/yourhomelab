@@ -1,6 +1,6 @@
 ---
 title: Fixed IP & Hostname
-description: Your server has a fixed IP address on your home network and a descriptive name. This ensures that SSH connections, port forwarding, and DNS entries always point to the correct device.
+description: Your server has a static IP address on your home network and a descriptive name. This ensures that SSH connections, port forwarding, and DNS entries always point to the correct device.
 level: 1
 minutes: 15
 requires:
@@ -11,7 +11,7 @@ requires:
 
 Your router automatically assigns addresses on your home network via **DHCP** (Dynamic Host Configuration Protocol). This is convenient, but the address may change after a reboot or a long period of inactivity. This is problematic for a server: port forwarding, DNS entries, and your SSH connection will suddenly point to nowhere. That’s why the server is assigned a static IP address. You can find the basics on this under [IP, Ports & NAT](/en/wiki/ip-ports-nat/).
 
-There are two ways to do this. The recommended method is to set up a **DHCP** **reservation** in the router: The server continues to request an IP address via DHCP but always receives the same address. Everything remains in one place, and the router knows which addresses have been assigned. The alternative is to configure a static IP address directly on the server.
+There are two ways to do this. The recommended method is to set up a **DHCP reservation** on the router: The server continues to request an IP address via DHCP but always receives the same address. Everything remains in one place, and the router knows which addresses have been assigned. The alternative is to configure a static IP address directly on the server.
 
 <OneWay />
 
@@ -39,13 +39,13 @@ Open your router's web interface in your browser. The address is usually printed
 
 On a FRITZ!Box, you'll find this under **Home Network → Network**. There, edit the server and enable "Always assign the same IPv4 address to this network device." On other routers, this feature may be called, for example, “DHCP Reservation,” “Static Lease,” or “Address Reservation.”
 
-You can keep the address the server currently has, or choose your own, such as `192.168.1.10`. Then restart the server so that it can reliably obtain the reserved address:
+You can keep the address the server currently has, or choose your own, such as `192.168.1.10`. Enter it as the server IP under “My Setup,” and it will then be used in all subsequent commands. Then restart the server to ensure it gets the reserved address:
 
 ```bash
 sudo reboot
 ```
 
-Once you've changed the address, connect using the new address. You're now done and can proceed directly to the "**Verify Hostname"** step.
+Once you've changed the address, connect using the new address. You're now done and can proceed directly to the "**Check Hostname"** step.
 </Step>
 
 <Step title="Alternative: Static IP on Debian (ifupdown)">
@@ -66,7 +66,7 @@ Replace the section for your network interface (the line containing  `inet dhcp`
 ```text
 auto enp1s0
 iface enp1s0 inet static
-    address 192.168.1.10/24
+    address __SERVER_IP__/24
     gateway 192.168.1.1
 ```
 
@@ -104,7 +104,7 @@ network:
     enp1s0:
       dhcp4: false
       addresses:
-        - 192.168.1.10/24
+        - __SERVER_IP__/24
       routes:
         - to: default
           via: 192.168.1.1
@@ -161,7 +161,7 @@ ping -c 3 debian.org
 
 You should see the static IP address, a `default`route through your router, and a response to the ping.
 
-Many routers resolve device names on the home network. This allows you to access the server by name, for example, or`ssh deinname@homelab` with a FRITZ!Box`ssh deinname@homelab.fritz.box`. If that doesn't work, simply use the IP address.
+Many routers resolve device names on the home network. This allows you to access the server by name, for example, or`ssh __USER__@homelab` on a FRITZ!Box`ssh __USER__@homelab.fritz.box`. If that doesn't work, simply use the IP address.
 
 Next, secure your access: [Set up SSH keys](/en/setup/ssh-keys/).
 </Step>

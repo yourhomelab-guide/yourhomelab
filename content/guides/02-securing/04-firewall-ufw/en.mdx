@@ -1,6 +1,6 @@
 ---
 title: Firewall with UFW
-description: Ultimately, a firewall blocks all incoming connections except SSH, HTTP, and HTTPS. And you know why Docker ports still get through and how to handle it.
+description: Ultimately, a firewall blocks all incoming connections except for SSH, HTTP, and HTTPS. And you know why Docker ports still get through it and how to handle that.
 level: 2
 minutes: 15
 requires:
@@ -8,7 +8,7 @@ requires:
   - Users with sudo privileges
 ---
 
-On a server, there are often more programs listening on ports than you realize. A firewall ensures that only what you explicitly allow is accessible from the outside. Everything else is blocked, even if a service is later accidentally started on another port.
+On a server, there are often more programs listening on ports than you realize. A firewall ensures that only what you explicitly allow is accessible from the outside. Everything else is blocked, even if a service is accidentally started on another port later on.
 
 **UFW** ("Uncomplicated Firewall") is a simple user interface for the firewall in the Linux kernel. Instead of writing long iptables or nftables rules, you write statements like `ufw allow 443/tcp`.
 
@@ -25,8 +25,8 @@ sudo apt install ufw
 As long as you don't turn on UFW, nothing will change.
 </Step>
 
-<Step title="Establish Basic Rules">
-The basic principle is: Inbound traffic is prohibited; outbound traffic is allowed. This means the server can download updates and retrieve certificates, but no one can gain access without permission.
+<Step title="Establishing Basic Rules">
+The basic principle is: Inbound traffic is prohibited; outbound traffic is permitted. This means the server can download updates and retrieve certificates, but no one can access it without permission.
 
 ```bash
 sudo ufw default deny incoming
@@ -34,7 +34,7 @@ sudo ufw default allow outgoing
 ```
 </Step>
 
-<Step title="Enable SSH before turning on the device">
+<Step title="Enable SSH before you turn it on">
 This is the most important step. If you enable UFW without an SSH rule, the firewall will disconnect you from the server.
 
 ```bash
@@ -51,7 +51,7 @@ When you're on the go, you can connect to your home network via [VPN](/en/setup/
 </Step>
 
 <Step title="Enable HTTP and HTTPS">
-Your reverse proxy (Traefik, Caddy, or Nginx Proxy Manager) will later handle all web requests on ports 80 and 443. It also needs port 80 so that Let's Encrypt can issue certificates and visitors can be redirected to HTTPS.
+Your reverse proxy (Traefik, Caddy, or Nginx Proxy Manager) will later handle all web requests on ports 80 and 443. It also needs port 80 so that Let's Encrypt can issue certificates and visitors are redirected to HTTPS.
 
 ```bash
 sudo ufw allow 80/tcp
@@ -78,15 +78,15 @@ You'll see the basic rules and your three permissions. To be on the safe side, o
 
 ## Docker bypasses UFW
 
-Here's what you need to know before installing Docker: **Ports that a container exposes are accessible from the outside, no matter what UFW says.**
+Here's what you need to know before installing Docker: **Ports exposed by a container are accessible from the outside, no matter what UFW says.**
 
-The reason lies in how both programs interact with the kernel firewall. UFW manages the rules for connections intended for the server itself. If you expose a`compose.yaml` port such as 8080 in a container`8080:80`, Docker writes its own iptables rules. These rules forward requests to port 8080 directly to the container before UFW’s rules even take effect. From the firewall’s perspective, this is traffic being forwarded to another network, not traffic destined for the server.
+The reason lies in how both programs interact with the kernel firewall. UFW manages the rules for connections intended for the server itself. If you expose a`compose.yaml` port such as 8080 in a container`8080:80`, Docker writes its own iptables rules. These rules forward requests to port 8080 directly to the container before UFW’s rules even take effect. From the firewall’s perspective, this is traffic forwarded to another network, not traffic destined for the server.
 
 This isn't a mistake in your configuration; it's a known, documented behavior. The details are described [in](https://docs.docker.com/engine/network/packet-filtering-firewalls/) the [Docker documentation on firewalls](https://docs.docker.com/engine/network/packet-filtering-firewalls/).
 
 ### The Consequence
 
-Since UFW doesn't protect you here, you have to protect yourself in the `compose.yaml`:
+Since UFW doesn't protect you here, you have to protect yourself in the`compose.yaml`:
 
 - **Only the reverse proxy exposes ports**—specifically, 80 and 443. All other services have no `ports:`entry at all. They reside within the proxy network`__NETWORK__`, and the proxy reaches them directly there. That is exactly how the templates on this page are structured.
 - **If you do need a port right away**—for testing, for example—bind it to `127.0.0.1`. Then it will only be accessible from the server itself, not from the network:
@@ -98,18 +98,18 @@ ports:
 
 From your own computer, you can then connect via an SSH tunnel—for example`ssh -L 8080:localhost:8080 homelab`, using —and open  `http://localhost:8080`in your browser.
 
-- **Without an IP address preceding it** (`"8080:80"`), the port listens on all network interfaces. This is the default behavior in Docker and is exactly the scenario that UFW does not block.
+- **Without an IP address preceding it** (`"8080:80"`), the port listens on all network interfaces. This is the default behavior in Docker, and it is precisely the scenario that UFW does not block.
 
-Strictly speaking, ports 80 and 443 wouldn't even need an UFW rule for a proxy in a container. However, the rules don't do any harm and document which ports should be open.
+Strictly speaking, ports 80 and 443 wouldn't even need an UFW rule for a proxy in a container. However, these rules don't do any harm and document which ports should be open.
 
 <Callout title="Check for yourself">
-You can only see what's actually accessible from the outside. On the server, it shows all`sudo ss -tlnp` the ports that are listening. From another computer on the network, you can test a port, for example, with `nc -zv 192.168.1.10 8080`. If a connection is established there even though UFW doesn't allow the port, a container has exposed it.
+You can only see what's actually accessible from the outside. On the server, it shows all`sudo ss -tlnp` the ports that are listening. From another computer on the network, you can test a port, for example, using `nc -zv __SERVER_IP__ 8080`. If a connection is established there even though UFW doesn't allow the port, a container has exposed it.
 
-If Docker later reports upon startup that a port is already in use, you can use the same command to find out which process is using it. For more information, see "[Port in Use](/en/wiki/port-in-use/)."
+If Docker later reports during startup that a port is already in use, you can use the same command to find out which process is using it. For more information, see "[Port in Use](/en/wiki/port-in-use/)."
 </Callout>
 
-There are projects like [ufw-docker](https://github.com/chaifeng/ufw-docker) that combine UFW and Docker. To get started, however, the simple rule above is more robust: don't expose unnecessary ports. The section "[Minimizing the Attack Surface](/en/wiki/attack-surface/)" explains why this is so effective.
+There are projects like [ufw-docker](https://github.com/chaifeng/ufw-docker) that combine UFW and Docker. To get started, however, the simple rule above is more reliable: don't expose unnecessary ports. The section "[Minimizing the Attack Surface](/en/wiki/attack-surface/)" explains why this is so effective.
 
 ## Don't forget the router
 
-If your server is at home, your router is your first firewall. The only traffic that comes in from outside is what you forward through [port forwarding](/en/wiki/port-forwarding/). Only open ports 80 and 443—do not open SSH. UFW is the second layer, which also affects devices on your own network.
+If your server is at home, your router is your first firewall. The only traffic that comes in from the outside is what you forward through [port forwarding](/en/wiki/port-forwarding/). Only open ports 80 and 443; do not open SSH. UFW is the second layer, which also affects devices on your own network.

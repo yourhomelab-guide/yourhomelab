@@ -21,20 +21,20 @@ For a home lab, SSH is the standard way to work. The server sits on a shelf some
 Every connection involves two parties:
 
 - The **server** is a service (`sshd`) that runs on the Homelab computer and listens on port 22 by default.
-  On Debian and Ubuntu Server, you install it using the package`openssh-server`, usually right during installation.
+  On Debian and Ubuntu Server, you can install it using the package`openssh-server`, usually right during installation.
 - The **client** is the program on`ssh` your laptop. It comes pre-installed on Linux, macOS, and Windows 10/11.
 
 A connection looks like this:
 
 ```bash
-ssh admin@192.168.1.10
+ssh __USER__@__SERVER_IP__
 ```
 
-The username on the server comes`@` before the , followed by the address. Use  to end`exit` the session.
+The username on the server comes`@` before the , followed by the address. Type  to end`exit` the session.
 
 ## Key Pairs Instead of Passwords
 
-A password can be guessed or intercepted. As soon as SSH is accessible from the Internet, bots try to crack it around the clock
+A password can be guessed or intercepted. As soon as SSH is accessible from the Internet, bots try to break in around the clock
 common combinations. Keys solve this problem.
 
 A **key pair** consists of two files:
@@ -61,7 +61,7 @@ copied. So you don't have to keep typing in the passphrase, it remembers it`ssh-
 You can transfer the public key using:
 
 ```bash
-ssh-copy-id admin@192.168.1.10
+ssh-copy-id __USER__@__SERVER_IP__
 ```
 
 The guides show you how to do this step by step and how to disable password login afterward
@@ -75,17 +75,17 @@ The guides show you how to do this step by step and how to disable password logi
 ## known_hosts and Fingerprint
 
 There are keys on the other side, too. Every SSH server has its own **host key**. This is how it proves to you that
-that you're actually communicating with your server and not with a device that's acting as an intermediary.
+that you're actually communicating with your server and not with a device that has inserted itself between you and it.
 
 The first time you connect, you'll see a message like this:
 
 ```text
-The authenticity of host '192.168.1.10 (192.168.1.10)' can't be established.
+The authenticity of host '__SERVER_IP__ (__SERVER_IP__)' can't be established.
 ED25519 key fingerprint is SHA256:...
 Are you sure you want to continue connecting (yes/no/[fingerprint])?
 ```
 
-The **fingerprint** is a short checksum of the host key. If you want to be precise, compare it with the value,
+The **fingerprint** is a short checksum of the host key. If you want to be thorough, compare it with the value,
 which the server displays itself (either directly on the device or in your VPS provider's console):
 
 ```bash
@@ -100,30 +100,30 @@ This happens quite innocently if you've reinstalled the server or assigned an IP
 Then delete the old entry:
 
 ```bash
-ssh-keygen -R 192.168.1.10
+ssh-keygen -R __SERVER_IP__
 ```
 
 If you haven't changed anything, take the warning seriously and don't just connect anyway.
 
 ## The ~/.ssh/config file
 
-Over time, you find yourself typing the same usernames, IP addresses, and key paths over and over again. The file  `~/.ssh/config`on
+Over time, you find yourself typing the same usernames, IP addresses, and key paths over and over again. The file  `~/.ssh/config`at
 Here's a summary for your laptop:
 
 ```text
 Host homelab
-    HostName 192.168.1.10
-    User admin
+    HostName __SERVER_IP__
+    User __USER__
     IdentityFile ~/.ssh/id_ed25519
 
 Host vps
     HostName vps.__DOMAIN__
-    User admin
+    User __USER__
     Port 22
 ```
 
 After that, `ssh homelab`. The shortcut also works for  and`scp` , as`rsync` well as in editors like VS Code with
-Remote SSH. The man page describes all the options`man ssh_config`.
+Remote SSH. The man page describes all options`man ssh_config`.
 
 ## File Permissions
 
@@ -137,7 +137,7 @@ chmod 600 ~/.ssh/id_ed25519 ~/.ssh/config
 
 On the server, the same applies to  `~/.ssh`and `~/.ssh/authorized_keys`.
 
-## Read More
+## Read more
 
 - [OpenSSH Manual](https://www.openssh.com/manual.html)
 - [Minimize the Attack Surface](/en/wiki/attack-surface/): Why SSH Should Not Be Exposed to the Internet If Possible
