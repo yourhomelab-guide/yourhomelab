@@ -1,0 +1,144 @@
+---
+title: "Multiple devices: Assign roles"
+description: "A Raspberry Pi, an old mini-PC, and maybe even a small VPS: Here, you'll learn which device handles which task, how to connect them, and what you need to keep in mind."
+level: 2
+related:
+  - cloud-hybrid-local
+  - operating-models
+  - backup-strategies
+  - vpn
+practice: vpn-wireguard
+---
+
+<OneWay />
+
+## Many people start out with more than one device
+
+There's still a Raspberry Pi sitting in the drawer, and I'll add a discarded Dell OptiPlex or Lenovo ThinkCentre to it,
+And later on, you might rent a small VPS. That's perfectly normal. The only important thing is that each device has a
+You'll be given a clear assignment. Otherwise, after a few months, you won't know what's going on anymore.
+
+The basic rule: **One device is your main server; the others take on precisely defined supporting roles.** Start with
+connect to the main server and work through all the guides there. I'll add another device if there's a
+there is a specific reason for it.
+
+## Each device remains independent
+
+You're not building a cluster. Each device is its own server with its own Linux, its own Docker, and its own
+Compose Stacks. This has two advantages: If one device fails, the others keep running. And you can configure each device
+Set it up using the same guides you're already familiar with.
+
+That's why you go over the basics on every device:
+
+- [SSH Keys](/en/setup/ssh-keys/), [Users, & sudo,](/en/setup/users-sudo/) and [Securing SSH](/en/setup/hardening-ssh/)
+- [Firewall with UFW](/en/setup/firewall-ufw/) and [Automatic Updates](/en/setup/automatic-updates/)
+- [Install Docker](/en/setup/installing-docker/) and set up [the](/en/setup/creating-the-directory-structure/) same [directory structure](/en/setup/creating-the-directory-structure/) under `__ROOT__`
+
+Using the same file paths across all devices saves a lot of hassle later on, especially when it comes to backups and migrating services.
+
+Clustering multiple servers (Docker Swarm, Kubernetes) is rarely worth the effort in a home lab. Why?
+can be found in "[Overview of Operating Models](/en/wiki/operating-models/)."
+
+## Which device does what?
+
+| Device | Role | Typical Services |
+| --- | --- | --- |
+| **Mini PC** (OptiPlex, ThinkCentre, NUC) | Main server: x86 CPU, SSD, sufficient RAM | Vaultwarden, Immich, Paperless-ngx, Jellyfin, Databases, Reverse Proxy |
+| **Raspberry Pi** | Small services that should continue to run even when the main server is down | AdGuard Home, Uptime Kuma, Home Assistant |
+| **VPS** | Public Entrance and Off-Site Location | VPN access to the home network, remote monitoring, destination for offsite backups |
+
+Three questions can help with any ministry:
+
+1. **Does it require a lot of storage or processing power?** If so, it belongs on the main server. Photos, documents, and
+   Media are located where the large plates are.
+2. **Should it keep working if the main server goes down?** DNS and monitoring should be handled by a different device.
+   If AdGuard Home is running on the main server and it restarts, the entire home network suddenly loses Internet access.
+   And a monitoring program running on the server being monitored cannot report its own failure.
+3. **Does it need to be accessible from the Internet?** If so, a VPS can serve as the entry point, and the data will still remain
+   At home. Read more in "[Cloud, Hybrid, or On-Premises?](/en/wiki/cloud-hybrid-local/)"
+
+<Callout title="Start small">
+You don't have to set up all three devices at the same time. One main server with backups is worth more than three half-baked ones.
+Set up devices. Using the Pi as a DNS server is usually the most sensible next step.
+</Callout>
+
+## What's Different About the Raspberry Pi
+
+- **ARM instead of x86:** Most well-known images are available for both architectures, but not all of them. On Docker Hub
+  Check under "OS/ARCH" to see if it's `linux/arm64`included.
+- **SSD Instead of an SD Card:** SD cards tend to fail when used continuously. An SSD connected via USB or an NVMe adapter lasts
+  significantly longer.
+- **Low RAM:** 4 to 8 GB is enough for a few small services, but not for Immich or Nextcloud.
+
+## What Makes a VPS Different
+
+A VPS has a public IP address and is scanned by bots from the very first minute. The guides on
+[Hardening SSH](/en/setup/hardening-ssh/) and setting up [a](/en/setup/firewall-ufw/) [firewall](/en/setup/firewall-ufw/) are mandatory here, not
+In short: Only run what really needs to be public there, and don't store any sensitive data with the provider that you
+you wouldn't also back it up in encrypted form.
+
+## Connect the devices
+
+On the home network, all devices are assigned a [static IP address](/en/setup/static-ip-hostname/). If you add a VPS, connect
+You can connect it to your home network via [VPN](/en/wiki/vpn/), using something like WireGuard or Tailscale. Then everyone can communicate
+Devices can connect to each other via private IP addresses without you having to open ports at home.
+
+To avoid having to juggle IP addresses, give each device on your laptop a name in `~/.ssh/config`:
+
+```text
+Host homelab
+    HostName __SERVER_IP__
+    User __USER__
+
+Host pi
+    HostName 192.168.1.20
+    User __USER__
+
+Host vps
+    HostName vps.__DOMAIN__
+    User __USER__
+```
+
+After that, either  or`ssh pi`  will do`ssh vps`. For more on this, see [SSH Basics](/en/wiki/ssh-basics/). Also, keep in mind
+In your [documentation](/en/wiki/documentation/), specify which device has which IP address and which stacks are running on them
+run.
+
+## Reverse Proxy Across Devices
+
+This is where the biggest pitfall lies. Traefik reads its labels only from containers on **the same** Docker host.
+A service on the Pi won't automatically appear in Traefik on the main server. You have two options:
+
+- **Each device gets its own reverse proxy.** This is easiest if services on each device use
+  run on its own domain. Each proxy retrieves its own certificates.
+- **A central proxy also forwards traffic to other devices.** The service on the Pi publishes its port in the
+  Home network, and the proxy on the main server is given a static entry with an IP address and port. In the
+  [Nginx Proxy Manager](/en/setup/reverse-proxy-npm/) is a standard proxy host, whereas in Traefik it is an entry in
+  a configuration file instead of labels.
+
+To start with, the first option is easier to understand. Very small services like AdGuard Home or Uptime Kuma on the
+You often don't even need to go through a domain. On a home network, the IP address and port are enough.
+
+## Cross-Checked Backups and Monitoring
+
+Having multiple devices is a boon for your [backup strategy](/en/wiki/backup-strategies/): The Pi backs up to
+the main server; the main server backs up to an external destination or the VPS. The important thing is that a backup never
+is located on the same device as the data. The guide explains how to do this with Borgmatic
+[Backups with borgmatic](/en/setup/backups-borgmatic/).
+
+To monitor the devices, install a [Beszel](/en/setup/monitoring-beszel/) agent on each one.
+[Uptime Kuma](/en/setup/uptime-kuma/) works best when run on a different device than the services it monitors,
+for example, on the Pi or the VPS.
+
+## "My Setup" with Multiple Devices
+
+"My Setup" always refers to a single device. If you're setting up a different device, enter its IP address first and, if necessary,
+Add the "Stack" folder. Then all the commands will fit in the Guides. The domain and email address remain the same.
+
+## Checklist for a New Device
+
+1. Install the operating system, assign a static IP address, go to “My Setup,” and enter`~/.ssh/config` the information
+2. SSH keys, users, SSH hardening, firewall, automatic updates
+3. Install Docker and set up the directory structure
+4. Define your role and note it in your documentation
+5. Launch the Beszel Agent and add the device to Uptime Kuma
+6. Set up backups on another device

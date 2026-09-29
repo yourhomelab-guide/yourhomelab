@@ -1,6 +1,6 @@
 ---
 title: Port in use
-description: Docker can't start a container because another program is already using the port. Find out which program is using it, then either free up the port or switch to a different one.
+description: Docker can't start a container because another program is already using the port. Find out which program is using it, and either free up the port or switch to a different one.
 level: 2
 related:
   - ip-ports-nat
@@ -28,9 +28,9 @@ The number after the colon is the port in use on the host.
 
 ## Why This Happens
 
-A port on the host can be used by only **one** program at a time. With ,`ports: - "80:80"` the
-Docker container to forward the host's port 80 to it. Is another program or another process already listening there?
-Containers—that doesn't work. For more information on ports[,](/en/wiki/ip-ports-nat/) see "[IP, Ports & NAT](/en/wiki/ip-ports-nat/)."
+A port on the host can be used by only **one** program at a time. With`ports: - "80:80"`  the
+Docker container to forward port 80 from the host to it. Is another program or another
+Containers—that won't work. For more information on ports[,](/en/wiki/ip-ports-nat/) see "[IP, Ports & NAT](/en/wiki/ip-ports-nat/)."
 
 ## Causes
 
@@ -67,7 +67,7 @@ systemctl status apache2 nginx
 
 ### Another container
 
-Stop the old container, or assign a different host port to the new one. On the left is the port on the host; on the right is the
+Stop the old container, or assign a different host port to the new one. On the left is the port on the host, and on the right is the
 in the container. Just change the one on the left:
 
 ```yaml
@@ -77,7 +77,7 @@ ports:
 
 Behind a reverse proxy, you usually don't need one at all for web services`ports:`. The proxy reaches the container via
 the network`__NETWORK__`. Then the conflict disappears entirely. Which ports a taken-over `compose.yaml`
-The [Compose](/en/werkzeuge/compose-erklaerer/) [Guide](/en/werkzeuge/compose-erklaerer/) shows you which ones have been published and which addresses they're linked to.
+The [Compose](/en/werkzeuge/compose-erklaerer/) [Guide](/en/werkzeuge/compose-erklaerer/) shows you which ones have been published and which addresses they are associated with.
 
 ### Old Web Server on Ports 80/443
 
@@ -89,12 +89,12 @@ sudo systemctl disable --now apache2
 sudo systemctl disable --now nginx
 ```
 
-You can uninstall it afterward using  `sudo apt remove apache2`or `sudo apt remove nginx`.
+You can then uninstall it using  `sudo apt remove apache2`or `sudo apt remove nginx`.
 
 ### Port 53 and systemd-resolved
 
 You're just disabling the local DNS stub. After that, the server will continue to resolve names via the
-DNS servers on your network.
+DNS server on your network.
 
 ```bash
 sudo mkdir -p /etc/systemd/resolved.conf.d
@@ -103,7 +103,7 @@ sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 sudo systemctl restart systemd-resolved
 ```
 
-Then use  to check `sudo ss -tulpn | grep ':53 '`that the port is open, and use  `ping -c1 debian.org`to check that the
+Then use  to check `sudo ss -tulpn | grep ':53 '`that the port is free, and use  `ping -c1 debian.org`to check that the
 Name resolution still works. On Debian, systemd-resolved usually isn't installed at all.
 
 ### Bind to a specific IP address
@@ -112,7 +112,7 @@ If the server has multiple IP addresses, a service can listen on only one of the
 
 ```yaml
 ports:
-  - "192.168.1.10:53:53/udp"
+  - "__SERVER_IP__:53:53/udp"
 ```
 
 ## Don't forget the firewall

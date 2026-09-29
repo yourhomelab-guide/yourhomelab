@@ -7,6 +7,7 @@ related:
   - cloud-hybrid-local
   - hardware-overview
   - what-is-docker
+  - operating-models
 practice: choosing-hardware
 ---
 
@@ -26,7 +27,7 @@ There is a wide selection of free software. Typical projects for beginners:
 
 <Cards>
   <Card title="Passwords">
-    A standalone password manager like [Vaultwarden](/en/services/vaultwarden/), compatible with the Bitwarden apps.
+    A standalone password manager like [Vaultwarden](/en/services/vaultwarden/) that's compatible with the Bitwarden apps.
   </Card>
   <Card title="Photos">
     A private photo archive like [Immich](/en/services/immich/) that automatically backs up photos from your cell phone.
@@ -37,27 +38,56 @@ There is a wide selection of free software. Typical projects for beginners:
   <Card title="Overview">
     Monitoring tools like [Uptime Kuma](/en/services/uptime-kuma/), which notify you when something goes down.
   </Card>
+  <Card title="On the Go">
+    Your own [VPN](/en/setup/vpn-wireguard/) that lets you securely access your home network as if you were at home.
+  </Card>
+  <Card title="Play">
+    Your own game server—for Minecraft or Valheim, for example—where you can play with friends.
+  </Card>
 </Cards>
 
 Many people start with a service and quickly realize how much money they can make with it. This hobby is often called
 **Homelab**: a small, personal IT environment at home for running, learning, and experimenting. How something like this works at
 The [Homelabs](/en/homelabs/) show what it looks like to others.
 
+## Docker, VMs, or Proxmox?
+
+If you look around, you'll find a variety of approaches. **Virtualization** is a popular one: a hypervisor such as
+[Proxmox VE](/en/wiki/proxmox-ve/) runs directly on the hardware and divides it into several **virtual
+Machines** (VMs). Each VM is a complete computer with its own operating system and a fixed allocation of
+Memory. This is useful for running different systems in parallel or for safely working with snapshots.
+to try out. There are also NAS systems like [TrueNAS and Unraid](/en/wiki/truenas-unraid/) that offer storage
+and bundle apps under a single web interface.
+
+Containers take the easier route. They share the host system's kernel and bring only the application with them
+provides everything it needs. A container starts up in seconds and often requires only a few megabytes of RAM,
+whereas a VM runs an entire operating system. Here's a detailed explanation of the difference
+[VMs or containers?](/en/wiki/vms-or-containers/)
+
+<Callout title="This site uses Docker">
+All the guides here are based on a Docker-based home lab: a Linux server running Docker Compose. That is
+Easiest to learn, convenient to maintain (one folder per service, updates with just two commands), requires the least
+It uses few resources and runs even on a small mini-PC or VPS. Proxmox and similar solutions are great, but they come with a
+an additional layer that you don't need at the beginning. If you want to virtualize later, everything will work from here on
+The same applies to a Debian VM on Proxmox. This shows which combination works when
+[An Overview of Business Models](/en/wiki/operating-models/).
+</Callout>
+
 ## How this works from a technical standpoint
 
-A typical setup on this page consists of just a few components:
+A Docker home lab, as described on this page, consists of just a few components:
 
 1. **Hardware**: a computer that runs continuously. The devices that are suitable are listed in the
    [Hardware Overview](/en/wiki/hardware-overview/).
 2. **Operating system**: usually a lightweight Linux distribution such as Debian or Ubuntu Server, without a graphical user interface. You
    Manage it via [SSH](/en/wiki/ssh-basics/) from your regular computer.
-3. **Docker**: Each service runs in its own **container**, an isolated environment containing everything the
+3. **Docker**: Each service runs in its own **container**, an isolated environment that contains everything the
    Software requires. It is described in a short file named `compose.yaml`. More on this in
    [What is Docker?](/en/wiki/what-is-docker/)
 4. **Reverse Proxy**: a service that accepts requests and forwards them to the appropriate container. It also ensures that
    HTTPS certificates, so you can use addresses like  `vault.__DOMAIN__`instead of an IP address and port. See
    [Reverse Proxy Explained](/en/wiki/reverse-proxy-explained/).
-5. **Backups**: a way to store a copy of your data in a different location. Without this, self-hosting is a risk.
+5. **Backups**: a way to store your data in a different location. Without this, self-hosting is a risk.
 
 All services are located in a shared folder, by default`__ROOT__`. For each service, there is a subfolder containing
 `compose.yaml`,  and`.env` `data/`. That way, you'll always know where everything is, and you'll end up backing up exactly one folder.
@@ -65,7 +95,7 @@ All services are located in a shared folder, by default`__ROOT__`. For each serv
 ## Where the server is located
 
 Self-hosting doesn't necessarily mean that the computer is sitting in your living room. There are three models: at home,
-in the cloud on a rented server, or a combination of both. This article explains which option is right for you
+in the cloud on a rented server, or a combination of both. This article explains which option is right for you.
 [Cloud, hybrid](/en/wiki/cloud-hybrid-local/), [or on-premises?](/en/wiki/cloud-hybrid-local/)
 
 What matters isn't the location, but control: You choose the software, decide on updates, and know that
@@ -76,23 +106,23 @@ where your data is stored.
 You don't have to be a pro. The following are helpful:
 
 - **Curiosity and patience.** Not everything works on the first try. Reading error messages is part of the process.
-- **A little time.** Setup takes a few evenings, and after that, a few minutes a week are usually enough for updates.
+- **A little time.** Setup takes a few evenings, and after that, it usually only takes a few minutes a week to check for updates.
   and a quick look at the system.
-- **Terminal Basics.** Copying commands, editing files, changing directories. You'll learn the rest as you go.
+- **Terminal Basics:** Copying commands, editing files, changing directories. You'll learn the rest as you go.
 - **A sense of responsibility.** You're now your own IT department. If something breaks, there's no support,
   who you can call.
 
-The article ["When Is It Worth It?](/en/wiki/is-it-worth-it/)" honestly explores whether the effort is worth it for you,
-with its pros and cons.
+The article ["When Is It Worth It?"](/en/wiki/is-it-worth-it/) takes an honest look at whether the effort is worth it for you,
+with pros and cons.
 
 ## Here's what happens next
 
-If you're ready to get started, follow the instructions under "Setup" in order. They begin with choosing the
-Hardware and guide you through installation, security, and Docker, all the way to your first service with its own domain. If you
+If you're ready to get started, follow the instructions under "Setup" in order. You'll start by choosing the
+Hardware and guide you through installation, security, and Docker all the way to setting up your first service with its own domain. If you
 If you don't know yet which path is right for you, the [Getting Started Wizard](/en/werkzeuge/einstiegs-assistent/) will help you
 It asks you a few questions and suggests a starting point.
 
 <Callout title="Start small">
-Start with a single service that you actually use. Once it's running reliably and is secure, then...
+Start with a single service that you actually use. Once it's running reliably and is secure, then you can move on to the
 One at a time. That's less stressful than doing ten at once.
 </Callout>
