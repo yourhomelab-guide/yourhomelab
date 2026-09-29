@@ -37,7 +37,7 @@ Notier dir:
 
 Bei einer FRITZ!Box findest du das unter **Heimnetz → Netzwerk**. Dort den Server bearbeiten und „Diesem Netzwerkgerät immer die gleiche IPv4-Adresse zuweisen“ aktivieren. Bei anderen Routern heißt die Funktion z. B. „DHCP-Reservierung“, „Static Lease“ oder „Adressreservierung“.
 
-Du kannst die Adresse behalten, die der Server gerade hat, oder eine eigene wählen, etwa `192.168.1.10`. Starte danach den Server neu, damit er die reservierte Adresse sicher bekommt:
+Du kannst die Adresse behalten, die der Server gerade hat, oder eine eigene wählen, etwa `192.168.1.10`. Trag sie unter „Mein Setup“ als Server-IP ein, dann steht sie in allen weiteren Befehlen. Starte danach den Server neu, damit er die reservierte Adresse sicher bekommt:
 
 ```bash
 sudo reboot
@@ -64,7 +64,7 @@ Ersetze den Block deiner Netzwerkkarte (die Zeile mit `inet dhcp` und ggf. `allo
 ```text
 auto enp1s0
 iface enp1s0 inet static
-    address 192.168.1.10/24
+    address __SERVER_IP__/24
     gateway 192.168.1.1
 ```
 
@@ -102,7 +102,7 @@ network:
     enp1s0:
       dhcp4: false
       addresses:
-        - 192.168.1.10/24
+        - __SERVER_IP__/24
       routes:
         - to: default
           via: 192.168.1.1
@@ -159,7 +159,7 @@ ping -c 3 debian.org
 
 Du solltest die feste Adresse sehen, eine `default`-Route über deinen Router und Antworten auf den Ping.
 
-Viele Router lösen Gerätenamen im Heimnetz auf. Dann erreichst du den Server auch per Name, z. B. `ssh deinname@homelab` oder bei einer FRITZ!Box `ssh deinname@homelab.fritz.box`. Klappt das nicht, nutzt du einfach die IP-Adresse.
+Viele Router lösen Gerätenamen im Heimnetz auf. Dann erreichst du den Server auch per Name, z. B. `ssh __USER__@homelab` oder bei einer FRITZ!Box `ssh __USER__@homelab.fritz.box`. Klappt das nicht, nutzt du einfach die IP-Adresse.
 
 Als Nächstes sicherst du den Zugang ab: [SSH-Schlüssel einrichten](/de/einrichten/ssh-schluessel/).
 </Step>

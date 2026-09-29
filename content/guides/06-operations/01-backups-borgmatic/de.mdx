@@ -71,7 +71,7 @@ sudo cat /etc/borgmatic/passphrase
 Borg kann in einen lokalen Ordner sichern oder per SSH auf einen anderen Rechner. Wähle ein Ziel:
 
 - **USB-Platte**: einfach und schnell. Häng sie fest ein, zum Beispiel unter `/mnt/backup` (über einen Eintrag in `/etc/fstab`). Sie schützt aber nicht vor Brand oder Diebstahl, wenn sie neben dem Server liegt. Tipp: zwei Platten im Wechsel, eine davon außer Haus.
-- **Anderer Rechner per SSH**, etwa ein NAS oder ein Rechner bei Freunden. Dort muss **Borg ebenfalls installiert** sein (`sudo apt install borgbackup`), denn Borg spricht auf beiden Seiten mit sich selbst. Lege auf dem Zielrechner einen eigenen Benutzer an, zum Beispiel `backup`.
+- **Anderer Rechner per SSH**, etwa ein NAS oder ein Rechner bei Freunden. Dort muss **Borg ebenfalls installiert** sein (`sudo apt install borgbackup`), denn Borg spricht auf beiden Seiten mit sich selbst. Lege auf dem Zielrechner einen eigenen Benutzer an, zum Beispiel `backup`. Hast du mehrere Geräte, können sie sich gegenseitig sichern, siehe [Mehrere Geräte: Rollen verteilen](/de/nachschlagen/mehrere-geraete/).
 - **Speicheranbieter mit Borg-Unterstützung**: Einige Hoster bieten Speicher an, der direkt mit Borg funktioniert. Die [borgmatic-Doku](https://torsion.org/borgmatic/how-to/set-up-backups/) nennt zum Beispiel BorgBase, Hetzner und rsync.net. Du bekommst dort eine SSH-Adresse und trägst sie genauso ein wie bei einem eigenen Rechner. Der Anbieter sieht nur verschlüsselte Daten.
 
 Für SSH-Ziele gilt: Weil das Backup als root läuft, muss `root` sich per SSH-Schlüssel dort anmelden können. Erzeuge einen Schlüssel und zeig den öffentlichen Teil an:

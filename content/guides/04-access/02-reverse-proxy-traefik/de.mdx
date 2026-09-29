@@ -64,6 +64,10 @@ Antwortet die Subdomain mit „Bad Gateway“, erreicht Traefik den Container ni
 <Callout title="Eigene Dienste anbinden">
 Für Dienste aus dem [Katalog](/de/dienste/) setzt „Mein Setup“ die Labels automatisch. Für alles andere erzeugt das Werkzeug [Proxy-Konfiguration](/de/werkzeuge/proxy-konfiguration/) die passenden Labels aus Subdomain, Containername und Port.
 </Callout>
+
+<Callout title="Dienste auf einem anderen Gerät?">
+Traefik liest Labels nur von Containern auf diesem Docker-Host. Läuft ein Dienst auf einem zweiten Gerät, etwa einem Raspberry Pi, gibst du ihm dort einen eigenen Reverse Proxy oder trägst ihn hier fest mit IP und Port ein. Beide Wege vergleicht [Mehrere Geräte: Rollen verteilen](/de/nachschlagen/mehrere-geraete/).
+</Callout>
 </Step>
 
 </Steps>

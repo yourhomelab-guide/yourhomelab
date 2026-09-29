@@ -34,7 +34,7 @@ cd __ROOT__/homepage
 
 Der Stack besteht aus zwei Containern. `homepage` ist das Dashboard. `socket-proxy` gibt ihm Lesezugriff auf Docker, dazu mehr im Schritt „Docker einbinden“.
 
-Wichtig ist die Variable `HOMEPAGE_ALLOWED_HOSTS` in der `.env`. Homepage beantwortet aus Sicherheitsgründen nur Anfragen an Adressen, die dort stehen. Sie muss genau die Adresse enthalten, die du im Browser eintippst, ohne `https://`. Mehrere Einträge trennst du mit Komma, ohne Leerzeichen. Nutzt du keinen Reverse Proxy, gehört die IP des Servers mit Port hinein, zum Beispiel `192.168.1.10:3002`.
+Wichtig ist die Variable `HOMEPAGE_ALLOWED_HOSTS` in der `.env`. Homepage beantwortet aus Sicherheitsgründen nur Anfragen an Adressen, die dort stehen. Sie muss genau die Adresse enthalten, die du im Browser eintippst, ohne `https://`. Mehrere Einträge trennst du mit Komma, ohne Leerzeichen. Nutzt du keinen Reverse Proxy, gehört die IP des Servers mit Port hinein, also `__SERVER_IP__:3002`.
 
 ```bash
 docker compose up -d

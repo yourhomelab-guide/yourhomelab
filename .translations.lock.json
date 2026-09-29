@@ -1491,6 +1491,14 @@
     "hash": "4774a83847fb3d0c",
     "by": "claude"
   },
+  "src/i18n/de.json#setupDialog.serverHint": {
+    "hash": "20c3c7db5799aea2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.serverIp": {
+    "hash": "6ff18092d207d7b7",
+    "by": "claude"
+  },
   "src/i18n/de.json#setupDialog.title": {
     "hash": "b8d56d4f8c357a9f",
     "by": "claude"
@@ -1509,6 +1517,10 @@
   },
   "src/i18n/de.json#setupDialog.urlSub": {
     "hash": "f6fcb73e864f6b2a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#setupDialog.user": {
+    "hash": "b1b677a2774c5e20",
     "by": "claude"
   },
   "src/i18n/de.json#skip": {

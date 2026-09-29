@@ -25,7 +25,7 @@ Zu jeder Verbindung gehören zwei Seiten:
 Eine Verbindung sieht so aus:
 
 ```bash
-ssh admin@192.168.1.10
+ssh __USER__@__SERVER_IP__
 ```
 
 Vor dem `@` steht der Benutzername auf dem Server, dahinter die Adresse. Mit `exit` beendest du die Sitzung.
@@ -59,7 +59,7 @@ kopiert. Damit du die Passphrase nicht ständig eintippen musst, merkt sich der 
 Den öffentlichen Schlüssel überträgst du mit:
 
 ```bash
-ssh-copy-id admin@192.168.1.10
+ssh-copy-id __USER__@__SERVER_IP__
 ```
 
 Wie das Schritt für Schritt geht und wie du danach den Passwort-Login abschaltest, zeigen die Guides
@@ -78,7 +78,7 @@ dass du wirklich mit deinem Server sprichst und nicht mit einem Gerät, das sich
 Beim ersten Verbinden siehst du eine Meldung wie diese:
 
 ```text
-The authenticity of host '192.168.1.10 (192.168.1.10)' can't be established.
+The authenticity of host '__SERVER_IP__ (__SERVER_IP__)' can't be established.
 ED25519 key fingerprint is SHA256:...
 Are you sure you want to continue connecting (yes/no/[fingerprint])?
 ```
@@ -98,7 +98,7 @@ passiert ganz harmlos, wenn du den Server neu installiert hast oder eine IP an e
 dann entfernst du den alten Eintrag:
 
 ```bash
-ssh-keygen -R 192.168.1.10
+ssh-keygen -R __SERVER_IP__
 ```
 
 Hast du nichts geändert, nimm die Warnung ernst und verbinde dich nicht einfach trotzdem.
@@ -110,13 +110,13 @@ deinem Laptop fasst das zusammen:
 
 ```text
 Host homelab
-    HostName 192.168.1.10
-    User admin
+    HostName __SERVER_IP__
+    User __USER__
     IdentityFile ~/.ssh/id_ed25519
 
 Host vps
     HostName vps.__DOMAIN__
-    User admin
+    User __USER__
     Port 22
 ```
 

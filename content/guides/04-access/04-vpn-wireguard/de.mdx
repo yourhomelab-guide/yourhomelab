@@ -54,7 +54,7 @@ services:
       # WireGuard itself, forwarded by the router
       - "51820:51820/udp"
       # Web UI, reachable from the home network only. Use your server's LAN IP.
-      - "192.168.1.10:51821:51821/tcp"
+      - "__SERVER_IP__:51821:51821/tcp"
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
@@ -76,7 +76,7 @@ networks:
         - subnet: fdcc:ad94:bacf:61a3::/64
 ```
 
-Ersetze `192.168.1.10` durch die LAN-IP deines Servers. So ist die Weboberfläche nur im Heimnetz (und später über das VPN) erreichbar. Wer sie bedienen kann, kann sich neue Zugänge ausstellen, deshalb gehört sie nicht ins Internet.
+`__SERVER_IP__` ist die IP deines Servers im Heimnetz aus „Mein Setup“. So ist die Weboberfläche nur im Heimnetz (und später über das VPN) erreichbar. Wer sie bedienen kann, kann sich neue Zugänge ausstellen, deshalb gehört sie nicht ins Internet.
 
 `NET_ADMIN` und die `sysctls` braucht der Container, um die WireGuard-Schnittstelle anzulegen und Pakete ins Heimnetz weiterzuleiten.
 </Step>
@@ -89,7 +89,7 @@ docker compose up -d
 docker compose logs -f wg-easy
 ```
 
-Mit `Strg+C` beendest du die Log-Anzeige. Startet der Container nicht sauber, hilft [Fehlersuche: erste Schritte](/de/nachschlagen/fehlersuche-erste-schritte/). Öffne dann `http://192.168.1.10:51821` im Browser. Beim ersten Aufruf führt dich ein Assistent durch die Einrichtung:
+Mit `Strg+C` beendest du die Log-Anzeige. Startet der Container nicht sauber, hilft [Fehlersuche: erste Schritte](/de/nachschlagen/fehlersuche-erste-schritte/). Öffne dann `http://__SERVER_IP__:51821` im Browser. Beim ersten Aufruf führt dich ein Assistent durch die Einrichtung:
 
 1. **Admin-Konto anlegen.** Nimm ein langes Passwort aus deinem Passwortmanager.
 2. **Host:** die Adresse, unter der deine Geräte den Server von außen finden, zum Beispiel `vpn.__DOMAIN__`. Durch den Wildcard-Record zeigt der Name bereits auf deine öffentliche IP.
@@ -124,7 +124,7 @@ Die Konfiguration enthält den privaten Schlüssel des Geräts. Verschicke sie n
 </Step>
 
 <Step title="Verbindung testen">
-Schalte am Handy das WLAN aus, damit es wirklich über das Mobilfunknetz geht. Aktiviere den Tunnel in der WireGuard-App und öffne `http://192.168.1.10:51821`. Siehst du die Anmeldeseite von wg-easy, bist du zuhause angekommen. In wg-easy zeigt der Client jetzt auch übertragene Daten und den letzten Handshake.
+Schalte am Handy das WLAN aus, damit es wirklich über das Mobilfunknetz geht. Aktiviere den Tunnel in der WireGuard-App und öffne `http://__SERVER_IP__:51821`. Siehst du die Anmeldeseite von wg-easy, bist du zuhause angekommen. In wg-easy zeigt der Client jetzt auch übertragene Daten und den letzten Handshake.
 
 Klappt es nicht, prüfe der Reihe nach:
 

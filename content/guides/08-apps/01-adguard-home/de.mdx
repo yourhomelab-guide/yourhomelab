@@ -117,11 +117,11 @@ Bevor du das ganze Netz umstellst, prüfst du den Server gezielt. Das Werkzeug `
 
 ```bash
 sudo apt install dnsutils
-dig @192.168.1.10 debian.org +short
-dig @192.168.1.10 doubleclick.net +short
+dig @__SERVER_IP__ debian.org +short
+dig @__SERVER_IP__ doubleclick.net +short
 ```
 
-Die erste Anfrage liefert normale IP-Adressen. Die zweite zielt auf eine bekannte Werbe-Domain und sollte `0.0.0.0` liefern: Sie wurde blockiert. Im „Abfrageprotokoll“ siehst du beide Anfragen. Unter Windows geht dasselbe mit `nslookup doubleclick.net 192.168.1.10`.
+Die erste Anfrage liefert normale IP-Adressen. Die zweite zielt auf eine bekannte Werbe-Domain und sollte `0.0.0.0` liefern: Sie wurde blockiert. Im „Abfrageprotokoll“ siehst du beide Anfragen. Unter Windows geht dasselbe mit `nslookup doubleclick.net __SERVER_IP__`.
 
 Bekommst du keine Antwort (`connection timed out`), läuft der Container nicht oder Port 53 ist nicht veröffentlicht. Prüfe `docker compose ps` und die Logs, wie in [Fehlersuche: erste Schritte](/de/nachschlagen/fehlersuche-erste-schritte/) beschrieben.
 </Step>
@@ -147,7 +147,7 @@ Jetzt hängt das ganze Heimnetz an deinem Server. **Ist der Server aus oder der 
 Überleg dir deshalb vorher, was dann passieren soll:
 
 - **Zweiter DNS-Server im Router**: Viele Router erlauben einen zweiten Eintrag. Trägst du dort einen öffentlichen DNS-Server ein, läuft das Netz weiter, wenn AdGuard Home ausfällt. Der Haken: Geräte nutzen den zweiten Server nicht nur im Notfall, sondern auch zwischendurch. Dann kommt dort Werbung durch.
-- **Zweite AdGuard-Home-Instanz**: Eine zweite Instanz auf einem anderen Gerät, etwa einem Raspberry Pi, mit denselben Einstellungen. Beide IPs trägst du im Router ein. Das ist die sauberste Lösung, aber mehr Pflege.
+- **Zweite AdGuard-Home-Instanz**: Eine zweite Instanz auf einem anderen Gerät, etwa einem Raspberry Pi, mit denselben Einstellungen. Beide IPs trägst du im Router ein. Das ist die sauberste Lösung, aber mehr Pflege. Mehr zur Aufteilung in [Mehrere Geräte: Rollen verteilen](/de/nachschlagen/mehrere-geraete/).
 - **Notfallplan**: Du akzeptierst den Ausfall und schreibst dir auf, wie du im Router den DNS-Eintrag zurücksetzt. Leg diese Notiz so ab, dass auch jemand anderes aus deinem Haushalt sie findet (siehe [Dokumentation](/de/nachschlagen/dokumentation/)).
 
 Für den Anfang ist der Notfallplan in Ordnung. Nimm AdGuard Home außerdem in [Uptime Kuma](/de/einrichten/uptime-kuma/) auf. Der Monitortyp „DNS“ fragt den Server regelmäßig nach einem Namen und meldet sich, wenn keine Antwort kommt.
