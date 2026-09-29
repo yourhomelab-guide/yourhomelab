@@ -28,7 +28,9 @@ npm run new service jellyfin      # scaffold a new service
   [Umami](https://umami.is) counts page views.
 - Every file is precompressed with Brotli and gzip at build time; [`public/.htaccess`](public/.htaccess) serves them
   and sets caching and security headers.
+- Branches: development happens on `dev`, `main` is what's live.
 - GitHub Actions: `ci.yml` builds every pull request, `deploy.yml` uploads `main` to Hetzner web hosting via SFTP,
+  `preview.yml` uploads `dev` to preview.yourhomelab.guide (no stats, not indexed, with a "preview" bar),
   `translate.yml` translates changed content with DeepL and opens a pull request.
 
 | Command | Purpose |
@@ -51,9 +53,11 @@ Secrets (Settings → Secrets and variables → Actions):
 | `DEPLOY_PASSWORD` | Environment `production` | Password of that user |
 | `DEPLOY_PATH` | Environment `production` (optional) | Target folder, default `public_html` |
 | `DEPLOY_PROTOCOL` | Environment `production` (optional) | `sftp` (default) or `ftp` (FTPS) |
+| `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_PASSWORD` | Environment `preview` | Same host, but the account of the preview subdomain |
+| `DEPLOY_PATH`, `DEPLOY_PROTOCOL` | Environment `preview` (optional, as variables) | Like production |
 | `DEEPL_API_KEY` | Repository | DeepL API key for automatic translations |
 
-Also: restrict the `production` environment to the `main` branch, allow GitHub Actions to create pull requests
+Also: restrict the `production` environment to the `main` branch and the `preview` environment to `dev`, allow GitHub Actions to create pull requests
 (organization and repository settings), install the [Renovate app](https://github.com/apps/renovate) to keep image
 versions in the templates up to date, and enable Discussions.
 

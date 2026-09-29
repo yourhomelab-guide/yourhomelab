@@ -1113,5 +1113,7 @@
   "tools.secret.regenerate": "Generate again",
   "tools.secret.bits": "{n} characters, about {bits} bits of randomness",
   "tools.secret.shell": "Rather create it on the server? This gives you the same format:",
-  "tools.secret.where": "The values go into your stack's .env, never into a public Git repository. Keep important secrets in your password manager as well."
+  "tools.secret.where": "The values go into your stack's .env, never into a public Git repository. Keep important secrets in your password manager as well.",
+  "preview.text": "Preview of the development branch (dev). Not the live site.",
+  "preview.live": "Go to the live site"
 }

@@ -1035,6 +1035,14 @@
     "hash": "76acd7a872e1f6bd",
     "by": "claude"
   },
+  "src/i18n/de.json#preview.live": {
+    "hash": "7833ceb6d2c54a6a",
+    "by": "claude"
+  },
+  "src/i18n/de.json#preview.text": {
+    "hash": "e72c1e9753edad42",
+    "by": "claude"
+  },
   "src/i18n/de.json#proxy.caddy": {
     "hash": "da12414e87375439",
     "by": "claude"

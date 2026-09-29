@@ -1113,5 +1113,7 @@
   "tools.secret.regenerate": "Neu erzeugen",
   "tools.secret.bits": "{n} Zeichen, etwa {bits} Bit Zufall",
   "tools.secret.shell": "Lieber direkt auf dem Server erzeugen? Das hier liefert dasselbe Format:",
-  "tools.secret.where": "Die Werte gehören in die .env deines Stacks, nie in ein öffentliches Git-Repository. Bewahre wichtige Secrets zusätzlich in deinem Passwortmanager auf."
+  "tools.secret.where": "Die Werte gehören in die .env deines Stacks, nie in ein öffentliches Git-Repository. Bewahre wichtige Secrets zusätzlich in deinem Passwortmanager auf.",
+  "preview.text": "Vorschau des Entwicklungsstands (Branch dev). Nicht die Live-Seite.",
+  "preview.live": "Zur Live-Seite"
 }

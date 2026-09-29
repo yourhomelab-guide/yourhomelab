@@ -4,9 +4,11 @@ import { renderVariants } from './variants';
 import { renderSummaries } from './summary';
 import { initTables } from './tables';
 import { initGlossary } from './glossary';
+import { loadAnalytics } from './analytics';
 
 initTables();
 initGlossary();
+loadAnalytics();
 
 function refresh() {
   const s = getSetup();

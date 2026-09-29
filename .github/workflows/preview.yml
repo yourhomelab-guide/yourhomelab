@@ -1,0 +1,84 @@
+name: Preview
+
+# Builds the dev branch and uploads it to preview.yourhomelab.guide (same Hetzner host as production, but its own
+# account and folder). The preview build loads no stats, shows a "preview" bar and is kept out of search engines.
+#
+# Setup (once): Settings → Environments → "preview" (deployment branch: dev) with the secrets
+#   DEPLOY_HOST                    – same host as production
+#   DEPLOY_USER, DEPLOY_PASSWORD   – the account of the preview subdomain
+# and optionally the variables DEPLOY_PATH (default public_html) and DEPLOY_PROTOCOL (default sftp).
+# Without these secrets the build still runs, it just isn't uploaded.
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+concurrency:
+  group: preview
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    environment:
+      name: preview
+      url: https://preview.yourhomelab.guide
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # "Zuletzt bearbeitet am" comes from git history
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          PREVIEW: '1'
+
+      - name: Keep the preview out of search engines
+        run: |
+          printf 'User-agent: *\nDisallow: /\n' > dist/robots.txt
+          rm -f dist/sitemap-*.xml
+          cat >> dist/.htaccess <<'HTACCESS'
+
+          # Preview only (added by preview.yml)
+          <IfModule mod_headers.c>
+            Header always set X-Robots-Tag "noindex, nofollow"
+          </IfModule>
+          HTACCESS
+
+      - name: Check deploy credentials
+        id: creds
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          if [ -z "$HOST" ] || [ -z "$USER" ]; then echo "::warning::Preview credentials missing (environment 'preview'), build ok but nothing uploaded"; echo "ok=false" >> "$GITHUB_OUTPUT"; else echo "ok=true" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Upload to Hetzner Webhosting
+        if: steps.creds.outputs.ok == 'true'
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          PASS: ${{ secrets.DEPLOY_PASSWORD }}
+          TARGET: ${{ vars.DEPLOY_PATH || 'public_html' }}
+          PROTOCOL: ${{ vars.DEPLOY_PROTOCOL || 'sftp' }}
+        run: |
+          sudo apt-get install -y -qq lftp >/dev/null
+          # Hashed assets first, HTML last, so visitors never get HTML pointing to missing files.
+          lftp -u "$USER","$PASS" "$PROTOCOL://$HOST" <<LFTP
+          set sftp:auto-confirm yes
+          set ftp:ssl-force true
+          set ssl:verify-certificate yes
+          set net:max-retries 3
+          mkdir -pf $TARGET
+          mirror --reverse --parallel=8 --only-newer --no-perms --verbose=1 dist/_astro $TARGET/_astro
+          mirror --reverse --parallel=8 --no-perms --delete --verbose=1 --exclude-glob .well-known/ --exclude-glob _astro/ dist $TARGET
+          mirror --reverse --parallel=8 --delete --no-perms --verbose=1 dist/_astro $TARGET/_astro
+          bye
+          LFTP

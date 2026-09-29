@@ -22,6 +22,8 @@ interface Props {
   noindex?: boolean;
 }
 const { lang, title, description = t(lang, 'meta.description'), alternates, nav, noindex = false } = Astro.props;
+/** Preview build (preview.yourhomelab.guide, see .github/workflows/preview.yml): no stats, not indexed */
+const preview = process.env.PREVIEW === '1';
 const fullTitle = title ? `${title} · ${site.name}` : `${site.name} · ${t(lang, 'home.title')}`;
 const canonical = new URL(Astro.url.pathname, site.url).href;
 const other = otherLang(lang);
@@ -48,7 +50,7 @@ const uiJson = JSON.stringify(Object.fromEntries(uiKeys.map((k) => [k, t(lang, k
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    {noindex && <meta name="robots" content="noindex" />}
+    {(noindex || preview) && <meta name="robots" content={preview ? 'noindex, nofollow' : 'noindex'} />}
     <link rel="canonical" href={canonical} />
     {Object.entries(alternates).map(([l, href]) => <link rel="alternate" hreflang={l} href={new URL(href, site.url).href} />)}
     {alternates.de && alternates.en && <link rel="alternate" hreflang="x-default" href={new URL(alternates.en, site.url).href} />}
@@ -64,10 +66,18 @@ const uiJson = JSON.stringify(Object.fromEntries(uiKeys.map((k) => [k, t(lang, k
     <slot name="head" />
     <link rel="preload" href={onestLatin} as="font" type="font/woff2" crossorigin />
     <style set:html={fontCss}></style>
-    {site.umami.websiteId && <script defer src={site.umami.src} data-website-id={site.umami.websiteId} data-domains={site.umami.domains} data-do-not-track="true" />}
   </head>
   <body>
     <a class="skip" href="#main">{t(lang, 'skip')}</a>
+    {
+      preview && (
+        <div class="preview-bar">
+          <div class="wrap">
+            {t(lang, 'preview.text')} <a href={site.url + Astro.url.pathname}>{t(lang, 'preview.live')} →</a>
+          </div>
+        </div>
+      )
+    }
     {
       site.underConstruction && (
         <div class="banner">
@@ -98,6 +108,12 @@ const uiJson = JSON.stringify(Object.fromEntries(uiKeys.map((k) => [k, t(lang, k
     <SetupDialog lang={lang} />
     <SearchDialog lang={lang} />
     <script type="application/json" id="yhl-ui" set:html={uiJson} />
+    {
+      /* Stats are loaded in the background by client/analytics.ts; never on preview builds */
+      site.umami.websiteId && !preview && (
+        <script type="application/json" id="yhl-umami" set:html={JSON.stringify({ src: site.umami.src, websiteId: site.umami.websiteId, domains: site.umami.domains })} />
+      )
+    }
     <script>
       import '../client/app';
     </script>
@@ -105,6 +121,8 @@ const uiJson = JSON.stringify(Object.fromEntries(uiKeys.map((k) => [k, t(lang, k
 </html>
 
 <style>
+  .preview-bar { background: #5b3cc4; color: #fff; font-size: 13.5px; font-weight: 600; padding-block: 8px; }
+  .preview-bar a { color: #fff; text-decoration: underline; margin-left: 6px; }
   .banner { background: rgba(255, 210, 50, 0.22); color: #4a3a00; border-bottom: 1px solid rgba(220, 170, 0, 0.35); }
   .banner-in { padding-block: 10px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-size: 14px; line-height: 1.45; }
   .banner-label { font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: 12.5px; background: #f6c627; color: #3d2e00; padding: 3px 9px; border-radius: 6px; }
