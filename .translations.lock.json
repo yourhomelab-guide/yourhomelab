@@ -1647,6 +1647,10 @@
     "hash": "a68ee4167406a050",
     "by": "claude"
   },
+  "src/i18n/de.json#summary.server": {
+    "hash": "aef7de28d52977f1",
+    "by": "claude"
+  },
   "src/i18n/de.json#summary.service": {
     "hash": "e0e8898cdd01fd52",
     "by": "claude"

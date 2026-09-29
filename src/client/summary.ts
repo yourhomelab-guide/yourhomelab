@@ -12,6 +12,7 @@ export function renderSummaries(s: Setup) {
     stacks: s.root,
     data: s.dataMode === 'stack' ? t['summary.dataStack'] : s.dataRoot,
     urls: s.urlMode === 'sub' ? `${t['summary.service']}.${s.domain}` : `${s.domain}/${t['summary.service']}`,
+    server: `${s.user}@${s.serverIp}`,
   };
   els.forEach((el) => {
     const k = el.dataset.sum!;

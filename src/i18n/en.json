@@ -299,6 +299,7 @@
   "summary.stacks": "Stacks",
   "summary.data": "Data",
   "summary.urls": "URLs",
+  "summary.server": "Server",
   "summary.dataStack": "./data in stack",
   "summary.service": "service",
   "search.placeholder": "Search guides, articles and services",

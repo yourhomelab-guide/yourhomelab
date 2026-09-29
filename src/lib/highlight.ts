@@ -78,10 +78,7 @@ export function renderCode(code: string, opts: { numbers?: boolean; values: Reco
         })
         .join('');
       const num = opts.numbers ? `<span class="ln" aria-hidden="true">${i + 1}</span>` : '';
-      // Indent of the line (YAML list dash included): wrapped continuation lines start below the content
-      const ind = /^\s*(?:- )?/.exec(line)![0].length;
-      const style = ind ? ` style="--i:${ind}ch"` : '';
-      return `<span class="line"${style}>${num}<span class="lc">${toks}</span></span>`;
+      return `<span class="line">${num}<span class="lc">${toks}</span></span>`;
     })
     .join('');
 }
