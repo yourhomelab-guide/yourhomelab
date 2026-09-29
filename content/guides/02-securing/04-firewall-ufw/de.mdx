@@ -101,7 +101,7 @@ Vom eigenen Rechner kommst du dann über einen SSH-Tunnel heran, zum Beispiel mi
 Streng genommen bräuchten 80 und 443 für einen Proxy im Container deshalb gar keine UFW-Regel. Die Regeln schaden aber nicht und dokumentieren, was offen sein soll.
 
 <Callout title="Selbst nachprüfen">
-Was wirklich erreichbar ist, siehst du nur von außen. Auf dem Server zeigt `sudo ss -tlnp` alle Ports, auf denen etwas lauscht. Von einem anderen Rechner im Netz testest du einen Port zum Beispiel mit `nc -zv 192.168.1.10 8080`. Kommt dort eine Verbindung zustande, obwohl UFW den Port nicht erlaubt, hat ein Container ihn veröffentlicht.
+Was wirklich erreichbar ist, siehst du nur von außen. Auf dem Server zeigt `sudo ss -tlnp` alle Ports, auf denen etwas lauscht. Von einem anderen Rechner im Netz testest du einen Port zum Beispiel mit `nc -zv __SERVER_IP__ 8080`. Kommt dort eine Verbindung zustande, obwohl UFW den Port nicht erlaubt, hat ein Container ihn veröffentlicht.
 
 Meldet Docker später beim Start, dass ein Port schon vergeben ist, findest du mit demselben Befehl heraus, wer ihn belegt. Mehr dazu unter [Port belegt](/de/nachschlagen/port-belegt/).
 </Callout>

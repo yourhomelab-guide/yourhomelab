@@ -51,10 +51,11 @@ Secrets (Settings → Secrets and variables → Actions):
 | `DEPLOY_HOST` | Environment `production` | Address of the host/webspace|
 | `DEPLOY_USER` | Environment `production` | SFTP/FTP user |
 | `DEPLOY_PASSWORD` | Environment `production` | Password of that user |
-| `DEPLOY_PATH` | Environment `production` (optional) | Target folder, default `public_html` |
+| `DEPLOY_PATH` | Environment `production` (variable or secret, required) | Target folder: `/` when the account's root is the site folder, otherwise e.g. `public_html`. Everything else in it is deleted on upload |
 | `DEPLOY_PROTOCOL` | Environment `production` (optional) | `sftp` (default) or `ftp` (FTPS) |
 | `DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_PASSWORD` | Environment `preview` | Same host, but the account of the preview subdomain |
-| `DEPLOY_PATH`, `DEPLOY_PROTOCOL` | Environment `preview` (optional, as variables) | Like production |
+| `DEPLOY_PATH` | Environment `preview` (required) | Target folder, like production (`/` for an account that only sees the preview folder) |
+| `DEPLOY_PROTOCOL` | Environment `preview` (optional) | Like production |
 | `DEEPL_API_KEY` | Repository | DeepL API key for automatic translations |
 
 Also: restrict the `production` environment to the `main` branch and the `preview` environment to `dev`, allow GitHub Actions to create pull requests

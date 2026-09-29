@@ -59,7 +59,7 @@ Wähl im Startmenü **Install** (die Textversion reicht völlig). Der Installer 
 2. **Rechnername (Hostname)**: ein kurzer Name in Kleinbuchstaben, z. B. `homelab`. Unter diesem Namen taucht der Server später im Netzwerk auf.
 3. **Domain-Name**: leer lassen.
 4. **Root-Passwort**: **leer lassen**. Dann sperrt Debian das Root-Konto, und dein normaler Benutzer bekommt automatisch `sudo`-Rechte. So arbeiten auch alle Guides auf dieser Seite.
-5. **Benutzer und Passwort**: dein normales Konto. Wähl ein starkes Passwort.
+5. **Benutzer und Passwort**: dein normales Konto. Wähl ein starkes Passwort. Trag den Benutzernamen oben unter „Mein Setup“ ein, dann steht er in allen Befehlen der Guides.
 6. **Partitionierung**: „Geführt – vollständige Festplatte verwenden“ und „Alle Dateien auf eine Partition“ ist für den Anfang die einfachste Wahl. Achte darauf, die richtige Platte zu wählen, falls mehrere eingebaut sind.
 7. **Paketmanager**: einen Spiegelserver in deiner Nähe wählen, Proxy leer lassen.
 
@@ -73,7 +73,7 @@ Bei **Softwareauswahl** kommt der wichtigste Schritt. Setz die Häkchen so:
 Den Bootloader GRUB installierst du auf die Systemplatte. Danach startet der Rechner neu. Zieh den USB-Stick ab.
 
 <Callout title="Doch ein Root-Passwort vergeben?">
-Dann bekommt dein Benutzer kein `sudo`. Du kannst es nachholen: als root anmelden (`su -`), dann `apt install sudo` und `usermod -aG sudo deinname` ausführen und dich neu anmelden.
+Dann bekommt dein Benutzer kein `sudo`. Du kannst es nachholen: als root anmelden (`su -`), dann `apt install sudo` und `usermod -aG sudo __USER__` ausführen und dich neu anmelden.
 </Callout>
 </Step>
 
@@ -115,10 +115,10 @@ sudo reboot
 Ab jetzt brauchst du Monitor und Tastatur am Server nicht mehr. Öffne auf deinem normalen Rechner ein Terminal (unter Windows PowerShell oder Windows Terminal, dort ist SSH bereits dabei) und verbinde dich:
 
 ```bash
-ssh deinname@192.168.1.50
+ssh __USER__@192.168.1.50
 ```
 
-Ersetze Benutzername und Adresse durch deine Werte. Beim ersten Verbinden fragt SSH, ob du dem Server vertraust. Bestätige mit `yes`. Was dabei passiert, erklärt [SSH-Grundlagen](/de/nachschlagen/ssh-grundlagen/).
+Ersetze die Adresse durch die, die du gerade herausgefunden hast. Beim ersten Verbinden fragt SSH, ob du dem Server vertraust. Bestätige mit `yes`. Was dabei passiert, erklärt [SSH-Grundlagen](/de/nachschlagen/ssh-grundlagen/).
 
 Die Adresse, die du gerade benutzt, hat der Router per DHCP vergeben und kann sich ändern. Deshalb gibst du dem Server im nächsten Guide eine [feste IP und einen Hostnamen](/de/einrichten/feste-ip-hostname/). Danach ersetzt du das Passwort durch [SSH-Schlüssel](/de/einrichten/ssh-schluessel/).
 </Step>

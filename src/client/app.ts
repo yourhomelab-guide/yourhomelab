@@ -5,9 +5,11 @@ import { renderSummaries } from './summary';
 import { initTables } from './tables';
 import { initGlossary } from './glossary';
 import { loadAnalytics } from './analytics';
+import { initExternalLinks } from './external';
 
 initTables();
 initGlossary();
+initExternalLinks();
 loadAnalytics();
 
 function refresh() {

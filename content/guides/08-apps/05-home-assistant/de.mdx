@@ -93,7 +93,7 @@ docker compose up -d
 docker compose logs -f home-assistant
 ```
 
-Im Browser öffnest du `http://192.168.1.10:8123`, mit der IP deines Servers. Ein Assistent legt dein Konto an und fragt nach Standort, Zeitzone und Einheiten. Danach zeigt Home Assistant schon die Geräte an, die es im Netz gefunden hat.
+Im Browser öffnest du `http://__SERVER_IP__:8123`, mit der IP deines Servers. Ein Assistent legt dein Konto an und fragt nach Standort, Zeitzone und Einheiten. Danach zeigt Home Assistant schon die Geräte an, die es im Netz gefunden hat.
 </Step>
 
 <Step title="Reverse Proxy anbinden">
@@ -125,7 +125,7 @@ home.__DOMAIN__ {
 }
 ```
 
-**Nginx Proxy Manager:** Leg einen Proxy-Host mit der Domain `home.__DOMAIN__` an. Als Forward Host trägst du die IP deines Servers im Heimnetz ein, etwa `192.168.1.10`, als Port `8123`. Schalte **Websockets Support** ein, ohne ihn lädt die Oberfläche nicht.
+**Nginx Proxy Manager:** Leg einen Proxy-Host mit der Domain `home.__DOMAIN__` an. Als Forward Host trägst du die IP deines Servers im Heimnetz ein, hier `__SERVER_IP__`, als Port `8123`. Schalte **Websockets Support** ein, ohne ihn lädt die Oberfläche nicht.
 
 Starte den Proxy danach neu (`docker compose up -d` in seinem Ordner), damit er die Änderung übernimmt.
 
@@ -145,7 +145,7 @@ sudo ufw allow from 172.18.0.0/16 to any port 8123 proto tcp
 <Step title="Trusted Proxies in Home Assistant einstellen">
 Rufst du Home Assistant jetzt über die Domain auf, bekommst du einen Fehler **400: Bad Request**. Das ist Absicht: Home Assistant nimmt keine Anfragen von einem Proxy an, dem du nicht ausdrücklich vertraust. Sonst könnte jedes Gerät behaupten, im Namen eines anderen zu sprechen.
 
-Öffne Home Assistant deshalb noch einmal direkt über `http://192.168.1.10:8123` und gehe zu **Einstellungen → System → Netzwerk**. Im Bereich für den **HTTP-Server** schaltest du **Trust X-Forwarded-For** ein und trägst bei **Trusted proxies** den Adressbereich von eben ein, also etwa `172.18.0.0/16`. Beim Speichern startet Home Assistant neu. Danach musst du die neuen Einstellungen innerhalb von fünf Minuten bestätigen, sonst setzt es sie zurück.
+Öffne Home Assistant deshalb noch einmal direkt über `http://__SERVER_IP__:8123` und gehe zu **Einstellungen → System → Netzwerk**. Im Bereich für den **HTTP-Server** schaltest du **Trust X-Forwarded-For** ein und trägst bei **Trusted proxies** den Adressbereich von eben ein, also etwa `172.18.0.0/16`. Beim Speichern startet Home Assistant neu. Danach musst du die neuen Einstellungen innerhalb von fünf Minuten bestätigen, sonst setzt es sie zurück.
 
 Die Namen der Optionen können in der deutschen Oberfläche leicht anders lauten. Die [Doku zur HTTP-Integration](https://www.home-assistant.io/integrations/http/) beschreibt sie im Detail.
 

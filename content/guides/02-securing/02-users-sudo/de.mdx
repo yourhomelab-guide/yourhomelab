@@ -18,7 +18,7 @@ Das hängt davon ab, wie dein Server eingerichtet wurde:
 - **Debian mit root-Passwort:** Dein Benutzer existiert, darf aber kein sudo. Oft ist sudo gar nicht installiert. Wechsle mit `su -` zu root (das Minus ist wichtig, erst damit findet die Shell Befehle wie `usermod`) und mach mit Schritt 2 weiter.
 - **Gemieteter Server mit nur root:** Viele Hoster liefern Server nur mit root aus. Mach alle Schritte.
 
-In den Beispielen heißt der neue Benutzer `alex`. Nimm deinen eigenen Namen, kleingeschrieben und ohne Leerzeichen.
+In den Beispielen heißt der neue Benutzer `__USER__`, so wie in „Mein Setup“ eingetragen. Nimm deinen eigenen Namen, kleingeschrieben und ohne Leerzeichen, und trag ihn dort ein.
 
 <Steps>
 
@@ -26,7 +26,7 @@ In den Beispielen heißt der neue Benutzer `alex`. Nimm deinen eigenen Namen, kl
 Melde dich als root an und leg den Benutzer an:
 
 ```bash
-adduser alex
+adduser __USER__
 ```
 
 `adduser` fragt nach einem Passwort und ein paar optionalen Angaben wie dem vollen Namen, die du mit Enter überspringen kannst. Wähle ein starkes Passwort. Per SSH brauchst du es später nicht mehr, aber `sudo` fragt danach.
@@ -38,7 +38,7 @@ Auf Debian fehlt sudo, wenn du bei der Installation ein root-Passwort gesetzt ha
 ```bash
 apt update
 apt install sudo
-usermod -aG sudo alex
+usermod -aG sudo __USER__
 ```
 
 `-aG` heißt „zur Gruppe hinzufügen“. Ohne das `-a` würde der Benutzer aus allen anderen Gruppen entfernt.
@@ -48,11 +48,11 @@ usermod -aG sudo alex
 Hast du deinen Schlüssel bisher bei root hinterlegt, kopierst du ihn zum neuen Benutzer. Die Befehle laufen noch als root:
 
 ```bash
-mkdir -p /home/alex/.ssh
-cp /root/.ssh/authorized_keys /home/alex/.ssh/
-chown -R alex:alex /home/alex/.ssh
-chmod 700 /home/alex/.ssh
-chmod 600 /home/alex/.ssh/authorized_keys
+mkdir -p /home/__USER__/.ssh
+cp /root/.ssh/authorized_keys /home/__USER__/.ssh/
+chown -R __USER__:__USER__ /home/__USER__/.ssh
+chmod 700 /home/__USER__/.ssh
+chmod 600 /home/__USER__/.ssh/authorized_keys
 ```
 
 Ohne `chown` gehören die Dateien root, und der SSH-Server ignoriert sie. Hast du noch keinen Schlüssel auf dem Server, richte ihn wie im Guide [SSH-Schlüssel einrichten](/de/einrichten/ssh-schluessel/) direkt für `alex` ein.
@@ -62,7 +62,7 @@ Ohne `chown` gehören die Dateien root, und der SSH-Server ignoriert sie. Hast d
 Lass die root-Sitzung offen und öffne ein neues Terminal auf deinem Rechner:
 
 ```bash
-ssh alex@192.168.1.10
+ssh __USER__@__SERVER_IP__
 ```
 
 Dann prüfst du sudo. Die Gruppenzugehörigkeit gilt erst ab einer neuen Anmeldung, deshalb testest du in dieser frischen Sitzung:
@@ -71,7 +71,7 @@ Dann prüfst du sudo. Die Gruppenzugehörigkeit gilt erst ab einer neuen Anmeldu
 sudo whoami
 ```
 
-Nach Eingabe deines Passworts muss `root` erscheinen. Klappt beides, arbeitest du ab jetzt nur noch als `alex`. Denk daran, in `~/.ssh/config` auf deinem Rechner `User alex` einzutragen.
+Nach Eingabe deines Passworts muss `root` erscheinen. Klappt beides, arbeitest du ab jetzt nur noch als `__USER__`. Denk daran, in `~/.ssh/config` auf deinem Rechner `User alex` einzutragen.
 </Step>
 
 <Step title="root-Anmeldung sperren">

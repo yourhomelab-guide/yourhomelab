@@ -11,7 +11,11 @@ Ein Passwort kann erraten, abgefangen oder durch Ausprobieren geknackt werden. E
 
 Dieser Guide richtet den Schlüssel ein. Nach [Benutzer & sudo](/de/einrichten/benutzer-sudo/) schaltest du in [SSH härten](/de/einrichten/ssh-haerten/) die Passwort-Anmeldung dann ganz ab. Die Hintergründe stehen in [SSH-Grundlagen](/de/nachschlagen/ssh-grundlagen/).
 
-In den Beispielen heißt der Server `192.168.1.10` und dein Benutzer auf dem Server `alex`. Ersetze beides durch deine Werte.
+Die Befehle nutzen die Server-IP `__SERVER_IP__` und deinen Benutzer `__USER__` aus „Mein Setup“. Stimmen die Werte nicht, trag dort deine eigenen ein.
+
+<Callout title="Mehrere Geräte?">
+Die Guides zu Sicherheit und Docker wiederholst du auf jedem Gerät. Trag vor jedem Durchgang die IP des Geräts in „Mein Setup“ ein, dann passen alle Befehle. Welches Gerät welche Aufgabe übernimmt, erklärt [Mehrere Geräte: Rollen verteilen](/de/nachschlagen/mehrere-geraete/).
+</Callout>
 
 <Steps>
 
@@ -37,7 +41,7 @@ Gibt es dort `id_ed25519` und `id_ed25519.pub`, überspringst du den nächsten S
 Windows 10 und 11, macOS und praktisch jede Linux-Distribution bringen OpenSSH schon mit. Der Befehl ist überall gleich. Auf Windows tippst du ihn in die PowerShell, sonst ins Terminal.
 
 ```bash
-ssh-keygen -t ed25519 -C "laptop-alex"
+ssh-keygen -t ed25519 -C "laptop-__USER__"
 ```
 
 - `-t ed25519` wählt den Schlüsseltyp. ed25519 ist aktueller Standard: sicher, schnell und kurz.
@@ -57,13 +61,13 @@ Auf dem Server landet der öffentliche Schlüssel in der Datei `~/.ssh/authorize
 Auf **macOS und Linux** erledigt das `ssh-copy-id`. Es fragt ein letztes Mal nach deinem Passwort auf dem Server:
 
 ```bash
-ssh-copy-id -i ~/.ssh/id_ed25519.pub alex@192.168.1.10
+ssh-copy-id -i ~/.ssh/id_ed25519.pub __USER__@__SERVER_IP__
 ```
 
 Auf **Windows** gibt es `ssh-copy-id` nicht. Dieser Einzeiler in der PowerShell macht dasselbe: Er schickt den Schlüssel per SSH zum Server, legt dort den Ordner an und hängt den Schlüssel an `authorized_keys` an.
 
 ```powershell
-type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh alex@192.168.1.10 "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh __USER__@__SERVER_IP__ "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 ```
 
 Die Rechte `700` und `600` sind wichtig. Kann jemand anderes als du die Dateien schreiben, ignoriert der SSH-Server sie aus Sicherheitsgründen.
@@ -77,10 +81,10 @@ Bei manchen gemieteten Servern gibt es anfangs nur den Benutzer root. Dann kopie
 Melde dich neu an:
 
 ```bash
-ssh alex@192.168.1.10
+ssh __USER__@__SERVER_IP__
 ```
 
-Hast du eine Passphrase gesetzt, fragt SSH jetzt nach **der Passphrase deines Schlüssels**, nicht nach dem Passwort des Servers. Fragt SSH nach `alex@192.168.1.10's password`, hat es nicht geklappt. Häufige Ursachen: der Schlüssel liegt beim falschen Benutzer, oder die Rechte auf dem Server stimmen nicht. Mit `ssh -v alex@192.168.1.10` siehst du, welche Schlüssel SSH anbietet und was der Server antwortet.
+Hast du eine Passphrase gesetzt, fragt SSH jetzt nach **der Passphrase deines Schlüssels**, nicht nach dem Passwort des Servers. Fragt SSH nach `__USER__@__SERVER_IP__'s password`, hat es nicht geklappt. Häufige Ursachen: der Schlüssel liegt beim falschen Benutzer, oder die Rechte auf dem Server stimmen nicht. Mit `ssh -v __USER__@__SERVER_IP__` siehst du, welche Schlüssel SSH anbietet und was der Server antwortet.
 </Step>
 
 <Step title="Kurzname in ~/.ssh/config anlegen">
@@ -88,8 +92,8 @@ Statt jedes Mal Benutzer und IP zu tippen, legst du auf deinem Rechner einen Ein
 
 ```text
 Host homelab
-    HostName 192.168.1.10
-    User alex
+    HostName __SERVER_IP__
+    User __USER__
     IdentityFile ~/.ssh/id_ed25519
     AddKeysToAgent yes
 ```

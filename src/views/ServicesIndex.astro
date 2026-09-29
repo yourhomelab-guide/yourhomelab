@@ -57,14 +57,15 @@ const hostOf = (u: string) => new URL(u).hostname.replace(/^www\./, '');
               <div class="svc-name">
                 <strong>{s.name}</strong>
                 <span>{t(lang, `category.${s.category}`)}</span>
+                <Level lang={lang} level={s.level} class="svc-lvl" />
               </div>
               {s.tag && <span class="tag">{t(lang, `tag.${s.tag}`)}</span>}
             </div>
             <p>{s.description}</p>
             <div class="svc-links">
-              <a href={s.repoUrl}>{s.repoLabel} ↗</a>
-              <a href={s.links.website}>{hostOf(s.links.website)} ↗</a>
-              <Level lang={lang} level={s.level} class="svc-lvl" />
+              <a href={s.repoUrl} target="_blank" rel="noopener noreferrer">{s.repoLabel} ↗</a>
+              <a href={s.links.website} target="_blank" rel="noopener noreferrer" title={hostOf(s.links.website)}>{t(lang, 'service.website')} ↗</a>
+              <a href={s.links.docs} target="_blank" rel="noopener noreferrer">{t(lang, 'service.docs')} ↗</a>
             </div>
             <a class="deploy" href={url.service(lang, s.id)} aria-label={`${s.name}: ${t(lang, 'services.deploy')}`}>
               {t(lang, 'services.deploy')}
@@ -130,10 +131,10 @@ const hostOf = (u: string) => new URL(u).hostname.replace(/^www\./, '');
   .svc-name strong { font-size: 17px; font-weight: 700; }
   .svc-name span { font-size: 13px; color: var(--muted); }
   .svc-head .tag { align-self: flex-start; }
+  .svc-name :global(.svc-lvl) { align-self: flex-start; margin-top: 4px; font-size: 11.5px; padding: 2px 8px; }
   .svc p { font-size: 14.5px; line-height: 1.55; color: var(--text-3); flex: 1; text-wrap: pretty; }
-  .svc-links { display: flex; gap: 14px; font-size: 13px; flex-wrap: wrap; align-items: center; }
-  .svc-links a { color: var(--text-4); }
-  .svc-links :global(.svc-lvl) { margin-left: auto; font-size: 12px; padding: 3px 8px; }
+  .svc-links { display: flex; gap: 8px 16px; font-size: 13px; flex-wrap: wrap; align-items: center; margin-bottom: -4px; }
+  .svc-links a { color: var(--text-4); white-space: nowrap; }
   .deploy { background: var(--accent-50); color: var(--accent-600); border-radius: 12px; padding: 11px; font-size: 14.5px; font-weight: 600; text-align: center; }
   .deploy:hover { background: var(--accent); color: #fff; text-decoration: none; }
   .missing { border: 2px dashed var(--dash); border-radius: 20px; padding: 22px; display: flex; flex-direction: column; justify-content: center; gap: 8px; color: var(--text); min-height: 220px; }

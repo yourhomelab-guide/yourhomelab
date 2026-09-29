@@ -84,7 +84,7 @@ Ohne Angabe einer Adresse lauscht der Port auf allen Netzwerkschnittstellen des 
 Die Faustregel für dieses Homelab:
 
 - **Mit Reverse Proxy:** Nur der Proxy veröffentlicht Ports, nämlich 80 und 443. Alle anderen Dienste hängen im Netzwerk `__NETWORK__` und haben keinen `ports`-Eintrag.
-- **Ohne Reverse Proxy:** Der Dienst veröffentlicht seinen Web-Port, und du erreichst ihn über `http://192.168.1.10:8080` im Heimnetz.
+- **Ohne Reverse Proxy:** Der Dienst veröffentlicht seinen Web-Port, und du erreichst ihn über `http://__SERVER_IP__:8080` im Heimnetz.
 - **Nur für dich auf dem Server:** Binde an `127.0.0.1`. Dann kommst du nur per SSH-Tunnel heran.
 - **Andere Protokolle** wie SSH für Forgejo (`"2222:22"`) veröffentlichst du, weil der HTTP-Proxy sie nicht weiterleitet.
 

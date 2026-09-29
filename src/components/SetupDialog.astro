@@ -70,6 +70,11 @@ const d = defaultSetup;
 
       <fieldset>
         <legend>{t(lang, 'setupDialog.sec4')}</legend>
+        <div class="grid2">
+          <label>{t(lang, 'setupDialog.serverIp')}<input name="serverIp" value={d.serverIp} autocomplete="off" spellcheck="false" /></label>
+          <label>{t(lang, 'setupDialog.user')}<input name="user" value={d.user} autocomplete="off" spellcheck="false" /></label>
+        </div>
+        <span class="hint">{t(lang, 'setupDialog.serverHint')}</span>
         <div class="grid3">
           <label>{t(lang, 'setupDialog.tz')}<input name="tz" value={d.tz} autocomplete="off" spellcheck="false" /></label>
           <label>PUID<input name="puid" value={d.puid} inputmode="numeric" autocomplete="off" /></label>
