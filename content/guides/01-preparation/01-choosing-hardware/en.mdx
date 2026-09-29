@@ -5,7 +5,7 @@ level: 1
 minutes: 15
 ---
 
-You don't need a server from a data center to get started. Most of the services on this site run smoothly on a small, energy-efficient computer. Low power consumption, enough RAM, and an SSD are more important than high performance. This guide will help you make a decision in just a few steps. You can find more background information in the [hardware overview](/en/wiki/hardware-overview/) and under [“Costs & Power Consumption](/en/wiki/costs-power/).”
+You don’t need a server from a data center to get started. Most of the services on this site run smoothly on a small, energy-efficient computer. Low power consumption, enough RAM, and an SSD are more important than high performance. This guide will help you make a decision in just a few steps. You can find more background information in the [hardware overview](/en/wiki/hardware-overview/) and under [“Costs & Power Consumption](/en/wiki/costs-power/).” If you’re not sure where to start, the [Getting Started Wizard](/en/werkzeuge/einstiegs-assistent/) will help you out with a few questions.
 
 <OneWay />
 
@@ -22,7 +22,7 @@ Also, think about how much data you want to store. A few passwords take up very 
 </Step>
 
 <Step title="Choose between on-premises or in the cloud">
-Before you buy hardware, it’s worth asking yourself whether you really need to have the server on your premises. A rented virtual private server (VPS) has a fixed public IP address and doesn’t take up space in your living room, but it comes with a monthly fee and usually offers limited storage space. Large amounts of data, such as photos, are better stored at home.
+Before you buy hardware, it’s worth asking whether you should even have the server on your premises. A rented virtual private server (VPS) has a fixed public IP address and doesn’t require any physical equipment in your living room, but it comes with a monthly fee and usually offers limited storage space. Large amounts of data, such as photos, are better stored at home.
 
 If you're unsure, the article "[Cloud, Hybrid, or On-Premises?](/en/wiki/cloud-hybrid-local/)" offers a brief decision-making guide.
 </Step>
@@ -35,10 +35,10 @@ For a home lab, these are the main devices to consider:
 | **Mini PC** | Energy-efficient, quiet, compact, x86-compatible, with SSD and RAM that are often upgradeable | Limited space for additional hard drives |
 | **Old Laptop** | It's free, the battery bridges short power outages, and it has a built-in screen and keyboard | Often just one drive; the battery degrades with continuous use; Wi-Fi instead of Ethernet on some models |
 | **NAS** (Synology, QNAP, etc.) | Plenty of space for hard drives, RAID, and a finished surface | Custom operating system, limited Docker support, often a weak CPU and little RAM |
-| **DIY / Old Desktop PC** | Plenty of power and space for drives | Usually uses significantly more electricity, is larger, and is louder |
+| **DIY / Old Desktop PC** | Plenty of power and space for hard drives | Usually uses significantly more electricity, is larger, and is louder |
 | **VPS** | Fixed IP, no need for your own device, quick setup | Ongoing costs, limited storage, data stored with the provider |
 
-For most beginners, a **used or new mini-PC** is the best compromise. Devices with the latest energy-efficient Intel processors (such as the N series) or comparable AMD chips are sufficient for running multiple applications at the same time. An old laptop is ideal for trying it out for free at first.
+For most beginners, a **used or new mini-PC** is the best compromise. Devices with the latest energy-efficient Intel processors (such as the N series) or comparable AMD chips are sufficient for running multiple applications at the same time. An old laptop is ideal for trying things out for free at first.
 
 <Callout title="And what about the Raspberry Pi?">
 A Raspberry Pi works, but it has an ARM CPU. Not every Docker image is available for ARM, and SD cards tend to fail when used continuously. If you're using a Pi, go with a newer model that has an SSD instead of an SD card. The guides on this page are based on an x86 computer.
@@ -46,22 +46,22 @@ A Raspberry Pi works, but it has an ARM CPU. Not every Docker image is available
 </Step>
 
 <Step title="Set RAM">
-With Docker, RAM is usually the first bottleneck—long before the CPU. Every container needs its own share, especially databases.
+With Docker, RAM is usually the first bottleneck—long before the CPU. Each container needs its own share of RAM, and databases in particular.
 
 - **8 GB**: a good starting point for a handful of light-to-moderate apps.
 - **16 GB**: plenty of space, even with Nextcloud or Immich, and a little to spare.
-- **32 GB and more**: useful if you want to run additional virtual machines, for example with [Proxmox VE](/en/wiki/proxmox-ve/).
+- **32 GB and more**: useful if you also want to run virtual machines, such as with [Proxmox VE](/en/wiki/proxmox-ve/). [The "Operating Models at a Glance](/en/wiki/operating-models/)" section shows which combination of system and virtualization is right for you.
 
-When buying, check to see if the RAM can be upgraded later. On some mini PCs, it's soldered in place.
+When buying, check to see if the RAM can be upgraded later. In some mini PCs, it's soldered in place.
 </Step>
 
 <Step title="Plan Storage">
-The system and your containers should be stored on an **SSD**. It's fast, quiet, and energy-efficient. An SSD with 500 GB to 1 TB is enough for the system, containers, and plenty of application data.
+The system and your containers should be stored on an **SSD**. It's fast, quiet, and energy-efficient. An SSD with 500 GB to 1 TB is sufficient for the system, containers, and plenty of application data.
 
-For large amounts of data, such as photos, videos, or backups, you can also plan to add a larger hard drive (HDD) or a second SSD. Check how many drives your device can accommodate: Many mini PCs have an M.2 slot and sometimes an additional 2.5-inch bay.
+For large amounts of data, such as photos, videos, or backups, you can also consider adding a larger hard drive (HDD) or a second SSD. Check how many drives your device can accommodate: Many mini PCs have an M.2 slot and sometimes an additional 2.5-inch bay.
 
 <Callout type="warning" title="Two hard drives are no substitute for a backup">
-A RAID array or a second hard drive protects against hard drive failure, but not against accidental deletion, ransomware, or water damage. You'll set up backups later in the guide "[Backups with borgmatic](/en/setup/backups-borgmatic/)."
+A RAID array or a second hard drive protects against hard drive failure, but not against accidental deletion, ransomware, or water damage. You'll set up backups later in the "[Backups with borgmatic"](/en/setup/backups-borgmatic/) guide.
 </Callout>
 </Step>
 
@@ -79,7 +79,7 @@ Approximate values at idle:
 | NAS with two hard drives | 15–30 W |
 | Older desktop PC | 30–60 W and more |
 
-The actual values depend heavily on the model, the drives, and the BIOS settings. The most accurate way to measure them is with a power meter that plugs into an outlet. For more information, see "[Costs & Power Consumption](/en/wiki/costs-power/)."
+The actual values depend heavily on the model, the drives, and the BIOS settings. The most accurate way to measure is with a plug-in power meter. For more information, see "[Costs & Power Consumption](/en/wiki/costs-power/)." The [power calculator](/en/werkzeuge/stromrechner/) will calculate the cost of your device and your electricity rate.
 </Step>
 
 <Step title="Check Before Buying">
@@ -89,7 +89,7 @@ Go through this short list before you buy or use a device:
 - **x86 CPU** (Intel or AMD) so that all images will run?
 - **At least 8 GB of RAM**—is it better if it's upgradeable?
 - **SSD** as the system drive?
-- Can the BIOS **automatically turn back on** after a power outage? Depending on the manufacturer, this option may be called “Restore on AC Power Loss” or “Power On after Power Failure,” for example.
+- Can the BIOS **automatically power on again** after a power outage? Depending on the manufacturer, this option is called something like “Restore on AC Power Loss” or “Power On after Power Failure.”
 - Is the device **quiet** enough for the location where it will be placed?
 
 If everything looks good, we'll move on to [installing the operating system](/en/setup/installing-the-os/).

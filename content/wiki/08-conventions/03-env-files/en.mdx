@@ -1,6 +1,6 @@
 ---
 title: .env files
-description: Passwords and settings don't belong directly in `compose.yaml`. Here, you'll learn how `.env`, `env_file`, and `environment` work together and where the common pitfalls lie.
+description: Passwords and settings don't belong in the `compose.yaml` file. Here, you'll learn how `.env`, `env_file`, and `environment` work together and where the common pitfalls lie.
 level: 1
 related:
   - docker-compose
@@ -9,10 +9,10 @@ related:
 practice: env-secrets
 ---
 
-## Why a .env file?
+## Why use a .env file?
 
-One describes`compose.yaml` *how* a service operates. Passwords, tokens, and values that vary from server to server
-Do not include files that do not fit this criteria. Otherwise, you won't be able to share the file, add it to Git, or simply upload it to
+One describes`compose.yaml` *how* a service runs. Passwords, tokens, and values that vary from server to server
+Do not include files that do not meet these criteria. Otherwise, you won't be able to share the file, add it to Git, or simply upload it to
 copy to another computer.
 
 The solution: It contains`compose.yaml` only references such as `${DB_PASSWORD}`. The actual values are stored in a file
@@ -22,14 +22,14 @@ named  `.env`in the same folder. Docker Compose reads them automatically at star
 
 The terms sound similar, but they mean different things.
 
-| Way              | Where                        | What happens                                                   |
+| Way              | Where                        | What Happens                                                   |
 | ---------------- | ------------------------- | -------------------------------------------------------------- |
 | `.env`           | File in the Stack folder     | Returns values for  `${…}`in the  `compose.yaml`(interpolation) |
 | `environment:`   | In the `compose.yaml`     | Sets environment variables **in the container**                      |
 | `env_file:`      | In the `compose.yaml`     | Loads all lines of a file into the container as environment variables |
 
 The most important point: It **doesn't** automatically end`.env` up in the container. Its sole purpose is to `compose.yaml`
-to be filled in. A value is only added to the container via  (`environment:`or `env_file:`).
+to fill in. A value is only added to the container via  (`environment:`or `env_file:`).
 
 The templates on this page therefore follow this pattern:
 
@@ -49,7 +49,7 @@ DB_PASSWORD=ein-langes-zufaelliges-passwort
 
 This way, you can see exactly`compose.yaml` which variables a container receives. This is`env_file:` useful when a
 The service requires a great many variables. However, everything is then passed on from the file, including values that the container doesn't even
-doesn't need. If you substitute the same variable into  and`environment:` over `env_file:`,  wins`environment:`.
+doesn't need. If you set the same variable to  `environment:`and over `env_file:`,  wins`environment:`.
 
 ## Interpolation and Default Values
 
@@ -61,7 +61,7 @@ The container starts. There are a few useful options:
 | `${VAR}`           | Value of `VAR`, empty if not set                   |
 | `${VAR:-standard}` | `standard`, if  is not`VAR` set or is empty         |
 | `${VAR-standard}`  | `standard` only if it is not set at all`VAR`           |
-| `${VAR:?Fehler}`   | Termination with an error message if  is missing`VAR` or empty  |
+| `${VAR:?Fehler}`   | Terminates with an error message if  is missing`VAR` or empty  |
 
 `${VAR:?…}` It's worth doing for required fields like passwords. Then the stack won't start with an empty password, but rather
 tells you what's missing. All the details are in the
@@ -83,7 +83,7 @@ Most problems with .`.env`files are caused by quotation marks and special charac
   Can be treated as a comment if there is a space before it. If in doubt, enclose the value in quotation marks.
 - **Spaces around the period`=`.** Write it without`KEY=wert` spaces. This is unambiguous in all tools.
 
-The easiest way to get around all of this is to use passwords made up of letters and numbers, for example, such as
+The easiest way to get around all of this is to use passwords made up of letters and numbers, for example,
 `openssl rand -hex 32`. They're still long enough, though.
 
 ## Testing with `docker compose config`
@@ -98,9 +98,12 @@ docker compose config
 The command displays the final configuration, including all the values used. If a variable is missing, you'll see a
 Warning. Caution: The output contains your passwords in plain text. Do not copy them into a forum without checking them first.
 
+If you've copied some code from`compose.yaml` a project's documentation and don't understand every line, the
+[Compose Guide](/en/werkzeuge/compose-erklaerer/). It explains the file line by line and highlights common issues.
+
 ## .env.example for Git
 
-It contains`.env` secrets and should never be placed in a public repository. Nevertheless, if someone were to access your
+It contains`.env` secrets and should never be placed in a public repository. However, if someone were to access your
 `compose.yaml` who use it know which variables are needed. That's what the following are for`.env.example`: the same keys,
 but with placeholders instead of actual values.
 
@@ -111,9 +114,10 @@ DB_PASSWORD=change-me
 ```
 
 This one goes`.env.example` into Git, and that one goes into`.env` the `.gitignore`. The service templates on this page are exactly the same
-Set up. For more information on how to protect Secrets, see "[Manage Secrets](/en/wiki/managing-secrets/)."
+built. For each service, the [Stack Builder](/en/werkzeuge/stack-builder/) immediately provides a ready-made  `.env`with
+randomly generated secrets. For more information on how to protect your secrets, see "[Manage Secrets](/en/wiki/managing-secrets/)."
 
 <Callout type="warning" title="Set Permissions">
-  This  should`.env` only be readable by you. Use  `chmod 600 .env`to make sure of that. And remember: Anyone who
+  This  should`.env` only be readable by you. You can`chmod 600 .env` make sure of that by using . And remember: Anyone who
   If someone finds a file in your backup, they'll have your passwords. That's why you should always encrypt your backups.
 </Callout>

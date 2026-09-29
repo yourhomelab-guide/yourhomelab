@@ -1,6 +1,6 @@
 ---
 title: Backup Strategies
-description: "At some point, something is bound to break: a hard drive, an update, or a wrong command. With a simple strategy, your data will still be safe, and you'll know exactly what you're backing up and where."
+description: "At some point, something will break: a hard drive, an update, or a wrong command. With a simple strategy, your data will still be safe, and you'll know exactly what you're backing up and where."
 level: 1
 related:
   - directory-structure
@@ -12,13 +12,13 @@ practice: backups-borgmatic
 
 ## Why Backups Are Essential
 
-As long as you're just trying out services, losing data is annoying. But as soon as you have photos, passwords, or documents
+As long as you're just trying out services, data loss is annoying. But as soon as you have photos, passwords, or documents
 If it's on your server, it's a problem. The most common causes are nothing out of the ordinary: a hard drive fails,
 An update wrecks a database; you accidentally delete the wrong folder. Less common, but worse:
 Ransomware (malware that encrypts your data), theft, fire, or water damage.
 
-A backup is a **copy of your data stored in a different location** that you can restore in case of an emergency. It is important to
-Part Two: A backup you've never restored is just a pipe dream.
+A backup is a **copy of your data stored in a different location** that you can restore in case of an emergency. It's important to
+Part Two: A backup you've never restored is just a hope.
 
 ## The 3-2-1 Rule
 
@@ -26,7 +26,7 @@ The best-known rule of thumb for backups is:
 
 - **3** copies of your data (the original plus two backups),
 - on 2 different media or devices,
-- including **1** copy stored off-site.
+- including **1** copy stored offsite.
 
 For a home lab, for example, this means: The data is stored on the server, and a backup is made to a USB drive or
 A NAS on the home network, with a second encrypted backup stored in cloud storage or on a friend's computer.
@@ -34,16 +34,16 @@ The local copy can be quickly restored, while the external copy protects against
 
 ## RAID is not a backup
 
-RAID distributes data across multiple hard drives in such a way that if one drive fails, nothing is lost. That's handy,
+RAID distributes data across multiple hard drives in such a way that the failure of a single drive doesn't cause any problems. That's handy,
 because the server just keeps running. But RAID mirrors **every** change immediately: If you delete a file or
-If ransomware encrypts your photos, it happens on all drives at the same time. RAID therefore ensures availability,
+If ransomware encrypts your photos, it happens on all drives at the same time. RAID therefore protects data availability,
 not your data. The same applies to sync services like Nextcloud or Syncthing: They, too, reliably spread errors.
 
 ## Versioning
 
 A good backup system keeps several snapshots from the past. If you don't realize until two weeks later that
-If a file is corrupted, yesterday's backup won't help you. Common retention rules include, for example: the last
-Keep 7 daily, 4 weekly, and 6 monthly entries; delete older ones.
+If a file is corrupted, yesterday's backup won't help you. Common retention rules include, for example: the most recent
+Keep 7 daily, 4 weekly, and 6 monthly records; delete older ones.
 
 Modern backup tools store only the changes (deduplication). As a result, many snapshots take hardly any
 First place.
@@ -52,10 +52,10 @@ First place.
 
 Your backups contain everything: databases, configuration, and the `.env`files containing passwords and API keys.
 If a backup is stored off-site, it should therefore **always** be **encrypted**—before it leaves your server.
-In that case, the hosting provider can't do anything with it either.
+In that case, the storage provider won't be able to do anything with it either.
 
 <Callout type="warning" title="The password doesn't just belong on the server">
-  Without the password or key for your backup repository, the backup is worthless. Be sure to store it in a
+  Without the password or key for your backup repository, the backup is worthless. Be sure to store it in a separate
   somewhere else, such as in your password manager or printed out. If the server goes down, that's when you'll need it most.
 </Callout>
 
@@ -68,13 +68,13 @@ For more information, see "[Directory Structure](/en/wiki/directory-structure/).
 
 You don't need to back up:
 
-- **Docker images**: These are downloaded anew `docker compose pull`at any time.
+- **Docker images**: It downloads them again `docker compose pull`at any time.
 - **The operating system**: A fresh install is faster than restoring from a system backup. But make a note of this:
   what changes you made to the system (see [the documentation](/en/wiki/documentation/)).
 
 ### Databases require extra attention
 
-A database constantly writes to its files. If you copy these files while the database is running, the backup may
+A database is constantly writing to its files. If you copy these files while the system is running, the backup may
 contain an incomplete state that the database will later be unable to read. Two simple solutions:
 
 1. **Create a dump:** Before backing up, export the database to a file and include it in the backup.
@@ -87,7 +87,7 @@ contain an incomplete state that the database will later be unable to read. Two 
 
    The name of the database container (`database`) and the user depend on the specific stack.
 
-2. **Briefly pause the stack:** `docker compose stop`, backup, `docker compose start`. This is the easiest way; it means
+2. **Briefly pause the stack:** `docker compose stop`, Backup, `docker compose start`. This is the easiest way; it means
    But a few minutes of downtime—usually at night—isn't a problem.
 
 SQLite databases (a single file, such as those used by Vaultwarden or Uptime Kuma) are also affected.
@@ -100,11 +100,11 @@ There are three tried-and-true tools for Linux servers. All three encrypt, dedup
 <Cards>
   <Card title="BorgBackup + borgmatic">
     Borg is very mature and efficient. Borgmatic supplements a single configuration file for sources,
-    Storage, Checks, and Hooks. The goal is a local disk or a computer with SSH and Borg; there are
+    Storage, checks, and hooks. The target is a local disk or a computer running SSH and Borg; there are
     There are also specialized providers for this. The guides on this site use Borgmatic.
   </Card>
   <Card title="restic">
-    A single program; encryption is always enabled. Saves data locally, via SFTP, or directly to S3-compatible
+    A single program with encryption always enabled. Saves data locally, via SFTP, or directly to S3-compatible
     Cloud storage that doesn't require anything to be installed on the target device.
   </Card>
   <Card title="Kopia">
@@ -112,11 +112,15 @@ There are three tried-and-true tools for Linux servers. All three encrypt, dedup
   </Card>
 </Cards>
 
-Any of them is a good choice. More important than the tool itself is that the backup runs **automatically**, for example via a cron job or
+Any of them are good choices. More important than the tool itself is that the backup runs **automatically**, such as via a cron job or
 systemd timer, and that you check regularly to make sure it's working.
+
+The tool generates a suitable configuration for`config.yaml` borgmatic, including database dumps and retention policies
+[borgmatic configuration](/en/werkzeuge/borgmatic-konfiguration/) from your setup.
 
 ## Test Restore
 
 Regularly test for emergencies: Restore a service from the backup to another computer or to another
 Restore the folder and check to see if it opens and if your data is there. Only then will you know that your backup works.
-The "[Test Restore](/en/setup/testing-restores/)" guide shows you how to do this.
+The ["Test Restore](/en/setup/testing-restores/)" guide shows you how to do this. What to do if the entire server
+It's best to outline in advance what to do in case of an [emergency](/en/setup/emergency-plan/).

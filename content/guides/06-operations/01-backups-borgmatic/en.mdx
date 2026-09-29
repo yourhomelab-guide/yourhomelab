@@ -11,12 +11,12 @@ requires:
 
 <OneWay />
 
-Hard drives fail, updates go wrong, and sometimes you just delete the wrong folder. That’s why a backup is the most important service in your home lab. It just needs to be able to do three things: run regularly, be stored off-site, and be restorable.
+Hard drives fail, updates go wrong, and sometimes you just delete the wrong folder. That’s why a backup is the most important service in your home lab. It just needs to do three things: run regularly, be stored off-site, and be recoverable.
 
 To do this, you'll use two programs that go together:
 
-- **[BorgBackup](https://www.borgbackup.org)** (Borg for short) does the actual work. It **deduplicates** (stores identical data blocks only once), **compresses**, and **encrypts** everything before it leaves the server. In Borg, the destination is called **a repository**; each backup point within it is an **archive**.
-- **[borgmatic](https://torsion.org/borgmatic/)** wraps Borg in a configuration file and an automation system. A single call creates the backup, cleans up old archives according to your rules, and checks the repository. Using **hooks**, it runs custom commands before and after the process—such as database dumps—and reports the results to your monitoring system.
+- **[BorgBackup](https://www.borgbackup.org)** (Borg for short) does the actual work. It **deduplicates** (stores duplicate data blocks only once), **compresses**, and **encrypts** everything before it leaves the server. The destination in Borg is called **a repository**; each backup point within it is an **archive**.
+- **[borgmatic](https://torsion.org/borgmatic/)** wraps Borg in a configuration file and an automation system. A single call creates the backup, cleans up old archives according to your rules, and checks the repository. Using **hooks**, it executes its own commands before and after the process—such as database dumps—and reports the results to your monitoring system.
 
 Since everything in this guide `__ROOT__`is located under , essentially a single path is all you need. For more information on the 3-2-1 rule and retention periods, see [Backup Strategies](/en/wiki/backup-strategies/).
 
@@ -61,7 +61,7 @@ openssl rand -base64 32 | sudo tee /etc/borgmatic/passphrase > /dev/null
 sudo chmod 600 /etc/borgmatic/passphrase
 ```
 
-<Callout type="warning" title="Keep a backup of your passphrase">
+<Callout type="warning" title="Keep a backup copy of your passphrase">
 Without this passphrase, all backups are worthless—even to you. There is no way to reset it. Copy it to your password manager right away. It must not be stored only on the server you want to back up.
 
 ```bash
@@ -70,12 +70,12 @@ sudo cat /etc/borgmatic/passphrase
 </Callout>
 </Step>
 
-<Step title="Prepare the Backup Destination">
+<Step title="Prepare the backup destination">
 Borg can back up to a local folder or to another computer via SSH. Select a destination:
 
-- **USB drive**: quick and easy. Plug it in securely, for example, under  `/mnt/backup`(via an entry in `/etc/fstab`). However, it doesn't protect against fire or theft if it's left next to the server. Tip: Use two drives alternately, keeping one of them off-site.
+- **USB drive**: quick and easy. Connect it securely, for example, under  `/mnt/backup`(via an entry in `/etc/fstab`). However, it doesn't protect against fire or theft if it's left next to the server. Tip: Use two drives alternately, keeping one of them off-site.
 - **Another computer via SSH**, such as a NAS or a friend's computer. **Borg** must **also** be **installed** on that computer (`sudo apt install borgbackup`), because Borg communicates with itself on both ends. Create a separate user account on the target computer, for example `backup`.
-- **Storage providers with Borg support**: Some hosting providers offer storage that works directly with Borg. The [borgmatic documentation](https://torsion.org/borgmatic/how-to/set-up-backups/) lists BorgBase, Hetzner, and rsync.net, for example. You’ll receive an SSH address from them and enter it just as you would for your own computer. The provider only sees encrypted data.
+- **Storage providers with Borg support**: Some hosting providers offer storage that works directly with Borg. The [borgmatic documentation](https://torsion.org/borgmatic/how-to/set-up-backups/) mentions BorgBase, Hetzner, and rsync.net, for example. You’ll receive an SSH address from them and enter it just as you would for your own computer. The provider only sees encrypted data.
 
 For SSH destinations, the following applies: Since the backup runs as root, you must be able to log `root`in there using an SSH key. Generate a key and view the public key:
 
@@ -89,10 +89,16 @@ Enter`backup` the output on the destination computer in the`~/.ssh/authorized_ke
 ```bash
 sudo ssh backup@192.168.1.20 borg --version
 ```
+
+Allow plenty of space on the destination drive—at least twice as much as your current data. If it still runs out of space, check if [the hard drive is full](/en/wiki/disk-full/).
 </Step>
 
 <Step title="Write the configuration">
 borgmatic reads its settings from `/etc/borgmatic/config.yaml`. Create`sudo nano /etc/borgmatic/config.yaml` the file using . In , choose **one**`repositories` of the two options and delete the other, or leave it commented out:
+
+<Callout title="Have the file generated">
+The [borgmatic-configuration](/en/werkzeuge/borgmatic-konfiguration/) tool generates this file based on the information you provide, and can include database dumps and Uptime Kuma reports if desired. The explanations below still apply, however: Read them so you know what’s in your file.
+</Callout>
 
 ```yaml
 # What to back up
@@ -131,14 +137,14 @@ checks:
 What the sections mean:
 
 - **source_directories**: what is backed up. This is your entire Homelab folder`compose.yaml`, including all `.env`files and data.
-- **repositories**: where the data is saved. This refers`ssh://backup@192.168.1.20/./borg` to the folder `borg`in the user's home directory`backup`. This is`label` a short name that Borgmatic displays in its output.
+- **repositories**: where data is saved.  `ssh://backup@192.168.1.20/./borg`Refers to the folder  `borg`in the user's home directory`backup`. This  `label`is a short name that Borgmatic displays in its output.
 - **encryption_passphrase**: borgmatic reads the passphrase from the file. Therefore, it does not appear in plain text in the configuration.
 - **compression**:  `zstd`Compresses well and quickly. Without this line, Borg uses the faster but less effective `lz4`.
-- **keep_…**: the retention rules. You can go back one day at a time for a week, one week at a time for a month, and one month at a time for half a year. Borgmatic automatically deletes older archives.
+- **keep_…**: the retention rules. You can go back one day at a time for one week, one week at a time for one month, and one month at a time for half a year. Borgmatic automatically deletes older archives.
 - **checks**:  `repository`and  check`archives` the structure of the repository and the archives—every two weeks in this case.  actually `data`reads and decrypts all the data. This takes a long time for large backups, so it’s done only every three months. borgmatic keeps track of when a check was last run and skips it until then.
 
 <Callout title="Is the data stored somewhere else?">
-If you selected “central” mode in “My Setup,” your data is located under `__DATA_ROOT__`. If this folder isn’t already located under `__ROOT__`, add`source_directories` it as the second line under . The same applies to external paths that you’ve integrated into Stacks, such as a media collection on a second disk.
+If you selected “central” mode in “My Setup,” your data is located under `__DATA_ROOT__`. If this folder isn’t already located under `__ROOT__`, add`source_directories` it as the second line under . The same applies to external paths that you’ve integrated into Stacks, such as a media collection on a second drive.
 </Callout>
 
 Pay attention to the indentation: YAML only allows spaces, not tabs. Check the file:
@@ -147,7 +153,7 @@ Pay attention to the indentation: YAML only allows spaces, not tabs. Check the f
 sudo borgmatic config validate
 ```
 
-The message says`All configuration files are valid`: Everything is set up correctly. If needed, you can generate a complete sample file with all options and comments using `sudo borgmatic config generate --destination /root/borgmatic-beispiel.yaml`. The [configuration reference](https://torsion.org/borgmatic/reference/configuration/) is also available for reference.
+The message says`All configuration files are valid`: Everything is set up correctly. If needed, you can generate a complete sample file with all options and comments using `sudo borgmatic config generate --destination /root/borgmatic-beispiel.yaml`. There is also a [configuration reference](https://torsion.org/borgmatic/reference/configuration/) available for your reference.
 </Step>
 
 <Step title="Create a repository and save the key">
@@ -157,9 +163,9 @@ Now create the repository. You only need to do this once:
 sudo borgmatic repo-create --encryption repokey
 ```
 
-`repokey` This is the mode that the [Borg](https://borgbackup.readthedocs.io/en/stable/usage/init.html) [documentation](https://borgbackup.readthedocs.io/en/stable/usage/init.html) recommends as a rule of thumb. If your server has an older CPU, this mode may be faster`repokey-blake2`. Once selected, this mode cannot be changed later.
+`repokey` This is the mode that the [Borg](https://borgbackup.readthedocs.io/en/stable/usage/init.html) [guide](https://borgbackup.readthedocs.io/en/stable/usage/init.html) recommends as a rule of thumb. If your server has an older CPU, this mode may be faster`repokey-blake2`. You won't be able to change this mode later.
 
-With , the actual key is`repokey` stored **in the repository**, protected by your passphrase. So in everyday use, you only need the passphrase. However, if that specific key file in the repository is damaged, everything will be lost unless you have a copy of the key. Therefore, export it once:
+With , the actual key is`repokey` stored **in the repository**, protected by your passphrase. So in everyday use, you only need the passphrase. However, if that specific key file in the repository is damaged, everything is lost unless you have a copy of the key. Therefore, export it once:
 
 ```bash
 sudo borgmatic key export
@@ -175,7 +181,7 @@ To decrypt data, you always need **both** the key (in the repository or as an ex
 <Step title="Back up databases beforehand">
 Most services store their data as files that Borg can easily copy. With databases like PostgreSQL or MariaDB, this is risky: they are constantly writing data, and a copy taken in the middle of a write operation may be unusable. That’s why you should first create a **dump**—a consistent export of the database as a file. Borg will then back up this dump as well.
 
-A **command** **hook** in borgmatic handles this: commands that run before the backup. Since your databases run in containers, you call the dump program from `docker compose exec`within the container. This shuts`-T` down the terminal so that the output is written cleanly to the file. The dump is saved to the service’s data folder, i.e., the secured area.
+A **command** **hook** in borgmatic handles this: commands that run before the backup. Since your databases run in containers, you call the dump program from `docker compose exec`within the container. This turns`-T` off the terminal so that the output is saved cleanly to the file. The dump is saved to the service’s data folder, i.e., the backed-up area.
 
 Add this block to the configuration. The example backs up the PostgreSQL database for [Authentik](/en/services/authentik/) and the MariaDB database for [Nextcloud](/en/services/nextcloud/):
 
@@ -192,13 +198,13 @@ commands:
           - docker compose -f __ROOT__/nextcloud/compose.yaml exec -T db sh -c 'mariadb-dump --single-transaction -u root -p"$MARIADB_ROOT_PASSWORD" nextcloud' > __DATA(nextcloud)__/db-dump/nextcloud.sql
 ```
 
-`before: action` "with" means`when: [create]`: The commands run immediately before each backup. If any of them fails, Borgmatic aborts and reports an error. So it does not silently back up a corrupted state. In MariaDB, the single quotes ensure that the variable containing the password is not evaluated until it is inside the container.
+`before: action` "with" means`when: [create]`: The commands run immediately before each backup. If any of them fails, borgmatic stops and reports an error. It therefore does not silently back up a corrupted state. In MariaDB, the single quotes ensure that the variable containing the password is not evaluated until inside the container.
 
-The dumps are intentionally left uncompressed. Borg performs its own compression and can only recognize unchanged parts of a dump if it hasn't been compressed beforehand. Container and database names are listed in the documentation for`compose.yaml` the respective service. If you don't have any databases, omit that section. Many projects also describe their own backup method in their documentation. That method takes precedence.
+The dumps are intentionally left uncompressed. Borg performs its own compression and can only recognize unchanged parts of a dump if it has not been compressed beforehand. Container and database names are listed in the documentation for`compose.yaml` the respective service. If you don't have any databases, omit that section. Many projects also describe their own backup method in their documentation. That method takes precedence.
 
-By the way, borgmatic also has its own [database hooks](https://torsion.org/borgmatic/how-to/backup-your-databases/), such as  `postgresql_databases`and `mariadb_databases`. These stream the dump directly to the archive. For databases in containers, however, you’ll need additional settings: either the appropriate client programs on the server or custom dump commands using `docker exec`, along with the database passwords in the configuration. Using  `docker compose exec`to write to a file is easier to understand when you’re just starting out.
+By the way, borgmatic also has its own [database hooks](https://torsion.org/borgmatic/how-to/backup-your-databases/), such as  `postgresql_databases`and `mariadb_databases`. These stream the dump directly to the archive. For databases in containers, however, you’ll need additional settings: either the appropriate client programs on the server or custom dump commands using `docker exec`, along with the database passwords in the configuration. Using  `docker compose exec`to dump to a file is easier to understand when you’re just starting out.
 
-**The simple alternative:** Pause the stack briefly, back it up, and then restart it. This approach is always consistent, but the service will be unavailable during the backup. At night, this usually doesn't bother anyone. A `after`-Hook runs even if the backup fails. So the stack will restart in any case:
+**The simple alternative:** Pause the stack briefly, back it up, and then restart it. This approach is always consistent, though the service will be unavailable during the backup. At night, this usually doesn't bother anyone. A `after`-Hook runs even if the backup fails. So the stack will restart in any case:
 
 ```yaml
 commands:
@@ -225,7 +231,7 @@ sudo borgmatic repo-list
 
 The first backup takes a while, depending on the amount of data. Subsequent backups are much faster because Borg only transfers changed blocks.  `repo-list`shows you the new archive with the computer name, date, and time.
 
-The `.env`files containing your secrets are included in the backup. This is by design, because without them, no service can restart. Borg encrypts them before they leave the server.
+The `.env`files containing your secrets are included in the backup. This is by design, because without them, no service can be restarted. Borg encrypts them before they leave the server.
 
 In your daily routine, you run borgmatic without any additional actions. It then takes care of everything in one go: creating a backup (`create`), deleting old archives according to your rules (`prune`), freeing up space (`compact`), and verifying (`check`if necessary). Try doing it manually:
 
@@ -235,7 +241,7 @@ sudo borgmatic --verbosity 1
 </Step>
 
 <Step title="Start automatically every night">
-A **systemd** **timer** starts borgmatic at a set time. It makes up for a missed run if the server was down at the scheduled time and logs everything to the system log. The borgmatic project provides [sample files](https://torsion.org/borgmatic/how-to/set-up-backups/#systemd) for this. The version shown here is intentionally streamlined: it omits additional security settings that can interfere with Docker commands in hooks, and uses the path from the pipx installation. Create two files.
+A **systemd** **timer** starts borgmatic at a set time. It makes up for a missed run if the server was down at the scheduled time and logs everything to the system log. The borgmatic project provides [sample files](https://torsion.org/borgmatic/how-to/set-up-backups/#systemd) for this. The version here is intentionally streamlined: it omits additional security settings that can interfere with Docker commands in hooks, and uses the path from the pipx installation. Create two files.
 
 `/etc/systemd/system/borgmatic.service`:
 
@@ -287,15 +293,15 @@ sudo systemctl start borgmatic.service
 sudo journalctl -u borgmatic.service -e
 ```
 
-Prefer cron? Then all it takes is one line in the root crontab (`sudo crontab -e`):
+Prefer cron? Then all you need is one line in root's crontab (`sudo crontab -e`):
 
 ```bash
 0 3 * * * /usr/local/bin/borgmatic --verbosity -1 --syslog-verbosity 1
 ```
 </Step>
 
-<Step title="Get notified about errors">
-You won't notice that a backup has been silently failing for weeks until you need it. That's why you should set up notifications. borgmatic can report the results directly to a **push monitor** in [Uptime Kuma](/en/setup/uptime-kuma/). If no report is received or if borgmatic reports an error, Uptime Kuma triggers an alert.
+<Step title="Get notified of errors">
+You won't notice that a backup has been silently failing for weeks until you actually need it. That's why you should set up notifications. borgmatic can report the results directly to a **push monitor** in [Uptime Kuma](/en/setup/uptime-kuma/). If no report is received or if borgmatic reports an error, Uptime Kuma triggers an alert.
 
 Create a "Push" monitor in Uptime Kuma. Set the heartbeat interval to  `90000`seconds (25 hours, with a little buffer for one day). Copy the Push URL and add it to the configuration. Enter the URL **without** the part starting with the question mark; borgmatic will append that itself:
 
@@ -307,11 +313,11 @@ uptime_kuma:
         - fail
 ```
 
-Using  and`finish` , borgmatic reports`fail` whether a run was successful after each run. Check the file with  `sudo borgmatic config validate`and start a test run with `sudo systemctl start borgmatic.service`. A green bar should appear in the monitor shortly thereafter. You can find other methods, such as ntfy or health checks, in the [borgmatic monitoring documentation](https://torsion.org/borgmatic/how-to/monitor-your-backups/).
+Using  and`finish` , borgmatic reports`fail` whether it was successful after each run. Check the file with  `sudo borgmatic config validate`and start a test run with `sudo systemctl start borgmatic.service`. A green bar should appear in the monitor shortly thereafter. The [Notifications](/en/setup/notifications/) guide explains how the messages are sent to your cell phone via your own ntfy server. You can find other methods, such as ntfy or health checks, in the [borgmatic monitoring documentation](https://torsion.org/borgmatic/how-to/monitor-your-backups/).
 </Step>
 
 </Steps>
 
 ## What happens next?
 
-A backup isn't really a backup unless you can restore it. In the next guide, "[Testing the Restore](/en/setup/testing-restores/)," you'll restore individual files and entire services to check whether everything is really there.
+A backup isn't really a backup unless you can restore it. In the next guide, "[Testing the Restore](/en/setup/testing-restores/)," you'll restore individual files and entire services to check whether everything is actually there.

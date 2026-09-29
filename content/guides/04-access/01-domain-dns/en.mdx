@@ -5,17 +5,17 @@ level: 1
 minutes: 15
 requires:
   - Access to the Router
-  - Server with a static IP address on the home network
+  - Server with a static IP address on a home network
 ---
 
-With your own domain, you can access your services using names such as  `fotos.__DOMAIN__`instead of an IP address and port. You also need it for valid TLS certificates from Let's Encrypt. The article "[DNS & Domains](/en/wiki/dns-domains/)" explains how DNS works behind the scenes.
+With your own domain, you can access your services using names like  `fotos.__DOMAIN__`instead of an IP address and port. You also need it for valid TLS certificates from Let's Encrypt. The article "[DNS & Domains](/en/wiki/dns-domains/)" explains how DNS works behind the scenes.
 
 <OneWay />
 
 <Steps>
 
 <Step title="Check the connection">
-Before you spend any money: Check whether your server can even be accessed from the outside. Many connections (especially cable and fiber-optic) no longer have their own public IPv4 address but use DS-Lite or CGNAT instead. In that case, you share an IPv4 address with other customers, and incoming connections won’t reach you.
+Before you spend any money: Check whether your server can be accessed from the outside at all. Many connections (especially cable and fiber-optic) no longer have their own public IPv4 address, but instead use DS-Lite or CGNAT. In that case, you share an IPv4 address with other customers, and incoming connections won’t reach you.
 
 Check your public address on the server:
 
@@ -24,7 +24,7 @@ curl -4 ifconfig.me
 curl -6 ifconfig.me
 ```
 
-Compare the IPv4 address with the WAN or Internet address that your router displays in its interface. If both are the same, you have your own public IPv4 address. If the router displays an address in the range  `100.64.0.0/10`(i.e.,  to`100.64.x.x` `100.127.x.x`) or no IPv4 address at all, you are behind CGNAT or DS-Lite.
+Compare the IPv4 address with the WAN or Internet address that your router displays in its interface. If both are the same, you have your own public IPv4 address. If the router displays an address from  `100.64.0.0/10`(i.e.,  to`100.64.x.x` `100.127.x.x`) or no IPv4 address at all, you are behind CGNAT or DS-Lite.
 
 In that case, the A records below won't be much help. Read up on [CGNAT & DS-Lite](/en/wiki/cgnat-ds-lite/) and use a [Cloudflare Tunnel](/en/setup/cloudflare-tunnel/) or a VPN like Tailscale to access it. You'll still need a domain, though.
 </Step>
@@ -38,7 +38,7 @@ What you should keep in mind:
 - **Manage your DNS using an API or DynDNS** if your IP address changes (see below).
 - **A short, neutral name.** It appears in every address. Your real name is not required.
 
-If you want to use a [Cloudflare Tunnel](/en/setup/cloudflare-tunnel/) later on, Cloudflare will need to manage your DNS. This is also possible with a domain from another registrar: You simply enter Cloudflare's nameservers there.
+If you want to use a [Cloudflare Tunnel](/en/setup/cloudflare-tunnel/) later on, Cloudflare will need to manage your DNS. This also works with a domain from another registrar: You simply enter Cloudflare's nameservers there.
 </Step>
 
 <Step title="Create A and AAAA Records">
@@ -49,7 +49,7 @@ Open your provider's DNS management interface and create the following entries:
 | Type | Name | Value | TTL |
 | --- | --- | --- | --- |
 | A | `@` (the domain itself) | Your public IPv4 | 300 |
-| A | `*` | Your public IPv4 address | 300 |
+| A | `*` | Your public IPv4 | 300 |
 
 This entry is`*` a **wildcard record**: Any subdomain, such as  or`fotos.__DOMAIN__` , will point`passwort.__DOMAIN__` to your server. This means you don't have to create a separate entry for each new service. The reverse proxy will later determine which service responds based on the name.
 
@@ -67,7 +67,7 @@ Use the address that isn't marked`temporary` as . In the router, you'll also nee
 <Step title="Set up DynDNS if your IP address changes">
 For most home internet connections, the public IP address changes occasionally—for example, after restarting the router. When that happens, your A record points to nowhere. **DynDNS** (dynamic DNS) solves this problem: A small program notifies your DNS provider of every new IP address.
 
-The easiest way is through the router. The FRITZ!Box, for example, has a form under “Internet → Sharing → DynDNS” where you can enter an update URL, username, and password. The values you need to enter there are listed in your DNS provider’s help section. Many registrars provide their own DynDNS login credentials for this purpose.
+The easiest way is to use your router. The FRITZ!Box, for example, has a form under “Internet → Sharing → DynDNS” where you can enter an update URL, username, and password. You can find the values to enter there in your DNS provider’s help section. Many registrars provide their own DynDNS login credentials for this purpose.
 
 If your router can't do that, or if your provider only supports an API, you can run a DynDNS client on the server. A popular choice is [ddclient](https://ddclient.net/), which is also available as a container. It supports many providers, including Cloudflare.
 
@@ -77,7 +77,7 @@ If you have a static IP address—for example, on a rented server—skip this st
 </Step>
 
 <Step title="Check entries">
-You can use  `dig`to query DNS records directly. On Debian and Ubuntu, it's included in the package`bind9-dnsutils`:
+You can use  `dig`to query DNS entries directly. On Debian and Ubuntu, it's included in the package`bind9-dnsutils`:
 
 ```bash
 sudo apt install bind9-dnsutils
@@ -92,21 +92,21 @@ All queries should return your IP addresses.  `test`stands for any subdomain; it
 dig +short test.__DOMAIN__ A @1.1.1.1
 ```
 
-On Windows and macOS, the following also works`nslookup`:
+On Windows and macOS, this also works`nslookup`:
 
 ```bash
 nslookup test.__DOMAIN__
 ```
 
-New entries are often visible within a few minutes. If you've just changed the name servers, it may take a few hours.
+New entries often become visible within a few minutes. If you've just changed the name servers, it may take a few hours. As long as the DNS settings are incorrect, the reverse proxy won't receive a certificate later; see "[Certificate Missing](/en/wiki/certificate/)."
 </Step>
 
 <Step title="Open ports 80 and 443">
 To ensure that requests from the Internet reach your server, the router forwards ports 80 (HTTP) and 443 (HTTPS) to your server's static IP address. The reverse proxy needs these two ports, and Let's Encrypt uses them to verify that you own the domain. For details on how this works and what it means for security, see [Port Forwarding](/en/wiki/port-forwarding/).
 
-Just open these two ports; do not open any ports for individual services. The reverse proxy handles everything else.
+Only open these two ports; do not open ports for individual services. The reverse proxy handles everything else. If a certificate still cannot be established later, search for "[certificate missing](/en/wiki/certificate/)" for help.
 
-Next up is the [reverse proxy using Traefik](/en/setup/reverse-proxy-traefik/) or the simpler [Nginx Proxy Manager](/en/setup/reverse-proxy-npm/).
+Next up is setting up a [reverse proxy using Traefik](/en/setup/reverse-proxy-traefik/) or the simpler [Nginx Proxy Manager](/en/setup/reverse-proxy-npm/).
 </Step>
 
 </Steps>

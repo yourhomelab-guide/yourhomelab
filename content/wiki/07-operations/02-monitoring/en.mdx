@@ -1,6 +1,6 @@
 ---
 title: Monitoring
-description: Monitoring lets you know how your server is doing and whether your services are available before anyone else tells you. To get started, all you need are two small tools.
+description: Monitoring lets you know how your server is doing and whether your services are available before anyone else tells you. To get started, two simple tools are all you need.
 level: 1
 related:
   - logs
@@ -13,7 +13,7 @@ practice: monitoring-beszel
 
 Without monitoring, you won't notice problems until something stops working: The photos won't load, the password manager
 Doesn't sync. This is often a sign of things to come. The hard drive is slowly filling up, and a container keeps starting
-It's happening again—the RAM is constantly at its limit. Monitoring makes such trends visible and sounds the alarm,
+It's happening again—the RAM is constantly at its limit. Monitoring reveals such trends and sounds the alarm,
 if something breaks down.
 
 ## Three Perspectives
@@ -24,11 +24,11 @@ Monitoring in the home lab answers three different questions. Each one requires 
 | --- | --- | --- |
 | **How is the server doing?** | CPU, RAM, disk space, temperature, network, usage per container | Beszel |
 | **Is the service available?** | Is the website responding? Is the status code correct? Is the certificate about to expire? | Uptime Kuma |
-| **What happened?** | Service Error Messages and Events | Logs, see [Logs](/en/wiki/logs/) |
+| **What happened?** | Service error messages and events | Logs, see [Logs](/en/wiki/logs/) |
 
 Resource monitoring shows you trends and causes. Availability monitoring shows you what the user sees.
 A server may appear to be in perfect working order, while the reverse proxy is configured incorrectly and no one can access your services
-achieved. On the other hand, a website can still respond even though the disk will be full in two days. That's why both are worthwhile.
+achieved. Conversely, a website can still respond even though the disk will be full in two days. That's why both are worthwhile.
 
 ## Resources: Beszel
 
@@ -36,39 +36,40 @@ achieved. On the other hand, a website can still respond even though the disk wi
 which runs on every monitored server and sends metrics to the hub. You can view trends for CPU, RAM, hard drives,
 Network-wide and for each Docker container individually. This way, you can see, for example, which container is suddenly using a lot of memory.
 
-Beszel is intentionally lightweight. Large-scale solutions like Prometheus with Grafana offer more features, but for getting started, they are
+Beszel is intentionally streamlined. Large-scale solutions like Prometheus with Grafana offer more features, but for getting started, they are
 much more time-consuming. You can always switch later.
 
 ## Availability: Uptime Kuma
 
 [Uptime Kuma](/en/services/uptime-kuma/) checks at regular intervals to see if your services are responding. Among other things, it can
 Access HTTP(S) pages, test ports, ping hosts, and query Docker containers. It also issues a warning if a
-TLS certificate is about to expire. If you'd like, you can create a status page from this and share it with your family or roommates.
+TLS certificate is about to expire. If you'd like, you can create a status page from it to share with your family or roommates.
 
 <Callout title="Check from the outside">
-  Uptime Kuma, running on the same server, can't see what's happening externally. If the server or your Internet connection goes down,
-  Monitoring will also fail, and it will no longer be able to alert you. Therefore, it's best to run Uptime Kuma on a
-  another device, such as a small VPS, or set up an external monitoring service that checks your public
+  Uptime Kuma, running on the same server, cannot see what's happening externally. If the server or your Internet connection goes down,
+  Monitoring will also fail, and it won't be able to warn you anymore. That's why it's best to run Uptime Kuma on a
+  another device, such as a small VPS, or add an external monitoring service that checks your public
   calls addresses from outside.
 </Callout>
 
 ## Notifications
 
 Monitoring isn't very helpful if you have to check the dashboard every day. So set up notifications. Beszel
-and Uptime Kuma can be reached via email, Telegram, Discord, Matrix, or
-[ntfy](https://ntfy.sh) (push notifications on your cell phone) to let you know.
+and Uptime Kuma can be contacted via email, Telegram, Discord, Matrix, or
+[ntfy](https://ntfy.sh) (push notifications on your cell phone). The guide shows you how to set this up
+[Notifications](/en/setup/notifications/).
 
-Here are a few tips to help ensure that the warnings remain useful:
+Here are a few tips to help ensure the warnings remain useful:
 
-- **A few important alerts:** Service unavailable, hard drive about 85 percent full, certificate expiring.
-  If you keep getting warnings, you'll eventually start ignoring them.
-- **Set thresholds with patience.** Brief spikes in CPU usage are normal. Only trigger an alert if a value remains high for several minutes.
-- **Test the notification.** Both tools have a "Test" button. Use it before you rely on them.
+- **A few important alerts.** Service unavailable, hard drive about 85 percent full, certificate expiring.
+  If you keep getting warnings, you'll eventually ignore them.
+- **Set thresholds with patience.** Brief CPU spikes are normal. Only issue a warning if a value remains high for several minutes.
+- **Test the notification.** Both tools have a "Test" button. Use it before you rely on it.
 
-## Monitor backups as well
+## Monitor Backups, Too
 
 A backup job that has been silently failing for weeks is a classic problem. Uptime Kuma has the solution for this
-Monitor Type: **Push**. Your backup script calls a URL at the end. If this call does not occur, you will receive a warning.
+Monitor Type: **Push**. Your backup script calls a URL at the end. If this call fails, you'll receive a warning.
 This way, you can also spot errors that don't generate an error message.
 
 ## How do I get started?

@@ -9,9 +9,9 @@ requires:
   - Port Forwarding on the Router
 ---
 
-A VPN (Virtual Private Network) creates an encrypted tunnel from your device to your home. You’re then connected to your home network as if you were sitting on the couch, and you can access all services without exposing them to the internet. Only a single UDP port is open to the outside world, and WireGuard only responds to devices with the correct key. For more details, see the [VPN](/en/wiki/vpn/) section.
+A VPN (Virtual Private Network) creates an encrypted tunnel from your device to your home. You’re then connected to your home network as if you were sitting on the sofa, and you can access all services without exposing them to the internet. Only a single UDP port is open to the outside world, and WireGuard responds there only to devices with the correct key. More information can be found under [VPN](/en/wiki/vpn/).
 
-[WireGuard](https://www.wireguard.com/) is a modern, fast VPN protocol that's built right into the Linux kernel. This guide uses [wg-easy](https://wg-easy.github.io/wg-easy/): It includes WireGuard in a container along with a web interface where you can create devices and distribute them via QR code.
+[WireGuard](https://www.wireguard.com/) is a modern, fast VPN protocol that's built right into the Linux kernel. This guide uses [wg-easy](https://wg-easy.github.io/wg-easy/): It includes WireGuard in a container along with a web interface where you can add devices and distribute them via QR codes.
 
 <Callout title="Alternatives">
 - **Router VPN:** Many routers support WireGuard natively; the FRITZ!Box, for example, has supported it since FRITZ!OS 7.50. In that case, you don't need anything on the server. Check there first.
@@ -34,8 +34,8 @@ cd __ROOT__/wg-easy
 ```
 </Step>
 
-<Step title="Write a compose.yaml file">
-`compose.yaml`Create the file. It follows the [official template](https://github.com/wg-easy/wg-easy/blob/master/docker-compose.yml) but saves the data in your data folder. wg-easy does not use the proxy network; instead, it has its own.
+<Step title="Write compose.yaml">
+`compose.yaml`Create the file. It follows the [official template](https://github.com/wg-easy/wg-easy/blob/master/docker-compose.yml) but saves the data in your data folder. wg-easy does not use the proxy network; instead, it gets its own.
 
 ```yaml
 services:
@@ -79,7 +79,7 @@ networks:
         - subnet: fdcc:ad94:bacf:61a3::/64
 ```
 
-Replace  `192.168.1.10`with your server's LAN IP address. This way, the web interface is only accessible on your home network (and later via the VPN). Anyone who can access it can create new accounts, so it shouldn't be exposed to the Internet.
+Replace  `192.168.1.10`with your server's LAN IP address. This way, the web interface is only accessible on your home network (and later via VPN). Anyone who can access it can create new accounts, so it shouldn't be exposed to the Internet.
 
 `NET_ADMIN` and the container needs`sysctls` these to create the WireGuard interface and forward packets to the home network.
 </Step>
@@ -92,17 +92,17 @@ docker compose up -d
 docker compose logs -f wg-easy
 ```
 
-Use  to close`Strg+C` the log window. Then open  `http://192.168.1.10:51821`in your browser. The first time you open it, a wizard will guide you through the setup:
+Click  to close`Strg+C` the log display. If the container doesn't start properly, refer to [Troubleshooting: First Steps](/en/wiki/first-steps/). Then open  `http://192.168.1.10:51821`in your browser. The first time you open it, a wizard will guide you through the setup:
 
 1. **Create an admin account.** Use a long password from your password manager.
-2. **Host:** the address that allows your devices to locate the server from the outside, for example`vpn.__DOMAIN__`. Thanks to the wildcard record, the name already points to your public IP address.
+2. **Host:** the address that allows your devices to locate the server from the outside, for example `vpn.__DOMAIN__`. Because of the wildcard record, the name already points to your public IP address.
 3. **Port:** `51820`.
 
 You can leave the remaining settings at their default values.
 </Step>
 
 <Step title="Open UDP Port 51820">
-In your router, forward port **51820/UDP** to your server's static IP address. Make sure to use UDP—WireGuard does not use TCP. Do not open any ports for the web interface. For instructions on how to open a port, see ["Port Forwarding](/en/wiki/port-forwarding/).["](/en/wiki/port-forwarding/)
+In your router, forward port **51820/UDP** to your server's static IP address. Make sure to use UDP; WireGuard does not use TCP. Do not open any ports for the web interface. For information on how to forward ports, see [Port Forwarding](/en/wiki/port-forwarding/).
 
 If you use UFW, allow the port there as well:
 
@@ -112,16 +112,16 @@ sudo ufw allow 51820/udp comment 'WireGuard'
 
 Strictly speaking, the ports that Docker exposes bypass the UFW rules. However, the rule does no harm and documents which ports should be open.
 
-If you use Cloudflare as your DNS provider, the entry for  must not`vpn.__DOMAIN__` go through Cloudflare (“DNS only,” gray cloud). The Cloudflare proxy only forwards web traffic, not WireGuard.
+If you use Cloudflare as your DNS provider, the entry for  must not`vpn.__DOMAIN__` go through Cloudflare ("DNS only," gray cloud). The Cloudflare proxy only forwards web traffic, not WireGuard.
 </Step>
 
 <Step title="Add Device">
-Each device gets its own account with its own password. This way, you can lock a lost phone individually.
+Each device gets its own account with its own key. This way, you can lock a lost cell phone individually.
 
 1. Create a new client in wg-easy and give it a descriptive name, such as `handy-anna`.
-2. Install the official WireGuard app on your device. It's available for Android, iOS, Windows, macOS, and Linux; see [wireguard.com/install](https://www.wireguard.com/install/).
-3. **Cell phone:** Add a tunnel in the app using a QR code, then scan the QR code from wg-easy.
-4. **Laptop:** Download the configuration file in wg-easy and import it into the app.
+2. Install the official WireGuard app on your device. It is available for Android, iOS, Windows, macOS, and Linux; see [wireguard.com/install](https://www.wireguard.com/install/).
+3. **Cell phone:** Add a tunnel to the app using a QR code, then scan the QR code from wg-easy.
+4. **Laptop:** Download the configuration file from wg-easy and import it into the app.
 
 The configuration contains the device's private key. Do not send it via instant messaging or email.
 </Step>
@@ -139,7 +139,7 @@ If it doesn't work, check the following one by one:
 <Step title="Optional: Only allow home network traffic through the tunnel">
 By default, wg-easy routes **all** of the device's internet traffic through your home network (full tunnel). This protects you on public Wi-Fi networks, but it does put a strain on your upload speed.
 
-If you only want to route traffic to your home network through the tunnel (split tunnel), enter only your home network and the VPN network in the "**Allowed IPs**" section of the wg-easy settings, for example`192.168.1.0/24, 10.8.0.0/24`. The VPN network is listed in the settings under "Address Ranges." After that, you’ll need to reload the configuration on your devices. Details can be found in the [wg-easy documentation](https://wg-easy.github.io/wg-easy/).
+If you only want to route traffic to your home network through the tunnel (split tunnel), enter only your home network and the VPN network in the "**Allowed IPs**" section of the wg-easy settings, for example`192.168.1.0/24, 10.8.0.0/24`. The VPN network is listed in the settings under "Address Ranges." After that, you’ll need to reload the configuration on your devices. For details, see the [wg-easy documentation](https://wg-easy.github.io/wg-easy/).
 </Step>
 
 </Steps>

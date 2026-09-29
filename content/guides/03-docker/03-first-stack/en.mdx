@@ -1,6 +1,6 @@
 ---
 title: First Stack with Compose
-description: Eventually, your first container—defined in a `compose.yaml` file—will be running, and you'll be able to access it in your browser using your server's IP address. Along the way, you'll learn the five Compose commands you'll use over and over again in your day-to-day work.
+description: Eventually, your first container—defined in a `compose.yaml` file—will be running, and you'll be able to access it in your browser using your server's IP address. Along the way, you'll learn the five Compose commands you'll use time and time again in your daily work.
 level: 1
 minutes: 20
 requires:
@@ -10,14 +10,14 @@ requires:
 
 A **stack** is a folder with a file`compose.yaml`. It specifies which containers should run, with which image, which ports, and which data. Instead of typing long `docker run`commands, you describe the desired state in a file, and [Docker Compose](/en/wiki/docker-compose/) `docker compose`sets it up. Read more about this in the article "[Docker Compose](/en/wiki/docker-compose/)."
 
-For your first service, use **`whoami`** from the Traefik developers. It’s a tiny web server that simply displays which requests it receives. It doesn’t store anything and requires no setup. This allows you to focus entirely on Compose. You’ll also use the same container later to test the reverse proxy.
+For your first service, use **`whoami`** from the Traefik developers. It’s a tiny web server that simply displays the requests it receives. It doesn’t store anything and requires no configuration. This allows you to focus entirely on Compose. You’ll also use the same container later to test the reverse proxy.
 
-There is no reverse proxy set up here yet. You can therefore access the container directly using the server's IP address and a port.
+There is no reverse proxy set up here yet. Therefore, you can access the container directly using the server's IP address and a port.
 
 <Steps>
 
 <Step title="Create a Stack Folder">
-Each service gets its own folder under `__ROOT__`. Run all `docker compose`-commands in this folder.
+Each service gets its own folder under `__ROOT__`. Run all `docker compose`commands in this folder.
 
 ```bash
 mkdir -p __ROOT__/whoami
@@ -47,16 +47,18 @@ services:
 What these lines mean:
 
 - `services:` lists the containers in the stack. There is only one here: `whoami`.
-- `image:` specifies which image Docker retrieves from Docker Hub. This is fine`latest` for a test container. For production services, it's better to use a specific version; see [Images & Tags](/en/wiki/images-tags/).
+- `image:` specifies which image Docker retrieves from Docker Hub. This is fine`latest` for a test container. For production services, you should use a specific version; see [Images & Tags](/en/wiki/images-tags/).
 - `container_name:` Gives the container a fixed, easy-to-read name.
-- `restart: unless-stopped` The container restarts automatically after a server crash or reboot, unless you've stopped it yourself.
-- `ports:` Connects the server's`8080` port  to the container's`80` port . The server is always listed on the left, and the container on the right.
+- `restart: unless-stopped` Automatically restarts the container after a server crash or reboot, unless you've stopped it yourself. If a container keeps restarting, "[Container in a Restart Loop](/en/wiki/restart-loop/)" can help.
+- `ports:` Connects the server's`8080` port to the container's`80` port. The server is always listed on the left, and the container on the right. If the port on the server is already in use, the container will not start; see "[Port in Use](/en/wiki/port-in-use/)."
 
 Pay attention to the indentation. YAML uses spaces, not tabs, and the indentation determines the structure.
+
+If you come across one later in`compose.yaml` a project's documentation, the [Compose Explainer](/en/werkzeuge/compose-erklaerer/) will explain each line to you and highlight common issues.
 </Step>
 
 <Step title="Start Stack">
-`up` Creates and starts everything listed`compose.yaml` in the  file.  `-d`(detached) runs the container in the background, so you can get your terminal back.
+`up` Creates and starts everything listed`compose.yaml` in the  file.  `-d`(detached) runs the container in the background, so you get your terminal back.
 
 ```bash
 docker compose up -d
@@ -87,7 +89,7 @@ curl http://localhost:8080
 ```
 
 <Callout type="warning" title="Bypassing UFW for Docker Ports">
-Ports starting with  are`ports:` accessible even if you haven't opened them in [UFW](/en/setup/firewall-ufw/). Docker applies its own firewall rules, which take precedence over those of UFW. At home behind a router, this is usually only visible on your home network. On a rented server, however, the port is immediately accessible **from the Internet**. In that case, it’s better to use `"127.0.0.1:8080:80"`. Then the port only listens locally, and you can test it with `curl`. Later on, the reverse proxy takes over anyway, and the services no longer need their own ports at all.
+Ports starting with  `ports:`are accessible even if you haven't opened them in [UFW](/en/setup/firewall-ufw/). Docker applies its own firewall rules, which take precedence over UFW's. At home behind a router, this is usually only visible on your home network. On a rented server, however, the port is immediately accessible **from the Internet**. In that case, it’s better to use `"127.0.0.1:8080:80"`. Then the port listens only locally, and you can test it with `curl`. Later on, the reverse proxy will take over anyway, and the services won’t need their own ports anymore.
 </Callout>
 </Step>
 
@@ -99,7 +101,9 @@ docker compose logs
 docker compose logs -f
 ```
 
-Click (`-f`follow) to see new lines appear in real time. Reload the page in your browser and watch what happens. Click to stop`Strg+C`. The container will continue to run.
+Click (`-f`follow) to see new lines appear in real time. Refresh the page in your browser and watch what happens. Click to stop`Strg+C`. The container will continue to run.
+
+["Troubleshooting: First Steps"](/en/wiki/first-steps/) explains how to identify the cause of an error based on an error message in the log.
 </Step>
 
 <Step title="Refresh">
@@ -110,7 +114,7 @@ docker compose pull
 docker compose up -d
 ```
 
-You'll use`up -d` the same one once you've made`compose.yaml` the changes. Compose detects the change and recreates the container.
+You use`up -d` the same one after you've changed`compose.yaml` it. Compose detects the change and recreates the container.
 </Step>
 
 <Step title="Stop and Remove">
@@ -120,7 +124,7 @@ You'll use`up -d` the same one once you've made`compose.yaml` the changes. Compo
 docker compose down
 ```
 
-Your files in the Stack folder will remain untouched—including everything inside it`data/`. Running the command again `docker compose up -d`will restore the Stack. Leave the folder `whoami`where it is; you'll need it in the next guide.
+Your files in the Stack folder will remain untouched—including everything inside it`data/`. Running the command again `docker compose up -d`will restore the Stack. Leave the folder `whoami`as is; you'll need it in the next guide.
 </Step>
 
 </Steps>
@@ -129,12 +133,12 @@ Your files in the Stack folder will remain untouched—including everything insi
 
 | Command | Effect |
 | --- | --- |
-| `docker compose up -d` | Create a stack or bring`compose.yaml` it up to date |
+| `docker compose up -d` | Create a stack or update`compose.yaml` it to the current version |
 | `docker compose ps` | Display the stack's containers and their status |
-| `docker compose logs -f` | Track logs live |
+| `docker compose logs -f` | Track Logs Live |
 | `docker compose pull` | Download New Images |
 | `docker compose down` | Stop and remove containers; data remains |
 
-All commands refer to the  `compose.yaml`in the current folder. If you see `no configuration file provided`, you're in the wrong folder.
+All commands refer to the file in`compose.yaml` the current folder. If you see `no configuration file provided`, you're in the wrong folder.
 
 Next up is [.env & Secrets](/en/setup/env-secrets/). There, you'll learn how settings and passwords are retrieved`compose.yaml` from it.

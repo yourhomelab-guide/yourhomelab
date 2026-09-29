@@ -10,7 +10,7 @@ requires:
 
 Most security breaches exploit vulnerabilities for which updates have long been available. A server that hasn’t been updated for months therefore poses a greater risk than almost any misconfiguration. Security updates from Debian and Ubuntu are designed not to break anything. That’s why it’s worth setting them to install automatically, rather than relying on your own discipline.
 
-The tool for this is called **unattended-upgrades**. It runs daily, refreshes the package lists, and installs updates from the sources you enable. By default, these are primarily security updates.
+The tool for this is called **unattended-upgrades**. It runs daily, refreshes the package lists, and installs updates from the sources you've enabled. By default, these are primarily security updates.
 
 <Steps>
 
@@ -39,14 +39,14 @@ APT::Periodic::Unattended-Upgrade "1";
 This means`1`: every day. The specific sources that are updated are listed in `/etc/apt/apt.conf.d/50unattended-upgrades`. The default settings for Debian and Ubuntu are suitable for getting started.
 </Step>
 
-<Step title="Test Run">
-A test run shows whether everything is set up correctly without installing anything:
+<Step title="Test run">
+A test run will show whether everything is set up correctly without installing anything:
 
 ```bash
 sudo unattended-upgrade --dry-run --debug
 ```
 
-In the output, you can see the allowed sources and which packages a real run would update. To see when the next run is scheduled, run:
+In the output, you can see the allowed sources and which packages a real run would update. To see when the next run is scheduled, check:
 
 ```bash
 systemctl list-timers 'apt-daily*'
@@ -56,7 +56,7 @@ What was actually installed is listed later in `/var/log/unattended-upgrades/una
 </Step>
 
 <Step title="Managing Restarts">
-Some updates, especially new kernels, take effect only after a reboot. If a reboot is necessary, the system `/var/run/reboot-required`creates the file. By default, however, unattended-upgrades does **not** reboot the system.
+Some updates, especially new kernels, do not take effect until after a reboot. If a reboot is necessary, the system `/var/run/reboot-required`creates the file. By default, however, unattended-upgrades does **not** reboot the system.
 
 You have two options: You can check for updates yourself from time to time, or you can enable an automatic restart at a quiet time. For the latter, create your own file instead of modifying the one provided. That way, package updates and your settings won't interfere with each other.
 
@@ -69,7 +69,7 @@ Unattended-Upgrade::Automatic-Reboot "true";
 Unattended-Upgrade::Automatic-Reboot-Time "04:00";
 ```
 
-The server will only restart when an update requires it, specifically at 4 a.m. Your containers will then come back online on their own if they are`compose.yaml``restart: unless-stopped` in the  . All templates on this page have this feature.
+The server will only restart when an update requires it, at 4 a.m. Your containers will then start up again on their own if they are`compose.yaml``restart: unless-stopped` in the  . All templates on this page have this feature.
 
 You can check at any time whether a restart is pending by:
 
@@ -79,15 +79,15 @@ ls /var/run/reboot-required
 </Step>
 
 <Step title="Restart Services After Updates">
-Not every update requires a full server reboot. If a library such as OpenSSL is updated, it is sufficient to restart only the services that use it. Until then, they continue to run with the old version in memory.
+Not every update requires a full server restart. If a library such as OpenSSL is updated, it is sufficient to restart only the services that use it. Until then, they continue to run with the old version in memory.
 
-The **`needsrestart`** tool identifies such services. It's already included in Ubuntu; on Debian, you can install it as follows:
+The **`needrestart`** tool finds such services. It's already included in Ubuntu; on Debian, you can install it using the following command:
 
 ```bash
 sudo apt install needrestart
 ```
 
-It will log in `apt upgrade`automatically from now on. You can also access it directly at any time:
+It will notify you `apt upgrade`automatically in the future. You can also access it directly at any time:
 
 ```bash
 sudo needrestart
@@ -100,7 +100,7 @@ sudo needrestart
 
 unattended-upgrades only handles operating system packages. Two important things are left out:
 
-- **Your containers.** unattended-upgrades never updates the images in your `compose.yaml`files. A vulnerability in Vaultwarden or Nextcloud remains unpatched until you pull a new image. The guide "[Updates with Renovate](/en/setup/updates-renovate/)" shows you how to schedule this. [The "Updates" section](/en/wiki/updates/) explains the background.
+- **Your containers.** The images in your `compose.yaml`files are never updated by `unattended-upgrades`. A vulnerability in Vaultwarden or Nextcloud remains unpatched until you pull a new image. The guide [“Updates with Renovate”](/en/setup/updates-renovate/) shows you how to schedule this. [The “Updates” section](/en/wiki/updates/) explains the background.
 - **Docker itself.** You'll install Docker later from the Docker package repository. It's not included in the default list for unattended-upgrades. So be sure to install it manually from time to time:
 
 ```bash
@@ -108,4 +108,8 @@ sudo apt update
 sudo apt upgrade
 ```
 
-A quick look once a month is enough. The only important thing is that you do it regularly.
+A quick look once a month is enough. The important thing is that it happens regularly.
+
+<Callout title="Did you complete the “Secure” level?">
+This completes the basic security setup for your server. The [security check](/en/werkzeuge/sicherheits-check/) lets you verify in just a few minutes whether SSH, the firewall, updates, and other settings are really configured the way they should be.
+</Callout>

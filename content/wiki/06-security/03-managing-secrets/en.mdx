@@ -1,6 +1,6 @@
 ---
 title: Manage Secrets
-description: Database passwords, API tokens, and client secrets are the keys to your home lab. Here, you'll learn where they belong, how to generate and store them securely, and what to do if one does end up being leaked.
+description: Database passwords, API tokens, and client secrets are the keys to your home lab. Here, you'll learn where they belong, how to generate and store them securely, and what to do if one does end up in the wrong hands.
 level: 2
 related:
   - env-files
@@ -14,7 +14,7 @@ practice: env-secrets
 ## What a Secret Is
 
 A "**secret"** is any piece of information that can be used to gain access: database passwords, API tokens,
-the client secret for [single sign-on](/en/wiki/single-sign-on/), the key for encrypted backups.
+the client secret for [single sign-on](/en/wiki/single-sign-on/), keys for encrypted backups.
 
 The danger rarely lies in a sophisticated attack. Most of the time, a secret simply ends up in the wrong place: in a
 a public Git repository, in a screenshot on the forum, or in an unencrypted backup. That's why we're focusing on this here
@@ -32,7 +32,7 @@ __ROOT__/nextcloud/
 └── data/
 ```
 
-In the  you simply refer`compose.yaml` to the variable:
+In the  you simply reference`compose.yaml` the variable:
 
 ```yaml
 services:
@@ -57,7 +57,7 @@ So, that's still working.
 
 ### Not in Git
 
-If you manage your stacks as a Git repo, exclude .* `.env`files from the start. One in`.gitignore` the root folder is enough:
+If you manage your stacks as a Git repository, exclude `.env`files right from the start. One in`.gitignore` the root folder is enough:
 
 ```text
 .env
@@ -67,7 +67,7 @@ If you manage your stacks as a Git repo, exclude .* `.env`files from the start. 
 
 It contains`.env.example` all variables with empty or sample values. That way, when you start over, you'll know what you
 you have to fill out. Once a secret is committed, it remains in the Git history, even if you delete the file later.
-The only thing that will help is to change the secret (see below).
+The only solution is to change the secret (see below).
 
 ## Generate Secrets Randomly
 
@@ -78,19 +78,22 @@ openssl rand -hex 32
 ```
 
 This generates 64 characters from  and`0-9` `a-f`. The variant  `openssl rand -base64 32`is shorter, but contains characters such as
-`/`,  and`+` `=`. These can cause problems in link URLs or with some images. Hex is the safe choice.
+`/`,  and`+` `=`. These can cause problems in link URLs or with some images. Hex is the safer choice.
 
 Use a separate secret for each service and each database. If one becomes known, only one service is affected.
+
+Some services, such as Tinyauth or Traefik's Basic Auth, expect a **bcrypt hash** instead of a password. You can generate one
+using the [Password Hash](/en/werkzeuge/passwort-hash/) tool, right in your browser.
 
 ## Where You Can Keep Track of Everything
 
 The  on`.env` the server is where the service reads the secret. However, it is not a good place to
 Take note of everything that's available. Two additions have proven useful:
 
-- **Password Manager:** Store important secrets in your password manager as well, for example in
+- **Password Manager:** Store important secrets in your password manager as well, such as in
   [Vaultwarden](/en/services/vaultwarden/) or KeePassXC. This is especially important for anything you don't have a backup of
   you can't recover, such as the passphrase for your Borg repository.
-- **Encrypted Backups:** Your backup of  `__ROOT__`contains all `.env`-files. It must therefore be encrypted.
+- **Encrypted Backups:** Your backup from  `__ROOT__`contains all `.env`-files. It must therefore be encrypted.
   borgmatic handles this automatically; see [Backup Strategies](/en/wiki/backup-strategies/).
 
 <Callout type="warning" title="Be Careful When Splitting Bills">
@@ -100,8 +103,8 @@ Take note of everything that's available. Two additions have proven useful:
 
 ## Docker Secrets: Secrets as Files
 
-Environment variables are convenient, but they're visible to anyone who is authorized to run`docker inspect` the command. Docker Compose supports
-That's why we also use **secrets**: The secret is stored in a separate file and is located in the container under `/run/secrets/`
+Environment variables are convenient, but they're visible to anyone who is allowed to run`docker inspect` the command. Docker Compose supports
+That's why there are additional **secrets**: The secret is stored in a separate file and is located in the container under `/run/secrets/`
 integrated.
 
 ```yaml
@@ -145,5 +148,5 @@ is supposed to have more. This is called **rotation**.
 4. Update the entry in the password manager.
 
 Note regarding databases: Databases such as Postgres or MariaDB only retrieve the password from the environment variable when
-The very first time it starts up, when the database is created. If you change only the [...]`.env`, the password will no longer work.
-You must first change it in the database itself, and only then in the `.env`.
+The very first time you start it, when the database is created. If you change only the afterward`.env`, the password will no longer work.
+You have to change it in the database first, and only then in the `.env`.

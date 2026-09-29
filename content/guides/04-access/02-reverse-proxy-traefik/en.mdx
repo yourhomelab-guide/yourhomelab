@@ -1,6 +1,6 @@
 ---
 title: Reverse Proxy with Traefik
-description: A reverse proxy receives all requests on ports 80 and 443 and forwards them to the correct container based on the hostname. To do this, Traefik reads the labels of your containers and retrieves the TLS certificates from Let's Encrypt itself.
+description: A reverse proxy receives all requests on ports 80 and 443 and forwards them to the correct container based on the hostname. To do this, Traefik reads the labels from your containers and retrieves the TLS certificates from Let's Encrypt itself.
 level: 2
 minutes: 25
 requires:
@@ -11,13 +11,13 @@ services:
 ---
 
 <Callout title="Traefik or Nginx Proxy Manager?">
-Traefik is a bit more complicated at first, but it offers the most options: The configuration is available as labels directly within each`compose.yaml` service; you can enable middleware such as login protection by applying a label to it, and everything can be versioned as a file. If you want to keep things simple at first, use [Nginx Proxy Manager](/en/setup/reverse-proxy-npm/) with its web interface.
+Traefik is a bit more complicated at first, but it offers the most options: The configuration is stored as labels directly within each`compose.yaml` service; you can enable middleware such as login protection by adding a label before it; and everything can be versioned as a file. If you want to keep things simple at first, use [Nginx Proxy Manager](/en/setup/reverse-proxy-npm/) with its web interface.
 </Callout>
 
 <Steps>
 
 <Step title="Create a proxy network">
-All services that Traefik is supposed to reach are connected to a shared Docker network. You create it once and then reference it in each stack.
+All services that Traefik is supposed to reach are connected via a shared Docker network. You create it once and then reference it in each stack.
 
 ```bash
 docker network create __NETWORK__
@@ -34,7 +34,7 @@ chmod 600 __DATA(traefik)__/letsencrypt/acme.json
 ```
 </Step>
 
-<Step title="Write the `compose.yaml` and `.env` files">
+<Step title="Write `compose.yaml` and `.env`">
 The configuration is located in `compose.yaml`. Values that differ between servers are specified in the `.env`.
 
 <ServiceFiles id="traefik" />
@@ -48,6 +48,8 @@ cd __ROOT__/traefik
 docker compose up -d
 docker compose logs -f traefik
 ```
+
+If the log reports errors during the challenge or if the browser displays Traefik's default certificate, see "[Certificate Missing"](/en/wiki/certificate/) for further assistance.
 </Step>
 
 <Step title="Connect the first service">
@@ -59,6 +61,12 @@ labels:
   - traefik.http.routers.whoami.rule=Host(`whoami.__DOMAIN__`)
   - traefik.http.routers.whoami.tls.certresolver=le
 ```
+
+If the subdomain returns a "Bad Gateway" response, Traefik cannot reach the container. The common causes are listed under "[Bad Gateway](/en/wiki/bad-gateway/)."
+
+<Callout title="Integrate Your Own Services">
+For services from the [catalog](/en/services/), “My Setup” automatically sets the labels. For everything else, the [Proxy Configuration](/en/werkzeuge/proxy-konfiguration/) tool generates the appropriate labels based on the subdomain, container name, and port.
+</Callout>
 </Step>
 
 </Steps>

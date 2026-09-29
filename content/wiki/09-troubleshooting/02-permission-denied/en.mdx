@@ -1,0 +1,113 @@
+---
+title: Permission denied
+description: The container starts, but it cannot write to its data folder. In most cases, the folder's owner and permissions do not match those of the user under which the process is running in the container.
+level: 2
+related:
+  - volumes-bind-mounts
+  - directory-structure
+  - first-steps
+practice: creating-the-directory-structure
+---
+
+## Symptom
+
+The container terminates shortly after starting or enters a [restart loop](/en/wiki/restart-loop/).
+The log contains a message such as:
+
+```text
+mkdir: cannot create directory '/data/config': Permission denied
+chown: changing ownership of '/var/lib/postgresql/data': Operation not permitted
+Error: EACCES: permission denied, open '/app/data/db.sqlite'
+```
+
+## Why This Happens
+
+Processes in a container run under a user ID (UID) and group ID (GID), just like on the host. Linux
+It only recognizes numbers, not names. If a container with UID 1000 writes to a bind mount that belongs to root (UID 0),
+Linux rejects this. The user's name in the container does not matter.
+
+## Causes
+
+1. **Docker created the folder itself.** If the path to a bind mount does not yet exist at startup, Docker
+   Set it to `root:root`. If the service is not running as root, it is not allowed to write there.
+2. **The image runs intentionally without root privileges.** Many modern (rootless) images use a fixed UID, often `1000`,
+   sometimes also  `65532`or its own. The data folder must belong to this UID.
+3. **PUID/PGID are missing or incorrect.** Images from linuxserver.io, for example, read the variables  `PUID`and  `PGID`and
+   will then run under this UID/GID.
+4. **Files were copied as root.** For example, when restoring a backup using  `sudo cp`or `sudo tar`.
+5. **The restrictions are too strict**—for example, for`700` a different owner.
+
+## Check
+
+In the commands,  `myapp`represents your stack, and  `<service>`represents the service name from the `compose.yaml`.
+
+Who owns the data folder?  shows`-n` numbers instead of names:
+
+```bash
+ls -ln __DATA(myapp)__
+```
+
+Under which UID is the process running in the container?
+
+```bash
+cd __ROOT__/myapp
+docker compose exec <service> id
+```
+
+If the container doesn't run long enough`exec`, check to see if the image specifies a user. An empty field means root:
+
+```bash
+docker image inspect --format '{{.Config.User}}' <image>
+```
+
+Your own UID and GID are displayed on`id` the host. On Debian and Ubuntu, the first user created usually has
+`1000`.
+
+## Solution
+
+**Assign the folder to the correct user.** Use the UID and GID from the verification step:
+
+```bash
+cd __ROOT__/myapp
+docker compose down
+sudo chown -R 1000:1000 __DATA(myapp)__
+docker compose up -d
+```
+
+**For images with a PUID/PGID**, enter your own UID/GID in the `compose.yaml`field, and the folder will belong to you:
+
+```yaml
+environment:
+  - PUID=__PUID__
+  - PGID=__PGID__
+```
+
+```bash
+sudo chown -R __PUID__:__PGID__ __DATA(myapp)__
+```
+
+**Create the folder before running Docker for the first time.** This prevents Docker from creating it as the root directory:
+
+```bash
+mkdir -p __DATA(myapp)__
+```
+
+The image's documentation usually specifies which UID it expects. Often, it also includes a ready-to-use `chown`command. Which
+The [Compose](/en/werkzeuge/compose-erklaerer/) [guide](/en/werkzeuge/compose-erklaerer/) shows you, line by line, how to set`compose.yaml` bind mounts and variables.
+
+<Callout type="warning" title="No chmod 777">
+  `chmod -R 777` It appears to fix the error, but it allows any process on the server to read the data and
+  to change. Some programs, such as databases or SSH, will even refuse to start if the permissions are too permissive. Set
+  I'd rather contact the right owner.
+</Callout>
+
+**Do not change the database settings.** Official images of Postgres or MariaDB set the permissions for their data folder
+when you first run it. If the folder then has an unexpected UID (such as `999`), that's normal. Don't change it.
+
+## SELinux
+
+On Fedora, RHEL, or Rocky Linux, SELinux may block access even though the permissions are correct. In that case, the extension
+`:Z` on the bind mount, for example`- __DATA(myapp)__:/data:Z`. On Debian and Ubuntu, SELinux is usually not
+Active—you don't need that there.
+
+For more background information on bind mounts, see "[Volumes & Bind Mounts](/en/wiki/volumes-bind-mounts/)."

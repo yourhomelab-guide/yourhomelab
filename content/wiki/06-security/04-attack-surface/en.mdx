@@ -1,6 +1,6 @@
 ---
 title: Keep the attack surface small
-description: Every open port and every accessible interface is a potential gateway into your home lab. Here, you'll learn which gateways you can close, why Docker bypasses your firewall, and what habits can make your setup significantly more secure with minimal effort.
+description: Every open port and every accessible interface is a potential gateway into your home lab. Here, you’ll learn which gateways you can close, why Docker bypasses your firewall, and what habits can make your setup significantly more secure with minimal effort.
 level: 2
 related:
   - port-forwarding
@@ -13,10 +13,10 @@ practice: firewall-ufw
 ## What "attack surface" means
 
 The **attack surface** is everything that an external attacker can target: open ports, login pages,
-Programs with security vulnerabilities. The smaller the vulnerability, the less likely something is to go wrong.
+Programs with security vulnerabilities. The smaller the program, the less likely something is to go wrong.
 
-You don't have to be a security expert to figure this out. Most attacks on home labs are automated. Bots scan the
-Check the Internet for open ports, known vulnerabilities, and default passwords. Anyone who avoids these easy targets is already
+You don't have to be a security expert to understand this. Most attacks on home labs are automated. Bots scan the
+Check the Internet for open ports, known vulnerabilities, and default passwords. If you avoid these easy targets, you're already
 very well protected.
 
 ## Open only the necessary ports
@@ -30,7 +30,7 @@ Open.
   Don't share anything at all. For services that only you use, this is often the best choice.
 - **SSH:** Don't open port 22 on your router unless you have to. When you're away from home, you can access the server via VPN.
 
-To see which ports your server is listening on, use the following command:
+To see which ports are listening on your server, use the following command:
 
 ```bash
 sudo ss -tlnp
@@ -50,7 +50,7 @@ but open.
 
 The solution is to avoid publishing ports in the first place:
 
-- **Services behind the reverse proxy** do not need one`ports:`. The proxy reaches them via the shared network.
+- **Services behind the reverse proxy** do not need a `ports:`. The proxy reaches them through the shared network
   `__NETWORK__`. Only the proxy itself exposes ports 80 and 443.
 - **If a port only requires local access,** bind it to`127.0.0.1`:
 
@@ -63,7 +63,7 @@ In that case, you can only access the service from the server itself, for exampl
 [Docker documentation on package filters](https://docs.docker.com/engine/network/packet-filtering-firewalls/).
 
 <Callout type="warning" title="A router is not the same as a firewall">
-  If your home server is behind a router without port forwarding enabled, the published ports are only accessible on your home network
+  If your home server is behind a router without port forwarding, published ports are only accessible on your home network
   accessible. With a VPS, on the other hand, the server is connected directly to the Internet. There, every published port is immediately
   Open worldwide.
 </Callout>
@@ -74,34 +74,34 @@ The Traefik dashboard, [Portainer](/en/services/portainer/), the interface of
 [Nginx Proxy Manager](/en/services/nginx-proxy-manager/) and your router's settings are powerful tools. If you
 Once it gets in, it often takes control of the entire server.
 
-- Make such resources accessible only on your home network or via the VPN.
-- If you need to publish it through the reverse proxy, add a login screen before it, for example, using
+- Make such resources accessible only on your home network or via VPN.
+- If you need to publish it through the reverse proxy, set up a login screen first, for example using
   [Tinyauth](/en/setup/tinyauth/) or [Pocket ID](/en/setup/pocket-id/). See also
   [Single Sign-On](/en/wiki/single-sign-on/).
-- Change default passwords immediately after installation.
+- Change the default passwords immediately after installation.
 
 ## Protecting the Docker Socket
 
 Some containers have the Docker socket `/var/run/docker.sock`mounted, such as Traefik, Portainer, or
 Monitoring tools. They control Docker via the socket.
 
-Important to know: **Access to the socket is essentially equivalent to root access to the server.** Anyone who can use it can start
-Any container with any permissions. The suffix  `:ro`when mounting the container has little effect on this. It merely prevents,
+Important to know: **Access to the socket is essentially the same as root access to the server.** Anyone who can use it can start
+Any container with any permissions. The suffix when`:ro` mounting has little effect on this. It only prevents,
 that the file itself is modified, not the commands sent through the socket.
 
 Therefore:
 
 - Only assign the socket to containers that really need it, and only from trusted sources.
-- **Socket proxies** are available for added security. They sit between the container and the socket and allow only certain
-  Processes requests, such as read-only access.
-- The same applies to the group on`docker` the server: Anyone in that group effectively has root privileges.
+- **Socket proxies** are available to enhance security. They sit between the container and the socket and allow only certain
+  Process requests, such as read-only access, for example.
+- The same applies to the group on`docker` the server: Anyone who is a member of it effectively has root privileges.
 
 ## Install Updates
 
 Many attacks exploit vulnerabilities for which updates have long been available. Therefore, make sure to keep two levels up to date:
 
 - **The operating system:** with [automatic updates](/en/setup/automatic-updates/) for security patches.
-- **The containers:** Update the images regularly; see [Updates](/en/wiki/updates/).
+- **The containers:** Update images regularly; see [Updates](/en/wiki/updates/).
 
 Services that are accessible via the Internet take priority.
 
@@ -111,7 +111,7 @@ Public login pages attract password-guessing bots. Here's how to prevent that:
 
 - **Strong, unique passwords** and, where possible, passkeys or two-factor authentication.
 - **Use a key instead of a password for SSH**; see [SSH Basics](/en/wiki/ssh-basics/).
-- **CrowdSec:** reads the logs from your reverse proxy and other services, detects suspicious behavior such as many
+- **CrowdSec:** reads the logs of your reverse proxy and other services, detects suspicious behavior such as many
   failed login attempts and blocks the IP address. In addition, all users share their findings, so that known attackers
   are often blocked in advance. With Traefik, CrowdSec can be integrated as middleware; see
   [CrowdSec](/en/setup/crowdsec/).
@@ -123,7 +123,7 @@ only the permissions he actually needs. If he is compromised, the damage will be
 
 In a home lab, for example, this means:
 
-- You're working as a regular user`sudo`, not as root. See [Users & sudo](/en/setup/users-sudo/).
+- You are working as a regular user`sudo`, not as root. See [Users & sudo](/en/setup/users-sudo/).
 - Whenever possible, containers should not run as root. Many images support this via`user:` the  or`compose.yaml`
   Variables such as  and`PUID` `PGID`.
 - Containers share only the networks they need. A database does not have to be connected to the proxy network.
@@ -137,3 +137,6 @@ In a home lab, for example, this means:
 - SSH with a key only.
 - Operating system and images are up to date.
 - Use the Docker socket only where it's needed.
+
+The [Security](/en/werkzeuge/sicherheits-check/) [Check](/en/werkzeuge/sicherheits-check/) provides a more detailed checklist that you can work through step by step. At the end
+You'll see where you're doing well and what's still missing.

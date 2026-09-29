@@ -1,6 +1,6 @@
 ---
 title: Portainer or Dockworker
-description: Ultimately, Portainer CE or Dockhand will serve as a web interface for your containers and stacks, accessible only to you and with your own login.
+description: Ultimately, Portainer CE or Dockhand serves as a web interface for your containers and stacks, accessible only to you and with your own login.
 level: 1
 minutes: 15
 requires:
@@ -11,7 +11,7 @@ services:
   - dockhand
 ---
 
-So far, you've managed`docker compose` everything via SSH. That remains the most reliable way. A web interface is still convenient, though: You can see at a glance which containers are running, read logs in your browser, and restart a hung-up service without opening a terminal. Two tools are commonly used in home labs: **Portainer CE** and **Dockhand**.
+So far, you've managed`docker compose` everything via SSH. That remains the most reliable way. A web interface is still handy, though: You can see at a glance which containers are running, read logs in your browser, and restart a frozen service without opening a terminal. Two tools are widely used in home labs: **Portainer CE** and **Dockhand**.
 
 <OneWay />
 
@@ -22,13 +22,13 @@ So far, you've managed`docker compose` everything via SSH. That remains the most
     A long-standing classic. Manages containers, images, volumes, networks, and Compose stacks. Large community, plenty of tutorials. The Community Edition (CE) is open source; there is also a paid Business Edition.
   </Card>
   <Card title="Dockhand">
-    A newer, streamlined tool focused on Compose stacks. It includes a Compose editor, deployments from Git repositories, and vulnerability scans for images. Licensed under BSL 1.1: free for personal use, but not traditionally open source.
+    A newer, lightweight tool focused on Compose stacks. It includes a Compose editor, deployments from Git repositories, and vulnerability scans for images. BSL 1.1 license: free for personal use, but not traditionally open source.
   </Card>
 </Cards>
 
 |                        | Portainer CE                            | Dockhand                                     |
 | ---------------------- | --------------------------------------- | -------------------------------------------- |
-| **Focus**        | Everything you need to know about Docker—very comprehensive  | Compose Stacks, Clean Interface       |
+| **Focus**        | Everything you need to know about Docker—very comprehensive  | Compose Stacks, a Clean Interface       |
 | **Stacks from Git**     | Yes                                      | Yes, with webhooks and automatic synchronization  |
 | **Multiple servers**     | Yes, through the Portainer Agent            | Yes, via Socket, Agent, or TCP              |
 | **Registration**          | Custom users, admin account at startup | Local Users, SSO via OIDC                |
@@ -38,7 +38,7 @@ So far, you've managed`docker compose` everything via SSH. That remains the most
 In short: If you want a tried-and-true solution with plenty of online guides, go with Portainer. If a more modern interface is more important to you and you mainly work with Compose stacks, try Dockhand. You only need one of the two.
 
 <Callout type="warning" title="Docker Socket Means Root Access">
-Both tools `/var/run/docker.sock`mount a file system. Whoever controls the Docker socket can start any container, including one that mounts the server's entire file system. This is essentially the same as having root access to the server. Therefore, never expose the interface to the Internet without protection: Make it accessible only via VPN or on your home network, or additionally behind login protection such as [Tinyauth](/en/setup/tinyauth/) or [Pocket ID](/en/setup/pocket-id/).
+Both tools `/var/run/docker.sock`mount a file system. Whoever controls the Docker socket can start any container, including one that mounts the server’s entire file system. This is essentially the same as having root access to the server. Therefore, never expose the interface to the Internet without protection: It should be accessible only via VPN or on your home network, or additionally behind login protection such as [Tinyauth](/en/setup/tinyauth/) or [Pocket ID](/en/setup/pocket-id/).
 </Callout>
 
 ## Set Up
@@ -58,7 +58,7 @@ mkdir -p __ROOT__/dockhand __DATA(dockhand)__
 </Step>
 
 <Step title="Write a compose.yaml file">
-The templates are customized for your setup. With Traefik, the service is assigned labels and ends up on the network`__NETWORK__`; without a reverse proxy, the port is exposed directly.
+The templates are customized for your setup. With Traefik, the service is assigned labels and is routed through the network`__NETWORK__`; without a reverse proxy, the port is exposed directly.
 
 **Portainer** stores its database, settings, and the stacks created in the interface in`__DATA(portainer)__/data`:
 
@@ -68,11 +68,11 @@ The templates are customized for your setup. With Traefik, the service is assign
 
 <ServiceFiles id="dockhand" />
 
-Portainer uses the "Long Term Support" (`lts`LTS) tag, which refers to the stable branch with less frequent updates. [The "Updates with Renovate](/en/setup/updates-renovate/)" [section](/en/setup/updates-renovate/) explains how to switch to fixed versions later and keep them up to date automatically.
+Portainer uses the `lts`"Long Term Support" tag, which refers to the stable branch with less frequent updates. [The "Updates with Renovate](/en/setup/updates-renovate/)" [section](/en/setup/updates-renovate/) explains how to switch to stable versions later and keep them up to date automatically.
 </Step>
 
 <Step title="Start">
-Start the stack and take a quick look at the log to see if everything is up and running.
+Start the stack and take a quick look at the log to see if everything is coming up correctly.
 
 ```bash
 cd __ROOT__/portainer    # oder __ROOT__/dockhand
@@ -83,10 +83,10 @@ docker compose logs -f
 Press  to exit`Strg+C` the log view; the container will continue to run.
 </Step>
 
-<Step title="Create an admin account">
+<Step title="Create an Admin Account">
 Open the interface in your browser, using a reverse proxy at  `https://portainer.__DOMAIN__`or `https://dockhand.__DOMAIN__`.
 
-- When you first launch **Portainer**, it will ask for the admin username and password. Do this right after starting the program: After a few minutes without configuration, Portainer will lock itself for security reasons. Then `docker compose restart`. Next, select the local environment (“Get Started”).
+- When you first launch **Portainer**, it will ask for the admin username and password. Do this right after starting the program: If you don't set it up within a few minutes, Portainer will lock itself for security reasons. Then `docker compose restart`. Next, select the local environment ("Get Started").
 - After launching, **Dockhand** immediately displays the local Docker environment. Create a user in the settings and verify that the login is actually active before using the interface from other devices.
 
 Choose a long, random password and save it in your password manager.
@@ -95,7 +95,7 @@ Choose a long, random password and save it in your password manager.
 <Step title="Secure Access">
 Logging into the interface itself is the first hurdle. Since root access is required, it’s worth taking a second look:
 
-- **For internal use only:** Allow the subdomain to be resolved only on the home network or via [VPN](/en/setup/vpn-wireguard/). The interface will then not be visible from outside the network at all.
+- **For internal use only:** Allow the subdomain to be accessed only on the home network or via [VPN](/en/setup/vpn-wireguard/). The interface will then not be visible from outside the network.
 - **Login first:** Place a middleware solution like [Tinyauth](/en/setup/tinyauth/) in front of the router. Then everyone must log in there first.
 
 A publicly accessible Portainer or Dockhand interface without additional protection is a prime target for attackers.
@@ -105,19 +105,21 @@ A publicly accessible Portainer or Dockhand interface without additional protect
 
 ## CLI Stacks and UI Stacks
 
-In the interface, you'll also see the stacks that you previously started`__ROOT__` via  `docker compose`under  . Docker uses labels to keep track of which containers belong to which Compose project, and that's exactly what both tools read. This means you can start, stop, read logs, and restart all stacks.
+In the interface, you'll also see the stacks that you previously started`__ROOT__` via [...`docker compose`]. Docker uses labels to keep track of which containers belong to which Compose project, and that's exactly what both tools read. That's why you can start, stop, view logs, and restart all stacks.
 
 There is one difference when it comes to **editing**:
 
-- **Stacks that you created via the CLI** do not belong to the tool. Portainer displays them as external and does not`compose.yaml` allow you to modify them (“Limited”). The file is located in `__ROOT__/<app>/`, not in Portainer.
+- **Stacks that you created via the CLI** do not belong to the tool. Portainer displays them as "external" and does not`compose.yaml` allow you to modify them ("Limited"). The file is located in `__ROOT__/<app>/`, not in Portainer.
 - The tool saves **stacks that you create in the interface** to its own data folder. In Portainer, they are located under `__DATA(portainer)__/data/compose/<nummer>/`, with numbers instead of names. They do not `__ROOT__`appear in your folder structure under .
 
 So don't mix the two worlds haphazardly. Find a source of truth:
 
 - **Files on  `__ROOT__`remain the preferred option** (this page's recommendation): You create stacks via SSH or Git and use the interface for viewing, logs, and restarts. Your backup of  contains`__ROOT__` everything, and you can continue working at any time without the interface.
-- **The interface takes center stage:** You create all your stacks there. It's convenient, but it ties you to the tool. Be sure to back up its data folder as well.
+- **The interface takes the lead:** You create all your stacks there. It's convenient, but it ties you to the tool. Be sure to back up its data folder as well.
 
-If you want to roll out Stacks from Git later on, you can continue with [Git deployments using Forgejo](/en/setup/git-deployments-forgejo/). Dockhand and Portainer can also deploy Stacks directly from a Git repository. The Forgejo guide shows you how to do this without a GUI, a method that works with any tool.
+In either case, you don't have to start from scratch when creating new stacks. The [Stack Builder](/en/werkzeuge/stack-builder/) generates the stack for you using`compose.yaml` services from the catalog. If you adopt someone else's stack from`compose.yaml` a project document, the [Compose Explainer](/en/werkzeuge/compose-erklaerer/) will first explain what each line does.
+
+If you want to roll out Stacks from Git later on, you can continue with [Git deployments using Forgejo](/en/setup/git-deployments-forgejo/). Dockhand and Portainer can also deploy Stacks directly from a Git repository. The Forgejo guide shows how to do this without a GUI, a method that works with any tool.
 
 ## Read more
 

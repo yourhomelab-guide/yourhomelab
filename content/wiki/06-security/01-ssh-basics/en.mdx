@@ -1,6 +1,6 @@
 ---
 title: SSH Basics
-description: With SSH, you can securely control your server over the network without needing a screen or keyboard on the device. Here, you'll learn how the client and server work together, why keys are better than passwords, and how a small configuration file can save you time typing.
+description: With SSH, you can securely control your server over the network without needing a screen or keyboard on the device. Here, you'll learn how the client and server work together, why keys are better than passwords, and how you can save yourself some typing with a small configuration file.
 level: 1
 related:
   - attack-surface
@@ -21,7 +21,7 @@ For a home lab, SSH is the standard way to work. The server sits on a shelf some
 Every connection involves two parties:
 
 - The **server** is a service (`sshd`) that runs on the Homelab computer and listens on port 22 by default.
-  On Debian and Ubuntu Server, you can install it using the package`openssh-server`—usually right during installation.
+  On Debian and Ubuntu Server, you install it using the package`openssh-server`, usually right during installation.
 - The **client** is the program on`ssh` your laptop. It comes pre-installed on Linux, macOS, and Windows 10/11.
 
 A connection looks like this:
@@ -30,11 +30,11 @@ A connection looks like this:
 ssh admin@192.168.1.10
 ```
 
-The username on the server comes`@` before the address, and the address comes after it. Use this to end`exit` the session.
+The username on the server comes`@` before the , followed by the address. Use  to end`exit` the session.
 
 ## Key Pairs Instead of Passwords
 
-A password can be guessed or intercepted. As soon as SSH is accessible from the Internet, bots try to guess it around the clock
+A password can be guessed or intercepted. As soon as SSH is accessible from the Internet, bots try to crack it around the clock
 common combinations. Keys solve this problem.
 
 A **key pair** consists of two files:
@@ -44,7 +44,7 @@ A **key pair** consists of two files:
 | Private key, e.g., `~/.ssh/id_ed25519` | only on your laptop | no one but you |
 | Public key, e.g., `~/.ssh/id_ed25519.pub` | on any server you want | every |
 
-The public key is stored in the file on the server`~/.ssh/authorized_keys`. When logging in, the server
+The public key is stored in the file on the server`~/.ssh/authorized_keys`. When a user logs in, the server
 a problem that can only be solved with the corresponding private key. The private key itself never leaves your
 I never bring my laptop with me.
 
@@ -56,7 +56,7 @@ ssh-keygen -t ed25519 -C "laptop"
 
 `ed25519` is a modern, short, and secure type of key. The comment below will help`-C` you later when creating keys
 to tell them apart. Set a **passphrase**: Then the private key will be useless even if someone gets hold of the file
-copied. So you don't have to keep typing in the passphrase, it remembers `ssh-agent`it for the session.
+copied. So you don't have to keep typing in the passphrase, it remembers it`ssh-agent` for the session.
 
 You can transfer the public key using:
 
@@ -75,7 +75,7 @@ The guides show you how to do this step by step and how to disable password logi
 ## known_hosts and Fingerprint
 
 There are keys on the other side, too. Every SSH server has its own **host key**. This is how it proves to you that
-that you're actually communicating with your server and not with a device that has inserted itself into the connection.
+that you're actually communicating with your server and not with a device that's acting as an intermediary.
 
 The first time you connect, you'll see a message like this:
 
@@ -96,7 +96,7 @@ If you confirm with `yes`, the client saves the host key in `~/.ssh/known_hosts`
 Check to see if the key is still the same.
 
 If the host key changes, SSH terminates with a major warning (`REMOTE HOST IDENTIFICATION HAS CHANGED`). The
-This happens quite innocently if you've reinstalled the server or if an IP address has been assigned to another device. Just
+This happens quite innocently if you've reinstalled the server or assigned an IP address to another device. Just
 Then delete the old entry:
 
 ```bash
@@ -107,7 +107,7 @@ If you haven't changed anything, take the warning seriously and don't just conne
 
 ## The ~/.ssh/config file
 
-Over time, you find yourself typing the same usernames, IP addresses, and key paths over and over again. The file  `~/.ssh/config`at
+Over time, you find yourself typing the same usernames, IP addresses, and key paths over and over again. The file  `~/.ssh/config`on
 Here's a summary for your laptop:
 
 ```text
@@ -123,7 +123,7 @@ Host vps
 ```
 
 After that, `ssh homelab`. The shortcut also works for  and`scp` , as`rsync` well as in editors like VS Code with
-Remote SSH. The man page describes all options`man ssh_config`.
+Remote SSH. The man page describes all the options`man ssh_config`.
 
 ## File Permissions
 
@@ -137,7 +137,8 @@ chmod 600 ~/.ssh/id_ed25519 ~/.ssh/config
 
 On the server, the same applies to  `~/.ssh`and `~/.ssh/authorized_keys`.
 
-## Read more
+## Read More
 
 - [OpenSSH Manual](https://www.openssh.com/manual.html)
 - [Minimize the Attack Surface](/en/wiki/attack-surface/): Why SSH Should Not Be Exposed to the Internet If Possible
+- [Security Check](/en/werkzeuge/sicherheits-check/): Uses a checklist to verify that SSH and the rest of your setup are well secured

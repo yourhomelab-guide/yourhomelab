@@ -1,0 +1,96 @@
+---
+title: The First 30 Days
+description: "A roadmap for your first month: go from an empty computer to a secure server with Docker, your own domain, and a tested backup in four weeks. Plus, the things you can safely put off until later."
+level: 1
+related:
+  - what-is-self-hosting
+  - is-it-worth-it
+  - operating-models
+  - backup-strategies
+practice: choosing-hardware
+---
+
+## Why a Schedule Helps
+
+At first, everything is exciting. You see screenshots of dashboards with twenty services, read about Proxmox clusters and Kubernetes, and want to do it all at once. That’s exactly the most common reason why home labs end up back in the closet after a few weeks: too much going on at once, nothing really understood, and when the first error occurs, you don’t know where to look.
+
+The pace here is intentionally slow. Each week builds on the previous one, and by the end of the month, you’ll have a foundation you can continue to build on for years to come. Set aside two to three evenings per week or half a day on the weekend. If you need more time, that’s perfectly fine.
+
+Still not sure where to start? The [Getting Started Wizard](/en/werkzeuge/einstiegs-assistent/) will ask you a few questions and suggest a path that's right for you.
+
+## Before the start: a decision
+
+Before the first week begins, figure out **where** your server will run: at home, in a rented space, or both. The sections [“Cloud, Hybrid, or Local?”](/en/wiki/cloud-hybrid-local/) and [“Hardware](/en/wiki/hardware-overview/) [Overview](/en/wiki/hardware-overview/)” can help you with this. A used mini-PC or an old laptop is often enough to get started. Don’t buy anything big just yet. You won’t know what you really need until a few months have passed.
+
+## Week 1: The Foundation
+
+Goal for this week: A Linux server is up and running, has a static IP address on the home network, and only you can access it using an SSH key.
+
+1. [Select Hardware](/en/setup/choosing-hardware/)
+2. [Install the Operating System](/en/setup/installing-the-os/)
+3. [Fixed IP & Hostname](/en/setup/static-ip-hostname/)
+4. [Set Up an SSH Key](/en/setup/ssh-keys/)
+5. [Users & sudo](/en/setup/users-sudo/)
+6. [Hardening SSH](/en/setup/hardening-ssh/)
+7. [Firewall with UFW](/en/setup/firewall-ufw/)
+8. [Automatic Updates](/en/setup/automatic-updates/)
+
+That sounds like not much of a home lab and a lot of work. But you only have to go through these steps once, and after that, you'll hardly have to worry about the basics anymore.
+
+## Week 2: Docker and the First Service
+
+Goal: Docker is running, your folder structure is set up, and your first service is accessible on your home network.
+
+1. [Install Docker](/en/setup/installing-docker/)
+2. [Create a directory structure](/en/setup/creating-the-directory-structure/)
+3. [First Stack with Compose](/en/setup/first-stack/)
+4. [.env & Secrets](/en/setup/env-secrets/)
+
+For your first service, choose something that won't be a big deal if it breaks—for example, [Uptime Kuma](/en/services/uptime-kuma/). Start it, stop it, delete the container, and restart it. This will teach you that your data survives the container because it's stored in the stack folder. For further reading, check out [“What Is Docker?”](/en/wiki/what-is-docker/) and [“Docker Compose](/en/wiki/docker-compose/).”
+
+## Week 3: Access via Domain and HTTPS
+
+Goal: Your services have nice names like `status.__DOMAIN__`, a valid certificate, and you can access them even when you're on the go.
+
+1. [Domain & DNS](/en/setup/domain-dns/)
+2. [Reverse proxy with Traefik](/en/setup/reverse-proxy-traefik/) or, if you prefer, [with Nginx Proxy Manager](/en/setup/reverse-proxy-npm/)
+3. [VPN with WireGuard](/en/setup/vpn-wireguard/) for Access on the Go
+
+Start by exposing as little as possible to the Internet. A VPN is the safest option to start with: Your services remain private, and only the VPN connection is accessible from the outside. The [comparison of access methods](/en/wiki/access-methods-compared/) will show you which option is best suited for your connection. If you don’t have your own public IPv4 address, read the section on [CGNAT & DS-Lite](/en/wiki/cgnat-ds-lite/) first.
+
+## Week 4: Backup, Restore, and Overview
+
+Goal: Your Homelab folder is backed up every night, you've successfully restored it once, and you'll notice if something goes down.
+
+1. [Backups with borgmatic](/en/setup/backups-borgmatic/)
+2. [Test Restore](/en/setup/testing-restores/)
+3. [Uptime Kuma](/en/setup/uptime-kuma/) or [Monitoring with Beszel](/en/setup/monitoring-beszel/)
+4. [Emergency Plan](/en/setup/emergency-plan/): Fill Out the Emergency Form
+
+<Callout type="warning" title="First the backup, then the important data">
+Don't upload passwords, photos, or documents to the server until your backup is running and you've tested a restore. Before that, your home lab is just a playground; afterward, it can become a place for important data.
+</Callout>
+
+Also, make a note of what you've built. The [documentation export tool](/en/werkzeuge/doku-export/) takes some of the work off your hands. See the "[Documentation"](/en/wiki/documentation/) section to find out why this is worth doing.
+
+## What You Can Leave Out for Now
+
+A lot of it is exciting, but unnecessary in the first month. None of it is bad. It's just too early.
+
+- **Proxmox, clusters, and multiple servers.** A single computer running Linux and Docker is enough for dozens of services. Virtualization is worth it if you know what you need it for. Learn more under ["Operating Models](/en/wiki/operating-models/)."
+- **Kubernetes.** For a home lab with a single server, it adds a lot of complexity and offers hardly any benefits.
+- **Single Sign-On and CrowdSec.** Login protection using [Pocket ID](/en/setup/pocket-id/) or [Tinyauth](/en/setup/tinyauth/) becomes important as soon as you make your services publicly accessible. Until then, a VPN is sufficient.
+- **Automated deployments.** [Portainer](/en/setup/portainer-dockhand/), [Git Deployments](/en/setup/git-deployments-forgejo/), and [Renovate](/en/setup/updates-renovate/) are handy if you manage a lot of stacks. It’s easier`docker compose pull` to explain with just three services.
+- **Expensive hardware, RAID, and a 10-gigabit network.** RAID is no substitute for a backup, and for the initial services, almost any computer from the last ten years will suffice.
+- **Twenty services at once.** Set a goal to learn one new service per week and get to know it well.
+
+## A Few Rules of Thumb
+
+- **One change at a time.** If something goes wrong, you'll know exactly what caused it. To learn how to do this, see ["Troubleshooting: First Steps](/en/wiki/first-steps/).["](/en/wiki/first-steps/)
+- **Take notes.** What commands did you run, and what didn't work? Otherwise, you won't remember in three months.
+- **You don't have to understand everything.** Don't just copy commands blindly, but you also don't need to know every detail before moving on. The [glossary](/en/wiki/glossary/) can help with unfamiliar terms.
+- **Downtime is allowed.** A server that runs smoothly for a week is a good sign.
+
+## And after the 30 days?
+
+Now comes the part you built all this for. Under ["First Apps](/en/setup/#anwendungen)," you'll find guides for services like ad blockers, dashboards, and photo management, and in [the](/en/services/) [Services Catalog](/en/services/), you'll find ready-made templates. Want to see what others have built? Then check out the [Homelabs](/en/homelabs/).

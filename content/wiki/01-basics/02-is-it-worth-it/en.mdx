@@ -1,6 +1,6 @@
 ---
 title: When is it worth it?
-description: Self-hosting offers control, a learning experience, and often lower ongoing costs. In return, you take on the time commitment and responsibility—especially when it comes to backups. An honest look at both sides.
+description: Self-hosting offers control, a learning experience, and often lower ongoing costs. In return, you take on the time commitment and responsibility—especially for backups. An honest look at both sides.
 level: 1
 related:
   - what-is-self-hosting
@@ -21,10 +21,11 @@ must be accessible under all circumstances.
   ... suddenly changes the terms or discontinues the service.
 - **No subscription trap.** Many cloud services charge monthly, per person, or per unit of storage. Your own server
   The main costs are electricity and, initially, hardware. The exact amount is shown in
-  [Costs & Electricity Consumption](/en/wiki/costs-power/).
+  [Costs & Power Consumption](/en/wiki/costs-power/)—it calculates these for your device
+  [Electricity calculator](/en/werkzeuge/stromrechner/) off.
 - **You'll learn a lot.** Linux, networks, DNS, certificates, containers: This knowledge will also help you in your career or when
   An understanding of how the Internet works.
-- **Freedom of choice.** You can combine the software that works best for you and aren't tied to a single ecosystem.
+- **Freedom of choice.** You can combine the software that works best for you and aren't tied to any one ecosystem.
 - **Storage is inexpensive.** Large amounts of data, such as photo archives or media files, are often significantly
   cheaper than in the cloud.
 
@@ -35,16 +36,16 @@ must be accessible under all circumstances.
   when everything is going well, and more when it isn't.
 - **You're the support person.** If a hard drive fails in the middle of the night or a container stops starting up, you're the one who handles it.
   When others (family, friends) use your services, they depend on you.
-- **Availability.** Power outages, router reboots, moving, vacations: A home server isn't as reliable as a
+- **Availability.** Power outages, router restarts, moving, vacations: A home server isn't as reliable as a
   Data center. That's fine for most consumer services, but not for everything.
-- **Security is up to you.** A service you post online will be accessed within hours by automated
+- **Security is up to you.** A service you put online will be targeted by automated
   Found by scanners. Updates and a small [attack surface](/en/wiki/attack-surface/) are a must.
 - **Hardware and electricity also cost money.** You won't save anything compared to a free service.
 
 ## The Most Important Responsibility: Backups
 
 With a cloud provider, someone else makes sure your data survives a hard drive failure. With the
-Self-hosting is all about you. That's the point beginners most often underestimate.
+Self-hosting is all about you. That's the point that beginners most often underestimate.
 
 <Callout type="warning" title="No Backup, No Self-Hosting">
 If you store photos or passwords only on your server, without backing them up somewhere else, they are
@@ -56,25 +57,25 @@ A tried-and-true rule of thumb is **3-2-1**: three copies of your data, on two d
 [Backup strategies](/en/wiki/backup-strategies/) and the guide explain how this works in practice
 [Backups with borgmatic](/en/setup/backups-borgmatic/).
 
-## When It's Best to Avoid It
+## When It's Best to Skip It
 
 Not every service is equally suitable. In these cases, you should think carefully:
 
-- **Email server.** Technically feasible, but practically a hassle. Many Internet service providers block outgoing port 25 for
-  Residential connections—and the dynamic IP addresses associated with them—are often blacklisted. To prevent your emails from ending up in the spam folder,
-  Among other things, you'll need correct SPF, DKIM, and DMARC records, a valid reverse DNS record, and a
+- **Email server.** Technically feasible, but a hassle in practice. Many Internet service providers block outbound port 25 for
+  Residential connections—and the dynamic IP addresses associated with them—are often blacklisted. To make sure your emails don't end up in the spam folder,
+  Among other things, you'll need valid SPF, DKIM, and DMARC records, a proper reverse DNS record, and a
   A clean IP reputation. And if your server goes down, in the worst-case scenario, important emails won't be delivered. For email
   A reputable provider with its own domain is usually the better choice.
-- **Services that must always be running.** If an outage causes real damage—for example, to business data or
-  For services that others rely on, you need more than just a single server at home.
-- **The only place to store irreplaceable data.** As long as there's no working backup, keep the originals
-  I'd rather have them there as well, where they are now.
-- **If you don't have time.** A server that hasn't received any updates for months is a risk. In that case, a
+- **Services that must always be running.** When an outage causes real damage, such as to business data or
+  For services that others rely on, you'll need more than just a single server at home.
+- **The only place to store irreplaceable data.** As long as there is no working backup, keep the originals
+  I'd rather have them stay where they are now.
+- **If you don't have time.** A server that hasn't received updates for months is a risk. In that case, a
   A well-maintained cloud service is the safer choice.
 
 ## A Good Middle Ground
 
-You don't have to choose between everything and nothing. Many people run services at home where data sovereignty and
+You don't have to choose between everything or nothing. Many people run services at home where data sovereignty and
 Keep track of your storage space—such as photos, files, and passwords—and store your email with a provider. Also, a
 A rented server might be the right way to get started—see "[Cloud, Hybrid, or On-Premises?](/en/wiki/cloud-hybrid-local/)"
 
@@ -83,5 +84,6 @@ Services, without making them publicly available on the Internet. This significa
 
 <Callout title="Honest Self-Assessment">
 Ask yourself: Do I enjoy setting this up? Do I have a little time each week? Am I willing to take backups seriously?
-Ready? If you say “yes” three times, nothing stands in the way of getting started.
+Ready? If you say “yes” three times, nothing stands in the way of getting started. The
+[Getting Started Wizard](/en/werkzeuge/einstiegs-assistent/).
 </Callout>

@@ -40,19 +40,19 @@ image: vaultwarden/server:latest
 image: vaultwarden/server:1.34.1
 ```
 
-You can see which tags are available on the image's page on Docker Hub or in the GitHub Container Registry. Use the version that's currently running on your system. That way, nothing will change during the switchover. The currently running version often displays the container's log or the service's web interface.
+You can see which tags are available on the image's page on Docker Hub or in the GitHub Container Registry. Use the version that's currently running on your system. That way, nothing will change during the migration. The currently running version often displays the container's log or the service's web interface.
 
-Some projects only provide tags for the major version, such as `forgejo:12`. That's fine: Within the major version, updates are then released via `docker compose pull`, and Renovate will notify you when it's time to move up to the next major version.
+Some projects only offer tags for the major version, such as `forgejo:12`. That's fine: Within the major version, updates are then released via `docker compose pull`, and Renovate will notify you when it's time to move up to the next major version.
 
 Commit and push the changes as usual.
 </Step>
 
 <Step title="Create a bot user in Forgejo">
-Renovate will get its own user account. This way, you can immediately see in Forgejo which changes were made by the bot, and you can revoke its access at any time.
+Renovate will get its own user account. That way, you can immediately see in Forgejo which changes were made by the bot, and you can revoke its access at any time.
 
 1. As an admin in Forgejo: **Website Administration** → **User Accounts** → **Create User Account**. Name, for example `renovate`.
-2. Sign `renovate`up as  and enter a full name and email address in your profile settings. Renovate needs both for its commits.
-3. Be yourself again: Repository `homelab`→ **Settings** → **Employees** → Add with`renovate` **write permissions**.
+2. Sign `renovate`up as  and enter your full name and email address in your profile settings. Renovate needs both for its commits.
+3. Be yourself again: Repository  `homelab`→ **Settings** → **Staff** →  Add with`renovate` **write permissions**.
 </Step>
 
 <Step title="Generate an access token">
@@ -69,7 +69,7 @@ Copy the token right away; Forgejo only displays it once. The current list of pe
 </Step>
 
 <Step title="Place `renovate.json` in the repository">
-The configuration for your repository is located directly`renovate.json` in`__ROOT__` your cloned repository on your computer. If it’s already there on the first run, Renovate skips its setup pull request (“Onboarding”) and gets started right away.
+The configuration for your repository is located directly`renovate.json` in`__ROOT__` your cloned repository on your computer. If it's already there on the first run, Renovate skips its setup pull request ("Onboarding") and gets started right away.
 
 ```json
 {
@@ -88,10 +88,10 @@ The configuration for your repository is located directly`renovate.json` in`__RO
 
 What these lines mean:
 
-- `config:recommended` This is the recommended default setting for Renovate. Among other things, it creates an issue called “Dependency Dashboard” that lists all pending and scheduled updates.
+- `config:recommended` This is Renovate's recommended default setting. Among other things, it creates an "Dependency Dashboard" issue that lists all pending and scheduled updates.
 - `enabledManagers` Restricts Renovate to Compose files. The manager automatically finds`docker-compose` `compose.yaml`them in`docker-compose.yml` all subfolders.
 - They allow`packageRules` **automatic merging only for patch updates**—for example, from  `1.34.1`to `1.34.2`. Minor and major updates remain open as PRs until you approve them.
-- `ignoreTests` This is necessary because your repository doesn't have any automated tests. Without this line, Renovate waits for the tests to pass before performing an automerge—tests that never run.
+- `ignoreTests` This is necessary because your repository doesn't have any automated tests. Without this line, Renovate will wait for the tests to pass before performing an automerge—tests that will never run.
 
 Commit the file and push it.
 </Step>
@@ -128,9 +128,9 @@ RENOVATE_AUTODISCOVER=true
 
 With `edit`RENOVATE_AUTODISCOVER=true``, Renovate processes all repositories to which the bot user has access. Since the bot user is`homelab` only a member of ``, that means exactly this one.
 
-Optional: Many images come from projects on GitHub. To allow Renovate to retrieve their release notes without hitting query limits, you can also `RENOVATE_GITHUB_COM_TOKEN`set a GitHub token without any special permissions. Without this token, Renovate will display a warning in the log, but it will still function.
+Optional: Many images come from projects on GitHub. To allow Renovate to retrieve their release notes without hitting query limits, you can also set `RENOVATE_GITHUB_COM_TOKEN`up a GitHub token without any special permissions. Without this token, Renovate will display a warning in the log, but it will still function.
 
-The  contains`.env` the token and, thanks to , does not`.gitignore` end up in the repository. The  is `compose.yaml`allowed into the repository. Renovate then even updates its own image.
+The  contains`.env` the token and, thanks to , does not`.gitignore` end up in the repository. The  is allowed`compose.yaml` in the repository. Renovate then even updates its own image.
 
 Renovate must be able to access it from the`https://git.__DOMAIN__` server. This is the case if the domain points to your reverse proxy.
 </Step>
@@ -143,9 +143,9 @@ cd __ROOT__/renovate
 docker compose run --rm renovate
 ```
 
-The first run takes a little longer because the image is being loaded. After that, in Forgejo, you'll find the first suggestions under "**Pull Requests**" and the Dependency Dashboard under **"Issues**." If there aren't any updates right now, that's fine too: the dashboard will then list all the images it has found.
+The first run takes a little longer because the image is being loaded. After that, in Forgejo, you'll find the first suggestions under "**Pull Requests**" and the Dependency Dashboard under **"Issues**." If there aren't any updates right now, that's fine too: The dashboard will then list all the images it has found.
 
-If nothing happens, read the output from top to bottom. Common causes include an incorrect token, insufficient permissions for the bot user, or an incorrect `RENOVATE_ENDPOINT`address.
+If nothing happens, read the output from top to bottom. Common causes include an invalid token, insufficient permissions for the bot user, or an incorrect `RENOVATE_ENDPOINT`address.
 </Step>
 
 <Step title="Run automatically at night">
@@ -161,14 +161,14 @@ and add this line. Renovate will then run every day at 4:17 a.m.:
 17 4 * * * cd __ROOT__/renovate && docker compose run --rm renovate >> $HOME/renovate.log 2>&1
 ```
 
-Patch updates will then be merged by the next run at the latest. Your deployment script will fetch them during the next `git pull`run and `docker compose up -d`load the new image, since it doesn't exist locally yet.
+Patch updates will be merged by the next run at the latest. Your deployment script will fetch them during the next `git pull`run and `docker compose up -d`load the new image because it doesn't exist locally yet.
 </Step>
 
 <Step title="Check for and approve updates">
-For minor and major updates, check out the PR:
+For minor and major updates, check the PR:
 
 - Renovate links to the release notes if it finds them. Read them before you merge, especially for **major updates** (the first number changes). These often include changes that require manual work.
-- With **databases** like PostgreSQL or MariaDB, you usually can't simply replace them during a major update. The data must be migrated. Make a backup beforehand and follow the project's instructions.
+- With **databases** like PostgreSQL or MariaDB, you usually can't just replace them during a major update. The data must be migrated. Make a backup beforehand and follow the project's instructions. For information on how to do this using a dump and restore, and how to recover if the problem has already occurred, see "[Database Won't Start After Update](/en/wiki/database-version/)."
 - If everything looks good, merge the PR into Forgejo. The deployment script will take care of the rest.
 
 If something goes wrong, undo`git revert` the merge commit and push. After that, the old version will run again.

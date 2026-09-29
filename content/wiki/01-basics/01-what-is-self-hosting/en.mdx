@@ -1,6 +1,6 @@
 ---
 title: What is self-hosting?
-description: Self-hosting means you run services such as password managers, photo archives, or cloud storage on a computer that you control yourself, rather than using them through a large provider.
+description: Self-hosting means that you run services such as password managers, photo archives, or cloud storage on a computer that you control yourself, rather than using them through a large provider.
 level: 1
 related:
   - is-it-worth-it
@@ -26,21 +26,22 @@ There is a wide selection of free software. Typical projects for beginners:
 
 <Cards>
   <Card title="Passwords">
-    A standalone password manager like [Vaultwarden](/en/services/vaultwarden/) that's compatible with the Bitwarden apps.
+    A standalone password manager like [Vaultwarden](/en/services/vaultwarden/), compatible with the Bitwarden apps.
   </Card>
   <Card title="Photos">
-    A private photo archive like [Immich](/en/services/immich/), which automatically backs up photos from your cell phone.
+    A private photo archive like [Immich](/en/services/immich/) that automatically backs up photos from your cell phone.
   </Card>
   <Card title="Files">
-    Your own cloud for files, calendars, and contacts—for example, [Nextcloud](/en/services/nextcloud/).
+    Your own cloud for files, calendars, and contacts—such as [Nextcloud](/en/services/nextcloud/).
   </Card>
   <Card title="Overview">
     Monitoring tools like [Uptime Kuma](/en/services/uptime-kuma/), which notify you when something goes down.
   </Card>
 </Cards>
 
-Many people start with a service and quickly realize how much money they can make from it. This hobby is often called
-**Homelab**: a small, personal IT environment at home for running, learning, and experimenting.
+Many people start with a service and quickly realize how much money they can make with it. This hobby is often called
+**Homelab**: a small, personal IT environment at home for running, learning, and experimenting. How something like this works at
+The [Homelabs](/en/homelabs/) show what it looks like to others.
 
 ## How this works from a technical standpoint
 
@@ -50,20 +51,20 @@ A typical setup on this page consists of just a few components:
    [Hardware Overview](/en/wiki/hardware-overview/).
 2. **Operating system**: usually a lightweight Linux distribution such as Debian or Ubuntu Server, without a graphical user interface. You
    Manage it via [SSH](/en/wiki/ssh-basics/) from your regular computer.
-3. **Docker**: Each service runs in its own **container**, an isolated environment that contains everything the
+3. **Docker**: Each service runs in its own **container**, an isolated environment containing everything the
    Software requires. It is described in a short file named `compose.yaml`. More on this in
    [What is Docker?](/en/wiki/what-is-docker/)
 4. **Reverse Proxy**: a service that accepts requests and forwards them to the appropriate container. It also ensures that
    HTTPS certificates, so you can use addresses like  `vault.__DOMAIN__`instead of an IP address and port. See
    [Reverse Proxy Explained](/en/wiki/reverse-proxy-explained/).
-5. **Backups**: a way to safeguard your data in a different location. Without this, self-hosting is a risk.
+5. **Backups**: a way to store a copy of your data in a different location. Without this, self-hosting is a risk.
 
 All services are located in a shared folder, by default`__ROOT__`. For each service, there is a subfolder containing
 `compose.yaml`,  and`.env` `data/`. That way, you'll always know where everything is, and you'll end up backing up exactly one folder.
 
 ## Where the server is located
 
-Self-hosting doesn't necessarily mean that the computer is sitting in your living room. There are three models: locally at home,
+Self-hosting doesn't necessarily mean that the computer is sitting in your living room. There are three models: at home,
 in the cloud on a rented server, or a combination of both. This article explains which option is right for you
 [Cloud, hybrid](/en/wiki/cloud-hybrid-local/), [or on-premises?](/en/wiki/cloud-hybrid-local/)
 
@@ -82,14 +83,16 @@ You don't have to be a pro. The following are helpful:
   who you can call.
 
 The article ["When Is It Worth It?](/en/wiki/is-it-worth-it/)" honestly explores whether the effort is worth it for you,
-with pros and cons.
+with its pros and cons.
 
 ## Here's what happens next
 
-If you're ready to get started, follow the instructions under "Setup" in order. You'll start by choosing the
-Hardware and guide you through installation, security, and Docker, all the way to your first service with its own domain.
+If you're ready to get started, follow the instructions under "Setup" in order. They begin with choosing the
+Hardware and guide you through installation, security, and Docker, all the way to your first service with its own domain. If you
+If you don't know yet which path is right for you, the [Getting Started Wizard](/en/werkzeuge/einstiegs-assistent/) will help you
+It asks you a few questions and suggests a starting point.
 
 <Callout title="Start small">
-Start with a single service that you actually use. Once it's running reliably and is secure, then
+Start with a single service that you actually use. Once it's running reliably and is secure, then...
 One at a time. That's less stressful than doing ten at once.
 </Callout>
