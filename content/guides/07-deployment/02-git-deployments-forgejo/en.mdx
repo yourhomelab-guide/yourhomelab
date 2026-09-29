@@ -26,7 +26,7 @@ The repository is hosted on **Forgejo**, a lightweight Git platform that you hos
 The repository should contain the Compose files, not the data or the secrets. How this looks depends on your [directory structure](/en/wiki/directory-structure/):
 
 - **Per stack (default):**  `__ROOT__`becomes the repository. You can exclude`.gitignore` the folders  `data/`and the `.env`files using .
-- **Central:** Here, configuration and data are already separated. The repository is the `stack` folder`__ROOT__`, and the data is stored separately in ```__DATA_ROOT__`. This works particularly well with Git because there aren't any large files in the repository folder. The `.gitignore` file then just needs`.gitignore` to exclude the `.` `.env`files.
+- **Central:** Here, configuration and data are already separated. The repository is the `stack` folder`__ROOT__`; the data is stored separately in ```__DATA_ROOT__`. This works particularly well with Git because there are no large files in the repository folder. The `.git/exclude` file then just needs`.gitignore` to exclude the `.` `.env`files.
 
 The commands below work for both versions.
 
@@ -39,7 +39,7 @@ These `.env`files contain passwords and tokens. They should never be included in
 <Steps>
 
 <Step title="Install Forgejo">
-Like any other service, Forgejo runs as a stack. Git over SSH uses port 2222 to avoid conflicting with the server's SSH access.
+Like any other service, Forgejo runs as a stack. Git over SSH uses port 2222 so that it doesn't conflict with the server's SSH access.
 
 ```bash
 mkdir -p __ROOT__/forgejo __DATA(forgejo)__
@@ -52,7 +52,7 @@ cd __ROOT__/forgejo
 docker compose up -d
 ```
 
-Then open it`https://git.__DOMAIN__`. The first time you launch it, Forgejo displays the initial setup:
+Then open it`https://git.__DOMAIN__`. The first time you launch it, Forgejo displays the initial configuration:
 
 - Database: **SQLite** is more than enough for a home lab.
 - Server domain`git.__DOMAIN__`, base URL`https://git.__DOMAIN__/`, SSH port **2222**.
@@ -63,7 +63,7 @@ Port 2222 must be accessible on your home network. You don't need to forward thi
 </Step>
 
 <Step title="Create a repository in Forgejo">
-In Forgejo, click the **+** icon in the upper-right corner → **New Repository**. Enter a name (for example)`homelab`, set visibility **to private**. Leave the repository empty: no README, no files`.gitignore`, no license. The files will be pulled directly from the server.
+In Forgejo, click the **+** icon in the upper-right corner → **New Repository**. Enter a name (for example)`homelab`, set visibility **to private**. Leave the repository empty: no README, no files`.gitignore`, no license. The files will come directly from the server.
 
 In the commands below,  stands `DEIN-NAME`for your Forgejo username.
 </Step>
@@ -89,7 +89,7 @@ For each stack with , create`.env``.env.example` a : the same variables, but wit
 </Step>
 
 <Step title="Create a repository and push">
-Set up Git with your name and create the repository. Before making your first commit`git status`, use to verify that neither`data/` `.env`nor appears in the list.
+Set up Git with your name and create the repository. Before making your first commit`git status`, use to verify that neither `.env`nor `data/`folder appears in the list.
 
 ```bash
 git config --global user.name "Dein Name"
@@ -102,7 +102,7 @@ git status
 git commit -m "Initial import"
 ```
 
-To make your first push, use HTTPS along with your Forgejo username and password:
+To make your first push, use HTTPS and enter your Forgejo username and password:
 
 ```bash
 git push https://git.__DOMAIN__/DEIN-NAME/homelab.git main
@@ -111,15 +111,15 @@ git push https://git.__DOMAIN__/DEIN-NAME/homelab.git main
 After that, you'll see all the Compose files in the Forgejo web interface.
 </Step>
 
-<Step title="The server receives a deployment key">
-From now on, the server should only have **read access**. To that end, it will be assigned its own SSH key, known as a deploy key. This key is valid only for this one repository.
+<Step title="The server is assigned a deploy key">
+From now on, the server should only **have read access**. To that end, it will be assigned its own SSH key, known as a "deploy key." This key is valid only for this one repository.
 
 ```bash
 ssh-keygen -t ed25519 -f ~/.ssh/forgejo_deploy -N "" -C "homelab-server"
 cat ~/.ssh/forgejo_deploy.pub
 ```
 
-Copy the line that appears. In Forgejo: Repository → **Settings** → **Deployment Keys** → **Add Deployment Key**. Do not check the "Write access" box.
+Copy the line that appears. In Forgejo: Repository → **Settings** → **Deploy Keys** → **Add Deploy Key**. Do not check the "Write access" box.
 
 Because Forgejo runs on the same server, the server connects directly via `localhost`. This bypasses DNS and routers. To do this, add`~/.ssh/config` an entry to :
 
@@ -144,7 +144,7 @@ git branch --set-upstream-to=origin/main main
 git pull
 ```
 
-The first time you connect, SSH will ask if you trust the host. Respond with `yes`.  It should`git pull` display "Already up to date."
+The first time you connect, SSH will ask if you trust the host. Reply with `yes`.  It `git pull`should display "Already up to date."
 </Step>
 
 <Step title="Clone on your computer">
@@ -154,11 +154,11 @@ On your laptop or PC, save your regular public SSH key in Forgejo: top right →
 git clone ssh://git@git.__DOMAIN__:2222/DEIN-NAME/homelab.git
 ```
 
-From now on, here's what you do: Make changes here, commit them, and push them. You no longer edit the Compose files directly on the server; otherwise, conflicts will occur the next time you run `git pull`. You only continue to maintain the `.env`files on the server.
+From now on, here’s what you do: Make changes here, commit them, and push them. You no longer edit the Compose files directly on the server; otherwise, conflicts will arise the next time you `git pull`. You’ll continue to maintain only the `.env`files on the server. To create a new stack, create a folder for it in the repository. The [Stack Builder](/en/werkzeuge/stack-builder/) will generate`compose.yaml` the appropriate one for you, and the [Compose Explainer](/en/werkzeuge/compose-erklaerer/) will walk you through a third-party one from a project documentation.
 </Step>
 
 <Step title="Deployment script on the server">
-In the simplest case, the deployment is just  `git pull`and then  `docker compose up -d`in each stack folder.  `up -d`is harmless for stacks that haven't been modified: Docker leaves containers whose configuration hasn't changed alone and only recreates the ones that have been modified.
+In the simplest case, the deployment is just  `git pull`and then  `docker compose up -d`in each stack folder.  `up -d`is harmless for stacks that haven't changed: Docker leaves containers whose configuration has remained the same alone and only recreates the ones that have changed.
 
 Create the script outside the repository so that it doesn't overwrite itself while it's running:
 
@@ -189,11 +189,11 @@ Try it out manually:
 ~/bin/homelab-deploy
 ```
 
-`--ff-only` Ensures that the script aborts instead of merging changes if someone on the server has made a direct change after all.  `--remove-orphans`Removes containers that you have deleted`compose.yaml` from a  . Stacks that are supposed to remain stopped have an empty file placed in`.skip` their folder.
+`--ff-only` Ensures that the script aborts instead of merging changes if someone has made direct changes on the server after all.  `--remove-orphans`Removes containers that you have deleted`compose.yaml` from a  . Stacks that are supposed to remain stopped have an empty file  placed in`.skip` their folder.
 </Step>
 
 <Step title="Perform regularly">
-To avoid having to connect to the server via SSH after each push, set the script to run regularly using cron. Open your crontab:
+To avoid having to connect to the server via SSH after a push, set the script to run regularly using cron. Open your crontab:
 
 ```bash
 crontab -e
@@ -205,7 +205,7 @@ and add this line. It checks for changes every 15 minutes:
 */15 * * * * $HOME/bin/homelab-deploy >> $HOME/homelab-deploy.log 2>&1
 ```
 
-From now on, here's your workflow: edit the file, commit, push, and wait a few minutes. In the log, you can see what happened:
+From now on, here's your workflow: edit the file, commit, push, and wait a few minutes. You can see what happened in the log:
 
 ```bash
 tail -n 50 ~/homelab-deploy.log
@@ -213,13 +213,13 @@ tail -n 50 ~/homelab-deploy.log
 </Step>
 
 <Step title="Advanced: Deploy Using Forgejo Actions">
-Instead of checking every 15 minutes, Forgejo can start the deployment immediately after each push. This is made possible by **Forgejo Actions**, a CI system similar to GitHub Actions. The jobs are executed by a separate program called the **Forgejo Runner**.
+Instead of checking every 15 minutes, Forgejo can start the deployment immediately after each push. This is made possible by **Forgejo Actions**, a CI system similar to GitHub Actions. The jobs are executed by a separate program, the **Forgejo Runner**.
 
 The general process:
 
 1. Enable actions for the repository in its settings.
 2. Install and register the Forgejo Runner on the server. To deploy on the same server, the Runner needs a label that runs jobs directly on the host instead of in a container (for example `homelab:host`). It will then run as your user, who is`docker` a member of the  group. The steps are outlined in the [Runner documentation](https://forgejo.org/docs/latest/admin/actions/runner-installation/).
-3. Add a workflow to the repository that calls the`main` script every time there is a push, for example`.forgejo/workflows/deploy.yaml`:
+3. Add a workflow to the repository that calls the`main` script every time there's a push, for example`.forgejo/workflows/deploy.yaml`:
 
 ```yaml
 on:
@@ -236,7 +236,7 @@ jobs:
 After that, you can delete the cron entry.
 
 <Callout type="warning" title="Runner with Host Access">
-A runner that runs directly on the host and is allowed to control Docker effectively has root privileges. Therefore, register it only for your own repository, not for the entire instance, and do not allow external users to create workflows.
+A runner that runs directly on the host and has permission to control Docker effectively has root privileges. Therefore, register it only for your own repository—not for the entire instance—and do not allow external users to create workflows.
 </Callout>
 </Step>
 
@@ -245,8 +245,8 @@ A runner that runs directly on the host and is allowed to control Docker effecti
 ## When something goes wrong
 
 - **`git pull` Stops with the message “Not possible to fast-forward”:** A file on the server has been modified that was also modified in the repository. Use  `git status`and  to see`git diff` which file it is. Apply the change to your repository on your computer and revert`git checkout -- <datei>` the file on the server using .
-- **An update failed:** `git revert`Undo the commit on your computer and push. The next time the script runs, it will roll back to the old version.
-- **New stack won't start:** The `.env`. is probably missing. You'll need to create it manually on the server, for example from the `.env.example`.
+- **An update failed:** `git revert`Undo the commit on your computer using  and push it. The next time the script runs, it will roll back to the old version.
+- **New stack won't start:** The `.env`. is probably missing. You'll need to create it manually on the server, for example from the `.env.example`. If that's not the problem, try [troubleshooting: first steps](/en/wiki/first-steps/).
 
 ## Read more
 

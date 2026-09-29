@@ -19,7 +19,7 @@ Each one behaves like its own server.
 
 Proxmox is based on Debian, is open source, and is free to use. It is managed through a web interface.
 (by default on port `8006`). The company behind it sells optional subscriptions that include support and a particularly
-tested update channel. Without a subscription, you'll use the "No-Subscription" repository and will receive a
+tested update channel. Without a subscription, you use the “No-Subscription” repository and, when you log in, you’ll receive a
 A message indicating that there is no valid subscription. This is normal for a home lab.
 
 ## VMs and LXC containers
@@ -31,7 +31,7 @@ Proxmox supports two types of guests:
     A fully simulated computer with its own kernel (based on KVM/QEMU). Any operating system can run on it: Debian, Windows, Home Assistant OS. Strong isolation from the host.
   </Card>
   <Card title="LXC containers">
-    A lightweight Linux system that shares the kernel with the Proxmox host. It boots in seconds and uses very little RAM, but offers less isolation.
+    A lightweight Linux system that shares the kernel with the Proxmox host. It starts up in seconds and uses very little RAM, but offers less isolation.
   </Card>
 </Cards>
 
@@ -39,10 +39,10 @@ Proxmox supports two types of guests:
 
 ## Why Proxmox?
 
-- **Try it out risk-free.** Create a new VM, test it, and delete it again. Your main system remains unaffected.
+- **Try it out risk-free.** Create a new VM, test it, and then delete it. Your main system remains unaffected.
 - **Snapshots.** Before an upgrade**,** you freeze the state of a VM. If something goes wrong, you can roll back to a
   Click back. (How well this works depends on the storage type, such as ZFS or LVM-Thin.)
-- **Built-in backups.** Proxmox backs up entire VMs and containers on a schedule to a local disk or a NAS.
+- **Built-in backups.** Proxmox backs up entire VMs and containers on a scheduled basis to a local disk or a NAS
   or a Proxmox Backup Server.
 - **Multiple systems on a single machine.** For example, one VM for Docker, one for Home Assistant, and a small container
   for Pi-hole.
@@ -50,32 +50,32 @@ Proxmox supports two types of guests:
 ## Backups with Proxmox Backup Server
 
 The [Proxmox Backup Server](https://pbs.proxmox.com/docs/) (PBS) is a
-its own product, which is also free. It stores backups **in a deduplicated format**: blocks that have not changed,
-are stored only once. This makes daily backups fast and requires little storage space. PBS can also
+its own product, which is also free. It stores **deduplicated** backups: blocks that haven't changed,
+are stored only once. As a result, daily backups are fast and take up little space. PBS can also
 Encrypt and mirror backups to a second PBS.
 
 Ideally, PBS should run on a **different device** than Proxmox itself. A backup on the same disk does not provide protection
 from a disk failure.
 
-<Callout title="VM backup is not a substitute for file backup">
+<Callout title="VM backup is no substitute for file backup">
 Backing up the entire VM is useful for a quick recovery. For individual files and a backup
 Outside the home, it's also worth using a tool like Borgmatic within the VM. See
 [Backup Strategies](/en/wiki/backup-strategies/).
 </Callout>
 
-## Docker: Better to Use It in a VM
+## Docker: Better in a VM
 
 Technically, Docker can also be run in an LXC container, and many people do so successfully. Nevertheless, we recommend
 We—and the [Proxmox documentation](https://pve.proxmox.com/wiki/Linux_Container)—run Docker in a **VM**
 to allow. The reasons:
 
-- **Containers within containers.** Docker in LXC means nested containers on a shared kernel. To do this,
-  Safety features must be relaxed (the "nesting" option), and this results in more edge cases.
+- **Containers within containers.** Docker in LXC means nested containers running on a shared kernel. To achieve this,
+  Security features must be relaxed (the “nesting” option), and this results in more edge cases.
 - **Host updates can cause** issues**.** Because LXC shares the kernel with Proxmox, a Proxmox update can
   Change Docker's behavior within the container. In a VM, Docker has its own kernel.
 - **Better isolation.** If a service is compromised, a VM isolates it much more effectively from the host.
 
-The cost of a VM is a little more RAM and disk space. For a Docker VM, 2 CPU cores and 4 GB of RAM are often sufficient as
+The cost of a VM is a bit more RAM and disk space. For a Docker VM, 2 CPU cores and 4 GB of RAM are often sufficient as
 Start. On it, install Debian or Ubuntu, and then follow the usual
 [Instructions](/en/setup/installing-the-os/) for treating the VM as if it were its own server.
 
@@ -87,11 +87,12 @@ Hosts. You don't need it for a first server with a few Docker services. In that 
 
 Proxmox is worth it if you
 
-- you want to run multiple operating systems in parallel (such as Home Assistant OS alongside Docker),
+- want to run multiple operating systems in parallel (such as Home Assistant OS alongside Docker, see
+  [Home Assistant](/en/setup/home-assistant/)),
 - enjoy experimenting and appreciate snapshots,
 - you have enough RAM—roughly 16 GB or more.
 
-This demonstrates how Proxmox, bare-metal, and NAS systems fit into the picture when used with Docker Compose
+This demonstrates how Proxmox, bare-metal, and NAS systems fit into the picture alongside Docker Compose
 [An Overview of Business Models](/en/wiki/operating-models/).
 
 ## Read more

@@ -15,8 +15,8 @@ practice: first-stack
 ## Why a naming scheme?
 
 Names appear in many places in a home lab: in folders, in `docker ps`, in logs, in monitoring, in the
-Browser address bar. If the same service has a different name in every location, you'll be constantly searching for it. A consistent naming convention saves you
-this search. And it makes commands predictable: You know the container's name without having to look it up.
+Browser address bar. If the same service has a different name in every field, you'll be searching constantly. A consistent naming convention saves you
+this search. And it makes commands predictable: You know the name of the container without having to look it up.
 
 The rule on this page is simple: **Each service has a name, and that name applies everywhere.**
 
@@ -26,13 +26,16 @@ A service's name is its ID, for example  `vaultwarden`or `nextcloud`. Lowercase 
 Hyphens, no spaces.
 
 - **Folder:** `__ROOT__/vaultwarden`
-- **Stack Name:** By default, Docker Compose uses the folder name as the project name. So you don't need to do anything.
+- **Stack Name:** Docker Compose uses the folder name as the project name by default. So you don't need to do anything.
 - **Container:** `container_name: vaultwarden`
 
 Without it, Compose would`container_name` generate`vaultwarden-vaultwarden-1` names such as (project, service, number). The
-It works, but it's long and hard to type. A fixed name is enough`docker logs vaultwarden`.
+It works, but it's long and hard to type. Just use a fixed name`docker logs vaultwarden`.
 
-## Aid Container
+The [Stack Builder](/en/werkzeuge/stack-builder/) follows this pattern. The folders and `compose.yaml`files,
+So the ones he generates are already appropriately named.
+
+## Aid Containers
 
 Many services consist of multiple containers, such as an app, a database, and a cache. The main container
 is named after the folder; all others follow this pattern`<id>-<rolle>`:
@@ -47,8 +50,8 @@ services:
     container_name: nextcloud-redis
 ```
 
-The keys are kept`services:` short (`db`, `redis`). The containers can be accessed using these names
-within the stack, for example, using `MYSQL_HOST=db`. Each one looks similar`compose.yaml`, and in `docker ps`
+The keys are`services:` short (`db`, `redis`). The containers can be accessed using these names
+within the stack, for example with `MYSQL_HOST=db`. Each one looks similar`compose.yaml`, and in `docker ps`
 you can still tell right away which database belongs to which service.
 
 Common roles are `db`, `redis`,  or`worker` `cron`. The important thing is that you always use the same ones.
@@ -76,7 +79,7 @@ The address remains the same. Learn more about domains under [DNS & Domains](/en
 
 ## Networks
 
-- **Proxy network:** A shared network to which the reverse proxy and all web services are connected. It is called
+- **Proxy network:** A shared network that hosts the reverse proxy and all web services. It is called
   `__NETWORK__` and is applied by hand just once:
 
   ```bash
@@ -84,7 +87,7 @@ The address remains the same. Learn more about domains under [DNS & Domains](/en
   ```
 
 - **Stack Network:** Compose automatically assigns each stack its own network named `<projekt>_default`,
-  For example`nextcloud_default`, databases are just sitting there and are therefore isolated from the rest.
+  For example`nextcloud_default`, databases are just sitting there, isolated from the rest.
 
 You rarely need additional networks. If you do, give them a name that describes their purpose, such as `monitoring`.
 For more information, see [Docker Networks](/en/wiki/docker-networks/).
@@ -92,9 +95,9 @@ For more information, see [Docker Networks](/en/wiki/docker-networks/).
 ## Host Names
 
 Your devices need names, too. A hostname should be short and consist only of lowercase letters, numbers, and hyphens.
-include them but don't reveal what's running on them. Popular formats include `homelab`, `nas`, , or`pi` numbered lists
+include them but don't reveal what's running on them. Popular schemes include `homelab`, `nas`, , or`pi` numbered sequences
 `srv01`, `srv02`. Some people also use planets or characters from books. It's a matter of taste, as long as you
-. The guide "[Static IP & Hostname](/en/setup/static-ip-hostname/)" shows you how to set the hostname.
+. The guide "[Static IP & Hostname](/en/setup/static-ip-hostname/)" explains how to set the hostname.
 
 ## In a nutshell
 
@@ -105,5 +108,5 @@ include them but don't reveal what's running on them. Popular formats include `h
 | Main Container       | `<id>`                    | `nextcloud`            |
 | Aid Container       | `<id>-<rolle>`            | `nextcloud-db`         |
 | Subdomain            | briefly, by function       | `cloud.__DOMAIN__`     |
-| Proxy Network       | once, together         | `__NETWORK__`          |
+| Proxy network       | once, together         | `__NETWORK__`          |
 | Hostname             | short, lowercase letters     | `homelab`              |

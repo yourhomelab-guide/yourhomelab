@@ -1,6 +1,6 @@
 ---
 title: VMs or containers?
-description: Virtual machines and containers isolate services from one another, but in different ways. The difference lies primarily in the kernel, and it determines the level of isolation and resource requirements.
+description: Virtual machines and containers isolate services from one another, but in different ways. The difference lies primarily in the kernel, which determines the level of isolation and resource requirements.
 level: 2
 related:
   - what-is-docker
@@ -12,10 +12,10 @@ practice: installing-docker
 
 <OneWay />
 
-## What's this about?
+## What's it about?
 
-Many services run side by side on a server. To prevent them from interfering with each other, they are separated.
-There are two techniques for this: **virtual machines** (VMs) and **containers**. From the outside, they look similar,
+Many services run side by side on a server. To prevent them from interfering with one another, they are separated.
+There are two techniques for this: **virtual machines** (VMs) and **containers**. From the outside, both look similar,
 But they work in fundamentally different ways.
 
 The key term is the **kernel**. It is the core of the operating system that communicates directly with the hardware.
@@ -24,20 +24,20 @@ and manages memory, processes, and devices.
 ## Virtual Machines
 
 A VM is a **simulated computer**. A hypervisor (such as KVM in Proxmox) makes it appear as though it has a CPU, RAM, hard drive, and
-Network adapter. A full-fledged operating system **with its own kernel** is running in the VM. It often doesn't even know that
+Network card. The VM runs a full-fledged operating system **with its own kernel**. It often doesn't even know,
 that it is virtualized.
 
 - **Strong isolation.** The hypervisor sits between the VM and the host, supported by the CPU (Intel VT-x, AMD-V).
 - **Any operating system:** Linux, Windows, Home Assistant OS, BSD.
-- **Fixed resource requirements.** Each VM boots its own system and reserves RAM. A lightweight Linux VM requires
-  Roughly a few hundred MB of RAM, even before any services are running.
+- **Fixed resource requirements.** Each VM boots its own system and reserves RAM. A lean Linux VM requires
+  Roughly a few hundred MB of RAM before any services are even running.
 
 ## Container
 
 A container is **not a separate computer**, but rather a group of processes on the host that is isolated.
 All containers **share the host's kernel**. This separation is handled by functions in the Linux kernel:
 
-- **Namespaces** ensure that a container runs only its own processes, its own file system, and its
+- **Namespaces** ensure that a container has only its own processes, its own file system, and its
   sees its own network.
 - **cgroups** limit how much CPU and RAM a container can use.
 
@@ -47,7 +47,7 @@ at the same time.
 
 There are two types:
 
-- **Application containers** like [Docker](/en/wiki/what-is-docker/): one container per service, built from
+- **Application containers** such as [Docker](/en/wiki/what-is-docker/): one container per service, built from
   a pre-built image. That's the standard for self-hosting.
 - **System containers** like LXC in Proxmox: an entire Linux system with package management and multiple services, almost
   like a small VM, but without its own kernel.
@@ -65,14 +65,15 @@ There are two types:
 
 ## When do you take what?
 
-For a home lab, the question is rarely “either/or.” The usual combination is: **Docker containers for the
-Services**, and if necessary, **a VM as a container around them**.
+For a home lab, the question is rarely "either/or." The usual combination is: **Docker containers for the
+Services**, and if necessary, **a VM as a wrapper around them**.
 
 - **Docker only:** You have a computer and want to run a few services. Linux running directly on the hardware, on which
   Docker. Here's how the [guides on this page](/en/setup/installing-docker/) work.
 - **VM with Docker inside:** You're using Proxmox or a NAS system and want to completely separate Docker from the host.
 - **Your Own VM:** For anything that requires its own operating system (Home Assistant OS, Windows, a firewall such as
-  (OPNsense), or for services that you want to isolate particularly strictly.
+  OPNsense), or for services you want to isolate particularly strictly. For Home Assistant, the guide considers
+  Comparing [Home Assistant](/en/setup/home-assistant/) VMs and containers.
 - **LXC:** For small, individual Linux services on Proxmox when RAM is limited.
 
 <Callout title="Containers are still safe enough">
@@ -119,7 +120,7 @@ Benefits: up-to-date images, no unnecessary permissions`privileged: true`, and a
     },
     lxc: {
       title: "Proxmox with LXC Containers",
-      text: "LXC containers save RAM and are well-suited for individual, lightweight services. For Docker, though, you're better off using a VM.",
+      text: "LXC containers save RAM and are suitable for individual, lightweight services. For Docker, though, you're better off using a VM.",
     },
   }}
 />
@@ -128,4 +129,5 @@ Benefits: up-to-date images, no unnecessary permissions`privileged: true`, and a
 
 - [What is Docker?](/en/wiki/what-is-docker/)
 - [Proxmox VE](/en/wiki/proxmox-ve/)
+- [An Overview of Operating Models](/en/wiki/operating-models/)
 - [Docker Documentation: What Is a Container?](https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/)

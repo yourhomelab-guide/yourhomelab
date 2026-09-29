@@ -1,6 +1,6 @@
 ---
 title: Single Sign-On
-description: With single sign-on, you log in once and are automatically logged in to all the services in your home lab. Here, you'll learn the basics of OIDC and OAuth2, the difference between forward authentication and native authentication, and which tools are best suited for each scenario.
+description: With single sign-on, you log in once and are automatically logged in to all the services in your home lab. Here, you’ll learn the basics of OIDC and OAuth2, the difference between forward authentication and native authentication, and which tools are best suited for each scenario.
 level: 2
 related:
   - reverse-proxy-explained
@@ -23,7 +23,7 @@ knows all the users. The individual services now ask only him: "Who is that, and
 Here's what you'll get:
 
 - **One account per person** instead of one account per service and person.
-- **Strong authentication through a single point of access**—for example, using Passkeys or two-factor authentication—even for services that don't support it themselves.
+- **Strong authentication through a single point of access**—such as with Passkeys or two-factor authentication—even for services that don't support it themselves.
 - **Protection for services that do not have their own login**, such as dashboards or admin interfaces.
 
 ## OAuth2 and OIDC: A General Overview
@@ -33,17 +33,17 @@ You don't need to know the protocols in detail, but the terms come up all the ti
 - **OAuth 2.0** defines how an application gains access on behalf of a user. Originally, it was about
   Permissions ("This app can access your contacts"), not the question of who someone is.
 - **OpenID Connect (OIDC)** builds on OAuth 2.0 and adds exactly that: an identity. After the
-  Login: username, email address, and often groups as well.
+  Login: Username, email address, and often groups as well.
 
 The process is always similar:
 
 1. You open a service, such as `photos.__DOMAIN__`.
 2. The service redirects you to the identity provider, such as `id.__DOMAIN__`.
 3. You sign up there.
-4. The IdP sends you back to the service with a signed certificate. The service verifies it and grants you access.
+4. The IdP sends you back to the service with a signed token. The service verifies it and grants you access.
 
 To make this work, you register each service with the IdP as **a client**. You'll receive a **client ID** and a
-**Client secret** and enter the **redirect URI** in the IdP—that is, the address to which it redirects after login.
+**Client secret**, and enter the **redirect URI** in the IdP—that is, the address to which it redirects after login.
 The client secret is a password and belongs in the service's`.env` secrets; see [Manage Secrets](/en/wiki/managing-secrets/).
 
 ## Two Options: Native OIDC or Forward Auth
@@ -55,21 +55,21 @@ In its settings, enter the IdP's address, client ID, and client secret. The foll
 then a button that says "Sign in with Pocket ID."
 
 This is the cleanest approach: The service knows who is logged in, creates the appropriate user accounts, and can assign permissions
-assigned. Apps on cell phones usually work without any problems, too, because the service manages the process itself.
+assigned. Apps on cell phones also usually work without any problems because the service manages the process itself.
 
 ### Forward Auth
 
 Not every service supports OIDC. That's where **Forward Auth** comes in: the [reverse proxy](/en/wiki/reverse-proxy-explained/)
-For every request, first check with an authentication service to see if the visitor is logged in. The proxy will only proceed if the visitor agrees.
+For every request, first check with an authentication service to see if the visitor is logged in. Only if the visitor agrees will the proxy proceed.
 forward the request to the actual service. Otherwise, the visitor is redirected to a login page.
 
 In Traefik, this is a middleware component that you attach to a router using a label. Caddy uses Nginx for this`forward_auth`.
-Proxy Manager can be integrated using its own Nginx configuration.
+Proxy Manager can be integrated using your own Nginx configuration.
 
 Forward Auth protects every service, but it has its limitations:
 
 - The service itself isn't aware of this. If it has its own login, you'll have to log in twice.
-- Mobile apps and other programs that communicate directly with the API can't do anything with the login page, and
+- Mobile apps and other programs that communicate directly with the API cannot make use of the login page and
   often fail. For such services, native OIDC is better.
 
 | | Native OIDC | Forward Auth |
@@ -77,7 +77,7 @@ Forward Auth protects every service, but it has its limitations:
 | **The service has to be able to do it** | Yes | No |
 | **User Accounts in the Service** | Are created automatically | Stay apart |
 | **Apps and APIs** | Usually work | Often problematic |
-| **Good for** | Services with OIDC Support | Dashboards, Admin Interfaces, Services That Don't Require a Login |
+| **Good for** | Services with OIDC Support | Dashboards, Admin Interfaces, Services Without Login |
 
 In practice, you combine both: native OIDC when the service supports it, and Forward Auth for everything else.
 
@@ -89,30 +89,32 @@ In practice, you combine both: native OIDC when the service supports it, and For
     Ideal for services with native OIDC support.
   </Card>
   <Card title="Tinyauth">
-    Small login middleware for forward authentication before Traefik, Caddy, or NPM. It can manage users on its own or use the
-    Forward the registration to Pocket ID.
+    Small login middleware for forward authentication before Traefik, Caddy, or NPM. Can manage users on its own or use the
+    Forward the login credentials to Pocket ID. The tool generates the password hash for local users.
+    [Password hash](/en/werkzeuge/passwort-hash/).
   </Card>
   <Card title="Authentik">
     A full-featured identity provider with OIDC, SAML, LDAP, and its own proxy. Very powerful, but more complex and with
-    It's significantly more resource-intensive than 2 GB of RAM.
+    It uses significantly more memory than 2 GB of RAM.
   </Card>
 </Cards>
 
 For most home labs, the combination of [Pocket ID](/en/services/pocket-id/) and [Tinyauth](/en/services/tinyauth/) is sufficient:
-Pocket ID is the central login; Tinyauth protects services that do not use OIDC via forward authentication and uses Pocket ID for this purpose as
-Sign In. [Authentication](/en/services/authentik/) is worth it if you want to manage many users, groups, and rules.
+Pocket ID is the central login; Tinyauth protects services without OIDC using forward authentication and uses Pocket ID for this purpose as
+Sign In. [Authentication](/en/services/authentik/) is worth it if you want to manage a lot of users, groups, and rules.
 or protocols such as LDAP.
 
 ## What You Should Keep in Mind
 
-- **The IdP is a key component.** If it goes down, you won't be able to access any connected services. Keep in
-  Set up a local admin account as an emergency access point for critical services and back up the IdP's data.
+- **The IdP is a key component.** If it goes down, you won't be able to access any of the connected services. Keep in
+  Set up a local admin account as an emergency access point for critical services and secure the IdP's data.
 - **HTTPS is required.** OIDC only works reliably with valid certificates; see
   [TLS & Certificates](/en/wiki/tls-certificates/).
-- **Enter the redirect URIs exactly as shown.** A typo or  `http`instead of  is`https` the most common reason for
+- **Enter the redirect URIs exactly as shown.** A typo, such as  `http`instead of , is`https` the most common reason for
   Error messages upon first login.
 
 ## Read more
 
-- [Set up Pocket ID](/en/setup/pocket-id/) and [configure Tinyauth to run before other services](/en/setup/tinyauth/)
+- [Set up Pocket ID](/en/setup/pocket-id/) and [configure Tinyauth to run before the services](/en/setup/tinyauth/)
+- [Security Check](/en/werkzeuge/sicherheits-check/): Shows whether your logins and the rest of your setup are well protected
 - [OpenID Connect Explained (openid.net)](https://openid.net/developers/how-connect-works/)

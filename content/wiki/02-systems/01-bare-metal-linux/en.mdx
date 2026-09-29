@@ -15,7 +15,7 @@ practice: installing-the-os
 ## What does “bare metal” mean?
 
 "Bare Metal" literally means "bare metal." What this means is that the operating system runs **directly on the hardware**, without
-a virtualization layer in between. So you install a standard version of Linux on your mini-PC or your old
+a virtualization layer in between. So you install a regular version of Linux on your mini-PC or your old
 Notebook, just like on a desktop computer, but without a graphical user interface.
 
 You then install Docker on this Linux system. Each service will then run in its own container. The
@@ -23,11 +23,11 @@ So Docker handles the separation between services, not a hypervisor.
 
 ## Why this path?
 
-Bare-Metal Linux offers many advantages for those just starting out:
+Bare-Metal Linux offers many advantages for those just getting started:
 
 - **Few moving parts.** One system, one package manager, one place for logs. If something isn't working, you look in
   exactly one location.
-- **Full performance.** No layer that diverts RAM or CPU resources. That’s what matters on low-end hardware with 8 or 16 GB of RAM.
+- **Full performance.** No layer that diverts RAM or CPU resources. That's what matters on low-end hardware with 8 or 16 GB of RAM.
 - **Huge knowledge base.** Almost every tutorial online is based on Debian or Ubuntu. You can find error messages
   quickly using a search engine.
 - **Easily transferable.** What you learn here (SSH, users, firewall, Docker) is something you'll also need later on a VPS or
@@ -38,15 +38,15 @@ Start, stop, and refresh. That's more than enough for most home labs.
 
 ## Which distribution?
 
-A distribution is a ready-to-use package consisting of the Linux kernel, programs, and a package manager. For a server, the following are good options:
+A distribution is a ready-to-use package consisting of the Linux kernel, programs, and a package manager. For a server, the following are recommended:
 two:
 
 | | Debian | Ubuntu Server |
 | --- | --- | --- |
-| **Character** | Slim, conservative, very sturdy | Slightly newer packages, more preinstalled |
+| **Character** | Slim, conservative, very sturdy | Slightly newer packages, more pre-installed |
 | **Support** | About three years per version, plus long-term support (LTS) provided by volunteers | LTS versions receive five years of standard updates |
 | **New Versions** | About every two years | LTS every two years (April, even-numbered years) |
-| **Manufacturer** | Community Project | Canonical (Company) |
+| **Manufacturer** | Community Project | Canonical (company) |
 
 Both are good choices, and all the commands on this page work on both. With Ubuntu, always use a
 **LTS** (Long-Term Support) **version**, not an interim release. If you can't decide: Debian.
@@ -58,7 +58,7 @@ from your computer. This saves RAM, and there's less software that needs updates
 
 ## What does the setup look like?
 
-If you follow the instructions under "[Setup](/en/setup/installing-the-os/)," your server will look like this
+If you follow the instructions under "[Setup](/en/setup/installing-the-os/)," your server will
 It ends up looking something like this:
 
 - Debian or Ubuntu Server, Login via SSH Key Only
@@ -77,14 +77,15 @@ Bare Metal isn't always the best choice:
 - **No system snapshots.** Before a major upgrade, you can't back up the entire server with a single click
   Back up and restore. A good [backup](/en/wiki/backup-strategies/) protects your data, which
   In an emergency, you'll need to reinstall the operating system. But with Docker and a clean folder, it's a quick fix.
-- **One system for everything.** Do you want to try something that doesn't run in Docker, such as another
-  Operating system or Home Assistant OS—you'll need a VM. In that case, it's worth taking a look at
+- **One system for everything.** Do you want to try something that doesn't run in Docker, such as a different
+  Operating system or Home Assistant OS—you'll need a VM. In that case, it's worth checking out
   [Proxmox VE](/en/wiki/proxmox-ve/).
-- **Many hard drives.** If your server is primarily a data storage device with multiple drives, it will take up
+- **Many hard drives.** If your server is primarily a data storage device with multiple drives, they’ll take up
   [TrueNAS or Unraid](/en/wiki/truenas-unraid/) take a lot of the work off your hands.
 
-You can switch later. Since all services are stored as  `compose.yaml`files in the same folder, you can drag them
-Migrate to a new system with minimal effort, such as to a VM running on Proxmox.
+You can switch later. Since all services are stored as files`compose.yaml` in the same folder, you can drag them
+Migrate to a new system with minimal effort, such as to a VM running on Proxmox. Here's a step-by-step guide on how to do it:
+[Migration to new hardware](/en/setup/moving-hardware/).
 
 "Which Infrastructure Fits Which Goal" provides [an overview](/en/wiki/operating-models/) comparing [operating models](/en/wiki/operating-models/).
 

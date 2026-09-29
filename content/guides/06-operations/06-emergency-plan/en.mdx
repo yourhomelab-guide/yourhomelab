@@ -1,0 +1,293 @@
+---
+title: Emergency Plan
+description: You create an emergency checklist with everything you need in case your server goes down, determine which services should come back online first, and have a step-by-step guide to help you rebuild your home lab from the borgmatic backup on new hardware.
+level: 2
+minutes: 45
+requires:
+  - Backups with borgmatic
+  - Restore Tested
+---
+
+<OneWay />
+
+Sooner or later, it happens: the SSD fails, lightning strikes the power line, the server gets stolen, or an update messes up the system so badly that a fresh install is faster than fixing it. With a backup, this isn’t a disaster—it’s just an afternoon’s work. Provided, of course, that you can access the backup and know what to do.
+
+In practice, it’s rarely the backup itself that fails, but rather minor details: The passphrase was stored in the password manager, and that was running on the crashed server. Access to the backup computer was only possible with the old server’s SSH key. The address of the backup destination was stored only in the configuration on the old server.
+
+This guide is therefore divided into two parts. You can take your time to complete the **preparation steps** now. You can read the **steps to follow in an emergency** when the time comes. This guide assumes that you have set up [backups using borgmatic](/en/setup/backups-borgmatic/) and [tested](/en/setup/testing-restores/) the [restore process](/en/setup/testing-restores/).
+
+## Preparation: The Emergency Sheet
+
+The Emergency Checklist is a brief compilation of everything you'll need if your server goes down. The most important rule: **None of this should be stored exclusively on the server you're backing up.**
+
+| What | What is it for? |
+| --- | --- |
+| Borg Passphrase | Without it, the backup won't be readable—not even for you. |
+| Exported Borg Key (`sudo borgmatic key export`) | A fallback in case the key file in the repository is corrupted. |
+| Repository address, e.g., `ssh://backup@192.168.1.20/./borg` | So that the new server knows where the backup is located. |
+| Access to the backup destination: Log in with the provider or on the backup computer | The new server needs its own SSH key, which you'll need to enter there. |
+| Password manager master password and recovery codes for 2FA | Without them, you won't be able to access any other entrances. |
+| Access to the registrar or DNS provider | In case the new server is assigned a different IP address. |
+| Access to the Router | Configure port forwarding and static IP assignments. |
+| Access to your hosting provider, if you're using a VPS | Order a new server and configure the firewall with the provider. |
+| Overview of your services: subdomains, ports, databases, paths outside of `__ROOT__` | Just so you know what needs to be returned. |
+| Copy of  `/etc/borgmatic/config.yaml`(optional) | Although Borgmatic automatically includes them in every archive, having a copy on hand will save you a step in case of an emergency. |
+
+You don't have to write the overview of your services by hand. The [documentation export](/en/werkzeuge/doku-export/) generates a Markdown file from your setup that includes ports, paths, and restore steps. If necessary, you can restore the borgmatic configuration from a backup or regenerate [it](/en/werkzeuge/borgmatic-konfiguration/) using the [`borgmatic-configuration`](/en/werkzeuge/borgmatic-konfiguration/) tool.
+
+<Callout type="warning" title="The Chicken-and-Egg Problem with Password Managers">
+If your password manager runs locally on your home computer—for example, as [Vaultwarden](/en/services/vaultwarden/)—the Borg passphrase and all other credentials are stored in the backup, which you cannot access without the passphrase. The Bitwarden apps do keep an encrypted copy of your vault and often display it even without a server connection. But don’t rely on that. At the very least, store the Borg passphrase, the key, and the master password separately **off-site** as well.
+</Callout>
+
+Where you keep the emergency sheet depends on what you want to protect yourself from. The following has proven effective:
+
+- **Print it out and place it** in a sealed envelope—for example, with your important documents. For the Borg key, generate a`sudo borgmatic key export --paper` version you can type out.
+- **A second copy stored off-site**, such as with a trusted person. Otherwise, a fire could destroy the server, the USB backup, and the paper copies all at once.
+- **Store them digitally in a location that isn't dependent on your server**—for example, in an encrypted export from your password manager on a USB drive.
+
+A piece of paper with your passphrase on it poses a risk if someone breaks into your home. For most people, that risk is smaller than the risk of losing all their data. Make a conscious decision about what works best for you.
+
+Update the sheet whenever you change your password, backup destination, or service provider. And give it a try: [Running](/en/setup/testing-restores/) the full "Test [Restore](/en/setup/testing-restores/)" procedure—with just the emergency sheet in hand—is the best way to practice.
+
+## Set Priorities
+
+In an emergency, you don't want to have to think about where to start. Decide on the order now and write it down on your emergency checklist. A sensible basic order:
+
+| Order | What | Why |
+| --- | --- | --- |
+| 1 | Password Manager | All other access points depend on it. |
+| 2 | Reverse proxy and login service (e.g., Traefik, Pocket ID) | Without it, hardly any other service is accessible. |
+| 3 | Services that contain important data and are used on a daily basis | Files, photos, calendars, smart home. Other people are often waiting here, too. |
+| 4 | Everything else | Dashboards, Monitoring, Media, and Experiments. |
+
+If anyone else in your household uses your services, you should also come up with a Plan B for the meantime. For example, you could keep the photos on your phone until the server is back up and running.
+
+## Procedure in Case of an Emergency
+
+Allow enough time. How long the restore takes depends primarily on the amount of data and the connection to the backup. Transferring 500 GB over a 100 Mbit/s connection takes about eleven hours just for the transfer. A USB drive connected to the new server is significantly faster.
+
+<Steps>
+
+<Step title="Assess the situation and don't rush into anything">
+First, figure out exactly what's broken. If it's just the power supply that's defective, a replacement part might be all you need. If it's just the system drive that's dead, the data on a second drive might still be intact.
+
+Until you know what's going on, the rule is:
+
+- **Do not write anything to a disk that might still contain data.** Do not attempt to repair it on a whim.
+- **Do not tamper with the backup repository.** Never run a second backup`repo-create`, and do not start any processes on`borgmatic` any computer without taking action until the restore is complete. Otherwise, the cleanup rules could delete actual archives.
+- **Check to see if the backup itself is affected.** If the server was compromised or if files were already corrupted before the outage, the most recent archive might not be the right one.
+</Step>
+
+<Step title="Deploy New Hardware or a VM">
+You need a computer on which your home lab can run again. It doesn't have to be the final solution right away:
+
+- a spare computer or an old laptop,
+- a virtual machine on your PC to quickly restore what's most important,
+- a rented VPS, if your backup destination is accessible via the Internet.
+
+Make sure you have enough storage space for all the data from the backup, plus some extra. The easiest option is a computer with the same architecture as the old one—that is, x86 or ARM again. The guide [“Migrating to New Hardware](/en/setup/moving-hardware/)” explains why.
+</Step>
+
+<Step title="Install the Operating System and Docker">
+Set up the new server just like the old one. You already know the guides for that:
+
+1. [Install the Operating System](/en/setup/installing-the-os/)
+2. [Fixed IP & Hostname](/en/setup/static-ip-hostname/)
+3. [Setting](/en/setup/ssh-keys/) [Up SSH Keys](/en/setup/ssh-keys/), [Users, and sudo](/en/setup/users-sudo/)
+4. [Securing SSH](/en/setup/hardening-ssh/) and Setting Up [a Firewall with UFW](/en/setup/firewall-ufw/)
+5. [Install Docker](/en/setup/installing-docker/)
+
+Three things will save you work later on. Assign the server **the same static IP address** as the old one; this will ensure that port forwarding and local DNS entries are correct right away. Give it **the same hostname**, because borgmatic names the archives after it and, by default, only displays archives for its own hostname. And create **the same username**. On Debian and Ubuntu`1000`, the first user will be assigned the ID as before, and the permissions for the restored files will be correct.
+
+You can install the automatic updates later. Finally, check to see if Docker is running:
+
+```bash
+docker compose version
+```
+</Step>
+
+<Step title="Install Borgmatic and connect it to the backup">
+Install Borg and borgmatic exactly as described in [the](/en/setup/backups-borgmatic/) [backup guide](/en/setup/backups-borgmatic/):
+
+```bash
+sudo apt update
+sudo apt install borgbackup pipx
+sudo PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/local/bin pipx install borgmatic
+```
+
+Enter the passphrase **from the emergency sheet**:
+
+```bash
+sudo mkdir -p /etc/borgmatic
+sudo chmod 700 /etc/borgmatic
+sudo nano /etc/borgmatic/passphrase
+sudo chmod 600 /etc/borgmatic/passphrase
+```
+
+Then create a`sudo nano /etc/borgmatic/config.yaml` minimal version of the configuration using . For the restore, all you need are your repository and the passphrase:
+
+```yaml
+repositories:
+    - path: ssh://backup@192.168.1.20/./borg
+      label: remote
+
+encryption_passphrase: "{credential file /etc/borgmatic/passphrase}"
+
+# Show archives of every host name, not just this server's
+match_archives: "*"
+```
+
+The last line ensures that you can still see the archives even if the new server has a different hostname. It belongs only in this restore configuration, not in the actual one that will be used later.
+
+If the backup is located on a different computer, the root user on the new server will need their own SSH key. Generate it and enter the public key in the backup destination—that is, in the user's`~/.ssh/authorized_keys` account or`backup` in your provider's web interface:
+
+```bash
+sudo ssh-keygen -t ed25519
+sudo cat /root/.ssh/id_ed25519.pub
+```
+
+Connect a USB drive to the same path as before. Now for the crucial test:
+
+```bash
+sudo borgmatic repo-list
+```
+
+If you can see your archives, the hardest part is over.
+
+By the way, your complete configuration is included in the backup: borgmatic automatically adds the configuration files used to each archive, along with their full paths. Here's how to move them to a folder for comparison:
+
+```bash
+mkdir -p /tmp/bootstrap
+P=/etc/borgmatic
+sudo borgmatic extract --archive latest --path "${P#/}" --destination /tmp/bootstrap
+sudo ls /tmp/bootstrap/etc/borgmatic
+```
+
+The passphrase file isn't included there—that's intentional. Don't apply the actual one `config.yaml`until after the restore, along with the timer. The [borgmatic documentation](https://torsion.org/borgmatic/how-to/extract-a-backup/) also describes the action for this`config bootstrap`. If Borg reports an error with the key, import the exported key from the emergency sheet using `sudo borgmatic key import`. Details can be found in the [borgmatic documentation](https://torsion.org/borgmatic/reference/command-line/actions/key-import/).
+
+<Callout type="warning" title="No timer yet">
+Don't set up the systemd timer until everything has been restored. Otherwise, a backup of a half-empty server would end up alongside your actual archives, and the cleanup rules could delete valid backups.
+</Callout>
+</Step>
+
+<Step title="Retrieve Data">
+First, select the archive.  It `repo-list`shows all versions with their dates. The most recent one is usually the correct one. If the old server was already acting up before the outage, choose an older version.
+
+You can restore the entire Homelab folder to its original location with a single command. On a fresh server, this is exactly`--destination /` what you want:
+
+```bash
+sudo borgmatic extract --archive latest --destination /
+```
+
+Instead, you can`latest` substitute`repo-list` any name from the list. Borg also restores ownership and rights in the process.
+
+If you want to proceed by priority, start by retrieving only individual stacks. Borg stores paths without a leading slash, which is why the expression is written as follows (`--path`more on this in [the "Restore" test](/en/setup/testing-restores/)):
+
+```bash
+P=__ROOT__/vaultwarden
+sudo borgmatic extract --archive latest --path "${P#/}" --destination /
+```
+
+In "central" mode, the data is located under `__DATA_ROOT__`. Retrieve it with a second call if the folder is`__ROOT__` not already located under . The same applies to other paths listed`source_directories` in .
+
+Finally, check to make sure everything is there:
+
+```bash
+ls -la __ROOT__
+```
+</Step>
+
+<Step title="Restore Databases">
+If your backup stopped the database stacks beforehand, the database files are fine. In that case, you can skip this step. If the databases were running during the backup, the copied files may be corrupted. The safest option in that case is to use the **dump** that your backup created beforehand.
+
+Here's how it works: You set the old database files aside, start only the database container with an empty data folder, and import the dump. This example uses Authentik with PostgreSQL from the backup guide:
+
+```bash
+cd __ROOT__/authentik
+sudo mv __DATA(authentik)__/postgres __DATA(authentik)__/postgres.alt
+docker compose up -d postgresql
+docker compose exec postgresql pg_isready -U authentik
+```
+
+If you report it,`pg_isready``accepting connections` you'll import the dump:
+
+```bash
+sudo cat __DATA(authentik)__/db-dump/authentik.sql \
+  | docker compose exec -T postgresql psql -U authentik -d authentik
+```
+
+With MariaDB—for example, for Nextcloud—it works like this. Here, too, you first move the old data folder aside and then just start the database:
+
+```bash
+cd __ROOT__/nextcloud
+sudo mv __DATA(nextcloud)__/db __DATA(nextcloud)__/db.alt
+docker compose up -d db
+sudo cat __DATA(nextcloud)__/db-dump/nextcloud.sql \
+  | docker compose exec -T db sh -c 'mariadb -u root -p"$MARIADB_ROOT_PASSWORD" nextcloud'
+```
+
+After starting the container, give it a few seconds until the database is ready. Services that use SQLite—such as Vaultwarden in its default configuration—usually don't require this step. Don't delete`.alt` the folders until the service has been running smoothly for a few days.
+</Step>
+
+<Step title="Launch stacks in the correct order">
+First, create the proxy network. It is part of Docker itself and is therefore not included in the backup:
+
+```bash
+docker network create __NETWORK__
+```
+
+Then start the reverse proxy, followed by the services according to your priority list:
+
+```bash
+cd __ROOT__/traefik && docker compose up -d
+cd __ROOT__/vaultwarden && docker compose up -d
+```
+
+Once the most important services are up and running, you can start the rest all at once. Stacks that are already running will remain unchanged:
+
+```bash
+for f in __ROOT__/*/compose.yaml; do docker compose -f "$f" up -d; done
+```
+
+Docker will re-download all images during this process. If an image has a`compose.yaml` fixed tag, you'll get the same version as before. Otherwise, it might`latest` be a newer version. So if you run into problems, check the log first:
+
+```bash
+docker compose -f __ROOT__/vaultwarden/compose.yaml logs --tail 50
+```
+
+For instructions on how to proceed from there, see ["Troubleshooting: First Steps](/en/wiki/first-steps/)." If a database won't start because its image now has a newer major version, see "[Database Won't Start After Update](/en/wiki/database-version/)."
+</Step>
+
+<Step title="Check DNS, Router, and Access">
+If the new server has the same IP address as the old one, you usually don't need to do anything here. Otherwise, go through these steps:
+
+- **Router**: Change the port forwarding settings for ports 80 and 443 (and the WireGuard port, if applicable) to the new internal IP address, and adjust the static IP assignment.
+- **DNS**: At home, your records point to your connection's public IP address. This does not change when you get new hardware. If the server is running on a new VPS, you'll need to update the A and AAAA records with your DNS provider to point to the new address.
+- Update **the local DNS entries**—such as those in your router or in Pi-hole—to the new IP address.
+
+Then check whether the name points to the correct address:
+
+```bash
+dig +short vault.__DOMAIN__
+```
+
+`dig` is included in the package  (`dnsutils``sudo apt install dnsutils`). Finally, test your services from the outside as well—for example, using your cell phone on the cellular network instead of Wi-Fi.
+
+Traefik has retrieved the certificates along with its data folder, so there's no need to request them again. If the request fails, don't restart Traefik in a loop. Let's Encrypt limits how often you can request certificates.
+</Step>
+
+<Step title="Follow-up work">
+Your home lab is up and running again. To make sure the next emergency turns out just as well, there are still a few things missing:
+
+1. **Re-enable the backup**: copy`/etc/borgmatic` the actual backup file `config.yaml`from the backup guide`/tmp/bootstrap`, check it for command hooks and monitoring, create the systemd timer described in the [backup guide](/en/setup/backups-borgmatic/), and start a run manually. Then delete it`/tmp/bootstrap`.
+2. **Monitoring**: Reinstall the agents for [Beszel](/en/setup/monitoring-beszel/) if they were running outside of Docker, and check in [Uptime Kuma](/en/setup/uptime-kuma/) to make sure all monitors are green.
+3. Catch`__ROOT__` up on **automatic updates** and other settings outside of .
+4. **Update your emergency sheet**: What was missing? What took longer than expected? Write it down now, while you still remember.
+5. Securely delete or destroy **old storage media** before you dispose of them. They contain your secrets.
+</Step>
+
+</Steps>
+
+## What happens next?
+
+A contingency plan is only as good as its last test. Schedule a full restore-to-restore[ test](/en/setup/testing-restores/) once a year, using only the emergency checklist. The guide [“Migrating to New Hardware](/en/setup/moving-hardware/)” shows you how to migrate a functioning home lab to new hardware without any downtime. You can find tips on documentation under [“Documentation](/en/wiki/documentation/).”

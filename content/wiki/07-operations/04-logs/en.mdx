@@ -11,14 +11,14 @@ related:
 ## What are logs?
 
 Logs are the records that programs generate while running: startup messages, warnings, errors, and accesses.
-When troubleshooting, they're usually the first and best clue. If a container doesn't start or keeps restarting
+When troubleshooting, they are usually the first and best clue. If a container fails to start or keeps restarting,
 Now, the reason is almost always found in the last few lines of his log.
 
 On a home lab server, there are two sources:
 
-- **Container logs**: Everything a service inside a container writes to standard output. Docker collects this information.
+- **Container logs**: Everything a service running in a container writes to standard output. Docker collects this information.
 - **System logs**: Messages from the operating system and its services, such as SSH, Docker itself, or updates. These are collected
-  On Debian and Ubuntu, the `**journald**` service provided by `systemd`.
+  On Debian and Ubuntu, systemd's **journald**.
 
 ## Reading Container Logs
 
@@ -45,7 +45,7 @@ docker compose logs --since 1h -t
 docker compose logs -f vaultwarden
 ```
 
-The options can be combined; for example, `docker compose logs -f --tail 50`. This is the typical command,
+The options can be combined; for example, `docker compose logs -f --tail 50`. That is the typical command,
 if you've just restarted a service and want to see what happens. Use  to filter`grep` by
 Keywords:
 
@@ -74,7 +74,7 @@ The journal sets its own size limit, so you usually don't have to worry about it
 ## Log Rotation: The Underestimated Pitfall
 
 By default, Docker stores container logs using the logging driver as`json-file` a file located at
-`/var/lib/docker/containers/`. These files continue to be written to indefinitely, **with no size limit**.
+`/var/lib/docker/containers/`. These files are continuously written to, **with no size limit**.
 A "chatty" container can accumulate many gigabytes over the course of months until the hard drive is full and nothing
 That's all.
 
@@ -108,8 +108,8 @@ sudo systemctl restart docker
 ```
 
 <Callout type="warning" title="Applies only to new containers">
-  This setting applies only to containers **created** after it is **enabled**. Simply restarting the system is not enough.
-  Recreate existing stacks by placing  in`docker compose up -d --force-recreate` the respective stack folder.
+  This setting applies only to containers **created** after this change. Simply restarting the system is not enough.
+  Recreate existing stacks using  `docker compose up -d --force-recreate`in the respective stack folder.
 </Callout>
 
 If you want to use different values for a specific service, you can do that in its configuration using`compose.yaml` the key
@@ -124,16 +124,20 @@ sudo du -sh /var/lib/docker/containers/
 ## Browser Logs: Dozzle
 
 If you prefer to read logs in your browser, you can try [Dozzle](https://dozzle.dev). Dozzle is a small container,
-which displays the logs of all containers in real time in a web interface, complete with search and filter functions. It doesn't store anything itself,
+which displays the logs of all containers in real time in a web interface, with search and filter functions. It doesn't store anything itself,
 Instead, it reads directly from Docker. This requires access to the Docker socket. So don't run Dozzle
-not directly to the Internet, but only to the home network, via a VPN, or behind login protection such as
+not directly to the Internet, but only to the home network, via VPN, or behind login protection such as
 [Tinyauth](/en/setup/tinyauth/).
 
 ## Troubleshooting Tips
 
 - **Is the container constantly restarting?**  `docker compose ps`Shows the status and  `docker compose logs --tail 50`the reason.
-- **Is something not working after an update?** Look in the logs for the first error message, not the last one.
+  Typical causes and solutions can be found under "[Container in a Restart Loop](/en/wiki/restart-loop/)."
+- **Is something not working after an update?** Look for the first error message in the logs, not the last one.
   Consequential errors often mask the actual cause.
 - **Service is unavailable, but the container is running?** Then it's worth taking a look at the reverse proxy logs.
 - Is **the error message unclear?** Copy it into a search engine or post it in the project's issues. You rarely
   The first one.
+
+You can find step-by-step instructions for the search at
+[Troubleshooting: First Steps](/en/wiki/first-steps/).

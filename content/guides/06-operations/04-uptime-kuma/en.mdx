@@ -10,10 +10,10 @@ services:
   - uptime-kuma
 ---
 
-[Beszel](/en/setup/monitoring-beszel/) checks the server’s internals: CPU, RAM, hard drive. [Uptime Kuma](https://uptime.kuma.pet) looks at it from the outside and asks the question that ultimately matters: Does the page load in the browser? To do this, it regularly accesses your services, just like a visitor would. If DNS goes down, a certificate expires, or the reverse proxy freezes, Uptime Kuma detects it—even if all the containers appear to be running.
+[Beszel](/en/setup/monitoring-beszel/) checks the server’s internals: CPU, RAM, hard drive. [Uptime Kuma](https://uptime.kuma.pet) monitors it from the outside and asks the question that ultimately matters: Does the page load in the browser? To do this, it regularly accesses your services, just like a visitor would. If DNS goes down, a certificate expires, or the reverse proxy freezes, Uptime Kuma detects it—even if all the containers appear to be running.
 
-<Callout type="warning" title="Who watches the watchdog?">
-If Uptime Kuma runs on the same server as your services, it will go down along with them and will no longer be able to alert you. Ideally, you should use a **different device**: a Raspberry Pi at home that monitors your cloud server, or a small VPS that monitors your home lab from outside. For starters, using the same server is fine. But then you should add an external check (last step) that monitors Uptime Kuma itself.
+<Callout type="warning" title="Who watches the watchman?">
+If Uptime Kuma runs on the same server as your services, it will go down along with them and will no longer be able to alert you. The ideal solution is a **separate device**: a Raspberry Pi at home that monitors your cloud server, or a small VPS that monitors your home lab from outside your network. For starters, using the same server is fine. But then you should add an external check (last step) that monitors Uptime Kuma itself.
 </Callout>
 
 <Steps>
@@ -39,7 +39,7 @@ Press  to close`Strg+C` the log display. If you're using Nginx Proxy Manager, en
 </Step>
 
 <Step title="Select a database and create an account">
-Open `https://status.__DOMAIN__`. When you first launch Uptime Kuma 2, it asks, “Which database do you want to use?” Select **SQLite**. It’s a single file in the `data`-folder, ideal for a home lab and easy to back up. The built-in MariaDB is only worth using if you have a large number of monitors.
+Open `https://status.__DOMAIN__`. When you start Uptime Kuma 2 for the first time, it asks, “Which database do you want to use?” Select **SQLite**. It’s a single file in the `data`-folder, ideal for a home lab and easy to back up. The built-in MariaDB is only worth using if you have a large number of monitors.
 
 Next, create your administrator account. Choose a long, random password from your password manager. Later, you can also enable two-factor authentication under "Settings → Security."
 </Step>
@@ -50,10 +50,10 @@ First, set up the channel through which Uptime Kuma will contact you. Then you c
 | Type | What You'll Need |
 | --- | --- |
 | ntfy | The ntfy app on your phone and a topic name. Server URL `https://ntfy.sh`or your own ntfy server. |
-| Telegram | A bot that you create with BotFather, and your chat ID. Uptime Kuma helps you retrieve the ID in the chat. |
+| Telegram | A bot that you create with BotFather, and your chat ID. Uptime Kuma helps you retrieve the ID in the dialog. |
 | Email (SMTP) | Your email provider's SMTP settings: server, port, username, and password. |
 
-On the public ntfy server, anyone who knows the topic name can read the messages. So choose a long, random name.
+On the public ntfy server, anyone who knows the topic name can view the messages. Therefore, choose a long, random topic name. The "[Notifications](/en/setup/notifications/)" guide explains how to set up your own ntfy server with access control instead.
 
 Check the boxes for “Enabled by default” and “Apply to all existing monitors.” Click “Test”: If the message arrives, save your changes. Many other services are listed in the [notifications list](https://github.com/louislam/uptime-kuma/wiki/Notification-Methods).
 </Step>
@@ -69,19 +69,19 @@ Click "Add New Monitor" and fill out the form:
 | Heartbeat Interval | 60 seconds |
 | Repetitions | 2 |
 
-Using the public address, you can check the entire chain: DNS, reverse proxy, certificate, and service. The **repeated checks** prevent false positives: Only if several checks fail in a row is the service considered down, and you receive a notification.
+Using the public address, you can check the entire chain: DNS, reverse proxy, certificate, and service. The **repeated checks** prevent false positives: Only if several checks fail in a row is the service considered down, and you’ll receive a notification.
 
 In the advanced options, enable "Notify me when a certificate expires." Then, if the automatic renewal ever gets stuck, Uptime Kuma will warn you before visitors see an error message.
 
-Set up a monitor for each important service in the same way. In addition to HTTP, there are other types, such as **keyword** (the page must contain a specific text), **TCP port**, and **ping** for devices without a web interface.
+Set up a monitor for each important service in the same way. In addition to HTTP, there are other types, such as **keyword** (the page must contain specific text), **TCP port**, and **ping** for devices without a web interface.
 
 Since Uptime Kuma `__NETWORK__`is part of the network, you can also check services internally using their container names, such as `http://vaultwarden:80`. This shows you whether the container itself is running, regardless of the proxy.
 </Step>
 
 <Step title="Monitor Backups">
-There are some things Uptime Kuma can't check for—they report themselves. That's what the **"Push"** monitor type is for: Uptime Kuma shows you a push URL and waits for it to be accessed regularly. If it isn't accessed, an alert is triggered.
+There are some things Uptime Kuma can't check for—they report themselves. That's what the **"Push"** monitor type is for: Uptime Kuma shows you a push URL and waits for it to be accessed regularly. If it isn't accessed, it triggers an alarm.
 
-Ideal for your nightly backup: Set up a "Backup" push monitor with a heartbeat interval of  `90000`seconds (25 hours, with a little buffer for one day). Enter the push URL in your borgmatic configuration, as described in [Backups with borgmatic](/en/setup/backups-borgmatic/).
+Ideal for your nightly backup: Set up a "Backup" push monitor with a heartbeat interval of  `90000`seconds (25 hours, allowing a little leeway for one day). Enter the push URL in your borgmatic configuration, as described in [Backups with borgmatic](/en/setup/backups-borgmatic/).
 </Step>
 
 <Step title="Create a status page">
@@ -96,7 +96,7 @@ The status page is public. Only include monitors whose names you want to display
 Finally, the question from the beginning: Who will notice if the entire server goes down? To find out, you need a check that **isn't** running on that server. Here are two simple ways:
 
 - **A second Uptime-Kuma instance** on a different device or a small VPS. It only monitors one or`https://status.__DOMAIN__` two key services. It's best to set it up at a different location so that even an outage of your internet connection will be detected.
-- **External Monitoring Service**: Many providers check a few addresses from the outside for free. You enter it there as`https://status.__DOMAIN__` an HTTP check and will receive an email if it stops responding.
+- **External Monitoring Service**: Many providers offer free monitoring of a few addresses from outside the network. You enter the address there as`https://status.__DOMAIN__` an HTTP check, and you'll receive an email if it stops responding.
 
 This gives you two layers of protection: Uptime Kuma knows all the details, and the external check alerts you when Uptime Kuma itself isn't responding.
 </Step>

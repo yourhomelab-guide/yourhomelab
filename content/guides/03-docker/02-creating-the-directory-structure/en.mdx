@@ -11,12 +11,12 @@ Before you start your first container, it’s worth deciding where to store your
 
 ## There are several common variations
 
-Docker itself doesn't dictate anything to you. In guides and forums, you'll mainly come across these folders:
+Docker itself doesn't dictate anything to you. In guides and forums, you'll mostly come across these folders:
 
 | Location | Typical of | Note |
 | --- | --- | --- |
 | `/opt/stacks` or `/opt/docker` | Dockge (used `/opt/stacks`by default), many blog posts | Works well.  However, according to Linux conventions, it's`/opt` intended more for additional software than for data. |
-| `~/docker` in the home directory | Quick Tests, Guides for Beginners | Not necessary`sudo`. However, it is associated with a user account, and the home directory contains a lot of other things as well. |
+| `~/docker` in the home directory | Quick Tests, Guides for Beginners | Not necessary`sudo`. However, it is associated with a user account, and the home directory contains many other things as well. |
 | `/srv/…` | Servers that provide data | `/srv` According to the Filesystem Hierarchy Standard, it is intended specifically for “data provided by this server.” |
 | Separate: Compose files here, data there | Larger setups, Git workflows | It's flexible, but there are two places you need to keep an eye on. |
 
@@ -26,7 +26,7 @@ All of these approaches are valid. What's more important than the exact path is 
 
 ## Recommendation for this page
 
-To get started, we recommend using **a single root folder**: `/srv/homelab`. In the commands on this page, it is referred to as  `__ROOT__`and is replaced by the value from “My Setup.” Within this folder, each service gets its own folder, and that folder contains everything related to that service:
+To get started, we recommend using **a single root folder**: `/srv/homelab`. In the commands on this page, it is referred to as  `__ROOT__`and is replaced by the value from “My Setup.” Within that folder, each service gets its own folder, and that folder contains everything related to that service:
 
 ```
 /srv/homelab/            ← __ROOT__
@@ -42,7 +42,7 @@ To get started, we recommend using **a single root folder**: `/srv/homelab`. In 
 
 This has three advantages:
 
-- **A backup destination.** Once you've backed it up`/srv/homelab`, you have everything: configuration, secrets, and data for all services.
+- **A backup destination.** Make sure you have everything`/srv/homelab`: configuration, secrets, and data for all services.
 - **Everything in one place.** If you want to know how a service is set up, you just look in one specific folder.
 - **Easy to migrate.** Moving a service to another server means: stop the stack, copy the folder, and start it there.
 
@@ -59,7 +59,7 @@ sudo mkdir -p __ROOT__
 </Step>
 
 <Step title="Transfer the folder to your user">
-So that you can create and edit files`sudo` later, transfer the folder to your user. This ensures`chmod 750` that other users on the server cannot access it. This is important because passwords will be stored in `.env`files here later on.
+So that you can create and edit files`sudo` in it later, transfer the folder to your user. This ensures`chmod 750` that other users on the server cannot access it. This is important because passwords will be stored in `.env`files here later on.
 
 ```bash
 sudo chown "$USER":"$(id -gn)" __ROOT__
@@ -70,7 +70,7 @@ ls -ld __ROOT__
 The output should now show`drwxr-x---` your username and .
 
 <Callout title="Files owned by root">
-Some containers create files as`data/` root or with their own user ID. This is normal. You can only read`sudo` or delete such files using . That's also why the backup will run with later on`sudo`.
+Some containers create files as`data/` root or with their own user ID. This is normal. You can only read`sudo` or delete such files using . For this reason, the backup will also run using later on`sudo`. If a container reports `Permission denied`, running [`permission denied`](/en/wiki/permission-denied/) will resolve the issue.
 </Callout>
 </Step>
 
@@ -83,14 +83,16 @@ You do this each time you set up the service. For the first stack, it looks like
 mkdir -p __ROOT__/whoami
 ```
 
-Persistent data is always stored in the service's`data/` subfolder. For example, the folder might contain`compose.yaml` `./data/db:/var/lib/postgresql/data`. The period at the beginning indicates that the path is relative to the folder where the  is `compose.yaml`located.
+Persistent data is always stored in the service's`data/` subfolder. For example, the folder might contain`compose.yaml` `./data/db:/var/lib/postgresql/data`. The period at the beginning means that the path is relative to the folder where the  is located`compose.yaml`.
+
+Do you already know which services you want to run? The [Stack Builder](/en/werkzeuge/stack-builder/) will put together the appropriate folders, including  `compose.yaml`and , `.env`as a package for you.
 </Step>
 
 <Step title="Check &quot;My Setup&quot;">
-Open "My Setup" at the top of the page and check under "Paths":
+Open "My Setup" at the top of the page and check the "Paths" section:
 
 - **Folder for Stacks:**  `/srv/homelab`(or your own path)
-- **Persistent Data:** “In the Stack Folder”
+- **Persistent data:** "In the Stack folder"
 
 From now on, all commands and Compose files on this page will use your path.
 </Step>
@@ -98,7 +100,7 @@ From now on, all commands and Compose files on this page will use your path.
 </Steps>
 
 <Callout title="The proxy network will come later">
-Many guides create a Docker network for the reverse proxy at this point. You won't need that until you set up a reverse proxy. That's why it's part of the "[Reverse Proxy with Traefik"](/en/setup/reverse-proxy-traefik/) guide.
+Many guides already set up a Docker network for the reverse proxy at this point. You won't need that until you set up a reverse proxy. That's why it's part of the "[Reverse Proxy with Traefik"](/en/setup/reverse-proxy-traefik/) guide.
 </Callout>
 
 ## Alternative: Separate configuration and data

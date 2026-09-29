@@ -1,6 +1,6 @@
 ---
 title: Test Restore
-description: You can restore individual files and an entire service from your Borgmatic backup, verify a database dump, and schedule the test for a specific date. Afterward, you'll know that your backups really do work when it counts.
+description: You can restore individual files and an entire service from your Borgmatic backup, verify a database dump, and schedule the test as a fixed appointment. Afterward, you'll know that your backups really work when it counts.
 level: 2
 minutes: 40
 requires:
@@ -8,14 +8,14 @@ requires:
   - Docker Compose
 ---
 
-A backup you've never restored is just a hope. Maybe a folder is missing because it was stored`__ROOT__` outside the system. Maybe the database dump is empty because the command didn't do what you thought it would. Or maybe the passphrase didn't end up in the password manager after all. You’ll only find out all of this by restoring the data. It’s best to do it now, while you have time, rather than waiting until the hard drive has already failed.
+A backup you've never restored is just a hope. Maybe a folder is missing because it was stored`__ROOT__` outside the system. Maybe the database dump is empty because the command didn't do what you thought it would. Or maybe the passphrase didn't end up in the password manager after all. You’ll only find out all of this by restoring your data. It’s best to do it now, when you have time, rather than waiting until the hard drive is already dead.
 
-This guide is based on [backups created with borgmatic](/en/setup/backups-borgmatic/). You should always restore to a **separate folder** or to **another computer**—never over the running services.
+This guide is based on [backups created with borgmatic](/en/setup/backups-borgmatic/). You should always restore data to a **separate folder** or to **another computer**—never over the running services.
 
 <Steps>
 
 <Step title="View Archives">
-First, check to see if the backups are actually arriving on a regular basis:
+First, check whether the backups are actually arriving on a regular basis:
 
 ```bash
 sudo borgmatic repo-list
@@ -23,7 +23,7 @@ sudo borgmatic repo-list
 
 You'll see a list of archives showing the computer name, date, and time. Is the date of the most recent archive correct? Are there days missing, even though the timer is supposed to run every night? If so, check the log first (`sudo journalctl -u borgmatic.service`).
 
-Before you look inside an archive, here’s something unique about Borg: It stores paths **without a leading slash**.  becomes`/srv/homelab`  in the archive`srv/homelab`. The borgmatic commands expect the path in  exactly`--path` as it appears in the archive. In the examples, the shell handles this: You store the usual path in the variable ``P``, and the expression after `` inserts`--path` it without the leading slash.
+Before you look inside an archive, here’s a quirk of Borg: It stores paths **without a leading slash**.  `/srv/homelab`becomes  in the archive`srv/homelab`. The `borgmatic` commands expect the path to be exactly`--path` as it appears in the archive. In the examples, the shell handles this: You store the usual path in the variable ``P``, and the expression after `` inserts`--path` it without the leading slash.
 
 To list the contents of the latest archive, use `list`.  stands`latest` for the latest archive, but you can also `repo-list`use any name from :
 
@@ -32,11 +32,11 @@ P=__ROOT__/vaultwarden
 sudo borgmatic list --archive latest --path "${P#/}"
 ```
 
-Check here to make sure that all stacks, all `.env`files, and the database dumps are included.
+Check here to make sure all stacks, all `.env`files, and the database dumps are included. If anything is missing, complete the configuration on the server. The [borgmatic-configuration](/en/werkzeuge/borgmatic-konfiguration/) tool can generate a new version for you upon request.
 </Step>
 
 <Step title="Retrieve a Single File">
-The most common scenario in everyday life: A file is corrupted or deleted. With  you `--path`can only recover this path;  `--destination`specifies the destination folder. You must create the folder beforehand:
+The most common scenario in everyday life: A file is corrupted or deleted. With  you `--path`can only restore this path;  `--destination`specifies the destination folder. You must create the folder beforehand:
 
 ```bash
 mkdir -p /tmp/restore-test
@@ -50,11 +50,11 @@ Borg creates the file using the full path relative to the destination folder. Th
 sudo diff /tmp/restore-test__ROOT__/vaultwarden/.env __ROOT__/vaultwarden/.env && echo "identisch"
 ```
 
-Pay attention to the output`extract`: "Borg reports`never matched`" indicates that the path does not exist in the archive. This is usually caused by a typo in the path, or the file was never located in the secured area.
+Pay attention to the output`extract`: "Borg reports`never matched`" indicates that the path does not exist in the archive. This is usually caused by a typo in the path, or the file was never in the backed-up area.
 </Step>
 
 <Step title="Browse the backup as a folder">
-Do you want to take a look around before restoring anything?  `borgmatic mount`mounts an archive as a folder. This requires **FUSE**, a technology that allows programs to provide their own file systems. Depending on the distribution, it may already`borgbackup` be included in the package. Use this command to be sure:
+Do you want to look around first before restoring anything?  `borgmatic mount`mounts an archive as a folder. This requires **FUSE**, a technology that allows programs to provide their own file systems. Depending on your distribution, it may already`borgbackup` be included in the package. Use this command to be sure:
 
 ```bash
 sudo apt install fuse3 python3-pyfuse3
@@ -74,7 +74,7 @@ You can easily copy individual files `sudo cp`using . Finally, unmount the archi
 sudo borgmatic umount --mount-point /mnt/borg
 ```
 
-For large amounts of data, this is significantly`extract` faster than copying from the mount.
+For large amounts of data, this is significantly`extract` faster than copying from the mount point.
 </Step>
 
 <Step title="Import a database dump">
@@ -89,7 +89,7 @@ sudo borgmatic extract --archive latest --path "${P#/}" --destination /tmp/resto
 sudo ls -lh /tmp/restore-test__DATA(authentik)__/db-dump/
 ```
 
-If the file is only a few bytes in size, there is a problem with the `dump` command in the configuration. In that case, start an empty database. Use the same image as in the stack (listed in the `compose.yaml`) so that the versions match:
+If the file is only a few bytes in size, there is something wrong with the `dump` command in the configuration. In that case, start an empty database. Use the same image as in the stack (listed in the `compose.yaml`) so that the versions match. The reason this is important is explained in [“Database Does Not Start After Update](/en/wiki/database-version/)”:
 
 ```bash
 docker run -d --name restore-test-db \
@@ -120,11 +120,11 @@ It works the same way for MariaDB, using the image  `mariadb`and the command  `m
 </Step>
 
 <Step title="Restore Full Service">
-The most important test: Will a service start up again after a total failure? The best way to check this is on a **different computer**, such as a VM on your PC or an old laptop. This way, you can realistically simulate an emergency situation, and the test won’t interfere with your actual server. Doing this on the same server is cumbersome because container names and ports are already in use.
+The most important test: Will a service start up again after a complete failure? The best way to check this is on a **different machine**, such as a VM on your PC or an old laptop. This way, you can realistically simulate a real-world emergency, and the test won’t interfere with your actual server. Doing this on the same server is cumbersome because the container names and ports are already in use.
 
-On the test computer, you'll need Docker, Borg, and borgmatic. Install Borg and borgmatic as described in the Backup Guide. If your repository is located on a different computer, the test computer must also be able to access it via an SSH key. Then test the connection once as described in the backup guide using `sudo ssh`. Simply plug a USB drive into the test computer, mounting it at the same path as on the server.
+On the test computer, you'll need Docker, Borg, and borgmatic. Install Borg and borgmatic as described in the Backup Guide. If your repository is located on a different computer, the test computer must also be able to access it via an SSH key. Then test the connection once as described in the backup guide using `sudo ssh`. Simply connect a USB drive to the test computer, mounting it at the same path as on the server.
 
-Then create the passphrase. Copy it **from your password manager**, not from the server. That’s exactly what you’ll need to do in an emergency:
+Then create the passphrase. Copy it **from your password manager**, not from the server. That's exactly what you'll need to do in an emergency:
 
 ```bash
 sudo mkdir -p /etc/borgmatic
@@ -133,7 +133,7 @@ sudo nano /etc/borgmatic/passphrase
 sudo chmod 600 /etc/borgmatic/passphrase
 ```
 
-To restore the system, all you need to do is perform a quick configuration in [...]`/etc/borgmatic/config.yaml`, specifying only the repository and the passphrase. Enter the same repository as on the server:
+To restore the system, all you need to do is enter a few settings in `/etc/borgmatic/config.yaml`, specifying only the repository and the passphrase. Enter the same repository as on the server:
 
 ```yaml
 repositories:
@@ -141,13 +141,18 @@ repositories:
       label: remote
 
 encryption_passphrase: "{credential file /etc/borgmatic/passphrase}"
+
+# Show archives of every host name, not just this computer's
+match_archives: "*"
 ```
+
+The last line is important: borgmatic names archives based on the hostname and, by default, displays only the archives on the local machine. The test machine has a different name than your server; without this line,  `repo-list`and  would `--archive latest`not find anything. It belongs only in this restore configuration, not on the server.
 
 <Callout type="warning" title="No backup from the test computer">
 Do not set up a timer on the test machine, and do not`borgmatic` start it without taking any action. Otherwise, archives from the test environment will end up in the same repository, and the cleanup rules may delete actual versions.
 </Callout>
 
-Next, check your exported key. The key is`repokey` stored in the repository, so normally all you need is the passphrase. The export serves as a backup in case this specific file in the repository becomes corrupted. View the key and compare it with the export in your password manager:
+Next, verify your exported key. The key is`repokey` stored in the repository, so normally all you need is the passphrase. The export serves as your backup in case this specific file in the repository becomes corrupted. View the key and compare it to the export in your password manager:
 
 ```bash
 sudo borgmatic key export
@@ -163,10 +168,10 @@ sudo borgmatic extract --archive latest --path "${P#/}" --destination /
 ```
 
 <Callout title="Is the data stored somewhere else?">
-In "central" mode, the data is not stored in the stack folder. Retrieve it by issuing a second call using  and`P=__DATA(vaultwarden)__` the same `extract`command.
+In "central" mode, the data is not stored in the stack folder. Retrieve it with a second call using  `P=__DATA(vaultwarden)__`and the same `extract`command.
 </Callout>
 
-`--destination /` writes the files back to their original paths. This is fine only on the test machine, but never on your server as long as the actual data is stored there. Borg also restores ownership and permissions, which is why the command runs with `sudo`. Now start the service:
+`--destination /` writes the files back to their original paths. This is fine only on the test machine, but never on your server as long as the real data is stored there. Borg also restores ownership and permissions, which is why the command runs with `sudo`. Now start the service:
 
 ```bash
 docker network create __NETWORK__
@@ -175,13 +180,13 @@ docker compose up -d
 docker compose logs -f
 ```
 
-Does the container start without any errors in the log, and does it find its data? To view the web interface, you can temporarily add`compose.yaml` a port to the  (for example,  `ports: ["8080:80"]`for the service`vaultwarden`) and open`http://<IP des Testrechners>:8080` . Log in and check whether your entries are there. Without HTTPS, some services will deny login. For now, it’s enough that the container starts up properly and finds the database.
+Does the container start without any errors in the log, and does it find its data? To view the web interface, you can temporarily enter`compose.yaml` a port in the  (for example,  `ports: ["8080:80"]`for the service `vaultwarden`) and open`http://<IP des Testrechners>:8080` . Log in and check whether your entries are there. Without HTTPS, some services will deny login. For now, it’s enough that the container starts up properly and finds the database.
 
-You're being very thorough if you restore the entire Homelab folder, including the reverse proxy—that is, without`extract` `--path`. That's a real emergency scenario.
+You're taking it very seriously if you restore the entire Homelab folder, including the reverse proxy—that is, without`extract` `--path`. That's the real emergency scenario.
 </Step>
 
 <Step title="Check all data">
-The nightly checks described in the Backup Guide only perform a full data scan every three months. During the restore test, you can also trigger this check immediately, either on the server or on the test computer.  `--only data`selects the most thorough check,  `--force`ignoring the configured schedule:
+The nightly checks described in the Backup Guide only perform a full data scan every three months. During the restore test, you can also trigger this check immediately, either on the server or on the test computer.  `--only data`Selects the most thorough check,  `--force`ignoring the configured schedule:
 
 ```bash
 sudo borgmatic check --only data --force --progress
@@ -197,14 +202,14 @@ Delete the test data so that no copies of your secrets are left lying around:
 sudo rm -rf /tmp/restore-test
 ```
 
-A restore test isn't a one-time event. Services are added, paths change, and a dump command might fail after an update. Therefore, be sure to schedule the test:
+A restore test isn't a one-time thing. New services are added, paths change, and a dump command might fail after an update. So be sure to schedule the test in advance:
 
-- **Monthly**:  `repo-list`Review, retrieve a file, and check the reports in Uptime Kuma.
-- **Every three to six months**: import a database dump and run the data check.
+- **Monthly**:  `repo-list`Review, retrieve a file, and check the notifications in Uptime Kuma.
+- **Every three to six months**: import a database dump and run the data validation.
 - **Annually**: Start a complete service on the test computer using only the passphrase and key from the password manager.
 - **After every major change**: new stack, new database, new backup destination.
 
-Add the dates to your calendar. Also, make a quick note of the steps you took and what went wrong. In an emergency, you'll be nervous, so having a ready-made guide will help more than any memory. See [the](/en/wiki/documentation/) ["Documentation"](/en/wiki/documentation/) section for more information.
+Add the dates to your calendar. Also, briefly jot down the steps you took and what went wrong. In a crisis, you'll be nervous, so having a ready-made guide will help more than any memory. For more on this, see [Documentation](/en/wiki/documentation/).
 </Step>
 
 </Steps>

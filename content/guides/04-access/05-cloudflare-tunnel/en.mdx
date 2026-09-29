@@ -5,7 +5,7 @@ level: 2
 minutes: 20
 requires:
   - Docker Compose
-  - Domain with DNS hosted on Cloudflare
+  - Domain with DNS hosted by Cloudflare
 ---
 
 With a tunnel, your server establishes an outbound connection to Cloudflare on its own. Requests to your domain first go to Cloudflare and are routed to you through this tunnel. Because the connection goes from the inside out, you don’t need to open any ports or have a public IPv4 address. The article [“Tunnels”](/en/wiki/tunnels/) explains how tunnels work in general.
@@ -17,7 +17,7 @@ The program on your side is called `cloudflared`. It runs as a container in the 
 | Advantages | Disadvantages |
 | --- | --- |
 | No open ports on the router | TLS Ends at Cloudflare: Cloudflare Can View Your Traffic in Plain Text |
-| Works behind CGNAT and DS-Lite | You are at the mercy of a U.S. provider and its rules |
+| Works behind CGNAT and DS-Lite | You're at the mercy of a U.S. provider and its rules |
 | Your home IP address remains hidden | In the free plan, uploads are limited to 100 MB per request |
 | Free, no need for your own server | Video streaming (Jellyfin, Plex) is not permitted under the Terms of Service |
 
@@ -28,7 +28,7 @@ For services like a password manager or photo storage, the first drawback is thi
 <Step title="Transfer a domain to Cloudflare">
 The tunnel only works with a domain whose DNS is managed by Cloudflare. Create a free account with [Cloudflare](https://dash.cloudflare.com/), add your domain, and enter the two nameservers that Cloudflare provides in your registrar's control panel.
 
-It may take anywhere from a few minutes to several hours for Cloudflare to mark the domain as active. For more information on DNS, see the [Domain & DNS](/en/setup/domain-dns/) guide.
+It may take anywhere from a few minutes to several hours for Cloudflare to mark the domain as active. For more information on DNS, see the [Domain & DNS](/en/setup/domain-dns/) Guide.
 </Step>
 
 <Step title="Create a tunnel">
@@ -92,7 +92,7 @@ docker compose logs -f cloudflared
 After a short while, several lines containing  should appear`Registered tunnel connection` in the log. Type  to stop`Strg+C` the display. In the Zero Trust dashboard, the tunnel now shows as "**Healthy**."
 </Step>
 
-<Step title="Publish a service">
+<Step title="Publish Service">
 Now you'll tell Cloudflare which name corresponds to which service. Open the tunnel in the dashboard and add an entry under "**Public Hostname**" (or "Published application routes," depending on your dashboard version). Here's an example using [Uptime Kuma](/en/services/uptime-kuma/):
 
 | Field | Value |
@@ -104,19 +104,19 @@ Now you'll tell Cloudflare which name corresponds to which service. Open the tun
 
 In the URL field, enter the **container name** and the port **within the container**. This works because  `cloudflared`and the service `__NETWORK__`are on the same network. Cloudflare creates the appropriate DNS record itself and handles the certificate.
 
-Then open it`https://status.__DOMAIN__`. You should see Uptime Kuma.
+Then open `https://status.__DOMAIN__`. You should see Uptime Kuma. If Cloudflare displays a "Bad Gateway" error instead, it's usually because the container name, port, or network settings are incorrect; see [Bad Gateway](/en/wiki/bad-gateway/).
 </Step>
 
 <Step title="Secure Access">
-Everything you post through the tunnel is publicly available on the Internet. The tunnel is not a substitute for logging in.
+Everything you post via the tunnel is publicly available on the Internet. The tunnel is not a substitute for logging in.
 
 - Only publish services that have their own, well-designed sign-in process.
-- For everything else, set up a login requirement. You can do this directly in Cloudflare using **Access** in the Zero Trust Dashboard (see [the Cloudflare documentation on Access](https://developers.cloudflare.com/cloudflare-one/applications/)), or with a third-party service like [Pocket ID](/en/setup/pocket-id/) or [Tinyauth](/en/setup/tinyauth/).
+- For everything else, add a login step. You can do this directly in Cloudflare using **Access** in the Zero Trust Dashboard (see [the Cloudflare documentation on Access](https://developers.cloudflare.com/cloudflare-one/applications/)), or with a third-party service like [Pocket ID](/en/setup/pocket-id/) or [Tinyauth](/en/setup/tinyauth/).
 - Do not expose administrative interfaces such as Portainer or the interface of your reverse proxy.
 </Step>
 
 </Steps>
 
 <Callout title="Combining Tunnels and Traefik">
-Instead of having each service point to its own container, you can also have the tunnel point to Traefik. Then the labels and middlewares from the other guides will work. But there’s a catch: Without open ports, Traefik can’t obtain a certificate via TLS challenge and will redirect HTTP to HTTPS. So you’ll need to adjust the tunnel’s TLS settings or switch Traefik to DNS challenge mode. This is more for advanced users; the options are described in the [Cloudflare documentation on origin settings](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/configure-tunnels/origin-configuration/).
+Instead of having each service point to its own container, you can also have the tunnel point to Traefik. Then the labels and middleware from the other guides will work. But there’s a catch: Without open ports, Traefik can’t obtain a certificate via TLS challenge and will redirect HTTP to HTTPS. So you’ll need to adjust the tunnel’s TLS settings or switch Traefik to DNS challenge mode. This is more for advanced users; the options are described in the [Cloudflare documentation on origin settings](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/configure-tunnels/origin-configuration/).
 </Callout>

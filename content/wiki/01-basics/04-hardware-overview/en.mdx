@@ -1,6 +1,6 @@
 ---
 title: Hardware Overview
-description: You don't need an expensive server to get started. An affordable mini-PC is sufficient for many services. Here's a look at the different device categories and what to consider when it comes to RAM, SSDs, and power consumption.
+description: You don't need an expensive server to get started. An affordable mini-PC is enough for many services. Here's a look at the different types of devices available and what to look for in terms of RAM, SSD, and power consumption.
 level: 1
 related:
   - costs-power
@@ -14,10 +14,11 @@ practice: choosing-hardware
 
 ## What Matters
 
-A home lab server runs 24/7, usually without much to do. That's why three things are especially important:
+A home lab server runs around the clock, usually without much to do. That's why three things are especially important:
 
-- **Power consumption in idle mode.** The computer spends most of its time in idle mode. Whether it draws 8 or 50 watts makes little difference over a
-  It makes a noticeable difference each year. Sample calculations can be found in the "[Costs & Electricity Consumption" section](/en/wiki/costs-power/).
+- **Power consumption in idle mode.** The computer spends most of its time idle. Whether it draws 8 or 50 watts while doing so makes a
+  year makes a noticeable difference. Sample calculations can be found under "[Costs & Electricity Consumption](/en/wiki/costs-power/),"
+  The [electricity calculator](/en/werkzeuge/stromrechner/) calculates your own values.
 - **Random Access Memory (RAM).** Every container uses memory. For many services, RAM is more of a bottleneck than the
   Computing power.
 - **Quiet and compact.** The device is often placed in the hallway, on a shelf, or next to the router.
@@ -37,7 +38,7 @@ It easily handles file synchronization, monitoring, and a reverse proxy.
     OptiPlex Micro. Rugged, easily upgradeable, and often affordable when bought used.
   </Card>
   <Card title="Raspberry Pi">
-    Very energy-efficient and compact. It uses an ARM processor, so not every Docker image will run on it. Good for a small number of,
+    Very energy-efficient and compact. It uses an ARM processor, so not every Docker image will run on it. Good for a few,
     easy tasks.
   </Card>
   <Card title="NAS">
@@ -65,19 +66,19 @@ depends on the BIOS settings.
 | Used Business Mini PC | about 8–15 W            | Rugged, upgradeable, affordable           | Older CPU, used, no warranty      |
 | Raspberry Pi               | about 3–5 W               | Very economical, tiny                  | ARM, SD Card as a Vulnerability          |
 | NAS (2–4 drive bays)        | about 15–40 W with panels | Plenty of storage, hard drive redundancy  | Docker is often limited; low RAM      |
-| Old Desktop PC           | about 30–70 W             | Available, plenty of space                 | High power consumption, loud               |
-| VPS                        | no electricity of their own       | Fixed IP, no device at home          | Monthly costs, limited storage        |
+| Old Desktop PC           | about 30–70 W             | Available, plenty of space                 | High power consumption, noisy               |
+| VPS                        | no electricity of its own       | Fixed IP, no device at home          | Monthly costs, limited storage        |
 
 ## RAM
 
 As a rough guide:
 
-- **4 GB** is enough for a handful of lightweight services, such as a reverse proxy, a password manager, and monitoring.
+- **4 GB** is enough for a handful of lightweight services, such as a reverse proxy, password manager, and monitoring.
 - **8–16 GB** is a good starting point for a typical home lab with databases and a file cloud.
 - **That's all** you need for storage-intensive services like photo archives with facial recognition, or if you also
   want to run virtual machines, for example with [Proxmox VE](/en/wiki/proxmox-ve/).
 
-When making a purchase, check to see if the RAM can be upgraded. Many N100 mini PCs have only a single slot.
+When purchasing, check to see if you can upgrade the RAM. Many N100 mini PCs have only a single slot.
 
 ## Storage: SSDs and Hard Drives
 
@@ -85,27 +86,27 @@ Install the system on an **SSD**. It's fast, quiet, and energy-efficient. An NVM
 The operating system, containers, and the data for most services.
 
 For large amounts of data, such as photos or videos, **hard disk drives (HDDs)** are also used. They are less expensive per terabyte,
-But they also require additional power and make noise. There’s usually no room for them in a mini PC, so a
+But they also require additional power and make noise. There’s usually no room for them in a mini-PC, so a
 An external enclosure connected via USB or a separate NAS.
 
 <Callout type="warning" title="Raspberry Pi and SD Cards">
-SD cards do not handle continuous write operations well and can fail without warning. Run a Pi as
-It's better to use an SSD for the server—either via USB or, in the case of the Raspberry Pi 5, via an NVMe adapter.
+SD cards do not handle continuous write operations well and may fail without warning. Run a Pi as
+It's better to use an SSD for the server, either via USB or, in the case of the Raspberry Pi 5, via an NVMe adapter.
 </Callout>
 
 ## ECC memory
 
 **ECC** (Error Correcting Code) is a type of memory that detects and corrects individual bit errors. In servers in the
-It's the standard in data centers. In forums, it's primarily discussed in connection with ZFS and
+It's the standard in data centers. In forums, it's mainly discussed in connection with ZFS and
 [TrueNAS](/en/wiki/truenas-unraid/) is recommended.
 
-ECC is not a requirement to get started. Mini-PCs and most desktop systems don't support it at all. If
-If you plan to set up a large data repository containing valuable data in the future, it's worth taking a look at this. More important than ECC are
+ECC is not a requirement to get started. Mini PCs and most desktop systems don't support it at all. If
+If you're planning to set up a large data repository containing valuable data in the future, it's worth taking a look at this. More important than ECC are
 In any case, make sure you have good backups.
 
 ## And what about the architecture?
 
-Most mini-PCs, business computers, and desktops use **x86-64** (also known as amd64). There are practically all kinds of
+Most mini-PCs, business computers, and desktops use **x86-64** (also known as amd64). There is software available for practically every
 Docker image. The Raspberry Pi and some cloud servers use **ARM64**. Many well-known projects offer images for both
 Some architectures are supported, but not all. Check the project page beforehand if you're using ARM.
 
@@ -115,4 +116,5 @@ An N100/N150-class mini PC or a used business mini PC with 16 GB of RAM and an N
 a good, affordable starting point for most beginners. If you just want to give it a try, even an old computer will do, one that
 that you already have lying around, or a small VPS. To figure out which model fits your plan,
 [Cloud, Hybrid](/en/wiki/cloud-hybrid-local/), [or On-Premises?](/en/wiki/cloud-hybrid-local/) The Guide's Specific Recommendations
-[Select hardware](/en/setup/choosing-hardware/).
+[Select hardware](/en/setup/choosing-hardware/). To see which devices others are actually using, go to
+[Homelabs](/en/homelabs/).

@@ -1,6 +1,6 @@
 ---
 title: Docker Compose
-description: With Docker Compose, you can describe a service—including its settings, data, and networks—in a single file. A single command then starts everything, and the file also serves as documentation for your setup.
+description: With Docker Compose, you describe a service—including its settings, data, and networks—in a single file. A single command then starts everything, and the file also serves as documentation for your setup.
 level: 1
 related:
   - what-is-docker
@@ -12,15 +12,15 @@ practice: first-stack
 
 ## Why use `Compose` instead of `docker run`?
 
-You can start a container using  `docker run`and a long list of options. This works, but it has some drawbacks: You have to memorize the command, typos aren't noticed until startup, and if there's an update, you have to repeat it exactly.
+You can start a container using  `docker run`and a long list of options. This works, but it has some drawbacks: You have to remember the command somewhere; typos aren't noticed until startup; and if you update it, you have to repeat the command exactly.
 
-Docker Compose flips that around. You write a file **`compose.yaml`**describing how your containers should look. Compose then ensures that the actual state matches that description. The file is human-readable, can be backed up, and versioned. If the server goes down, you restore the folder and restart it with a single command.
+Docker Compose flips that around. You write a file **`compose.yaml`**specifying how your containers should look. Compose then ensures that the actual state matches that description. The file is human-readable, can be backed up, and versioned. If the server goes down, you restore the folder and restart it with a single command.
 
-A **stack** consists of`compose.yaml` all the associated containers. On this page, each stack is assigned its own folder under `__ROOT__`; see [the directory structure](/en/wiki/directory-structure/).
+A **stack** consists of`compose.yaml` all its associated containers. On this page, each stack is assigned its own folder under `__ROOT__`; see [the directory structure](/en/wiki/directory-structure/).
 
-## An Example with Comments
+## An Annotated Example
 
-This is what a stack looks like for [Uptime Kuma](/en/services/uptime-kuma/), a tool that monitors your services. The file is located in `__ROOT__/uptime-kuma/compose.yaml`.
+This is what a stack for [Uptime Kuma](/en/services/uptime-kuma/) looks like—a tool that monitors your services. The file is located in `__ROOT__/uptime-kuma/compose.yaml`.
 
 ```yaml
 services:                             # all containers of this stack
@@ -52,16 +52,18 @@ An overview of the most important keys:
 | `restart` | The "restart" rule `unless-stopped`is almost always correct for Homelab services. |
 | `environment` | Environment variables used to configure many programs. Secrets belong in the [.env file](/en/wiki/env-files/). |
 | `volumes` | Links folders on the server to folders in the container. See [Volumes & Bind Mounts](/en/wiki/volumes-bind-mounts/). |
-| `ports` | Makes a port on the container accessible from the server. The server is on the left, and the container is on the right. |
-| `networks` | Which Docker networks the container is connected to. See [Docker Networks](/en/wiki/docker-networks/). |
+| `ports` | Makes a port on the container accessible on the server. The server is on the left, and the container is on the right. |
+| `networks` | Which Docker networks the container is part of. See [Docker Networks](/en/wiki/docker-networks/). |
 
 <Callout title="Ports or reverse proxy?">
 The example shows both`networks`  and`ports`  so that you know both keys. In practice, you usually only need one of them: With a reverse proxy like Traefik, the service is only accessible within the network  `__NETWORK__`and does not expose a port. Without a proxy, you access it`http://<server-ip>:3001` via . The templates under ["Services"](/en/services/) automatically adapt this to your setup.
 </Callout>
 
-Relative paths such as  always refer`./data` to the folder where the  `compose.yaml`is located. That is why all of a service's data is stored alongside its configuration.
+Relative paths such as  always refer`./data` to the folder in which the  file is located`compose.yaml`. That is why all of a service's data is stored alongside its configuration.
 
-Compose reads`${TZ}` variables such as  from a file  `.env`in the same folder. This keeps the  free`compose.yaml` of passwords, so you can share it.
+Compose reads`${TZ}` variables like  from a file  `.env`in the same folder. This keeps the  free`compose.yaml` of passwords, so you can share it.
+
+If you have a file from`compose.yaml` a project's documentation in front of you, the [Compose guide](/en/werkzeuge/compose-erklaerer/) explains each line and shows you what you need to adjust for your setup.
 
 ## The Most Important Commands
 
@@ -76,11 +78,11 @@ cd __ROOT__/uptime-kuma
 | `docker compose up -d` | Create a container and start it in the background. After making changes to the file, simply run it again. |
 | `docker compose ps` | Displays the containers in the stack and their status. |
 | `docker compose logs -f` | Displays the logs in real time. Press Ctrl+C to exit. |
-| `docker compose pull` | Downloads newer versions of the images. Then `up -d`, to use them. |
+| `docker compose pull` | Downloads newer versions of the images. Then`up -d`, to use them. |
 | `docker compose restart` | Restarts the containers without recreating them. |
 | `docker compose down` | Stop and delete the containers and the Stack network. Your data in  `./data`will be preserved. |
 | `docker compose exec uptime-kuma sh` | Opens a shell in the running container, if the image provides one. |
-| `docker compose config` | Checks the file and displays it with the variables inserted. Great for troubleshooting. |
+| `docker compose config` | Checks the file and displays it with the variables substituted. Great for troubleshooting. |
 
 An update to a service looks like this:
 
@@ -90,6 +92,8 @@ docker compose up -d
 ```
 
 Compose only recreates containers whose image or configuration has changed.
+
+If a stack doesn't start as expected, see "[Troubleshooting: First Steps](/en/wiki/first-steps/)" to learn how to use `ps`,  and`logs`  to identify the`config` cause.
 
 ## docker compose or docker-compose?
 
@@ -108,4 +112,4 @@ Older Compose files begin with  `version: "3.8"`or something similar. The curren
 
 - [Official Compose Documentation](https://docs.docker.com/compose/)
 - [List of all keys in compose.yaml](https://docs.docker.com/reference/compose-file/services/)
-- [First Stack with Compose](/en/setup/first-stack/): A Step-by-Step Guide to Your First Running Service
+- [First Stack with Compose](/en/setup/first-stack/): Step-by-Step Guide to Your First Running Service

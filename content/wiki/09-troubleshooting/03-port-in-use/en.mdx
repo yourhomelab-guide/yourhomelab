@@ -1,0 +1,121 @@
+---
+title: Port in use
+description: Docker can't start a container because another program is already using the port. Find out which program is using it, then either free up the port or switch to a different one.
+level: 2
+related:
+  - ip-ports-nat
+  - docker-networks
+  - first-steps
+practice: first-stack
+---
+
+## Symptom
+
+`docker compose up -d` aborts, and the container remains in the status`Created`. The message varies depending on the Docker version
+something like this:
+
+```text
+Error response from daemon: driver failed programming external connectivity on endpoint pihole:
+Bind for 0.0.0.0:53 failed: port is already allocated
+```
+
+```text
+Error response from daemon: failed to bind port 0.0.0.0:80/tcp:
+listen tcp4 0.0.0.0:80: bind: address already in use
+```
+
+The number after the colon is the port in use on the host.
+
+## Why This Happens
+
+A port on the host can be used by only **one** program at a time. With ,`ports: - "80:80"` the
+Docker container to forward the host's port 80 to it. Is another program or another process already listening there?
+Containers—that doesn't work. For more information on ports[,](/en/wiki/ip-ports-nat/) see "[IP, Ports & NAT](/en/wiki/ip-ports-nat/)."
+
+## Causes
+
+1. **Another container is using the port.** For example, two stacks that both use`8080:8080` it, or an old one
+   A container that is still running.
+2. **Port 80 or 443: a web server on the host.** An Apache or nginx server installed earlier, or a second one
+   Reverse Proxy.
+3. **Port 53: systemd-resolved.** On Ubuntu, the local DNS service listens on `127.0.0.53:53`. This conflicts with
+   DNS services such as Pi-hole or AdGuard Home.
+4. **The same port appears twice in the `compose.yaml`.**
+
+## Check
+
+Which port is in use? Replace  `80`with your port:
+
+```bash
+sudo ss -tulpn | grep ':80 '
+```
+
+The last column lists the program, for example `users:(("nginx",pid=812,fd=6))`. If it says `docker-proxy`, then it is
+A container. Which one is shown:
+
+```bash
+docker ps --filter publish=80
+```
+
+Whether a web server is running as a system service:
+
+```bash
+systemctl status apache2 nginx
+```
+
+## Solution
+
+### Another container
+
+Stop the old container, or assign a different host port to the new one. On the left is the port on the host; on the right is the
+in the container. Just change the one on the left:
+
+```yaml
+ports:
+  - "8081:8080"
+```
+
+Behind a reverse proxy, you usually don't need one at all for web services`ports:`. The proxy reaches the container via
+the network`__NETWORK__`. Then the conflict disappears entirely. Which ports a taken-over `compose.yaml`
+The [Compose](/en/werkzeuge/compose-erklaerer/) [Guide](/en/werkzeuge/compose-erklaerer/) shows you which ones have been published and which addresses they're linked to.
+
+### Old Web Server on Ports 80/443
+
+If you no longer need it, stop and disable it:
+
+```bash
+sudo systemctl disable --now apache2
+# oder
+sudo systemctl disable --now nginx
+```
+
+You can uninstall it afterward using  `sudo apt remove apache2`or `sudo apt remove nginx`.
+
+### Port 53 and systemd-resolved
+
+You're just disabling the local DNS stub. After that, the server will continue to resolve names via the
+DNS servers on your network.
+
+```bash
+sudo mkdir -p /etc/systemd/resolved.conf.d
+printf '[Resolve]\nDNSStubListener=no\n' | sudo tee /etc/systemd/resolved.conf.d/no-stub.conf
+sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+sudo systemctl restart systemd-resolved
+```
+
+Then use  to check `sudo ss -tulpn | grep ':53 '`that the port is open, and use  `ping -c1 debian.org`to check that the
+Name resolution still works. On Debian, systemd-resolved usually isn't installed at all.
+
+### Bind to a specific IP address
+
+If the server has multiple IP addresses, a service can listen on only one of them:
+
+```yaml
+ports:
+  - "192.168.1.10:53:53/udp"
+```
+
+## Don't forget the firewall
+
+If you're using a new port that needs to be accessible from the outside, you may need to open it in UFW. Note: From Docker
+Published ports bypass UFW. For details, see the "[Firewall with UFW"](/en/setup/firewall-ufw/) guide.

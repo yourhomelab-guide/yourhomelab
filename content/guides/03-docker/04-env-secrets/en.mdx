@@ -1,22 +1,22 @@
 ---
 title: .env & Secrets
-description: In the end, your stack's settings and passwords are stored in a .env file alongside the compose.yaml, well protected and outside of Git. You generate secure random values and use `docker compose config` to check what Compose does with them.
+description: In the end, your stack's settings and passwords are stored in a .env file next to the compose.yaml file, well-protected and outside of Git. You generate secure random values and use `docker compose config` to check what Compose does with them.
 level: 2
 minutes: 15
 requires:
   - First Stack with Compose
 ---
 
-A [document] describes`compose.yaml` **how** a service works. However, passwords, API keys, and values that vary from server to server do not belong there. Otherwise, they’ll end up in every backup diff, every screenshot, and, in the worst case, in a public Git repository.
+A [document] describes`compose.yaml` **how** a service works. However, passwords, API keys, and values that vary from server to server do not belong there. Otherwise, they’ll end up in every backup diff, every screenshot, and—in the worst case—in a public Git repository.
 
-The solution is a file named  `.env`in the same folder. Docker Compose reads it automatically and substitutes its values wherever they appear`compose.yaml``${NAME}` in the . This keeps the  `compose.yaml`free of secrets, and you can share it or version control it. For more information, see the articles [“Managing](/en/wiki/managing-secrets/) [.env Files”](/en/wiki/env-files/) and [“Managing Secrets](/en/wiki/managing-secrets/).”
+The solution is a file named  `.env`in the same folder. Docker Compose automatically reads it and substitutes its values wherever they appear`compose.yaml``${NAME}` in the . This keeps the  `compose.yaml`free of secrets, and you can share or version it. For more information, see the articles [“Managing](/en/wiki/managing-secrets/) [.env Files”](/en/wiki/env-files/) and [“Managing Secrets](/en/wiki/managing-secrets/).”
 
 In this guide, you'll continue working with the whoami stack from the [first stack](/en/setup/first-stack/).
 
 <Steps>
 
 <Step title="Create a .env file">
-Go to the "Stack" folder and create`.env` the following:
+Go to the Stack folder and create`.env` the  file:
 
 ```bash
 cd __ROOT__/whoami
@@ -32,7 +32,7 @@ TZ=__TZ__
 WHOAMI_NAME=homelab
 ```
 
-The rules are simple: one variable per line`NAME=Wert`, no spaces around the variable name`=`. Lines beginning with  are`#` comments.
+The rules are simple: one variable per line`NAME=Wert`, no spaces around the `=`. Lines beginning with  are`#` comments.
 </Step>
 
 <Step title="Using Variables in compose.yaml">
@@ -61,11 +61,13 @@ This command displays the text exactly`compose.yaml` as Compose sees it after in
 docker compose config
 ```
 
-Your actual values should`environment:` now appear under , such as `WHOAMI_NAME: homelab`. If a variable is missing from `.env`, Compose will display a warning saying `variable is not set. Defaulting to a blank string.`
+Your actual values should`environment:` now be listed under , such as `WHOAMI_NAME: homelab`. If a variable is missing from `.env`, Compose will display a warning: `variable is not set. Defaulting to a blank string.`
 
 <Callout type="warning" title="The output contains plain text">
-`docker compose config` It also displays all passwords in plain text. Do not copy the output into a forum or chat without verifying it first.
+`docker compose config` It also displays all passwords in plain text. Do not copy the output to a forum or chat without checking it first.
 </Callout>
+
+The [Compose](/en/werkzeuge/compose-erklaerer/) [Explainer](/en/werkzeuge/compose-erklaerer/) will explain what the individual lines of a  mean`compose.yaml`. But only `compose.yaml`paste the  there—not the output containing your secrets.
 </Step>
 
 <Step title="Restart the stack and test it">
@@ -78,7 +80,7 @@ curl http://localhost:8080
 
 The response now contains the line `Name: homelab`. The value came from the  via`.env` the  `compose.yaml`into the container.
 
-By the way, simply restarting  `docker compose restart`isn't enough. It doesn't apply any changes to variables. After making changes to  or`.env` , always`compose.yaml` run `docker compose up -d`.
+By the way, simply restarting with  isn't `docker compose restart`enough. It doesn't carry over any changed variables. After making changes to  or`.env` , always`compose.yaml` use `docker compose up -d`. If the container restarts repeatedly afterward, a variable is often missing; see "[Container in a Restart Loop](/en/wiki/restart-loop/)."
 </Step>
 
 <Step title="Generate Secure Secrets">
@@ -96,8 +98,8 @@ echo "DB_PASSWORD=$(openssl rand -hex 32)" >> .env
 
 `DB_PASSWORD` This is just an example name. The variables a service needs are listed on its service page`.env`. The random values are already pre-filled in your browser there.
 
-<Callout title="Why &quot;hex&quot;?">
-Hex values do not contain any special characters. This saves you trouble: Otherwise, Compose will try`.env` to interpret a  `$`in the value as a variable. If you do need to use a  `$`in the value, enclose the value in single quotes; Compose will then treat it as a literal.
+<Callout title="Why hex?">
+Hex values do not contain special characters. This saves you trouble: Otherwise, Compose will try`.env` to interpret a  `$`in the value as a variable. If you do need to include a  in`$` the value, enclose the value in single quotes; Compose will then treat it as a literal.
 </Callout>
 </Step>
 
@@ -109,11 +111,11 @@ chmod 600 .env
 ls -l .env
 ```
 
-The output now reads `-rw-------`. Do this for each new `.env`.
+The output now reads `-rw-------`. Do this for every new `.env`.
 </Step>
 
 <Step title="Keep .env out of Git">
-If you're managing your Compose files in a Git repository, add`.gitignore`  `.env`and the data folders to the  . It's best to do this in the  `.gitignore`in the root directory of the repository; then it will apply to all stacks:
+If you're managing your Compose files in a Git repository, add  `.env`and the data folders to the  `.gitignore`file. It's best to do this in the  file `.gitignore`in the root directory of the repository; then it will apply to all stacks:
 
 ```bash
 printf '.env\ndata/\n' >> .gitignore
@@ -128,8 +130,8 @@ If you're not using Git, you can skip this step. Just remember: The  `.env`is pa
 
 ## Good to Know
 
-- **Passwords do not change retroactively.** Many databases read the password from the environment only when they are started for the very first time and use it to create the user. If you change it later in the `.env`, it will no longer match the database. Therefore, set secrets before the first startup.
-- **Enforce required variables.** If you use , Compose will terminate`${DB_PASSWORD:?fehlt in .env}` with this message instead of starting with an empty value. , on the other hand, sets`${TZ:-Europe/Berlin}` a default value if the variable is missing.
-- **Environment variables are not hidden.** Anyone in the group `docker`can view them, for example, using `docker inspect`. For beginners, the option `.env`with is `chmod 600`perfectly sufficient. For a more secure approach—such as using Compose secrets or variables ending in `_FILE`—see [“Managing Secrets](/en/wiki/managing-secrets/).”
+- **Passwords do not change retroactively.** Many databases read the password from the environment only when they are first started and use it to create the user. If you change it later in the `.env`, it will no longer match the database. Therefore, set the secrets before the first startup.
+- **Enforce required variables.** If you use ``, Compose will terminate`${DB_PASSWORD:?fehlt in .env}` with this message instead of starting with an empty value. ``, on the other hand, sets`${TZ:-Europe/Berlin}` a default value if the variable is missing.
+- **Environment variables are not hidden.** Anyone in the group `docker`can view them, for example, using `docker inspect`. For beginners, `.env`using  is perfectly`chmod 600` sufficient. For more stringent approaches, such as using Compose secrets or variables with the suffix `_FILE`, see [Managing Secrets](/en/wiki/managing-secrets/).
 
 That wraps up the Docker phase. Next, you'll make your services accessible under their own names using [a domain and DNS](/en/setup/domain-dns/).

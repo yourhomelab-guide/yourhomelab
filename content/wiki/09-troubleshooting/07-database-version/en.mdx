@@ -1,0 +1,164 @@
+---
+title: Database Does Not Start After Update
+description: After an update, Postgres or MariaDB won't start because the data belongs to a different major version. Here's how to roll back and perform a clean upgrade using a dump and restore.
+level: 3
+related:
+  - images-tags
+  - updates
+  - backup-strategies
+  - first-steps
+practice: testing-restores
+---
+
+## Symptom
+
+After  and`docker compose pull` , the database container hangs`docker compose up -d` in a
+[Restart loop](/en/wiki/restart-loop/); the app reports that it cannot connect to the database.
+The Postgres log shows:
+
+```text
+FATAL:  database files are incompatible with server
+DETAIL:  The data directory was initialized by PostgreSQL version 16, which is not compatible with this version 17.6.
+```
+
+## Why This Happens
+
+Postgres stores its data in a format that corresponds to **the** **major version** (16, 17, 18 …). A new major version
+I can't just open the files from the old version. Within a major version—for example, from 17.5 to 17.6—there is a
+Updating, on the other hand, is no problem.
+
+Most of the time, it's because the previous day was too open:  or`postgres:latest` no day at all quietly`pull` jumps to the next
+Next major version. For more information, see [Images & Tags](/en/wiki/images-tags/).
+
+## Causes
+
+1. **Tag  `latest`or no tag** in the database image.
+2. **Day was intentionally increased** without migrating the data.
+3. **An update tool** such as Watchtower or Renovate has increased the major version.
+
+## Check
+
+Which image is running, and what version does the data have?
+
+```bash
+cd __ROOT__/myapp
+grep -n "image:" compose.yaml
+docker compose logs --tail 20 db
+sudo cat __DATA(myapp)__/db/PG_VERSION
+```
+
+`myapp` stands for your stack,  `db`for the database service name. The bind mount in
+yours`compose.yaml`. In the example, it is `__DATA(myapp)__/db`.  contains`PG_VERSION` the main version of the data.
+The [Compose](/en/werkzeuge/compose-erklaerer/) [guide](/en/werkzeuge/compose-erklaerer/) highlights which images in your post appear `compose.yaml`with or`latest` without a tag.
+
+## Quick Fix: Revert to the Previous Version
+
+The data isn't corrupted. Postgres just refused to open it. Enter the  again`compose.yaml`
+Main version from  `PG_VERSION`and **pin** it so that doesn't happen again:
+
+```yaml
+  db:
+    image: postgres:16
+```
+
+```bash
+docker compose up -d
+```
+
+The service is up and running again. It turns out the new version has already made some changes to the data, and the startup is still failing,
+Restore your latest backup; see "[Testing the Restore" for instructions](/en/setup/testing-restores/).
+
+## Upgrading the Right Way: Dump and Restore for Postgres
+
+The safe way: Export the data using the old version (dump), recreate it from scratch using the new version, and
+Restore.
+
+<Callout type="warning" title="Back up first">
+  Make a backup of the entire stack folder beforehand; see "[Backups with borgmatic](/en/setup/backups-borgmatic/)."
+  In the following procedure, the old data folder will also remain as a copy.
+</Callout>
+
+1. **Run the old version and stop the app.** Only the database should be running so that nothing happens during the dump
+   changes:
+
+   ```bash
+   cd __ROOT__/myapp
+   docker compose stop
+   docker compose up -d db
+   ```
+
+2. **Create a dump.**  This backs`pg_dumpall` up all databases, including users. The variable is evaluated in the container:
+
+   ```bash
+   docker compose exec -T db sh -c 'pg_dumpall -U "$POSTGRES_USER"' > dump.sql
+   ls -lh dump.sql
+   ```
+
+   The file must not be empty.
+
+3. **Stop the stack and set the old data folder aside:**
+
+   ```bash
+   docker compose down
+   sudo mv __DATA(myapp)__/db __DATA(myapp)__/db-old
+   ```
+
+4. **Enter the new major version** and just start the database. It creates an empty data folder with users and
+   Password from  to`.env`:
+
+   ```yaml
+     db:
+       image: postgres:17
+   ```
+
+   ```bash
+   docker compose up -d db
+   docker compose logs --tail 20 db
+   ```
+
+   Wait until  `database system is ready to accept connections`appears.
+
+5. **Import a dump:**
+
+   ```bash
+   docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d postgres' < dump.sql
+   ```
+
+   Messages like  are`role "..." already exists` harmless because the user was already created when the record was inserted.
+
+6. **Start and test everything:**
+
+   ```bash
+   docker compose up -d
+   ```
+
+   Log in to the app and check to see if your data is there. If everything runs smoothly for a few days, delete it and`dump.sql`
+   `__DATA(myapp)__/db-old`. The dump contains password hashes—don't leave it lying around.
+
+<Callout title="Follow the app's instructions">
+  Some apps require a specific version of Postgres or come with their own image, such as Immich. Read this before
+  Update the app's documentation. Starting with Postgres 18, the official image also includes the location of the data within the container
+  Changed. See the notes on the [Postgres Docker Hub page](https://hub.docker.com/_/postgres).
+</Callout>
+
+## MariaDB
+
+MariaDB can usually import data files from older versions directly, but it must then adjust its system tables.
+The official image handles this at startup if you set this variable:
+
+```yaml
+  db:
+    image: mariadb:11
+    environment:
+      - MARIADB_AUTO_UPGRADE=1
+```
+
+**Downgrading** to an older version, on the other hand, won't work. To do that, you'll need the backup you made earlier. Pin this one, too.
+the major version, that is,  `mariadb:11`instead of `mariadb:latest`. For MySQL, the rule is: Major version jumps should only be made incrementally, and
+with a backup; see [the MySQL documentation on upgrading](https://dev.mysql.com/doc/refman/8.4/en/upgrading.html).
+
+## Prevention
+
+- Always pin database images to the major version: `postgres:17`, `mariadb:11`.
+- Never apply major database updates automatically; see [Updates with Renovate](/en/setup/updates-renovate/).
+- Make a fresh backup before every major update; see [Updates](/en/wiki/updates/).
