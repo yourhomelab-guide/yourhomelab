@@ -37,7 +37,7 @@ export function tokenizeLine(line: string): Token[] {
   const m = rest.match(/^(\s*(?:- )?)([A-Za-z_][\w.\-]*)([:=])(?=\s|$|[^/])/);
   if (m && !/^\s*(?:- )?https?:/.test(line)) {
     push(m[1], 'plain');
-    push(m[2], 'key');
+    splitPlaceholders(m[2], 'key', push);
     push(m[3], 'plain');
     rest = rest.slice(m[0].length);
   }
@@ -78,7 +78,10 @@ export function renderCode(code: string, opts: { numbers?: boolean; values: Reco
         })
         .join('');
       const num = opts.numbers ? `<span class="ln" aria-hidden="true">${i + 1}</span>` : '';
-      return `<span class="line">${num}<span class="lc">${toks}</span></span>`;
+      // Indent of the line (YAML list dash included): wrapped continuation lines start below the content
+      const ind = /^\s*(?:- )?/.exec(line)![0].length;
+      const style = ind ? ` style="--i:${ind}ch"` : '';
+      return `<span class="line"${style}>${num}<span class="lc">${toks}</span></span>`;
     })
     .join('');
 }

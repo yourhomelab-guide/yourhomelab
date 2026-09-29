@@ -1,6 +1,7 @@
 ---
 /**
- * Decision helper. Each answer awards points to result ids; the result with most points wins.
+ * Decision helper. Each answer awards points to result ids; the result with most points wins. On a tie, the
+ * answer changed last decides, so every click can move the recommendation. Updates live on every change.
  *
  * <Quiz
  *   questions={[{ question: "…", answers: [{ label: "…", points: { lokal: 2 } }] }]}
@@ -18,7 +19,7 @@ const { questions, results } = Astro.props;
 const lang = langFromUrl(Astro.url);
 ---
 
-<div class="quiz card" data-quiz data-results={JSON.stringify(results)}>
+<div class="quiz card" data-quiz data-results={JSON.stringify(results)} data-runner-up={t(lang, 'quiz.runnerUp')}>
   {
     questions.map((q, qi) => (
       <fieldset class="q">
@@ -36,10 +37,11 @@ const lang = langFromUrl(Astro.url);
       </fieldset>
     ))
   }
-  <div class="result" data-result hidden>
+  <div class="result" data-result aria-live="polite" hidden>
     <span class="rk">{t(lang, 'quiz.recommendation')}</span>
     <span class="rt" data-result-title></span>
     <span class="rx" data-result-text></span>
+    <span class="r2" data-result-second hidden></span>
     <div class="ra">
       <a class="btn btn-primary btn-sm" href={url.section(lang, 'setup')}>{t(lang, 'quiz.start')}</a>
       <button type="button" class="link-btn" data-reset>{t(lang, 'quiz.reset')}</button>
@@ -50,23 +52,45 @@ const lang = langFromUrl(Astro.url);
 
 <script>
   document.querySelectorAll<HTMLElement>('[data-quiz]').forEach((quiz) => {
-    const results = JSON.parse(quiz.dataset.results!);
+    const results = JSON.parse(quiz.dataset.results!) as Record<string, { title: string; text: string }>;
     const groups = quiz.querySelectorAll('fieldset').length;
+    const box = quiz.querySelector<HTMLElement>('[data-result]')!;
+    const second = quiz.querySelector<HTMLElement>('[data-result-second]')!;
+    const pts = (i: HTMLInputElement) => JSON.parse(i.dataset.points!) as Record<string, number>;
+    let last: HTMLInputElement | null = null;
+    let shown = '';
     const update = () => {
       const checked = quiz.querySelectorAll<HTMLInputElement>('input:checked');
       const done = checked.length === groups;
-      quiz.querySelector<HTMLElement>('[data-result]')!.hidden = !done;
+      box.hidden = !done;
       quiz.querySelector<HTMLElement>('[data-hint]')!.hidden = done;
-      if (!done) return;
+      if (!done) return (shown = '');
       const score: Record<string, number> = {};
-      checked.forEach((i) => Object.entries(JSON.parse(i.dataset.points!) as Record<string, number>).forEach(([k, v]) => (score[k] = (score[k] ?? 0) + v)));
-      const best = Object.keys(results).sort((a, b) => (score[b] ?? 0) - (score[a] ?? 0))[0];
+      checked.forEach((i) => Object.entries(pts(i)).forEach(([k, v]) => (score[k] = (score[k] ?? 0) + v)));
+      // Highest score first; on a tie the answer clicked last decides, then the order of the results
+      const bonus = last ? pts(last) : {};
+      const ranked = Object.keys(results).sort((a, b) => (score[b] ?? 0) - (score[a] ?? 0) || (bonus[b] ?? 0) - (bonus[a] ?? 0));
+      const [best, next] = ranked;
       quiz.querySelector('[data-result-title]')!.textContent = results[best].title;
       quiz.querySelector('[data-result-text]')!.textContent = results[best].text;
+      const close = next && (score[next] ?? 0) > 0 && (score[best] ?? 0) - (score[next] ?? 0) <= 1;
+      second.hidden = !close;
+      if (close) second.textContent = quiz.dataset.runnerUp!.replace('{title}', results[next].title);
+      // Short highlight so a changed recommendation is noticed
+      if (shown && shown !== best) {
+        box.classList.remove('changed');
+        void box.offsetWidth;
+        box.classList.add('changed');
+      }
+      shown = best;
     };
-    quiz.addEventListener('change', update);
+    quiz.addEventListener('change', (e) => {
+      last = e.target as HTMLInputElement;
+      update();
+    });
     quiz.querySelector('[data-reset]')!.addEventListener('click', () => {
       quiz.querySelectorAll<HTMLInputElement>('input').forEach((i) => (i.checked = false));
+      last = null;
       update();
     });
   });
@@ -87,5 +111,9 @@ const lang = langFromUrl(Astro.url);
   .rt { font-size: 24px; font-weight: 700; color: var(--accent-700); }
   .rx { font-size: 15.5px; line-height: 1.6; color: #23465a; }
   .ra { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; align-items: center; }
+  .r2 { font-size: 14px; color: var(--accent-600); }
+  .result:global(.changed) { animation: quiz-flash 0.6s ease; }
+  @keyframes quiz-flash { from { box-shadow: 0 0 0 3px var(--accent); } to { box-shadow: 0 0 0 3px transparent; } }
+  @media (prefers-reduced-motion: reduce) { .result:global(.changed) { animation: none; } }
   .hint { font-size: 14px; color: var(--muted); }
 </style>

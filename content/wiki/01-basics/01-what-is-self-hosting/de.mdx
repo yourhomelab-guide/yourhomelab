@@ -3,7 +3,7 @@ slug: was-ist-selfhosting
 title: "Was ist Selfhosting?"
 description: "Selfhosting heißt: Du betreibst Dienste wie Passwortmanager, Fotoarchiv oder Cloud-Speicher auf einem Rechner, den du selbst kontrollierst, statt sie bei einem großen Anbieter zu nutzen."
 level: 1
-related: [is-it-worth-it, cloud-hybrid-local, hardware-overview, what-is-docker]
+related: [is-it-worth-it, cloud-hybrid-local, hardware-overview, what-is-docker, operating-models]
 practice: choosing-hardware
 ---
 
@@ -34,15 +34,44 @@ Die Auswahl an freier Software ist groß. Typische Einstiegsprojekte:
   <Card title="Überblick">
     Monitoring wie [Uptime Kuma](/de/dienste/uptime-kuma/), das dir meldet, wenn etwas ausfällt.
   </Card>
+  <Card title="Von unterwegs">
+    Ein eigenes [VPN](/de/einrichten/vpn-wireguard/), über das du sicher auf dein Heimnetz zugreifst, als wärst du zuhause.
+  </Card>
+  <Card title="Spielen">
+    Ein eigener Gameserver, etwa für Minecraft oder Valheim, auf dem du mit Freunden spielst.
+  </Card>
 </Cards>
 
 Viele Leute fangen mit einem Dienst an und merken schnell, wie viel sich damit machen lässt. Dieses Hobby nennt man oft
 **Homelab**: eine kleine, eigene IT-Umgebung zuhause zum Betreiben, Lernen und Ausprobieren. Wie so etwas bei
 anderen aussieht, zeigen die [Homelabs](/de/homelabs/).
 
+## Docker, VMs oder Proxmox?
+
+Wenn du dich umschaust, begegnen dir verschiedene Ansätze. Beliebt ist **Virtualisierung**: Ein Hypervisor wie
+[Proxmox VE](/de/nachschlagen/proxmox-ve/) läuft direkt auf der Hardware und teilt sie in mehrere **virtuelle
+Maschinen** (VMs) auf. Jede VM ist ein kompletter Rechner mit eigenem Betriebssystem und fest zugeteiltem
+Arbeitsspeicher. Das ist praktisch, um verschiedene Systeme parallel zu betreiben oder mit Snapshots gefahrlos
+auszuprobieren. Daneben gibt es NAS-Systeme wie [TrueNAS und Unraid](/de/nachschlagen/truenas-unraid/), die Speicher
+und Apps unter einer Weboberfläche bündeln.
+
+Container gehen einen leichteren Weg. Sie teilen sich den Kern des Host-Systems und bringen nur die Anwendung mit
+allem mit, was sie braucht. Ein Container startet in Sekunden und kommt oft mit wenigen Megabyte Arbeitsspeicher aus,
+während eine VM ein ganzes Betriebssystem mitschleppt. Den Unterschied im Detail erklärt
+[VMs oder Container?](/de/nachschlagen/vms-oder-container/).
+
+<Callout title="Diese Seite setzt auf Docker">
+Alle Anleitungen hier bauen auf einem Docker-basierten Homelab auf: ein Linux-Server, darauf Docker Compose. Das ist
+am einfachsten zu lernen, bequem zu pflegen (ein Ordner pro Dienst, Updates mit zwei Befehlen), braucht die wenigsten
+Ressourcen und läuft auch auf einem kleinen Mini-PC oder VPS. Proxmox und Co. sind großartig, bringen aber eine
+zusätzliche Schicht mit, die du am Anfang nicht brauchst. Willst du später virtualisieren, funktioniert alles von hier
+genauso in einer Debian-VM auf Proxmox. Welche Kombination wann passt, zeigt
+[Betriebsmodelle im Überblick](/de/nachschlagen/betriebsmodelle/).
+</Callout>
+
 ## Wie das technisch aussieht
 
-Ein typisches Setup auf dieser Seite besteht aus wenigen Bausteinen:
+Ein Docker-Homelab, wie es diese Seite beschreibt, besteht aus wenigen Bausteinen:
 
 1. **Hardware**: ein Rechner, der dauerhaft läuft. Welche Geräte sich eignen, steht in der
    [Hardware-Übersicht](/de/nachschlagen/hardware-uebersicht/).

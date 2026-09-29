@@ -207,7 +207,8 @@ const alternates = article ? { de: url.wiki('de', article.slugs.de), en: url.wik
 
 <style>
   .wiki { display: grid; grid-template-columns: 260px minmax(0, 1fr) 240px; gap: 48px; align-items: start; }
-  .side { position: sticky; top: var(--header-h); max-height: calc(100vh - var(--header-h)); overflow-y: auto; padding: 32px 0 40px; display: flex; flex-direction: column; gap: 22px; scrollbar-width: thin; view-transition-name: wiki-side; }
+  .side { position: sticky; top: var(--header-h); max-height: calc(100vh - var(--header-h)); overflow-y: auto; padding: 32px 0 40px; display: flex; flex-direction: column; gap: 22px; scrollbar-width: none; view-transition-name: wiki-side; }
+  .side::-webkit-scrollbar { display: none; }
   .filter { height: 52px; flex: none; border-radius: 14px; background: var(--surface); border: 1.5px solid var(--line-2); display: flex; align-items: center; gap: 10px; padding: 0 12px 0 14px; cursor: text; }
   .filter:focus-within { border-color: var(--accent); }
   .filter svg { flex: none; }
