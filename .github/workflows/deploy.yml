@@ -36,7 +36,7 @@ jobs:
           if [ -z "$HOST" ]; then echo "::warning::DEPLOY_HOST secret missing, build ok but nothing uploaded"; echo "ok=false" >> "$GITHUB_OUTPUT"; exit 0; fi
           # The upload deletes everything in the target folder that isn't part of the site, so there is no default:
           # a wrong guess (e.g. public_html) would wipe other folders such as live/ and preview/.
-          if [ -z "$TARGET" ]; then echo "::error::DEPLOY_PATH is not set (environment 'production'), e.g. public_html/live"; exit 1; fi
+          if [ -z "$TARGET" ]; then echo "::error::DEPLOY_PATH is not set (environment 'production'), e.g. / when the account's root is the site folder"; exit 1; fi
           echo "ok=true" >> "$GITHUB_OUTPUT"
 
       - name: Upload to Hetzner Webhosting
