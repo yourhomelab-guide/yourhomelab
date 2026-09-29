@@ -46,28 +46,9 @@ Viele Leute fangen mit einem Dienst an und merken schnell, wie viel sich damit m
 **Homelab**: eine kleine, eigene IT-Umgebung zuhause zum Betreiben, Lernen und Ausprobieren. Wie so etwas bei
 anderen aussieht, zeigen die [Homelabs](/de/homelabs/).
 
-## Wie das technisch aussieht
-
-Ein typisches Setup auf dieser Seite besteht aus wenigen Bausteinen:
-
-1. **Hardware**: ein Rechner, der dauerhaft läuft. Welche Geräte sich eignen, steht in der
-   [Hardware-Übersicht](/de/nachschlagen/hardware-uebersicht/).
-2. **Betriebssystem**: meist ein schlankes Linux wie Debian oder Ubuntu Server, ohne grafische Oberfläche. Du
-   verwaltest es per [SSH](/de/nachschlagen/ssh-grundlagen/) von deinem normalen Rechner aus.
-3. **Docker**: Jeder Dienst läuft in einem eigenen **Container**, einer abgeschotteten Umgebung mit allem, was die
-   Software braucht. Beschrieben wird er in einer kurzen Datei namens `compose.yaml`. Mehr dazu in
-   [Was ist Docker?](/de/nachschlagen/was-ist-docker/).
-4. **Reverse Proxy**: ein Dienst, der Anfragen annimmt und an den richtigen Container weiterreicht. Er sorgt auch für
-   HTTPS-Zertifikate, damit du Adressen wie `vault.__DOMAIN__` statt IP-Adresse und Port nutzen kannst. Siehe
-   [Reverse Proxy erklärt](/de/nachschlagen/reverse-proxy-erklaert/).
-5. **Backups**: eine Sicherung deiner Daten an einem anderen Ort. Ohne diesen Punkt ist Selfhosting ein Risiko.
-
-Alle Dienste liegen in einem gemeinsamen Ordner, standardmäßig `__ROOT__`. Pro Dienst gibt es einen Unterordner mit
-`compose.yaml`, `.env` und `data/`. So weißt du immer, wo was liegt, und sicherst am Ende genau einen Ordner.
-
 ## Docker, VMs oder Proxmox?
 
-Wenn du dich umschaust, begegnen dir auch andere Ansätze. Beliebt ist **Virtualisierung**: Ein Hypervisor wie
+Wenn du dich umschaust, begegnen dir verschiedene Ansätze. Beliebt ist **Virtualisierung**: Ein Hypervisor wie
 [Proxmox VE](/de/nachschlagen/proxmox-ve/) läuft direkt auf der Hardware und teilt sie in mehrere **virtuelle
 Maschinen** (VMs) auf. Jede VM ist ein kompletter Rechner mit eigenem Betriebssystem und fest zugeteiltem
 Arbeitsspeicher. Das ist praktisch, um verschiedene Systeme parallel zu betreiben oder mit Snapshots gefahrlos
@@ -87,6 +68,25 @@ zusätzliche Schicht mit, die du am Anfang nicht brauchst. Willst du später vir
 genauso in einer Debian-VM auf Proxmox. Welche Kombination wann passt, zeigt
 [Betriebsmodelle im Überblick](/de/nachschlagen/betriebsmodelle/).
 </Callout>
+
+## Wie das technisch aussieht
+
+Ein Docker-Homelab, wie es diese Seite beschreibt, besteht aus wenigen Bausteinen:
+
+1. **Hardware**: ein Rechner, der dauerhaft läuft. Welche Geräte sich eignen, steht in der
+   [Hardware-Übersicht](/de/nachschlagen/hardware-uebersicht/).
+2. **Betriebssystem**: meist ein schlankes Linux wie Debian oder Ubuntu Server, ohne grafische Oberfläche. Du
+   verwaltest es per [SSH](/de/nachschlagen/ssh-grundlagen/) von deinem normalen Rechner aus.
+3. **Docker**: Jeder Dienst läuft in einem eigenen **Container**, einer abgeschotteten Umgebung mit allem, was die
+   Software braucht. Beschrieben wird er in einer kurzen Datei namens `compose.yaml`. Mehr dazu in
+   [Was ist Docker?](/de/nachschlagen/was-ist-docker/).
+4. **Reverse Proxy**: ein Dienst, der Anfragen annimmt und an den richtigen Container weiterreicht. Er sorgt auch für
+   HTTPS-Zertifikate, damit du Adressen wie `vault.__DOMAIN__` statt IP-Adresse und Port nutzen kannst. Siehe
+   [Reverse Proxy erklärt](/de/nachschlagen/reverse-proxy-erklaert/).
+5. **Backups**: eine Sicherung deiner Daten an einem anderen Ort. Ohne diesen Punkt ist Selfhosting ein Risiko.
+
+Alle Dienste liegen in einem gemeinsamen Ordner, standardmäßig `__ROOT__`. Pro Dienst gibt es einen Unterordner mit
+`compose.yaml`, `.env` und `data/`. So weißt du immer, wo was liegt, und sicherst am Ende genau einen Ordner.
 
 ## Wo der Server steht
 
