@@ -57,9 +57,9 @@ const toolLinks = [
         <p>{s.description}</p>
       </div>
       <div class="hero-links">
-        <a class="btn btn-outline btn-sm" href={s.repoUrl}>{s.repoLabel} ↗</a>
-        <a class="btn btn-outline btn-sm" href={s.links.website}>{t(lang, 'service.website')} ↗</a>
-        <a class="btn btn-outline btn-sm" href={s.links.docs}>{t(lang, 'service.docs')} ↗</a>
+        <a class="btn btn-outline btn-sm" href={s.repoUrl} target="_blank" rel="noopener noreferrer">{s.repoLabel} ↗</a>
+        <a class="btn btn-outline btn-sm" href={s.links.website} target="_blank" rel="noopener noreferrer">{t(lang, 'service.website')} ↗</a>
+        <a class="btn btn-outline btn-sm" href={s.links.docs} target="_blank" rel="noopener noreferrer">{t(lang, 'service.docs')} ↗</a>
       </div>
     </div>
 
@@ -152,7 +152,7 @@ const toolLinks = [
             s.upstream && (
               <p data-source-text="upstream" hidden>
                 {t(lang, 'service.upstreamText')}
-                <a href={s.upstream.url}>
+                <a href={s.upstream.url} target="_blank" rel="noopener noreferrer">
                   {s.upstream.label} ↗
                 </a>
               </p>
@@ -184,7 +184,7 @@ const toolLinks = [
             stale && (
               <p class="stale">
                 {s.reviewed ? t(lang, 'service.staleSince', { date: formatDate(lang, s.reviewed) }) : t(lang, 'service.untested')}{' '}
-                <a href={issueUrl}>{t(lang, 'service.staleReport')} ↗</a>
+                <a href={issueUrl} target="_blank" rel="noopener noreferrer">{t(lang, 'service.staleReport')} ↗</a>
               </p>
             )
           }
@@ -245,8 +245,8 @@ const toolLinks = [
           <strong>{t(lang, 'service.contributeTitle')}</strong>
           <span>{t(lang, 'service.contributeText')}</span>
           <div class="contrib-links">
-            <a href={`${site.repo}/tree/${site.branch}/${s.filePath}`}>{t(lang, 'service.edit')} ↗</a>
-            <a href={issueUrl}>{t(lang, 'service.report')} ↗</a>
+            <a href={`${site.repo}/tree/${site.branch}/${s.filePath}`} target="_blank" rel="noopener noreferrer">{t(lang, 'service.edit')} ↗</a>
+            <a href={issueUrl} target="_blank" rel="noopener noreferrer">{t(lang, 'service.report')} ↗</a>
           </div>
         </div>
       </aside>
