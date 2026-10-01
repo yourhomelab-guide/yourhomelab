@@ -1,6 +1,7 @@
 services:
   nextcloud:
-    image: nextcloud:31-apache
+    # Upgrade one major version at a time (35 → 36 → 37), never skip one.
+    image: nextcloud:35-apache
     container_name: nextcloud
     restart: unless-stopped
     environment:
@@ -11,26 +12,50 @@ services:
       - MYSQL_PASSWORD=${DB_PASSWORD}
       - REDIS_HOST=redis
       - NEXTCLOUD_TRUSTED_DOMAINS=__HOST__
-      - OVERWRITEPROTOCOL=https
+      # Behind a reverse proxy: correct links, client IPs and protocol
+      - TRUSTED_PROXIES=172.16.0.0/12
+      - OVERWRITEPROTOCOL=__SCHEME__
+      - OVERWRITECLIURL=__URL__
+      # Largest file you can upload through the browser
+      - PHP_UPLOAD_LIMIT=10G
     volumes:
       - ./data/html:/var/www/html
     depends_on:
       - db
       - redis
 
+  # Runs Nextcloud's background jobs every 5 minutes.
+  # Set "Background jobs" to Cron under Administration settings → Basic settings.
+  cron:
+    image: nextcloud:35-apache
+    container_name: nextcloud-cron
+    restart: unless-stopped
+    entrypoint: /cron.sh
+    volumes:
+      # Must match the volume of the nextcloud service
+      - ./data/html:/var/www/html
+    depends_on:
+      - db
+      - redis
+
   db:
-    image: mariadb:11
+    image: mariadb:lts
     container_name: nextcloud-db
     restart: unless-stopped
+    # Isolation level Nextcloud expects
+    command: --transaction-isolation=READ-COMMITTED
     environment:
       - MARIADB_DATABASE=nextcloud
       - MARIADB_USER=nextcloud
       - MARIADB_PASSWORD=${DB_PASSWORD}
       - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      # Upgrade the data files automatically after a MariaDB update
+      - MARIADB_AUTO_UPGRADE=1
+      - MARIADB_DISABLE_UPGRADE_BACKUP=1
     volumes:
       - ./data/db:/var/lib/mysql
 
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     container_name: nextcloud-redis
     restart: unless-stopped

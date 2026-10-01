@@ -24,7 +24,7 @@ upstream:
   label: docker-compose.yml
   url: https://github.com/owner/myservice/blob/main/docker-compose.yml
 # Date you last tested this template (YYYY-MM-DD)
-reviewed: 2026-01-01
+reviewed: 2026-10-01
 # Does a GPU help (transcoding, machine learning)? Shown on the service page
 # gpu: no            # no | optional | recommended
 # Database of the stack, used for backup dumps (borgmatic tool)

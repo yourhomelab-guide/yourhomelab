@@ -14,7 +14,7 @@ links:
 upstream:
   label: docker-compose.yml
   url: https://github.com/pocket-id/pocket-id/blob/main/docker-compose.yml
-reviewed: 2026-09-12
+reviewed: 2026-10-01
 db:
   type: sqlite
   path: data/data/pocket-id.db

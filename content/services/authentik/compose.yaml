@@ -1,36 +1,52 @@
+# authentik works in UTC internally. Don't mount /etc/localtime or set TZ here,
+# that breaks OAuth and SAML logins. The web UI shows your local time anyway.
 services:
   authentik:
-    image: ghcr.io/goauthentik/server:2025.8
+    image: ghcr.io/goauthentik/server:2026.8
     container_name: authentik
     restart: unless-stopped
     command: server
+    # Optional settings like e-mail come from .env as AUTHENTIK_* variables
+    env_file: .env
     environment:
-      - TZ=${TZ}
       - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
       - AUTHENTIK_POSTGRESQL__HOST=postgresql
+      - AUTHENTIK_POSTGRESQL__NAME=authentik
       - AUTHENTIK_POSTGRESQL__USER=authentik
       - AUTHENTIK_POSTGRESQL__PASSWORD=${PG_PASS}
-      - AUTHENTIK_REDIS__HOST=redis
     volumes:
-      - ./data/media:/media
+      - ./data/data:/data
+      - ./data/custom-templates:/templates
+    shm_size: 512mb
     depends_on:
-      - postgresql
-      - redis
+      postgresql:
+        condition: service_healthy
 
   worker:
-    image: ghcr.io/goauthentik/server:2025.8
+    image: ghcr.io/goauthentik/server:2026.8
     container_name: authentik-worker
     restart: unless-stopped
     command: worker
+    # Needs root for the Docker socket (automatic outpost deployment)
+    user: root
+    env_file: .env
     environment:
       - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
       - AUTHENTIK_POSTGRESQL__HOST=postgresql
+      - AUTHENTIK_POSTGRESQL__NAME=authentik
       - AUTHENTIK_POSTGRESQL__USER=authentik
       - AUTHENTIK_POSTGRESQL__PASSWORD=${PG_PASS}
-      - AUTHENTIK_REDIS__HOST=redis
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./data/media:/media
+      # Optional: lets authentik start outposts itself. Remove it if you
+      # deploy outposts by hand.
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data/data:/data
+      - ./data/certs:/certs
+      - ./data/custom-templates:/templates
+    shm_size: 512mb
+    depends_on:
+      postgresql:
+        condition: service_healthy
 
   postgresql:
     image: postgres:16-alpine
@@ -42,8 +58,9 @@ services:
       - POSTGRES_DB=authentik
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
-
-  redis:
-    image: redis:alpine
-    container_name: authentik-redis
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d authentik -U authentik"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s

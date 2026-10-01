@@ -52,7 +52,7 @@ Die wichtigsten Schlüssel im Überblick:
 | `networks` | In welchen Docker-Netzwerken der Container hängt. Siehe [Docker-Netzwerke](/de/nachschlagen/docker-netzwerke/). |
 
 <Callout title="ports oder Reverse Proxy?">
-Das Beispiel zeigt `ports` und `networks` zusammen, damit du beide Schlüssel kennst. In der Praxis brauchst du meist nur eins davon: Mit einem Reverse Proxy wie Traefik hängt der Dienst nur im Netzwerk `__NETWORK__` und veröffentlicht keinen Port. Ohne Proxy greifst du über `http://<server-ip>:3001` zu. Die Vorlagen unter [Dienste](/de/dienste/) passen das automatisch an dein Setup an.
+Das Beispiel zeigt `ports` und `networks` zusammen, damit du beide Schlüssel kennst. In der Praxis brauchst du meist nur eins davon: Mit einem Reverse Proxy wie Traefik hängt der Dienst nur im Netzwerk `__NETWORK__` und veröffentlicht keinen Port. Ohne Proxy greifst du über `http://__SERVER_IP__:3001` zu. Die Vorlagen unter [Dienste](/de/dienste/) passen das automatisch an dein Setup an.
 </Callout>
 
 Relative Pfade wie `./data` beziehen sich immer auf den Ordner, in dem die `compose.yaml` liegt. Deshalb landen alle Daten eines Dienstes neben seiner Konfiguration.

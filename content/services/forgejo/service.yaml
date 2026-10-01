@@ -12,7 +12,7 @@ links:
 upstream:
   label: docs/admin/installation-docker.md
   url: https://forgejo.org/docs/latest/admin/installation/docker/
-reviewed: 2026-09-12
+reviewed: 2026-10-01
 db:
   type: sqlite
   path: data/data/gitea/gitea.db

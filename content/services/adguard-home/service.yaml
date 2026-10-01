@@ -13,4 +13,5 @@ links:
 upstream:
   label: wiki/Docker
   url: https://github.com/AdguardTeam/AdGuardHome/wiki/Docker
+reviewed: 2026-10-01
 pairsWith: [homepage, uptime-kuma]

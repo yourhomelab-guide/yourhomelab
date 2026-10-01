@@ -13,4 +13,5 @@ links:
 upstream:
   label: docs/installation/docker.md
   url: https://gethomepage.dev/installation/docker/
+reviewed: 2026-10-01
 pairsWith: [uptime-kuma, beszel, adguard-home]

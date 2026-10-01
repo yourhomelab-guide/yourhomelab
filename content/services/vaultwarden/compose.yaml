@@ -6,6 +6,7 @@ services:
     environment:
       - TZ=${TZ}
       - DOMAIN=__URL__
+      # No open registration: invite users on the admin page instead
       - SIGNUPS_ALLOWED=false
       - ADMIN_TOKEN=${ADMIN_TOKEN}
     volumes:

@@ -11,7 +11,7 @@ links:
 upstream:
   label: supplemental/docker/hub/docker-compose.yml
   url: https://github.com/henrygd/beszel/blob/main/supplemental/docker/hub/docker-compose.yml
-reviewed: 2026-09-12
+reviewed: 2026-10-01
 db:
   type: sqlite
   path: data/data/data.db

@@ -1,13 +1,24 @@
 services:
   pocket-id:
-    image: ghcr.io/pocket-id/pocket-id:v1
+    image: ghcr.io/pocket-id/pocket-id:v2
     container_name: pocket-id
     restart: unless-stopped
     environment:
       - TZ=${TZ}
       - APP_URL=__URL__
+      # Encrypts the signing keys in the database. Never lose or change it.
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      # Pocket ID is only reached through the reverse proxy, so trust its headers
       - TRUST_PROXY=true
+      # Only allow HTTPS callback URLs for your apps (localhost stays allowed)
+      - ALLOW_INSECURE_CALLBACK_URLS=false
       - PUID=${PUID}
       - PGID=${PGID}
     volumes:
       - ./data/data:/app/data
+    healthcheck:
+      test: ["CMD", "/app/pocket-id", "healthcheck"]
+      interval: 1m30s
+      timeout: 5s
+      retries: 2
+      start_period: 10s
