@@ -18,7 +18,7 @@ Dieser Guide baut auf [Git-Deployments mit Forgejo](/de/einrichten/git-deploymen
 ## Der Ablauf
 
 1. Renovate läuft einmal pro Nacht als kurzlebiger Container.
-2. Es findet zum Beispiel `vaultwarden/server:1.34.1` in deinem Repository und sieht, dass es `1.34.2` gibt.
+2. Es findet zum Beispiel `vaultwarden/server:1.37.2` in deinem Repository und sieht, dass es `1.37.3` gibt.
 3. Es öffnet in Forgejo einen PR, der genau diese Zeile ändert, meist mit Link zu den Release Notes.
 4. Du mergst den PR, oder Renovate macht es bei Patch-Updates selbst.
 5. Dein Deploy-Skript holt die Änderung per `git pull`, und `docker compose up -d` startet den Container mit der neuen Version.
@@ -34,12 +34,12 @@ Renovate kann nur Versionen vergleichen. Aus `latest`, `stable` oder `lts` kann 
 # vorher
 image: vaultwarden/server:latest
 # nachher
-image: vaultwarden/server:1.34.1
+image: vaultwarden/server:1.37.3
 ```
 
 Welche Tags es gibt, siehst du auf der Seite des Images bei Docker Hub oder in der GitHub Container Registry. Nimm die Version, die gerade bei dir läuft. So ändert sich beim Umstellen nichts. Die aktuell laufende Version zeigt oft das Log des Containers oder die Weboberfläche des Dienstes.
 
-Manche Projekte bieten Tags nur für die Hauptversion an, etwa `forgejo:12`. Das ist in Ordnung: Innerhalb der Hauptversion kommen Updates dann über `docker compose pull`, und Renovate meldet dir den Sprung auf die nächste Hauptversion.
+Manche Projekte bieten Tags nur für die Hauptversion an, etwa `forgejo:15`. Das ist in Ordnung: Innerhalb der Hauptversion kommen Updates dann über `docker compose pull`, und Renovate meldet dir den Sprung auf die nächste Hauptversion.
 
 Committe und pushe die Umstellung wie gewohnt.
 </Step>
@@ -87,7 +87,7 @@ Was die Zeilen bedeuten:
 
 - `config:recommended` ist die empfohlene Grundeinstellung von Renovate. Sie legt unter anderem ein Issue „Dependency Dashboard“ an, in dem alle offenen und geplanten Updates stehen.
 - `enabledManagers` beschränkt Renovate auf Compose-Dateien. Der Manager `docker-compose` findet `compose.yaml` und `docker-compose.yml` in allen Unterordnern von selbst.
-- Die `packageRules` erlauben **automatisches Mergen nur für Patch-Updates**, also etwa von `1.34.1` auf `1.34.2`. Minor- und Major-Updates bleiben als PR offen, bis du sie freigibst.
+- Die `packageRules` erlauben **automatisches Mergen nur für Patch-Updates**, also etwa von `1.37.2` auf `1.37.3`. Minor- und Major-Updates bleiben als PR offen, bis du sie freigibst.
 - `ignoreTests` ist nötig, weil dein Repository keine automatischen Tests hat. Ohne diese Zeile wartet Renovate vor dem Automerge auf erfolgreiche Tests, die nie kommen.
 
 Committe die Datei und pushe sie.

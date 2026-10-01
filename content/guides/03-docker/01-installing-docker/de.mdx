@@ -18,10 +18,10 @@ Deshalb nutzt du hier das **offizielle apt-Repository von Docker**. Du bekommst 
 <Steps>
 
 <Step title="Alte oder fremde Pakete entfernen">
-Ist schon eine Docker-Version aus der Distribution installiert, kollidiert sie mit den offiziellen Paketen. Dieser Befehl entfernt sie. Auf einem frischen Server meldet apt nur, dass die Pakete nicht installiert sind. Das ist in Ordnung.
+Ist schon eine Docker-Version aus der Distribution installiert, kollidiert sie mit den offiziellen Paketen. Dieser Befehl sucht sie und entfernt sie. Auf einem frischen Server findet er nichts, und apt meldet höchstens, dass es nichts zu tun gibt. Das ist in Ordnung.
 
 ```bash
-for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove -y $pkg; done
+sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-doc docker-buildx podman-docker containerd runc 2>/dev/null | cut -f1)
 ```
 
 Vorhandene Images und Container unter `/var/lib/docker` bleiben dabei erhalten.
@@ -50,6 +50,7 @@ Types: deb
 URIs: https://download.docker.com/linux/$(. /etc/os-release && echo "$ID")
 Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
 Components: stable
+Architectures: $(dpkg --print-architecture)
 Signed-By: /etc/apt/keyrings/docker.asc
 EOF
 sudo apt-get update

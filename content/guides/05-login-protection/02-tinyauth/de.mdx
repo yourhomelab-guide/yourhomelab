@@ -11,37 +11,20 @@ Nicht jeder Dienst hat einen eigenen Login. Das Traefik-Dashboard, ein Datei-Bro
 
 Tinyauth löst das mit **Forward Auth**. Dabei fragt der Reverse Proxy vor jeder Anfrage bei Tinyauth nach: "Ist dieser Besucher angemeldet?" Wenn ja, geht die Anfrage an den Dienst. Wenn nein, leitet der Proxy auf die Login-Seite von Tinyauth um. Der Dienst selbst merkt davon nichts. In Traefik ist Forward Auth eine **Middleware**, also ein Zwischenschritt, den du per Label an beliebige Dienste hängst.
 
-<Callout title="Version beachten">
-Die Vorlage auf dieser Seite nutzt Tinyauth **v3**. Die aktuelle Doku auf [tinyauth.app](https://tinyauth.app/docs) beschreibt neuere Versionen, bei denen sich die Namen der Variablen geändert haben. Die Befehle und Variablen in dieser Anleitung passen zu v3.
-</Callout>
-
 <Steps>
-
-<Step title="Secret erzeugen">
-Tinyauth verschlüsselt seine Session-Cookies mit einem Secret. Tinyauth v3 verlangt dafür **genau 32 Zeichen**, sonst startet es nicht. So bekommst du einen passenden Zufallswert:
-
-```bash
-openssl rand -hex 16
-```
-
-Den Wert trägst du im nächsten Schritt als `TINYAUTH_SECRET` in die `.env` ein. Die `.env` weiter unten enthält schon einen passenden Zufallswert mit 32 Zeichen, den du auch einfach übernehmen kannst.
-</Step>
 
 <Step title="Benutzer anlegen">
 Ein Tinyauth-Benutzer besteht aus Benutzername und einem **bcrypt-Hash** des Passworts. Ein Hash ist eine Einweg-Umrechnung: Tinyauth kann damit prüfen, ob ein Passwort stimmt, aber niemand kann das Passwort daraus zurückrechnen.
 
-Den Hash erzeugst du mit `htpasswd`. Das Programm steckt im Paket `apache2-utils`:
+Am einfachsten erzeugt Tinyauth den Benutzer selbst:
 
 ```bash
-sudo apt install apache2-utils
-htpasswd -nB admin
+docker run -it --rm ghcr.io/tinyauthapp/tinyauth:v5 user create --interactive
 ```
 
-`htpasswd` fragt zweimal nach dem Passwort und gibt dann eine Zeile wie `admin:$2y$05$...` aus. Diese ganze Zeile ist dein Benutzer. Mehrere Benutzer trennst du mit Komma.
+Der Befehl fragt nach Benutzername und Passwort und gibt eine Zeile wie `admin:$2a$10$...` aus. Diese ganze Zeile ist dein Benutzer. Beantworte die Frage nach dem Docker-Format mit **Nein**, denn im nächsten Schritt schützen einfache Anführungszeichen den Hash. Mehrere Benutzer trennst du mit Komma.
 
-Alternativ erzeugt Tinyauth den Benutzer selbst: `docker run --rm -it ghcr.io/steveiliop56/tinyauth:v3 user create --interactive`. Wähle dabei **kein** Docker-Format, denn im nächsten Schritt schützen einfache Anführungszeichen den Hash.
-
-Ohne Installation geht es mit dem Werkzeug [Passwort-Hash](/de/werkzeuge/passwort-hash/). Es rechnet den Hash direkt in deinem Browser aus und gibt dir die fertige Zeile für die `.env`.
+Ohne Docker geht es mit dem Werkzeug [Passwort-Hash](/de/werkzeuge/passwort-hash/). Es rechnet den Hash direkt in deinem Browser aus und gibt dir die fertige Zeile für die `.env`.
 </Step>
 
 <Step title="compose.yaml und .env schreiben">
@@ -49,14 +32,13 @@ Tinyauth läuft unter `login.__DOMAIN__`. Es setzt sein Login-Cookie für die ga
 
 <ServiceFiles id="tinyauth" />
 
-Trag in der `.env` das Secret aus Schritt 1 ein. Den Benutzer aus Schritt 2 setzt du in **einfache Anführungszeichen**. Sonst hält Docker Compose die `$`-Zeichen im Hash für Variablen und zerstört ihn:
+Trag in der `.env` den Benutzer aus Schritt 1 ein, in **einfachen Anführungszeichen**. Sonst hält Docker Compose die `$`-Zeichen im Hash für Variablen und zerstört ihn:
 
 ```bash
-TINYAUTH_SECRET=DEIN_32_ZEICHEN_SECRET
-TINYAUTH_USERS='admin:$2y$05$...'
+TINYAUTH_USERS='admin:$2a$10$...'
 ```
 
-Ergänze dann in der `compose.yaml` unter `labels` die Definition der Middleware. Sie sagt Traefik, wo es nachfragen soll:
+Mit Traefik enthält die `compose.yaml` schon die Definition der Middleware `tinyauth`. Sie sagt Traefik, wo es vor jeder Anfrage nachfragen soll:
 
 ```yaml
       - traefik.http.middlewares.tinyauth.forwardauth.address=http://tinyauth:3000/api/auth/traefik
@@ -64,7 +46,7 @@ Ergänze dann in der `compose.yaml` unter `labels` die Definition der Middleware
 
 Traefik erreicht Tinyauth über das gemeinsame Netzwerk `__NETWORK__` direkt unter dem Containernamen, deshalb steht hier `http://` und kein öffentlicher Hostname.
 
-Optional, aber empfehlenswert: Mit `- COOKIE_SECURE=true` unter `environment` schickt der Browser das Login-Cookie nur noch über HTTPS.
+Zwei weitere Einstellungen sind schon gesetzt: `TINYAUTH_AUTH_SECURECOOKIE=true` schickt das Login-Cookie nur über HTTPS, und `TINYAUTH_AUTH_TRUSTEDPROXIES` lässt Tinyauth die echte IP deiner Besucher sehen. Ein Secret brauchst du seit Version 4 nicht mehr, Tinyauth speichert seine Sitzungen in einer kleinen Datenbank unter `data/`.
 </Step>
 
 <Step title="Starten und Login testen">
@@ -75,7 +57,7 @@ docker compose up -d
 docker compose logs -f tinyauth
 ```
 
-Öffne `https://login.__DOMAIN__` und melde dich mit deinem Benutzer an. Klappt das, läuft Tinyauth. Geschützt ist aber noch nichts. Startet der Container immer wieder neu, ist oft das Secret nicht genau 32 Zeichen lang, siehe auch [Container in der Neustart-Schleife](/de/nachschlagen/container-neustart-schleife/).
+Öffne `https://login.__DOMAIN__` und melde dich mit deinem Benutzer an. Klappt das, läuft Tinyauth. Geschützt ist aber noch nichts. Lehnt Tinyauth dein Passwort ab, ist meist der Hash in der `.env` beschädigt: Prüfe die einfachen Anführungszeichen. Startet der Container immer wieder neu, hilft [Container in der Neustart-Schleife](/de/nachschlagen/container-neustart-schleife/).
 </Step>
 
 <Step title="Einen Dienst schützen">
@@ -106,12 +88,12 @@ Apps auf dem Handy (z. B. Nextcloud, Immich, Vaultwarden) sprechen direkt mit de
 </Step>
 
 <Step title="Pocket ID als Anmeldeweg (optional)">
-Statt mit Passwort kannst du dich bei Tinyauth auch per Passkey über [Pocket ID](/de/einrichten/pocket-id/) anmelden. Tinyauth spricht Pocket ID dafür über seinen "generischen" OAuth-Anbieter an.
+Statt mit Passwort kannst du dich bei Tinyauth auch per Passkey über [Pocket ID](/de/einrichten/pocket-id/) anmelden.
 
 Lege in Pocket ID einen OIDC-Client an, z. B. mit dem Namen `Tinyauth`, und dieser Callback-URL:
 
 ```text
-https://login.__DOMAIN__/api/oauth/callback/generic
+https://login.__DOMAIN__/api/oauth/callback/pocketid
 ```
 
 Trag Client-ID und Secret in die `.env` von Tinyauth ein:
@@ -124,19 +106,20 @@ POCKET_ID_CLIENT_SECRET=DEIN_CLIENT_SECRET
 Und ergänze in der `compose.yaml` unter `environment`:
 
 ```yaml
-      - GENERIC_CLIENT_ID=${POCKET_ID_CLIENT_ID}
-      - GENERIC_CLIENT_SECRET=${POCKET_ID_CLIENT_SECRET}
-      - GENERIC_AUTH_URL=https://id.__DOMAIN__/authorize
-      - GENERIC_TOKEN_URL=https://id.__DOMAIN__/api/oidc/token
-      - GENERIC_USER_URL=https://id.__DOMAIN__/api/oidc/userinfo
-      - GENERIC_SCOPES=openid email profile groups
-      - GENERIC_NAME=Pocket ID
-      - OAUTH_WHITELIST=DEINE_EMAIL_IN_POCKET_ID
+      - TINYAUTH_OAUTH_PROVIDERS_POCKETID_CLIENTID=${POCKET_ID_CLIENT_ID}
+      - TINYAUTH_OAUTH_PROVIDERS_POCKETID_CLIENTSECRET=${POCKET_ID_CLIENT_SECRET}
+      - TINYAUTH_OAUTH_PROVIDERS_POCKETID_AUTHURL=https://id.__DOMAIN__/authorize
+      - TINYAUTH_OAUTH_PROVIDERS_POCKETID_TOKENURL=https://id.__DOMAIN__/api/oidc/token
+      - TINYAUTH_OAUTH_PROVIDERS_POCKETID_USERINFOURL=https://id.__DOMAIN__/api/oidc/userinfo
+      - TINYAUTH_OAUTH_PROVIDERS_POCKETID_REDIRECTURL=https://login.__DOMAIN__/api/oauth/callback/pocketid
+      - TINYAUTH_OAUTH_PROVIDERS_POCKETID_SCOPES=openid email profile groups
+      - TINYAUTH_OAUTH_PROVIDERS_POCKETID_NAME=Pocket ID
+      - TINYAUTH_OAUTH_WHITELIST=DEINE_EMAIL_IN_POCKET_ID
 ```
 
-`OAUTH_WHITELIST` ist wichtig: Trag dort die E-Mail-Adresse deines Pocket-ID-Kontos ein. Ohne diese Zeile darf sich jeder anmelden, der ein Konto in Pocket ID hat. Mehrere E-Mail-Adressen trennst du mit Komma.
+`TINYAUTH_OAUTH_WHITELIST` ist wichtig: Trag dort die E-Mail-Adresse deines Pocket-ID-Kontos ein. Ohne diese Zeile darf sich jeder anmelden, der ein Konto in Pocket ID hat. Mehrere E-Mail-Adressen trennst du mit Komma. Soll Tinyauth direkt zu Pocket ID weiterleiten, ohne eigene Login-Seite, ergänzt du `TINYAUTH_OAUTH_AUTOREDIRECT=pocketid`.
 
-Nach `docker compose up -d` zeigt die Login-Seite einen zusätzlichen Button "Pocket ID". Details stehen im [Pocket-ID-Guide von Tinyauth](https://tinyauth.app/docs/guides/pocket-id).
+Nach `docker compose up -d` zeigt die Login-Seite einen zusätzlichen Button „Pocket ID“. Details stehen im [Pocket-ID-Guide von Tinyauth](https://tinyauth.app/docs/guides/pocket-id).
 </Step>
 
 </Steps>

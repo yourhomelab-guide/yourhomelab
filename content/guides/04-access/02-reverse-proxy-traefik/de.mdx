@@ -50,16 +50,39 @@ Meldet das Log Fehler bei der Challenge oder zeigt der Browser das Standardzerti
 </Step>
 
 <Step title="Ersten Dienst anbinden">
-Ein Container wird über Labels an Traefik gehängt. Danach ist er unter seiner Subdomain mit gültigem Zertifikat erreichbar.
+Ein Container wird über Labels an Traefik gehängt und muss im Proxy-Netzwerk hängen. Einen eigenen Port braucht er nicht mehr. Ändere dafür die `compose.yaml` des whoami-Stacks aus dem [ersten Stack](/de/einrichten/erster-stack/) so ab:
 
 ```yaml
-labels:
-  - traefik.enable=true
-  - traefik.http.routers.whoami.rule=Host(`whoami.__DOMAIN__`)
-  - traefik.http.routers.whoami.tls.certresolver=le
+services:
+  whoami:
+    image: traefik/whoami:latest
+    container_name: whoami
+    restart: unless-stopped
+    networks:
+      - __NETWORK__
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.whoami.rule=Host(`whoami.__DOMAIN__`)
+      - traefik.http.routers.whoami.entrypoints=websecure
+      - traefik.http.routers.whoami.tls.certresolver=le
+
+networks:
+  __NETWORK__:
+    external: true
 ```
 
+```bash
+cd __ROOT__/whoami
+docker compose up -d
+```
+
+Nach ein paar Sekunden ist `https://whoami.__DOMAIN__` mit gültigem Zertifikat erreichbar. Voraussetzung ist ein DNS-Eintrag für die Subdomain, siehe [Domain & DNS](/de/einrichten/domain-dns/).
+
 Antwortet die Subdomain mit „Bad Gateway“, erreicht Traefik den Container nicht. Die üblichen Ursachen stehen unter [Bad Gateway](/de/nachschlagen/bad-gateway/).
+
+<Callout type="warning" title="Das Dashboard ist öffentlich">
+Die Vorlage veröffentlicht das Traefik-Dashboard unter `traefik.__DOMAIN__`. Es zeigt nur Informationen und lässt keine Änderungen zu, verrät aber deine Dienste und Routen. Schütze es, sobald du [Tinyauth](/de/einrichten/tinyauth/) eingerichtet hast, mit dem Label `traefik.http.routers.dashboard.middlewares=tinyauth`. Brauchst du das Dashboard nicht, löschst du die fünf `labels`-Zeilen und die Option `--api.dashboard=true`.
+</Callout>
 
 <Callout title="Eigene Dienste anbinden">
 Für Dienste aus dem [Katalog](/de/dienste/) setzt „Mein Setup“ die Labels automatisch. Für alles andere erzeugt das Werkzeug [Proxy-Konfiguration](/de/werkzeuge/proxy-konfiguration/) die passenden Labels aus Subdomain, Containername und Port.

@@ -5,6 +5,9 @@ level: 2
 port: 3000
 subdomain: login
 subdomainOnly: true
+# Defines the middleware "tinyauth" that other routers can use
+traefikLabels:
+  - traefik.http.middlewares.tinyauth.forwardauth.address=http://tinyauth:3000/api/auth/traefik
 links:
   repo: tinyauthapp/tinyauth
   website: https://tinyauth.app

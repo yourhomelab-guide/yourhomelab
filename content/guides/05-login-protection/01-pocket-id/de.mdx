@@ -22,9 +22,10 @@ Pocket ID bekommt wie jeder Dienst einen eigenen Ordner unter `__ROOT__`. Die Da
 
 <ServiceFiles id="pocket-id" />
 
-Zwei Variablen sind wichtig:
+Drei Variablen sind wichtig:
 
 - `APP_URL` ist die öffentliche Adresse von Pocket ID. Sie muss exakt stimmen, denn Passkeys sind fest an diese Domain gebunden. Ändert sich die Domain später, funktionieren die registrierten Passkeys nicht mehr.
+- `ENCRYPTION_KEY` verschlüsselt die Signaturschlüssel in der Datenbank. Der Zufallswert ist in der `.env` schon vorausgefüllt. Bewahre ihn zusätzlich in deinem Passwortmanager auf: Ohne ihn ist ein Backup der Datenbank wertlos.
 - `TRUST_PROXY=true` sagt Pocket ID, dass es hinter einem Reverse Proxy läuft. Dann sieht es im Audit-Log die echte IP-Adresse deiner Besucher statt der des Proxys.
 </Step>
 
@@ -65,14 +66,14 @@ Melde dich einmal ab und wieder an, um zu prüfen, dass alles klappt.
 </Step>
 
 <Step title="Notfall: ausgesperrt">
-Hast du keinen Zugriff mehr auf einen deiner Passkeys, erzeugst du auf dem Server einen einmaligen Anmeldelink. Er gilt eine Stunde.
+Hast du keinen Zugriff mehr auf einen deiner Passkeys, erzeugst du auf dem Server einen einmaligen Login-Code. Er gilt nur kurze Zeit.
 
 ```bash
 cd __ROOT__/pocket-id
 docker compose exec pocket-id /app/pocket-id one-time-access-token DEIN_BENUTZERNAME
 ```
 
-Die Ausgabe enthält eine URL. Öffne sie, melde dich damit an und registriere sofort einen neuen Passkey.
+Die Ausgabe enthält einen Code und einen Link. Öffne den Link oder gib den Code auf der Seite „Login Code“ ein, melde dich damit an und registriere sofort einen neuen Passkey.
 </Step>
 
 <Step title="OIDC-Client für einen Dienst anlegen">
@@ -80,7 +81,7 @@ Damit sich ein Dienst über Pocket ID anmelden darf, legst du für ihn einen **O
 
 1. Öffne im Admin-Bereich **OIDC Clients** und klicke auf **OIDC-Client hinzufügen**.
 2. Gib einen **Namen** ein, z. B. den Namen des Dienstes. Er erscheint auf der Anmeldeseite.
-3. Trage die **Callback-URL** ein. Das ist die Adresse im Dienst, an die Pocket ID nach dem Login zurückleitet. Welche das ist, steht in der Doku des jeweiligen Dienstes. Für [Tinyauth](/de/einrichten/tinyauth/) lautet sie zum Beispiel `https://login.__DOMAIN__/api/oauth/callback/generic`.
+3. Trage die **Callback-URL** ein. Das ist die Adresse im Dienst, an die Pocket ID nach dem Login zurückleitet. Welche das ist, steht in der Doku des jeweiligen Dienstes. Für [Tinyauth](/de/einrichten/tinyauth/) lautet sie zum Beispiel `https://login.__DOMAIN__/api/oauth/callback/pocketid`.
 4. Speichere den Client.
 
 Pocket ID zeigt dir danach **Client-ID** und **Client-Secret** sowie die **OIDC Discovery URL**:

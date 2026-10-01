@@ -82,7 +82,13 @@ Mit `Strg+C` verlässt du die Log-Ansicht, der Container läuft weiter.
 <Step title="Admin-Konto anlegen">
 Öffne die Oberfläche im Browser, mit Reverse Proxy unter `https://portainer.__DOMAIN__` bzw. `https://dockhand.__DOMAIN__`.
 
-- **Portainer** fragt beim ersten Aufruf nach Benutzername und Passwort für den Admin. Mach das direkt nach dem Start: Nach einigen Minuten ohne Einrichtung sperrt sich Portainer aus Sicherheitsgründen. Dann hilft `docker compose restart`. Wähle danach die lokale Umgebung („Get Started“).
+- **Portainer** fragt beim ersten Aufruf nach einem **Setup-Token** und danach nach Benutzername und Passwort für den Admin. Das Token schützt eine frische Installation davor, dass jemand anderes sie zuerst übernimmt. Du findest es im Log:
+
+  ```bash
+  docker compose logs portainer | grep setup_token
+  ```
+
+  Mach die Einrichtung direkt nach dem Start: Nach fünf Minuten ohne Admin-Konto sperrt sich Portainer aus Sicherheitsgründen. Dann hilft `docker compose restart`, und im Log steht ein neues Token. Wähle danach die lokale Umgebung („Get Started“).
 - **Dockhand** zeigt nach dem Start direkt die lokale Docker-Umgebung. Leg in den Einstellungen einen Benutzer an und prüfe, dass die Anmeldung wirklich aktiv ist, bevor du die Oberfläche von anderen Geräten aus nutzt.
 
 Nimm ein langes, zufälliges Passwort und speichere es in deinem Passwortmanager.
