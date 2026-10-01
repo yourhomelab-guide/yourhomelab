@@ -58,7 +58,7 @@ Dateien und Kalender, erreichbar unter cloud.__DOMAIN__
 
 - Abhängigkeiten: Traefik, Pocket ID (Login per OIDC)
 - Datenbank: MariaDB (nextcloud-db), Dump liegt vor dem Backup in data/db-dump.sql
-- Besonderheit: Hintergrundjobs per Cron auf dem Host eingerichtet
+- Besonderheit: Hintergrundjobs laufen im Container nextcloud-cron, in den Einstellungen auf „Cron“ gestellt
 
 ## Restore
 1. Ordner aus dem Backup zurückspielen

@@ -32,7 +32,7 @@ services:
     environment:
       - MYSQL_HOST=db          # "db" is resolved by Docker's internal DNS
   db:
-    image: mariadb:11
+    image: mariadb:lts
 ```
 
 Nextcloud verbindet sich mit dem Host `db`, und Docker löst den Namen zur aktuellen IP des Datenbank-Containers auf. Die Datenbank veröffentlicht keinen Port. Sie ist nur innerhalb des Stacks erreichbar.

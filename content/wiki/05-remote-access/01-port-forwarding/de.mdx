@@ -11,7 +11,7 @@ practice: reverse-proxy-traefik
 
 Dein Router trennt dein Heimnetz vom Internet. Von innen nach außen kommt alles durch, von außen nach innen erst einmal nichts. Kommt eine Anfrage aus dem Internet an, weiß der Router nicht, welches Gerät gemeint ist, und verwirft sie.
 
-Eine **Portfreigabe** (englisch *port forwarding*) ändert das für einen bestimmten Port. Du sagst dem Router: "Alles, was auf Port 443 ankommt, schickst du an meinen Server 192.168.1.10." Damit ist dein Server für die ganze Welt auf diesem Port erreichbar. Nicht nur für dich, sondern auch für jeden Scanner, der das Internet nach offenen Ports absucht.
+Eine **Portfreigabe** (englisch *port forwarding*) ändert das für einen bestimmten Port. Du sagst dem Router: "Alles, was auf Port 443 ankommt, schickst du an meinen Server `__SERVER_IP__`." Damit ist dein Server für die ganze Welt auf diesem Port erreichbar. Nicht nur für dich, sondern auch für jeden Scanner, der das Internet nach offenen Ports absucht.
 
 Ein **Port** ist dabei eine Nummer, über die ein Rechner mehrere Dienste gleichzeitig anbieten kann. Mehr dazu steht in [IP, Ports & NAT](/de/nachschlagen/ip-ports-nat/).
 

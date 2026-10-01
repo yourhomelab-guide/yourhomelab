@@ -15,13 +15,13 @@ Im Log von Postgres steht:
 
 ```text
 FATAL:  database files are incompatible with server
-DETAIL:  The data directory was initialized by PostgreSQL version 16, which is not compatible with this version 17.6.
+DETAIL:  The data directory was initialized by PostgreSQL version 17, which is not compatible with this version 18.3.
 ```
 
 ## Warum das passiert
 
 Postgres speichert seine Daten in einem Format, das zur **Hauptversion** gehört (16, 17, 18 …). Eine neue Hauptversion
-kann die Dateien der alten nicht einfach öffnen. Innerhalb einer Hauptversion, also etwa von 17.5 auf 17.6, ist ein
+kann die Dateien der alten nicht einfach öffnen. Innerhalb einer Hauptversion, also etwa von 18.2 auf 18.3, ist ein
 Update dagegen problemlos.
 
 Meist steckt ein zu offener Tag dahinter: `postgres:latest` oder gar kein Tag springt beim nächsten `pull` still auf die
@@ -55,7 +55,7 @@ Hauptversion aus `PG_VERSION` ein und **pinne** sie, damit das nicht wieder pass
 
 ```yaml
   db:
-    image: postgres:16
+    image: postgres:17
 ```
 
 ```bash
@@ -101,11 +101,14 @@ wieder einspielen (Restore).
    ```
 
 4. **Neue Hauptversion eintragen** und nur die Datenbank starten. Sie legt einen leeren Datenordner mit Benutzer und
-   Passwort aus der `.env` an:
+   Passwort aus der `.env` an. Ab Postgres 18 bindest du dabei `/var/lib/postgresql` ein statt wie bisher
+   `/var/lib/postgresql/data`. Das Image legt darin selbst einen Unterordner pro Hauptversion an:
 
    ```yaml
      db:
-       image: postgres:17
+       image: postgres:18
+       volumes:
+         - ./data/db:/var/lib/postgresql
    ```
 
    ```bash
@@ -134,8 +137,8 @@ wieder einspielen (Restore).
 
 <Callout title="Vorgaben der App beachten">
   Manche Apps verlangen eine bestimmte Postgres-Version oder bringen ein eigenes Image mit, etwa Immich. Lies vor dem
-  Upgrade die Doku der App. Ab Postgres 18 hat das offizielle Image außerdem den Speicherort der Daten im Container
-  geändert. Die Hinweise dazu stehen auf der [Docker-Hub-Seite von Postgres](https://hub.docker.com/_/postgres).
+  Upgrade die Doku der App. Den geänderten Speicherort ab Postgres 18 beschreibt die
+  [Docker-Hub-Seite von Postgres](https://hub.docker.com/_/postgres).
 </Callout>
 
 ## MariaDB
@@ -145,17 +148,18 @@ Das offizielle Image erledigt das beim Start, wenn du diese Variable setzt:
 
 ```yaml
   db:
-    image: mariadb:11
+    image: mariadb:lts
     environment:
       - MARIADB_AUTO_UPGRADE=1
 ```
 
-Ein **Downgrade** auf eine ältere Version klappt dagegen nicht. Dafür brauchst du das Backup von vorher. Pinne auch hier
-die Hauptversion, also `mariadb:11` statt `mariadb:latest`. Bei MySQL gilt: Große Versionssprünge nur schrittweise und
+Ein **Downgrade** auf eine ältere Version klappt dagegen nicht. Dafür brauchst du das Backup von vorher. Nimm statt
+`mariadb:latest` eine feste Hauptversion wie `mariadb:11` oder den Tag `lts`, der nur Versionen mit Langzeitsupport
+bekommt. Die [Nextcloud-Vorlage](/de/dienste/nextcloud/) nutzt `lts` zusammen mit `MARIADB_AUTO_UPGRADE`. Bei MySQL gilt: Große Versionssprünge nur schrittweise und
 mit Backup, siehe [MySQL-Doku zum Upgrade](https://dev.mysql.com/doc/refman/8.4/en/upgrading.html).
 
 ## Vorbeugen
 
-- Datenbank-Images immer auf die Hauptversion pinnen: `postgres:17`, `mariadb:11`.
+- Datenbank-Images immer auf die Hauptversion pinnen: `postgres:18`, `mariadb:11` oder `mariadb:lts`.
 - Major-Updates von Datenbanken nie automatisch übernehmen, siehe [Updates mit Renovate](/de/einrichten/updates-renovate/).
 - Vor jedem größeren Update ein frisches Backup, siehe [Updates](/de/nachschlagen/updates/).

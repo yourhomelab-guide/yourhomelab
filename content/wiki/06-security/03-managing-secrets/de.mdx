@@ -35,7 +35,7 @@ In der `compose.yaml` verweist du nur auf die Variable:
 ```yaml
 services:
   db:
-    image: postgres:17
+    image: postgres:18
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
 ```
@@ -108,7 +108,7 @@ eingebunden.
 ```yaml
 services:
   db:
-    image: postgres:17
+    image: postgres:18
     environment:
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
     secrets:

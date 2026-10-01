@@ -279,11 +279,11 @@
 
 - id: acme-challenge
   term: ACME-Challenge
-  aliases: [DNS-Challenge, HTTP-Challenge]
+  aliases: [DNS-Challenge, HTTP-Challenge, TLS-Challenge]
   text: >-
     Der Nachweis gegenüber Let's Encrypt, dass dir eine Domain gehört. Bei der HTTP-Challenge muss dein Server von außen
-    auf Port 80 erreichbar sein, bei der DNS-Challenge legt dein Proxy kurz einen DNS-Eintrag an. Nur die DNS-Challenge
-    funktioniert ohne offene Ports und liefert Wildcard-Zertifikate.
+    auf Port 80 erreichbar sein, bei der TLS-Challenge auf Port 443, bei der DNS-Challenge legt dein Proxy kurz einen
+    DNS-Eintrag an. Nur die DNS-Challenge funktioniert ohne offene Ports und liefert Wildcard-Zertifikate.
 
 - id: ssh
   term: SSH

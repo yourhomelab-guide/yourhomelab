@@ -12,7 +12,7 @@ practice: vpn-wireguard
 
 Viele Dienste im Homelab brauchst nur du: Portainer, das Proxmox-Webinterface, die Router-Oberfläche, SSH. Diese Dienste haben im offenen Internet nichts verloren. Trotzdem willst du auch von unterwegs heran.
 
-Genau dafür gibt es ein **VPN** (*Virtual Private Network*). Dein Gerät baut eine verschlüsselte Verbindung zu deinem Heimnetz auf. Danach verhält es sich, als stünde es in deinem WLAN. Du rufst Dienste über ihre internen Adressen auf, etwa `192.168.1.10`.
+Genau dafür gibt es ein **VPN** (*Virtual Private Network*). Dein Gerät baut eine verschlüsselte Verbindung zu deinem Heimnetz auf. Danach verhält es sich, als stünde es in deinem WLAN. Du rufst Dienste über ihre internen Adressen auf, etwa `__SERVER_IP__`.
 
 Der entscheidende Vorteil: **Nur wer einen passenden Schlüssel hat, kommt rein.** Ein Angreifer sieht keine Login-Seite, die er ausprobieren könnte. Bei WireGuard antwortet der Server auf fremde Pakete nicht einmal.
 
