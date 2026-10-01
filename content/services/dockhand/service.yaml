@@ -11,7 +11,7 @@ links:
 upstream:
   label: README.md
   url: https://github.com/Finsys/dockhand
-reviewed: 2026-09-12
+reviewed: 2026-10-01
 db:
   type: sqlite
   path: data/data/db/dockhand.db

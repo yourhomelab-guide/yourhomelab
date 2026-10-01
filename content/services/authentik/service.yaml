@@ -10,9 +10,9 @@ links:
   website: https://goauthentik.io
   docs: https://docs.goauthentik.io
 upstream:
-  label: docker-compose.yml
-  url: https://goauthentik.io/docker-compose.yml
-reviewed: 2026-09-12
+  label: compose.yml
+  url: https://docs.goauthentik.io/compose.yml
+reviewed: 2026-10-01
 db:
   type: postgres
   service: postgresql

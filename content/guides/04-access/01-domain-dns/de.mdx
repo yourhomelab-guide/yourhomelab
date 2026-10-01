@@ -102,7 +102,7 @@ Neue Einträge sind oft nach wenigen Minuten sichtbar. Hast du gerade erst die N
 <Step title="Ports 80 und 443 freigeben">
 Damit Anfragen aus dem Internet bei deinem Server ankommen, leitet der Router die Ports 80 (HTTP) und 443 (HTTPS) an die feste IP deines Servers weiter. Diese beiden Ports braucht der Reverse Proxy, und Let's Encrypt prüft darüber, ob dir die Domain gehört. Wie das geht und was es für die Sicherheit bedeutet, steht unter [Portfreigabe](/de/nachschlagen/portfreigabe/).
 
-Gib nur diese beiden Ports frei, keine Ports einzelner Dienste. Alles Weitere regelt der Reverse Proxy. Kommt später trotzdem kein Zertifikat zustande, hilft [Zertifikat fehlt](/de/nachschlagen/zertifikat-fehlt/) bei der Suche.
+Optional kommt 443 über UDP dazu, damit Browser HTTP/3 nutzen können. Gib sonst keine Ports frei, vor allem keine Ports einzelner Dienste. Alles Weitere regelt der Reverse Proxy. Kommt später trotzdem kein Zertifikat zustande, hilft [Zertifikat fehlt](/de/nachschlagen/zertifikat-fehlt/) bei der Suche.
 
 Weiter geht es mit dem [Reverse Proxy mit Traefik](/de/einrichten/reverse-proxy-traefik/) oder dem einfacheren [Nginx Proxy Manager](/de/einrichten/reverse-proxy-npm/).
 </Step>

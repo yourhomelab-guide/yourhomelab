@@ -216,6 +216,7 @@ In code blocks, inline code, `compose.yaml` and `.env.example`, these values are
 | `__TZ__`, `__PUID__`, `__PGID__` | `Europe/Berlin`, `1000`, `1000` |
 | `__SECRET__` | Random value (`.env.example` only); `__SECRET(32)__` for exactly 32 characters |
 | `__HOST__`, `__URL__` | Host or full URL of the service (service templates only) |
+| `__SCHEME__` | `https` behind a reverse proxy, `http` without one (service templates only) |
 
 In running text, always put placeholders in backticks: `` `__ROOT__/traefik` ``. Without backticks, Markdown
 turns them into bold text.

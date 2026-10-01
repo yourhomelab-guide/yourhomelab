@@ -5,12 +5,15 @@ level: 2
 port: 3000
 subdomain: login
 subdomainOnly: true
+# Defines the middleware "tinyauth" that other routers can use
+traefikLabels:
+  - traefik.http.middlewares.tinyauth.forwardauth.address=http://tinyauth:3000/api/auth/traefik
 links:
-  repo: steveiliop56/tinyauth
+  repo: tinyauthapp/tinyauth
   website: https://tinyauth.app
-  docs: https://tinyauth.app/docs
+  docs: https://tinyauth.app/docs/getting-started
 upstream:
   label: docker-compose.example.yml
-  url: https://github.com/steveiliop56/tinyauth/blob/main/docker-compose.example.yml
-reviewed: 2026-09-12
+  url: https://github.com/tinyauthapp/tinyauth/blob/main/docker-compose.example.yml
+reviewed: 2026-10-01
 pairsWith: [pocket-id, traefik, caddy]

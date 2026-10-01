@@ -75,12 +75,12 @@ Die meisten Netzwerkscanner und Multifunktionsgeräte können direkt in eine Win
 sudo apt install samba
 ```
 
-Hänge am Ende von `/etc/samba/smb.conf` einen Abschnitt für den Eingangskorb an. Ersetze `dein-benutzer` durch deinen Linux-Benutzernamen:
+Hänge am Ende von `/etc/samba/smb.conf` einen Abschnitt für den Eingangskorb an. `__USER__` ist dein Linux-Benutzer aus „Mein Setup“:
 
 ```ini
 [paperless]
    path = __DATA(paperless-ngx)__/consume
-   valid users = dein-benutzer
+   valid users = __USER__
    writable = yes
    browseable = yes
    create mask = 0664

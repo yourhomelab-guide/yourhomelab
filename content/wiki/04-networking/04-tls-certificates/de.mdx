@@ -24,7 +24,7 @@ Ein **selbstsigniertes Zertifikat** stellst du dir selbst aus. Verschlüsseln ka
 
 ## Let's Encrypt und ACME
 
-[Let's Encrypt](https://letsencrypt.org/) ist eine gemeinnützige CA, die Zertifikate kostenlos ausstellt. Das Ganze läuft vollautomatisch über das Protokoll **ACME**. Traefik, Caddy und Nginx Proxy Manager sprechen ACME von Haus aus. Du trägst nur deine E-Mail-Adresse ein, den Rest erledigt der Proxy.
+[Let's Encrypt](https://letsencrypt.org/) ist eine gemeinnützige CA, die Zertifikate kostenlos ausstellt. Das Ganze läuft vollautomatisch über das Protokoll **ACME**. Traefik, Caddy und Nginx Proxy Manager sprechen ACME von Haus aus. Du trägst höchstens eine E-Mail-Adresse für dein Konto ein, den Rest erledigt der Proxy. Erinnerungsmails vor dem Ablauf verschickt Let's Encrypt seit 2025 nicht mehr, die automatische Erneuerung muss also funktionieren.
 
 Bevor Let's Encrypt ein Zertifikat ausstellt, musst du beweisen, dass dir der Name gehört. Das nennt sich **Challenge**. Es gibt drei Arten.
 
@@ -53,7 +53,7 @@ Ist dein Server von außen auf Port 443 erreichbar, reicht TLS-ALPN-01 wie in de
 
 ## Laufzeit und Erneuerung
 
-Zertifikate von Let's Encrypt gelten bisher 90 Tage. Let's Encrypt hat angekündigt, die Laufzeit in den kommenden Jahren schrittweise auf 45 Tage zu verkürzen. Die kurze Laufzeit ist gewollt: Ein gestohlenes Zertifikat ist nur kurz nutzbar, und Automatisierung wird Pflicht.
+Zertifikate von Let's Encrypt gelten derzeit 90 Tage. Die Laufzeit sinkt schrittweise: ab Februar 2027 auf 64 Tage, ab Februar 2028 auf 45 Tage ([Ankündigung](https://letsencrypt.org/2025/12/02/from-90-to-45)). Das betrifft alle öffentlichen Zertifizierungsstellen, nicht nur Let's Encrypt. Die kurze Laufzeit ist gewollt: Ein gestohlenes Zertifikat ist nur kurz nutzbar, und Automatisierung wird Pflicht.
 
 Für dich heißt das: Nichts von Hand erneuern. Dein Proxy prüft regelmäßig und erneuert rechtzeitig vor Ablauf. Wichtig ist nur, dass er seine Zertifikate dauerhaft speichert. Bei Traefik liegt dafür die Datei `acme.json` unter `__DATA(traefik)__/letsencrypt/`. Geht sie verloren, holt Traefik beim Start neue Zertifikate. Das klappt, solange du nicht zu oft neu anfragst: Let's Encrypt hat [Rate Limits](https://letsencrypt.org/docs/rate-limits/), die bei vielen Neustarts mit leerem Speicher greifen können. Zeigt der Browser statt eines gültigen Zertifikats eine Warnung, hilft [Zertifikat fehlt](/de/nachschlagen/zertifikat-fehlt/) bei der Suche nach der Ursache.
 

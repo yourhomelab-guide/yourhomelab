@@ -1,6 +1,8 @@
 services:
   immich:
-    image: ghcr.io/immich-app/immich-server:release
+    # Major version tag: you get all v3 updates, but no surprise jump to v4.
+    # Read the release notes before a major upgrade.
+    image: ghcr.io/immich-app/immich-server:v3
     container_name: immich
     restart: unless-stopped
     environment:
@@ -18,18 +20,24 @@ services:
       - redis
 
   machine-learning:
-    image: ghcr.io/immich-app/immich-machine-learning:release
+    # For hardware acceleration add a suffix like -cuda or -openvino to the tag,
+    # see https://docs.immich.app/features/ml-hardware-acceleration
+    image: ghcr.io/immich-app/immich-machine-learning:v3
     container_name: immich-machine-learning
     restart: unless-stopped
     volumes:
       - ./data/model-cache:/cache
 
   redis:
-    image: docker.io/valkey/valkey:8
+    image: docker.io/valkey/valkey:9
     container_name: immich-redis
     restart: unless-stopped
+    healthcheck:
+      test: redis-cli ping | grep -q PONG || exit 1
 
   database:
+    # Immich's own Postgres build with the vector extensions. Keep this tag
+    # unless the Immich release notes tell you to change it.
     image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0
     container_name: immich-database
     restart: unless-stopped
@@ -38,7 +46,9 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=immich
       - POSTGRES_INITDB_ARGS=--data-checksums
+      # Only if the database cannot live on an SSD:
+      # - DB_STORAGE_TYPE=HDD
     volumes:
-      # Keep the database on an SSD
+      # Keep the database on an SSD, never on a network share
       - ./data/postgres:/var/lib/postgresql/data
     shm_size: 128mb

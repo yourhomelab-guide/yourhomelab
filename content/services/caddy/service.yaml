@@ -14,5 +14,5 @@ links:
 upstream:
   label: "Docker Hub: caddy"
   url: https://hub.docker.com/_/caddy
-reviewed: 2026-09-12
+reviewed: 2026-10-01
 pairsWith: [tinyauth, pocket-id, vaultwarden]

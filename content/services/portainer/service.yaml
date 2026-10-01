@@ -11,5 +11,5 @@ links:
 upstream:
   label: "Docker Hub: portainer-ce"
   url: https://hub.docker.com/r/portainer/portainer-ce
-reviewed: 2026-09-12
+reviewed: 2026-10-01
 pairsWith: [nginx-proxy-manager, uptime-kuma, beszel]

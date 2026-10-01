@@ -1,6 +1,6 @@
 services:
   jellyfin:
-    image: jellyfin/jellyfin:12.1
+    image: jellyfin/jellyfin:12
     container_name: jellyfin
     restart: unless-stopped
     # Run as your normal user so Jellyfin can read the media folder

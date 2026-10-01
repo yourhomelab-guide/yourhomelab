@@ -52,7 +52,7 @@ docker compose logs -f nginx-proxy-manager
 
 Meldet Docker beim Start, dass ein Port schon belegt ist, läuft dort bereits ein anderer Dienst, siehe [Port belegt](/de/nachschlagen/port-belegt/). Mit `Strg+C` beendest du die Log-Anzeige. Öffne dann im Browser `http://__SERVER_IP__:81`.
 
-Aktuelle Versionen zeigen beim ersten Aufruf einen Einrichtungsassistenten, in dem du dein Admin-Konto anlegst. Ältere Versionen haben stattdessen ein Standardkonto (`admin@example.com` / `changeme`). Wenn du das siehst, ändere E-Mail und Passwort sofort nach dem Login. Nimm ein langes, zufälliges Passwort aus deinem Passwortmanager.
+Beim ersten Aufruf zeigt NPM einen Einrichtungsdialog, in dem du dein Admin-Konto anlegst. Standard-Zugangsdaten gibt es nicht mehr. Nimm ein langes, zufälliges Passwort aus deinem Passwortmanager. Mach diesen Schritt direkt nach dem Start, solange die Oberfläche nur im Heimnetz erreichbar ist.
 </Step>
 
 <Step title="Ersten Proxy-Host anlegen">
@@ -97,8 +97,8 @@ Im Heimnetz bindest du ihn an die LAN-IP deines Servers:
 ```yaml
     ports:
       - "80:80"
-      - "__SERVER_IP__:81:81"
       - "443:443"
+      - "__SERVER_IP__:81:81"
 ```
 
 Auf einem gemieteten Server bindest du ihn an `127.0.0.1` und erreichst ihn über einen SSH-Tunnel:

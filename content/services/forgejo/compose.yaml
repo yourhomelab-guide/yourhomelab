@@ -1,14 +1,20 @@
 services:
   forgejo:
-    image: codeberg.org/forgejo/forgejo:12
+    # 15 is the current LTS release (security fixes until mid 2027)
+    image: codeberg.org/forgejo/forgejo:15
     container_name: forgejo
     restart: unless-stopped
     environment:
       - TZ=${TZ}
       - USER_UID=${PUID}
       - USER_GID=${PGID}
+      # Settings for app.ini: FORGEJO__<section>__<KEY>
+      # Correct clone URLs in the web UI
+      - FORGEJO__server__ROOT_URL=__URL__
+      - FORGEJO__server__SSH_PORT=2222
     ports:
       # Git over SSH. 2222 avoids a clash with the server's own SSH.
       - "2222:22"
     volumes:
       - ./data/data:/data
+      - /etc/localtime:/etc/localtime:ro

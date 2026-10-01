@@ -55,7 +55,7 @@ chmod 700 /home/__USER__/.ssh
 chmod 600 /home/__USER__/.ssh/authorized_keys
 ```
 
-Ohne `chown` gehören die Dateien root, und der SSH-Server ignoriert sie. Hast du noch keinen Schlüssel auf dem Server, richte ihn wie im Guide [SSH-Schlüssel einrichten](/de/einrichten/ssh-schluessel/) direkt für `alex` ein.
+Ohne `chown` gehören die Dateien root, und der SSH-Server ignoriert sie. Hast du noch keinen Schlüssel auf dem Server, richte ihn wie im Guide [SSH-Schlüssel einrichten](/de/einrichten/ssh-schluessel/) direkt für `__USER__` ein.
 </Step>
 
 <Step title="Neuen Benutzer testen">
@@ -71,7 +71,7 @@ Dann prüfst du sudo. Die Gruppenzugehörigkeit gilt erst ab einer neuen Anmeldu
 sudo whoami
 ```
 
-Nach Eingabe deines Passworts muss `root` erscheinen. Klappt beides, arbeitest du ab jetzt nur noch als `__USER__`. Denk daran, in `~/.ssh/config` auf deinem Rechner `User alex` einzutragen.
+Nach Eingabe deines Passworts muss `root` erscheinen. Klappt beides, arbeitest du ab jetzt nur noch als `__USER__`. Denk daran, in `~/.ssh/config` auf deinem Rechner `User __USER__` einzutragen.
 </Step>
 
 <Step title="root-Anmeldung sperren">

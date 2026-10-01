@@ -4,6 +4,8 @@ services:
     container_name: ntfy
     restart: unless-stopped
     command: serve
+    # Needed for the healthcheck, prevents zombie processes
+    init: true
     environment:
       - TZ=${TZ}
       - NTFY_BASE_URL=__URL__
@@ -20,3 +22,9 @@ services:
       - NTFY_UPSTREAM_BASE_URL=https://ntfy.sh
     volumes:
       - ./data/data:/var/lib/ntfy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --tries=1 http://localhost:80/v1/health -O - | grep -Eo '\"healthy\"\\s*:\\s*true' || exit 1"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

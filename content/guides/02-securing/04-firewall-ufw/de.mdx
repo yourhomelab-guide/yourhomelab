@@ -54,7 +54,10 @@ Dein Reverse Proxy (Traefik, Caddy oder Nginx Proxy Manager) nimmt später alle 
 ```bash
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
+sudo ufw allow 443/udp
 ```
+
+`443/udp` ist für HTTP/3, das Traefik und Caddy in den Vorlagen hier zusätzlich anbieten. Browser fallen ohne diese Regel einfach auf das normale HTTPS zurück.
 </Step>
 
 <Step title="Firewall einschalten und prüfen">
@@ -69,7 +72,7 @@ UFW warnt, dass bestehende SSH-Verbindungen unterbrochen werden könnten. Mit de
 sudo ufw status verbose
 ```
 
-Du siehst die Grundregeln und deine drei Freigaben. Öffne zur Sicherheit ein neues Terminal und prüf, ob `ssh homelab` weiterhin funktioniert. Eine Regel entfernst du mit `sudo ufw status numbered` und anschließend `sudo ufw delete <Nummer>`.
+Du siehst die Grundregeln und deine Freigaben. Öffne zur Sicherheit ein neues Terminal und prüf, ob `ssh homelab` weiterhin funktioniert. Eine Regel entfernst du mit `sudo ufw status numbered` und anschließend `sudo ufw delete <Nummer>`.
 </Step>
 
 </Steps>

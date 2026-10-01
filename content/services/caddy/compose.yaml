@@ -3,9 +3,13 @@ services:
     image: caddy:2
     container_name: caddy
     restart: unless-stopped
+    # Lets Caddy raise network buffers for HTTP/3
+    cap_add:
+      - NET_ADMIN
     ports:
       - "80:80"
       - "443:443"
+      # HTTP/3 (QUIC)
       - "443:443/udp"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro

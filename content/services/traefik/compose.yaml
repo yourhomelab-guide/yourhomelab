@@ -1,15 +1,18 @@
 services:
   traefik:
-    image: traefik:v3.5
+    image: traefik:v3.7
     container_name: traefik
     restart: unless-stopped
     command:
       - --providers.docker=true
+      # Only containers with the label traefik.enable=true are published
       - --providers.docker.exposedbydefault=false
       - --providers.docker.network=__NETWORK__
       - --entrypoints.web.address=:80
       - --entrypoints.web.http.redirections.entrypoint.to=websecure
       - --entrypoints.websecure.address=:443
+      # HTTP/3 (QUIC) on the same port, needs 443/udp below
+      - --entrypoints.websecure.http3=true
       - --certificatesresolvers.le.acme.email=__EMAIL__
       - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
       - --certificatesresolvers.le.acme.tlschallenge=true
@@ -17,6 +20,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "443:443/udp"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./data/letsencrypt:/letsencrypt

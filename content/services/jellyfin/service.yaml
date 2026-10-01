@@ -15,4 +15,5 @@ upstream:
   label: "jellyfin.org: Installation > Container"
   url: https://jellyfin.org/docs/general/installation/container
 gpu: optional
+reviewed: 2026-10-01
 pairsWith: [immich]

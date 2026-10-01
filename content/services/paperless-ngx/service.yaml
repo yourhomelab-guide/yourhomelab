@@ -19,4 +19,5 @@ db:
   service: db
   user: paperless
   name: paperless
+reviewed: 2026-10-01
 pairsWith: [nextcloud, pocket-id]

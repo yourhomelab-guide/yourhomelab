@@ -53,7 +53,7 @@ docker compose logs traefik | grep -i -E "acme|certificate"
 
 Für Caddy und NPM entsprechend `docker compose logs` im jeweiligen Stack-Ordner.
 
-**DNS prüfen.** Beide Adressen müssen zu deinem Anschluss gehören. `dig` steckt im Paket `dnsutils`:
+**DNS prüfen.** Beide Adressen müssen zu deinem Anschluss gehören. `dig` steckt im Paket `bind9-dnsutils`:
 
 ```bash
 dig +short A app.__DOMAIN__

@@ -5,5 +5,7 @@ services:
     restart: unless-stopped
     environment:
       - TZ=${TZ}
+      # Used for links in notifications
+      - APP_URL=__URL__
     volumes:
       - ./data/data:/beszel_data

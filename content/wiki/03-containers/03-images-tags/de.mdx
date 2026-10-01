@@ -70,7 +70,7 @@ Nicht jedes Projekt hält sich an Semver, und manche bieten nur `latest` an. Wie
 Ein Tag ist nur ein Etikett, das der Herausgeber jederzeit auf ein anderes Image umhängen kann. Eindeutig ist dagegen der **Digest**: eine Prüfsumme über den Inhalt des Images, die mit `sha256:` beginnt. Du kannst ihn an den Namen anhängen:
 
 ```yaml
-image: nginx:1.27@sha256:0123abc…
+image: nginx:1.31@sha256:0123abc…
 ```
 
 Docker lädt dann genau dieses Image, auch wenn der Tag inzwischen woanders hinzeigt. Das `…` steht hier für den Rest der langen Prüfsumme. Den Digest der Images auf deinem Server siehst du mit:

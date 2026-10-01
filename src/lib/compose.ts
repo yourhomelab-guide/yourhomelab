@@ -108,7 +108,7 @@ function buildVariant(
   const urlPath = useSub ? '' : `/${meta.subdomain}`;
   const hostPort = meta.hostPort ?? meta.port;
   const direct = proxy === 'none' && !meta.reverseProxy;
-  const url = direct ? `http://<server-ip>:${hostPort}` : `https://${host}${urlPath}`;
+  const url = direct ? `http://__SERVER_IP__:${hostPort}` : `https://${host}${urlPath}`;
 
   if (!meta.reverseProxy) {
     const add: [string, unknown][] = [];
@@ -145,7 +145,12 @@ function buildVariant(
     }
   }
 
-  const fill = (s: string) => s.replaceAll('__HOST__', host).replaceAll('__URL__', url).replaceAll('__PATH__', urlPath);
+  const fill = (s: string) =>
+    s
+      .replaceAll('__HOST__', host)
+      .replaceAll('__URL__', url)
+      .replaceAll('__SCHEME__', direct ? 'http' : 'https')
+      .replaceAll('__PATH__', urlPath);
   const compose = fill(doc.toString({ lineWidth: 0 }));
   const env = fill(envSrc.trim()) || '# –';
 

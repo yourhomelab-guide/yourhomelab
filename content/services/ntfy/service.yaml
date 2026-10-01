@@ -16,4 +16,5 @@ upstream:
 db:
   type: sqlite
   path: data/data/auth.db
+reviewed: 2026-10-01
 pairsWith: [uptime-kuma, beszel]

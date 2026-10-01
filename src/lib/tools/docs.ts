@@ -92,7 +92,7 @@ export function buildDocs(
   const L: string[] = [];
   const code = (c: string, lang = 'bash') => ['```' + lang, ...c.split('\n'), '```'];
   const ip = input.ip.trim();
-  const url = (u: string) => (ip ? u.replace('<server-ip>', ip) : u);
+  const url = (u: string) => u.replaceAll('__SERVER_IP__', ip || s.serverIp);
   const title = input.title.trim() || tx.defaultTitle;
 
   L.push(`# ${fmt(tx.title, { name: title })}`, '', `_${fmt(tx.generated, { date: meta.date, url: meta.toolUrl })}_`, '');

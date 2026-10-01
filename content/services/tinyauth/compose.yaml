@@ -1,10 +1,16 @@
 services:
   tinyauth:
-    image: ghcr.io/steveiliop56/tinyauth:v3
+    image: ghcr.io/tinyauthapp/tinyauth:v5
     container_name: tinyauth
     restart: unless-stopped
     environment:
       - TZ=${TZ}
-      - APP_URL=__URL__
-      - SECRET=${TINYAUTH_SECRET}
-      - USERS=${TINYAUTH_USERS}
+      - TINYAUTH_APPURL=__URL__
+      - TINYAUTH_AUTH_USERS=${TINYAUTH_USERS}
+      # The login cookie is only sent over HTTPS
+      - TINYAUTH_AUTH_SECURECOOKIE=true
+      # Docker networks, so Tinyauth sees the real client IP from the reverse proxy
+      - TINYAUTH_AUTH_TRUSTEDPROXIES=172.16.0.0/12
+    volumes:
+      # Sessions and settings (SQLite)
+      - ./data/data:/data

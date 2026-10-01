@@ -11,11 +11,11 @@ traefikLabels: []
 links:
   repo: immich-app/immich
   website: https://immich.app
-  docs: https://immich.app/docs
+  docs: https://docs.immich.app
 upstream:
-  label: docker/docker-compose.yml
-  url: https://github.com/immich-app/immich/blob/main/docker/docker-compose.yml
-reviewed: 2026-09-12
+  label: docker-compose.yml (latest release)
+  url: https://github.com/immich-app/immich/releases/latest/download/docker-compose.yml
+reviewed: 2026-10-01
 gpu: optional
 db:
   type: postgres

@@ -14,7 +14,7 @@ links:
 upstream:
   label: wiki/Using-Docker-Compose
   url: https://github.com/dani-garcia/vaultwarden/wiki/Using-Docker-Compose
-reviewed: 2026-09-12
+reviewed: 2026-10-01
 db:
   type: sqlite
   path: data/data/db.sqlite3

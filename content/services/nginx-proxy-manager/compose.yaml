@@ -1,14 +1,15 @@
 services:
   nginx-proxy-manager:
-    image: jc21/nginx-proxy-manager:latest
+    image: jc21/nginx-proxy-manager:2
     container_name: nginx-proxy-manager
     restart: unless-stopped
     environment:
       - TZ=${TZ}
     ports:
       - "80:80"
-      - "81:81"
       - "443:443"
+      # Admin web UI. Close it again once NPM serves its own UI via a proxy host.
+      - "81:81"
     volumes:
       - ./data/data:/data
       - ./data/letsencrypt:/etc/letsencrypt
