@@ -1,32 +1,29 @@
 ---
-title: Volumes & Bind Mounts
-description: Containers are disposable, but your data isn't. Named volumes and bind mounts store data outside the container. This page uses bind mounts because they allow you to keep everything you need to back up in a single folder.
+title: "Volumes & bind mounts"
+description: "Containers are disposable, your data isn't. Named volumes and bind mounts store data outside the container. This site uses bind mounts, because then a single folder contains everything you need to back up."
 level: 2
-related:
-  - directory-structure
-  - backup-strategies
-  - docker-compose
+related: [directory-structure, backup-strategies, docker-compose]
 practice: creating-the-directory-structure
 ---
 
-## Why Data Doesn't Belong in the Container
+## Why data doesn't belong in the container
 
-A container is designed to be deleted and recreated at any time. That is exactly what happens with every update: Compose discards the old container and starts a new one from the new image. Anything the program has written inside the container itself is then lost.
+A container is built to be deleted and recreated at any time. That's exactly what happens with every update: Compose throws away the old container and starts a new one from the new image. Everything the program wrote into the container itself is then lost.
 
-That's why you mount the folders where a program stores its data from outside. The program appears to be writing to its own folder, but in reality, the files end up on the server. Docker offers two ways to do this.
+That's why you mount the folders where a program stores its data from outside. The program seems to write into its own folder, but the files actually land on the server. Docker has two ways of doing this.
 
-## Named Volumes and Bind Mounts
+## Named volumes and bind mounts
 
 <Cards>
-  <Card title="Named Volume">
-    Docker manages the storage location itself. You just assign a name; the files are located somewhere under /var/lib/docker/volumes.
+  <Card title="Named volume">
+    Docker manages the storage location itself. You only give it a name; the files live somewhere under /var/lib/docker/volumes.
   </Card>
-  <Card title="Bind Mount">
-    You choose the folder on the server yourself—for example, ./data/db next to the compose.yaml file. You'll see the files right away.
+  <Card title="Bind mount">
+    You choose the folder on the server yourself, for example ./data/db next to the compose.yaml. You see the files directly.
   </Card>
 </Cards>
 
-In the [...], they both `compose.yaml`look almost the same:
+In the `compose.yaml`, both look almost the same:
 
 ```yaml
 services:
@@ -40,21 +37,21 @@ volumes:
   app-data:                         # named volumes must be declared here
 ```
 
-The rule: If the left side starts with  or`/` `./`, it's a mount. Otherwise, it's a named volume. If there's an unknown  , the [Compose guide](/en/werkzeuge/compose-erklaerer/) will show`compose.yaml` you which entries mount what.
+The rule: if the left part starts with `/` or `./`, it's a bind mount. Otherwise it's a named volume. For a `compose.yaml` from someone else, the [Compose explainer](/en/tools/compose-explainer/) shows you which entries mount what.
 
-| | Named Volume | Bind Mount |
+| | Named volume | Bind mount |
 | --- | --- | --- |
 | **Location** | Managed by Docker | Chosen by you |
-| **View Files** | Only by taking a detour | Directly using `ls`,  or`cat` an editor |
-| **Backup** | Per volume, usually via a auxiliary container | Copy the folder—done! |
-| **Rights** | Docker takes care of it | You have to set the appropriate value yourself |
-| **Delete** | `docker compose down -v` it removes it | It will remain until you delete the folder |
+| **Viewing files** | Only in roundabout ways | Directly with `ls`, `cat` or an editor |
+| **Backup** | Per volume, usually through a helper container | Copy the folder, done |
+| **Permissions** | Docker takes care of them | You have to set them correctly yourself |
+| **Deleting** | `docker compose down -v` removes it | Stays until you delete the folder |
 
-## Why This Site Uses Bind Mounts
+## Why this site uses bind mounts
 
-Named volumes are technically sound and cause fewer issues with permissions. For a home lab, however, one advantage of bind mounts outweighs the others: **everything is in one place.**
+Named volumes are technically clean and cause less trouble with permissions. For a homelab, though, one advantage of bind mounts outweighs that: **everything is in one place.**
 
-Each service is assigned a folder under `__ROOT__`, and its data is stored in the subfolder `data/`:
+Each service gets a folder under `__ROOT__`, and its data lives in the `data/` subfolder:
 
 ```
 __ROOT__/
@@ -65,24 +62,24 @@ __ROOT__/
         └── data/        ← mounted into the container as /data
 ```
 
-To back up your system, all you need to do is back up one folder: `__ROOT__`. This folder contains the configuration, secrets, and data for all services. If you're moving to a new server, simply copy the folder and restart the Stacks; see "[Migrating to New Hardware](/en/setup/moving-hardware/)." For more information, see "[Directory Structure](/en/wiki/directory-structure/) and [Backup Strategies](/en/wiki/backup-strategies/)."
+For a backup, you then only have to back up one folder: `__ROOT__`. It holds the configuration, secrets and data of all services. If you move to a new server, you copy the folder and start the stacks again, see [Moving to new hardware](/en/setup/moving-hardware/). More in [Directory structure](/en/wiki/directory-structure/) and [Backup strategies](/en/wiki/backup-strategies/).
 
-All templates under "[Services](/en/services/)" follow this pattern. If you select a central data folder in "My Setup,"  automatically`./data/…` becomes `__DATA_ROOT__/<dienst>/…`.
+All templates under [Services](/en/services/) follow this pattern. If you choose a central data folder in "My setup", `./data/…` automatically becomes `__DATA_ROOT__/<service>/…`.
 
-<Callout type="warning" title="Do not copy databases while the system is running">
-A database is constantly writing to its files. If you copy the folder while it's running, the copy may be unusable. Create a dump beforehand using the database tool, or briefly stop the stack with `docker compose stop`.
+<Callout type="warning" title="Don't copy databases while they're running">
+A database writes to its files constantly. If you copy the folder while it's running, the copy may be unusable. Create a dump with the database's own tool first, or briefly stop the stack with `docker compose stop`.
 </Callout>
 
-## Rights: Who owns the files?
+## Permissions: who owns the files?
 
-With bind mounts, the same permission settings apply on the server and inside the container. Linux does not use usernames; instead, it uses numbers: the **UID** (User ID) and the **GID** (Group ID). If a program runs in the container with UID 1000, the files it creates also belong to UID 1000 on the server.
+With bind mounts, the same permission system applies on the server and in the container. Linux doesn't know user names here, only numbers: the **UID** (user ID) and the **GID** (group ID). If a program in the container runs as UID 1000, the files it creates also belong to UID 1000 on the server.
 
-This gives rise to two common problems:
+This leads to two typical problems:
 
-- **The folder is missing.** If the path on the left does not yet exist, Docker will create it at startup as root. A program that does not run as root inside the container will not be able to write to it. Therefore, create the folders yourself beforehand.
-- **The permissions are incorrect.** The program is running under a different UID than the folder owner. The log usually shows "Permission denied." The "[Permission denied](/en/wiki/permission-denied/)" section explains how to fix this step by step.
+- **The folder is missing.** If the path on the left doesn't exist yet, Docker creates it at startup, as root. A program that doesn't run as root in the container then may not write into it. So create the folders yourself beforehand.
+- **The numbers don't match.** The program runs as a different UID than the owner of the folder. The log then usually says "Permission denied". How to fix that step by step is shown in [Permission denied](/en/wiki/permission-denied/).
 
-The command displays your own UID and GID`id`. For the first user created, this is usually 1000.
+The `id` command shows your own UID and GID. For the first user created, that's usually 1000.
 
 ```bash
 id
@@ -90,7 +87,7 @@ id
 
 ## PUID and PGID
 
-Many images, most notably those from [LinuxServer.io](https://www.linuxserver.io/), solve this problem using two environment variables. You tell the container which UID and GID to use:
+Many images, above all those from [LinuxServer.io](https://www.linuxserver.io/), solve the problem with two environment variables. You tell the container which UID and GID to work as:
 
 ```yaml
 environment:
@@ -98,29 +95,29 @@ environment:
   - PGID=__PGID__
 ```
 
-If you enter your own values here, all files will be in  `./data`your user account. You can edit`sudo` and save them without  any issues.
+If you put in your own values here, all files in `./data` belong to your user. You can edit and back them up without `sudo`.
 
-`PUID` However, these are`PGID` just a convention, not a Docker standard. Images that don't recognize them are simply ignored. Some images, on the other hand, always run under a fixed UID, which is listed in their documentation. In that case, you adjust the folder owner:
+`PUID` and `PGID` are a convention, though, not a Docker standard. Images that don't know them simply ignore them. Some images instead always run as a fixed UID that's stated in their documentation. Then you adjust the folder's owner:
 
 ```bash
 sudo chown -R 1000:1000 __ROOT__/<dienst>/data
 ```
 
-Replace  `1000:1000`with the UID and GID from the image's documentation. Other images support the `compose` key`user:`, which allows you to specify the UID directly. The relevant information is always provided in the documentation for the specific image.
+Replace `1000:1000` with the UID and GID from the image's docs, and `<dienst>` with the service's folder. Other images support the Compose key `user:`, with which you set the UID directly. Which of these applies is always in the documentation of the image in question.
 
 ## Read-only
 
-If you `:ro`mount it, the container can read the files but not modify them:
+If you append `:ro` to a mount, the container can read the files but not change them:
 
 ```yaml
 volumes:
   - ./config.yml:/app/config.yml:ro
 ```
 
-This makes sense for configuration files that only you modify. One exception is the Docker socket`/var/run/docker.sock`, which Traefik, for example, binds to: In that case, it only`:ro` prevents the file itself from being modified. The container can still send commands to Docker via the socket. Therefore, only assign it to containers you trust.
+That makes sense for configuration files only you change. One exception is the Docker socket `/var/run/docker.sock`, which Traefik mounts, for example: there, `:ro` only prevents the file itself from being changed. The container can still send commands to Docker through the socket. So only give it to containers you trust.
 
-## Read more
+## Further reading
 
-- [Docker Documentation on Bind Mounts](https://docs.docker.com/engine/storage/bind-mounts/)
-- [Docker Documentation on Volumes](https://docs.docker.com/engine/storage/volumes/)
-- [Create a directory structure](/en/setup/creating-the-directory-structure/): `__ROOT__`Set up the folder
+- [Docker docs on bind mounts](https://docs.docker.com/engine/storage/bind-mounts/)
+- [Docker docs on volumes](https://docs.docker.com/engine/storage/volumes/)
+- [Creating the directory structure](/en/setup/creating-the-directory-structure/): setting up the `__ROOT__` folder

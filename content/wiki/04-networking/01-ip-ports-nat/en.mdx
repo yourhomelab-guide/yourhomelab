@@ -1,100 +1,96 @@
 ---
-title: IP, Ports & NAT
-description: Every device on the network has an IP address, and every service listens on a port. And your router uses NAT to translate between your home network and the Internet. If you understand these three concepts, you’ll also understand why a service is—or isn’t—accessible.
+title: "IP, ports & NAT"
+description: "Every device on the network has an IP address, every service listens on a port. And your router translates between your home network and the internet with NAT. If you understand these three terms, you also understand why a service is reachable or not."
 level: 1
-related:
-  - dns-domains
-  - port-forwarding
-  - cgnat-ds-lite
-  - docker-networks
+related: [dns-domains, port-forwarding, cgnat-ds-lite, docker-networks]
 practice: static-ip-hostname
 ---
 
-## Why You Should Know This
+## Why you should know this
 
-Almost every problem with self-hosting of the "I can't access my service" variety has one of three causes: the wrong address, the wrong port, or a translation (NAT) somewhere along the way. The basics are straightforward, and they’ll save you a lot of guesswork later on. To learn how to systematically troubleshoot such a problem, see [“Troubleshooting: First Steps](/en/wiki/first-steps/).”
+Almost every self-hosting problem of the "I can't get to my service" kind has one of three causes: the wrong address, the wrong port or a translation (NAT) somewhere in between. The basics are manageable, and they'll save you a lot of guesswork later. How to approach such a problem systematically is shown in [Troubleshooting: first steps](/en/wiki/first-steps/).
 
 ## IP addresses
 
-An **IP address** is a device's "house number" on a network. There are two versions:
+An **IP address** is a device's house number on the network. There are two versions:
 
-- **IPv4**: four numbers ranging from 0 to 255, such as `192.168.1.20`. There are only about 4.3 billion of these, and they have long since run out.
-- **IPv6**: significantly longer, about `2001:db8::20`. The address space is so large that every device can be assigned its own globally unique address.
+- **IPv4**: four numbers from 0 to 255, such as `192.168.1.20`. There are only about 4.3 billion of them, and they've long been scarce.
+- **IPv6**: much longer, such as `2001:db8::20`. The address space is so large that every device can get its own globally valid address.
 
-With IPv4, a distinction is made between **private** and **public** addresses. Private addresses are valid only on your home network and are not routed on the Internet. Three ranges are reserved for this purpose:
+With IPv4, there are **private** and **public** addresses. Private addresses only apply within your home network and aren't routed on the internet. Three ranges are reserved for them:
 
-| Area | Typical Uses |
+| Range | Typical use |
 | --- | --- |
-| `10.0.0.0/8` | Corporate networks, VPNs, some routers |
-| `172.16.0.0/12` | Docker networks often use addresses from this range |
-| `192.168.0.0/16` | Most home routers, such as  `192.168.1.x`or `192.168.178.x` |
+| `10.0.0.0/8` | Company networks, VPNs, some routers |
+| `172.16.0.0/12` | Docker networks often use addresses from here |
+| `192.168.0.0/16` | Most home routers, e.g. `192.168.1.x` or `192.168.178.x` |
 
-The notation `/8`,  or`/12`  `/16`is called **CIDR**. It specifies how many bits at the beginning define the network. The smaller the number, the larger the range.
+The notation `/8`, `/12` or `/16` is called **CIDR**. It states how many bits at the front define the network. The smaller the number, the larger the range.
 
-Your router receives the public IPv4 address from your Internet service provider. All devices in your household share this single address with the outside world. For many connections, it changes regularly, and some providers no longer assign you a dedicated one at all (see [CGNAT & DS-Lite](/en/wiki/cgnat-ds-lite/)).
+Your router gets the public IPv4 address from your internet provider. All devices in your household share this one address towards the outside. On many lines it changes regularly, and some providers don't give you one of your own at all anymore (see [CGNAT & DS-Lite](/en/wiki/cgnat-ds-lite/)).
 
-On your server, you'll see its addresses like this:
+On your server, you see its addresses like this:
 
 ```bash
 ip -brief address
 ```
 
-To ensure your server doesn't suddenly have a different address after a reboot, assign it a static IP address on your home network. The "[Static IP & Hostname](/en/setup/static-ip-hostname/)" section shows you how to do this.
+So your server doesn't suddenly have a different address after a restart, give it a static IP on your home network. How that works is shown in [Static IP & hostname](/en/setup/static-ip-hostname/).
 
 ## Ports
 
-An IP address points to the device. The **port** identifies which program is running on that device. Ports are numbered from 0 to 65535. A port can be used by only one program per address and protocol (TCP or UDP). For instructions on what to do if a port is already in use, see “[Port Occupied](/en/wiki/port-in-use/).”
+An IP address leads to the device. The **port** says which program on that device is meant. Ports are numbers from 0 to 65535. A port can only be used by one program per address and protocol (TCP or UDP). What to do if a port is already taken is in [Port already in use](/en/wiki/port-in-use/).
 
-Some ports are permanently assigned and you'll come across them all the time:
+Some ports are permanently assigned and come up all the time:
 
 | Port | Service |
 | --- | --- |
 | 22 | SSH |
-| 53 | DNA |
+| 53 | DNS |
 | 80 | HTTP |
 | 443 | HTTPS |
-| 51820 (UDP) | WireGuard (Default) |
+| 51820 (UDP) | WireGuard (default) |
 
-This command shows which ports on your server are currently open and listening. With , you can also see`sudo` which process is running on them:
+This command shows which ports on your server are currently open and listening. With `sudo`, you also see which process is behind them:
 
 ```bash
 sudo ss -tulpn
 ```
 
-An address like  means`0.0.0.0:443`: The service listens on all network interfaces.  means`127.0.0.1:8080`: only locally on the server itself; not accessible from outside.
+An address like `0.0.0.0:443` means the service listens on all network interfaces. `127.0.0.1:8080` means only locally on the server itself, not reachable from outside.
 
 ## NAT
 
-**NAT** (Network Address Translation) translates addresses. Your router does this all the time: When your laptop, using its private address, visits a`192.168.1.30` website, the router replaces the sender's address with its public IP. The response arrives at the router, and it still knows which device it belongs to.
+**NAT** (network address translation) translates addresses. Your router does this constantly: when your laptop with the private address `192.168.1.30` opens a website, the router replaces the sender address with its public IP. The reply arrives at the router, and it still knows which device it belongs to.
 
-This works well for connections **from the inside to the outside**. For connections **from the outside to the inside**, however, the router doesn't know which device you're referring to. That's exactly why you need [to](/en/wiki/port-forwarding/) [forward](/en/wiki/port-forwarding/) a [port](/en/wiki/port-forwarding/): You tell the router that, for example, all traffic on port 443 should `192.168.1.20`be directed to it.
+That works well for connections **from inside to outside**. For connections **from outside to inside**, though, the router doesn't know which device is meant. That's exactly what you need [port forwarding](/en/wiki/port-forwarding/) for: you tell the router that, for example, everything on port 443 should go to `192.168.1.20`.
 
-Side effect: NAT acts as a simple layer of protection. Anything that isn't allowed through simply can't get through from the outside.
+A side effect: NAT acts like a simple layer of protection. Whatever isn't forwarded doesn't get through from outside in the first place.
 
 <Callout title="IPv6 and NAT">
-With IPv6, there is generally no NAT. Every device has a public address. Instead, protection is handled by the router's firewall, which blocks incoming connections by default. For a service, you don't forward a port there; instead, you allow access to the port and the device.
+With IPv6, there's usually no NAT. Every device has a public address. Instead, the router's firewall provides the protection by blocking incoming connections by default. For a service, you then don't forward a port but allow access to the port and device.
 </Callout>
 
 ## NAT in Docker
 
-Docker uses the same principle. Containers have their own private addresses on a [Docker network](/en/wiki/docker-networks/). With  `ports:`in the  command, you expose`compose.yaml` a port from the container to the host:
+Docker uses the same principle. Containers have their own private addresses in a [Docker network](/en/wiki/docker-networks/). With `ports:` in the `compose.yaml`, you publish a container port on the host:
 
 ```yaml
 ports:
   - "8080:80"   # host port 8080 -> container port 80
 ```
 
-The number on the left is the port on the server; the number on the right is the port in the container. This allows two containers to both use port 80 internally without interfering with each other.
+The left number is the port on the server, the right one the port in the container. That way, two containers can both use port 80 internally without getting in each other's way.
 
 <Callout type="warning" title="Docker bypasses UFW">
-Docker automatically adds published ports directly to the kernel's firewall rules. UFW rules do not apply to these. A reverse proxy is`ports: "8080:80"` therefore accessible from anywhere on the network, even if UFW blocks port 8080. For this reason, only expose the reverse proxy’s ports. If you only need a port locally, bind it to `127.0.0.1`, e.g., `"127.0.0.1:8080:80"`.
+Docker writes published ports directly into the kernel's firewall rules. UFW rules don't apply to them. So a `ports: "8080:80"` is reachable on the whole network, even if UFW blocks port 8080. Therefore only publish the reverse proxy's ports. If you only need a port locally, bind it to `127.0.0.1`, e.g. `"127.0.0.1:8080:80"`.
 </Callout>
 
-With a [reverse proxy,](/en/wiki/reverse-proxy-explained/) you usually only need two exposed ports: 80 and 443. The proxy accesses all other services via the shared Docker network.
+With a [reverse proxy](/en/wiki/reverse-proxy-explained/), you usually only need two published ports: 80 and 443. The proxy reaches all other services through the shared Docker network.
 
-## In a nutshell
+## In short
 
-- The device finds the **IP address**, and the program finds the **port** on the device.
-- On your home network, you use private IP addresses; when connecting to the outside world, all devices share a public IP address.
-- **NAT** simply allows outgoing connections to pass through; incoming connections require port forwarding.
-- Docker does the same thing internally: it maps`ports:` a port on the host to a port in the container.
+- The **IP address** finds the device, the **port** the program on it.
+- On your home network, you use private addresses; towards the outside, all devices share one public address.
+- **NAT** simply lets outgoing connections through; incoming ones need port forwarding.
+- Docker does the same internally: `ports:` connects a port on the host to a port in the container.

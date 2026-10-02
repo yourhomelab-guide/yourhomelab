@@ -341,7 +341,7 @@
   },
   "content/wiki/03-containers/01-what-is-docker/de.mdx": {
     "hash": "38f15f686d645efd",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/wiki/03-containers/02-docker-compose/de.mdx": {
     "hash": "dba72a709ad43513",
@@ -353,7 +353,7 @@
   },
   "content/wiki/03-containers/04-volumes-bind-mounts/de.mdx": {
     "hash": "e60f199f45589477",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/wiki/03-containers/05-docker-networks/de.mdx": {
     "hash": "687691d3e1d26a8b",
@@ -361,7 +361,7 @@
   },
   "content/wiki/04-networking/01-ip-ports-nat/de.mdx": {
     "hash": "9a790e93a0c74fc4",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/wiki/04-networking/02-dns-domains/de.mdx": {
     "hash": "e535fbc003dc34b2",
@@ -369,7 +369,7 @@
   },
   "content/wiki/04-networking/03-reverse-proxy-explained/de.mdx": {
     "hash": "7048087bbf1b2c46",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/wiki/04-networking/04-tls-certificates/de.mdx": {
     "hash": "19c52126b979c07e",
@@ -377,7 +377,7 @@
   },
   "content/wiki/04-networking/05-cgnat-ds-lite/de.mdx": {
     "hash": "7b1b9c6a1f665500",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/wiki/05-remote-access/01-port-forwarding/de.mdx": {
     "hash": "ec85c66f9f88e4af",
@@ -392,8 +392,8 @@
     "by": "claude"
   },
   "content/wiki/05-remote-access/04-access-methods-compared/de.mdx": {
-    "hash": "328ed95c57e95573",
-    "by": "deepl"
+    "hash": "276ea900ce1f00df",
+    "by": "claude"
   },
   "content/wiki/06-security/01-ssh-basics/de.mdx": {
     "hash": "46c999d11feee208",

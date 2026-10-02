@@ -1,86 +1,83 @@
 ---
-title: What is Docker?
-description: Docker bundles a program—along with everything it needs to run—into a package that works the same way on any Linux server. Almost every self-hosted service is delivered this way today.
+title: "What is Docker?"
+description: "Docker packs a program together with everything it needs to run into a package that works the same on every Linux server. Almost every self-hosted service ships this way today."
 level: 1
-related:
-  - vms-or-containers
-  - images-tags
-  - docker-compose
+related: [vms-or-containers, images-tags, docker-compose]
 practice: installing-docker
 ---
 
-## Why Docker in the first place?
+## Why Docker at all?
 
-Imagine you want to run three services on a single server. The first requires PHP 8.2, the second PHP 8.3, and the third a specific version of Node.js. If you install everything directly on the system, dependencies will quickly start to conflict. Updates become a risk, and after a year, no one will know which file belongs to which program.
+Imagine you want to run three services on one server. The first needs PHP 8.2, the second PHP 8.3, the third a specific version of Node.js. If you install everything directly on the system, the dependencies quickly get in each other's way. Updates become a risk, and after a year nobody knows which file belongs to which program.
 
-Docker solves this problem by running each service in its own isolated **container**. The container brings its own libraries and runtime environment. All you need on the server itself is Docker. Removing a service simply means deleting the container. Nothing remains in the system except for the data you intentionally want to keep.
+Docker solves this by running each service in its own isolated **container**. The container brings its own libraries and runtime. On the server itself, you only need Docker. Removing a service means deleting the container. Nothing stays behind on the system, except the data you deliberately want to keep.
 
-That's why almost all self-hosting projects distribute their software as a Docker image. The installation is often reduced to a short configuration file and a single command.
+That's why almost all self-hosting projects ship their software as a Docker image. Installation often shrinks to a short configuration file and one command.
 
-## The Three Basic Concepts
+## The three basic terms
 
 <Cards>
   <Card title="Image">
-    The template. An image contains the program and everything it needs as a fixed package. It is built once and then simply used.
+    The template. An image contains the program and everything it needs as an unchangeable package. It's built once and then only used.
   </Card>
   <Card title="Container">
-    A running instance of an image. You can start as many containers as you like from a single image. Each container has its own process space and its own network.
+    A running instance of an image. You can start as many containers from one image as you like. Each has its own process space and its own network.
   </Card>
   <Card title="Registry">
-    The place where images are stored so that others can download them. The best-known one is Docker Hub; other examples include the GitHub Container Registry.
+    The place where images are stored so others can download them. The best known is Docker Hub; there's also the GitHub Container Registry, for example.
   </Card>
 </Cards>
 
 ## An analogy
 
-An image is like a recipe that comes with pre-packaged ingredients in a box. The container is the dish you cook with it. You can cook with the same box multiple times, and every dish will taste the same, no matter which kitchen you’re in. The registry is the store where the boxes sit on the shelves.
+An image is like a recipe with pre-packed ingredients in a box. The container is the dish you cook from it. You can cook from the same box several times, and every dish tastes the same, no matter which kitchen you're in. The registry is the store where the boxes sit on the shelf.
 
-There is a limit to this analogy: When you delete a container, everything it has written to itself at runtime is gone. Therefore, you should store data that you want to keep outside the container on the server. [The "Volumes & Bind Mounts](/en/wiki/volumes-bind-mounts/)" section explains how to do this.
+The analogy has a limit: when you delete a container, everything it wrote into itself at runtime is gone. So data that should stay is stored outside the container on the server. How that works is explained in [Volumes & bind mounts](/en/wiki/volumes-bind-mounts/).
 
-## How a Container Is Made
+## How a container comes about
 
 The process is always the same:
 
-1. Docker downloads (**pulls**) the image from a registry.
-2. Docker uses this to start a container (**run**).
-3. The container runs until you stop it or it crashes. With a restart rule, Docker automatically restarts it. If it keeps restarting, [the "Container in Restart Loop" rule](/en/wiki/restart-loop/) can help.
+1. Docker downloads the image from a registry (**pull**).
+2. Docker starts a container from it (**run**).
+3. The container runs until you stop it or it crashes. With a restart policy, Docker starts it again automatically. If it keeps restarting over and over, [Container in a restart loop](/en/wiki/restart-loop/) helps.
 
-You can try this out with a single command once Docker is installed:
+Once Docker is installed, you can try it with a single command:
 
 ```bash
 docker run --rm hello-world
 ```
 
-Docker loads the small image`hello-world`, starts it, the container displays a welcome message, and then exits. It then immediately `--rm`deletes the container.
+Docker downloads the small `hello-world` image and starts it; the container prints a greeting and exits. `--rm` removes the container again right afterwards.
 
-In everyday use, however, you don't start containers with long `docker run`-commands. You define them in a file and`compose.yaml` start them with `docker compose up -d`. This is more readable, can be saved, and can be repeated at any time. Learn more in [Docker Compose](/en/wiki/docker-compose/).
+In everyday use, though, you don't start containers with long `docker run` commands. You describe them in a `compose.yaml` file and start them with `docker compose up -d`. That's more readable, can be backed up and repeated at any time. More in [Docker Compose](/en/wiki/docker-compose/).
 
-## Containers are not virtual machines
+## Containers aren't virtual machines
 
-A virtual machine (VM) simulates an entire computer with its own operating system kernel. A container, on the other hand, shares the kernel with the server and is simply an isolated process. This makes containers small and fast: They start up in seconds and require very little additional memory.
+A virtual machine (VM) simulates a complete computer with its own operating system kernel. A container, on the other hand, shares the kernel with the server and is just an isolated process. That makes containers small and fast: they start in seconds and need hardly any extra memory.
 
-The trade-off is that isolation is weaker than with a VM. For most home lab services, this is perfectly sufficient. To find out when a VM is still worth it, see "[VMs or Containers?](/en/wiki/vms-or-containers/)".
+The price is weaker separation than with a VM. For most homelab services, it's entirely sufficient. When a VM is still worth it is covered in [VMs or containers?](/en/wiki/vms-or-containers/).
 
 ## Docker and Podman
 
-Docker isn't the only container software. The best-known alternative is **Podman**, developed by Red Hat. Here's a quick overview of the differences:
+Docker isn't the only container software. The best-known alternative is **Podman**, developed by Red Hat. The differences in brief:
 
 |                   | Docker                                  | Podman                                        |
 | ----------------- | --------------------------------------- | --------------------------------------------- |
-| **Structure**        | A background service (daemon) manages all containers | No central daemon; each container is a normal process |
-| **Rights**        | Daemon runs as root                   | By default, without root privileges (rootless)     |
-| **Commands**       | `docker …`                              | Largely the same, `podman …`                 |
-| **Compose**       | `docker compose` is fully integrated    | Possible, but with more quirks            |
-| **Distribution**   | Standard in almost all instructions      | Especially with Fedora, RHEL, and others.            |
+| **Architecture**  | A background service (daemon) manages all containers | No central daemon; each container is a normal process |
+| **Privileges**    | The daemon runs as root                 | Without root privileges by default (rootless) |
+| **Commands**      | `docker …`                              | Largely the same, `podman …`                  |
+| **Compose**       | `docker compose` is built in            | Possible, but with more quirks                |
+| **Adoption**      | Standard in almost all guides           | Mainly on Fedora, RHEL and similar            |
 
-Podman is technically interesting and built with security in mind. For beginners, however, this site still recommends Docker: Almost every tutorial and Compose file you’ll find online is based on Docker. If something doesn’t work, you’ll find help faster with Docker.
+Podman is technically interesting and built with security in mind. For getting started, this site still recommends Docker: almost every guide and every Compose file you find on the web assumes Docker. If something doesn't work, you'll find help faster with Docker.
 
-<Callout title="Anyone in the &quot;docker&quot; group has root privileges">
-The Docker daemon runs as root. Anyone who is allowed to execute Docker commands can do practically anything on the server. Therefore, only `docker`add users to the group to whom you would also grant`sudo` root privileges.
+<Callout title="Anyone in the docker group has root privileges">
+The Docker daemon runs as root. Whoever may run Docker commands can do practically anything on the server with them. So only add users to the `docker` group whom you'd also give `sudo`.
 </Callout>
 
-## Read more
+## Further reading
 
-- [Official Introduction to Docker](https://docs.docker.com/get-started/docker-overview/)
-- [Images & Tags](/en/wiki/images-tags/): Which version of an image you get
-- [Installing Docker](/en/setup/installing-docker/): Docker Engine and Compose Plugin on Debian or Ubuntu
+- [Official introduction to Docker](https://docs.docker.com/get-started/docker-overview/)
+- [Images & tags](/en/wiki/images-tags/): which version of an image you get
+- [Installing Docker](/en/setup/installing-docker/): Docker Engine and the Compose plugin on Debian or Ubuntu
