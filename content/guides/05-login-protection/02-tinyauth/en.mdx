@@ -1,77 +1,55 @@
 ---
-title: Enable Tinyauth before using the services
-description: Ultimately, Tinyauth runs as a login page under its own subdomain, and Traefik only allows requests to selected services to go through after a successful login—optionally via a passkey using Pocket ID.
+title: "Putting Tinyauth in front of services"
+description: "In the end, Tinyauth runs as a login page on its own subdomain, and Traefik only lets requests to selected services through after a successful login, optionally with a passkey via Pocket ID."
 level: 2
 minutes: 15
-requires:
-  - Reverse Proxy with Traefik
-  - Domain
-services:
-  - tinyauth
-  - traefik
+requires: [Reverse proxy with Traefik, Domain]
+services: [tinyauth, traefik]
 ---
 
-Not every service has its own login. The Traefik dashboard, a file browser, or a small statistics tool are open to anyone on the Internet without protection as soon as they have a public subdomain. Other services do have a login, but it’s not one you’d want to trust.
+Not every service has a login of its own. The Traefik dashboard, a file browser or a small statistics tool are open to anyone on the internet as soon as they have a public subdomain. Other services do have a login, but not one you'd want to trust.
 
-Tinyauth solves this with **Forward Auth**. With this method, the reverse proxy checks with Tinyauth before every request: "Is this visitor logged in?" If yes, the request goes to the service. If no, the proxy redirects to Tinyauth's login page. The service itself is unaware of this. In Traefik, Forward Auth is a **middleware**—that is, an intermediate step that you can attach to any service using a label.
-
-<Callout title="Note the version">
-The template on this page uses Tinyauth **v3**. The current documentation on [tinyauth.app](https://tinyauth.app/docs) describes newer versions in which the variable names have changed. The commands and variables in this guide are specific to v3.
-</Callout>
+Tinyauth solves this with **forward auth**. Before every request, the reverse proxy asks Tinyauth: "Is this visitor logged in?" If yes, the request goes to the service. If not, the proxy redirects to Tinyauth's login page. The service itself notices nothing. In Traefik, forward auth is a **middleware**, an intermediate step you attach to any service with a label.
 
 <Steps>
 
-<Step title="Create a secret">
-Tinyauth encrypts its session cookies using a secret. Tinyauth v3 requires **exactly 32 characters** for this; otherwise, it won't start. Here's how to generate a suitable random value:
-
-```bash
-openssl rand -hex 16
-```
-
-In the next step, enter`.env` the value as  `TINYAUTH_SECRET`in the  field. The  field `.env`below already contains a suitable random value consisting of 32 characters, which you can simply copy.
-</Step>
-
 <Step title="Create a user">
-A Tinyauth user consists of a username and a **bcrypt hash** of the password. A hash is a one-way conversion: Tinyauth can use it to verify whether a password is correct, but no one can use it to recover the password.
+A Tinyauth user consists of a user name and a **bcrypt hash** of the password. A hash is a one-way conversion: Tinyauth can use it to check whether a password is right, but nobody can calculate the password back from it.
 
-You can generate the hash using `htpasswd`. The program is included in the package `apache2-utils`:
+The easiest way is to let Tinyauth create the user itself:
 
 ```bash
-sudo apt install apache2-utils
-htpasswd -nB admin
+docker run -it --rm ghcr.io/tinyauthapp/tinyauth:v5 user create --interactive
 ```
 
-`htpasswd` It asks for the password twice and then displays`admin:$2y$05$...` a line like . This entire line is your username. Separate multiple usernames with commas.
+The command asks for a user name and password and prints a line like `admin:$2a$10$...`. That whole line is your user. Answer **No** to the question about the Docker format, because in the next step single quotes protect the hash. Separate several users with commas.
 
-Alternatively, Tinyauth generates the user itself: `docker run --rm -it ghcr.io/steveiliop56/tinyauth:v3 user create --interactive`. Do **not** select the Docker format here, because in the next step, single quotes will protect the hash.
-
-You can use the [Password Hash](/en/werkzeuge/passwort-hash/) tool without installing anything. It calculates the hash directly in your browser and provides you with the completed line for the `.env`.
+Without Docker, use the [password hash](/en/tools/password-hash/) tool. It calculates the hash right in your browser and gives you the finished line for the `.env`.
 </Step>
 
-<Step title="Write the `compose.yaml` and `.env` files">
-Tinyauth runs on `login.__DOMAIN__`. It sets its login cookie for the entire domain `__DOMAIN__`. Therefore, all services you want to protect must be subdomains of the same domain.
+<Step title="Write compose.yaml and .env">
+Tinyauth runs at `login.__DOMAIN__`. It sets its login cookie for the whole domain `__DOMAIN__`. That's why all services you want to protect must be subdomains of the same domain.
 
 <ServiceFiles id="tinyauth" />
 
-Enter the`.env` secret from Step 1 into the . Enclose the user from Step 2 in **single quotes**. Otherwise, Docker Compose will treat the - `$`characters in the hash as variables and corrupt it:
+Put the user from step 1 into the `.env`, in **single quotes**. Otherwise Docker Compose treats the `$` signs in the hash as variables and destroys it:
 
 ```bash
-TINYAUTH_SECRET=DEIN_32_ZEICHEN_SECRET
-TINYAUTH_USERS='admin:$2y$05$...'
+TINYAUTH_USERS='admin:$2a$10$...'
 ```
 
-Then add the following `compose.yaml`to `labels`the definition of the middleware. It tells Traefik where to look:
+With Traefik, the `compose.yaml` already contains the definition of the `tinyauth` middleware. It tells Traefik where to ask before each request:
 
 ```yaml
       - traefik.http.middlewares.tinyauth.forwardauth.address=http://tinyauth:3000/api/auth/traefik
 ```
 
-Traefik reaches Tinyauth over the shared network directly`__NETWORK__` using the container name, which is why it appears here `http://`instead of a public hostname.
+Traefik reaches Tinyauth directly by its container name through the shared `__NETWORK__` network, which is why this says `http://` and not a public host name.
 
-Optional, but recommended: If you set  to`- COOKIE_SECURE=true`  , the browser will only send`environment` the login cookie over HTTPS.
+Two more settings are already in place: `TINYAUTH_AUTH_SECURECOOKIE=true` only sends the login cookie over HTTPS, and `TINYAUTH_AUTH_TRUSTEDPROXIES` lets Tinyauth see your visitors' real IP. Since version 4 you no longer need a secret; Tinyauth stores its sessions in a small database under `data/`.
 </Step>
 
-<Step title="Start and Test Login">
+<Step title="Start and test the login">
 
 ```bash
 cd __ROOT__/tinyauth
@@ -79,72 +57,82 @@ docker compose up -d
 docker compose logs -f tinyauth
 ```
 
-Open it and`https://login.__DOMAIN__` log in with your username. If that works, Tinyauth is running. However, nothing is secure yet. If the container keeps restarting, it's often because the secret isn't exactly 32 characters long; see also "[Container in a Restart Loop](/en/wiki/restart-loop/)."
+Open `https://login.__DOMAIN__` and log in with your user. If that works, Tinyauth is running. But nothing is protected yet. If Tinyauth rejects your password, the hash in the `.env` is usually damaged: check the single quotes. If the container keeps restarting, [Container in a restart loop](/en/wiki/restart-loop/) helps.
 </Step>
 
-<Step title="Protecting a Service">
-Now connect the middleware to a service's router. On this page, routers are named after the service—for example, "Kuma" for`traefik.http.routers.uptime-kuma` Uptime. Add a`compose.yaml` label to it:
+<Step title="Protect a service">
+Now attach the middleware to a service's router. On this site, routers are named like the service, e.g. `traefik.http.routers.uptime-kuma` for Uptime Kuma. Add a label to its `compose.yaml`:
 
 ```yaml
       - traefik.http.routers.uptime-kuma.middlewares=tinyauth
 ```
 
-A good first destination is the Traefik dashboard. Its router is called `dashboard`. In , add the following to`__ROOT__/traefik/compose.yaml` the labels:
+A good first target is the Traefik dashboard. Its router is called `dashboard`. `__ROOT__/traefik/compose.yaml` already contains a middleware that only lets the home network through. Replace these two lines:
+
+```yaml
+      - traefik.http.middlewares.dashboard-lan.ipallowlist.sourcerange=10.0.0.0/8,192.168.0.0/16
+      - traefik.http.routers.dashboard.middlewares=dashboard-lan
+```
+
+with:
 
 ```yaml
       - traefik.http.routers.dashboard.middlewares=tinyauth
 ```
 
-Then restart the respective stack so that Traefik can read the labels:
+A router has only one `middlewares` line. If you want several middlewares, separate them there with commas, e.g. `dashboard-lan,tinyauth` for "home network only **and** login". The same goes for services like Dockhand and Homepage, which the templates restrict to the home network by default.
+
+Then restart the stack so Traefik reads the labels:
 
 ```bash
 cd __ROOT__/traefik
 docker compose up -d
 ```
 
-Open the dashboard in a private browser window. You should first go`login.__DOMAIN__` to  and be redirected after logging in.
+Open the dashboard in a private browser window. You should land on `login.__DOMAIN__` first and be sent back after logging in.
 
-<Callout type="warning" title="Don't turn everything on">
-Mobile apps (e.g., Nextcloud, Immich, Vaultwarden) communicate directly with the service's API and cannot display a login page. Only use Tinyauth for services you access in a browser or for those that don't have their own login page.
+<Callout type="warning" title="Don't put it in front of everything">
+Phone apps (e.g. Nextcloud, Immich, Vaultwarden) talk directly to the service's API and can't show a login page. Only put Tinyauth in front of services you use in the browser, or in front of those without a login of their own.
 </Callout>
 </Step>
 
-<Step title="Pocket ID as a login method (optional)">
-Instead of using a password, you can also log in to Tinyauth using a passkey via [Pocket ID](/en/setup/pocket-id/). To do this, Tinyauth communicates with Pocket ID through its "generic" OAuth provider.
+<Step title="Pocket ID as a sign-in method (optional)">
+Instead of a password, you can also sign in to Tinyauth with a passkey through [Pocket ID](/en/setup/pocket-id/).
 
-Create an OIDC client in Pocket ID, for example, with the name `Tinyauth`, and this callback URL:
+In Pocket ID, create an OIDC client, e.g. named `Tinyauth`, with this callback URL:
 
 ```text
-https://login.__DOMAIN__/api/oauth/callback/generic
+https://login.__DOMAIN__/api/oauth/callback/pocketid
 ```
 
-Enter the client ID and secret into the Tinyauth `.env`fields:
+Put the client ID and secret into Tinyauth's `.env`:
 
 ```bash
 POCKET_ID_CLIENT_ID=DEINE_CLIENT_ID
 POCKET_ID_CLIENT_SECRET=DEIN_CLIENT_SECRET
 ```
 
-And add the following under`compose.yaml` `environment`:
+And add this under `environment` in the `compose.yaml`:
 
 ```yaml
-      - GENERIC_CLIENT_ID=${POCKET_ID_CLIENT_ID}
-      - GENERIC_CLIENT_SECRET=${POCKET_ID_CLIENT_SECRET}
-      - GENERIC_AUTH_URL=https://id.__DOMAIN__/authorize
-      - GENERIC_TOKEN_URL=https://id.__DOMAIN__/api/oidc/token
-      - GENERIC_USER_URL=https://id.__DOMAIN__/api/oidc/userinfo
-      - GENERIC_SCOPES=openid email profile groups
-      - GENERIC_NAME=Pocket ID
-      - OAUTH_WHITELIST=DEINE_EMAIL_IN_POCKET_ID
+      - TINYAUTH_OAUTH_PROVIDERS_POCKETID_CLIENTID=${POCKET_ID_CLIENT_ID}
+      - TINYAUTH_OAUTH_PROVIDERS_POCKETID_CLIENTSECRET=${POCKET_ID_CLIENT_SECRET}
+      - TINYAUTH_OAUTH_PROVIDERS_POCKETID_AUTHURL=https://id.__DOMAIN__/authorize
+      - TINYAUTH_OAUTH_PROVIDERS_POCKETID_TOKENURL=https://id.__DOMAIN__/api/oidc/token
+      - TINYAUTH_OAUTH_PROVIDERS_POCKETID_USERINFOURL=https://id.__DOMAIN__/api/oidc/userinfo
+      - TINYAUTH_OAUTH_PROVIDERS_POCKETID_REDIRECTURL=https://login.__DOMAIN__/api/oauth/callback/pocketid
+      - TINYAUTH_OAUTH_PROVIDERS_POCKETID_SCOPES=openid email profile groups
+      - TINYAUTH_OAUTH_PROVIDERS_POCKETID_NAME=Pocket ID
+      - TINYAUTH_OAUTH_WHITELIST=DEINE_EMAIL_IN_POCKET_ID
 ```
 
-`OAUTH_WHITELIST` Important: Enter the email address for your Pocket ID account there. Without this line, anyone with a Pocket ID account can log in. Separate multiple email addresses with commas.
+Replace the uppercase placeholders with your values. `TINYAUTH_OAUTH_WHITELIST` is important: enter the email address of your Pocket ID account there. Without this line, anyone with an account in Pocket ID may sign in. Separate several email addresses with commas. If Tinyauth should redirect straight to Pocket ID without its own login page, add `TINYAUTH_OAUTH_AUTOREDIRECT=pocketid`.
 
-After that, the login page displays`docker compose up -d` an additional "Pocket ID" button. Details can be found in [Tinyauth's Pocket ID Guide](https://tinyauth.app/docs/guides/pocket-id).
+After `docker compose up -d`, the login page shows an additional "Pocket ID" button. Details are in [Tinyauth's Pocket ID guide](https://tinyauth.app/docs/guides/pocket-id).
 </Step>
 
 </Steps>
 
 ## With Nginx Proxy Manager
 
-Tinyauth also works with Nginx Proxy Manager, just without labels. There, for each protected proxy host, you enter a configuration block in the **Advanced** tab that forwards every request to`auth_request` Tinyauth via . For Tinyauth’s own proxy host, **the “Common Exploits” block** must be disabled; otherwise, NPM will block the redirect back to the service. The complete configuration is available in the [Tinyauth documentation for Nginx Proxy Manager](https://tinyauth.app/docs/guides/nginx-proxy-manager).
+Tinyauth also works with Nginx Proxy Manager, just without labels. There, for every protected proxy host, you add a configuration block in the **Advanced** tab that passes each request to Tinyauth with `auth_request`. On Tinyauth's own proxy host, **Block Common Exploits** must be turned off, otherwise NPM blocks the redirect back to the service. The complete configuration is in the [Tinyauth docs for Nginx Proxy Manager](https://tinyauth.app/docs/guides/nginx-proxy-manager).

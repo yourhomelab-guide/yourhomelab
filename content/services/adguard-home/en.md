@@ -1,8 +1,9 @@
 ---
-description: A DNS server that blocks ads and trackers for all devices on the home network.
+description: "A DNS server that blocks ads and trackers for every device on your home network."
 notes:
-  - Port 53 must be open on the server. On Ubuntu, it is occupied by systemd-resolved, so you'll need to stop it first.
-  - In the setup wizard, set the web interface to port 3000 (all interfaces). That way, it will remain where the reverse proxy expects it to be.
-  - Never open Port 53 on your router. An open DNS server on the Internet can quickly be exploited for attacks.
-  - If the server is down, DNS will no longer work on your home network. Plan to set up a second DNS server or a fallback.
+  - "Finish the setup wizard right after the first start. Until then, anyone who can reach the page can set up AdGuard Home."
+  - "Port 53 must be free on the server. On Ubuntu, systemd-resolved uses it, so turn that off first."
+  - "In the setup wizard, set the web interface to port 3000 (all interfaces). That way it stays where the reverse proxy expects it."
+  - "Never forward port 53 on your router. An open DNS server on the internet gets abused for attacks quickly."
+  - "If the server is off, DNS stops working on your home network. Plan a second DNS server or a fallback."
 ---

@@ -1,45 +1,41 @@
 ---
-title: Git Deployments with Forgejo
-description: In the end, all Compose files are stored in a private Git repository in your own Forgejo. You edit them on your computer, push the changes, and the server fetches the changes via a script and restarts the affected stacks.
+title: "Git deployments with Forgejo"
+description: "In the end, all Compose files live as a private Git repository in your own Forgejo. You change them on your computer and push, and the server pulls the changes with a script and restarts the affected stacks."
 level: 3
 minutes: 45
-requires:
-  - Docker Compose
-  - Reverse Proxy with Domain
-  - Basic Knowledge of Git
-services:
-  - forgejo
+requires: [Docker Compose, Reverse proxy with domain, Basic Git knowledge]
+services: [forgejo]
 ---
 
-As long as you edit your `compose.yaml`files directly on the server, there's no version history. If an update breaks something, you won't know what the file looked like before. With Git, you get three things:
+As long as you edit your `compose.yaml` files directly on the server, there's no history. When an update breaks something, you no longer know what the file looked like before. With Git you get three things:
 
-- **History:** Each change is a commit with a date and description. Use a command to go back.
-- **A place for the truth:** You edit files on your computer using your editor, not via SSH with `nano`.
-- **Automation:** Tools like [Renovate](/en/setup/updates-renovate/) can suggest updates to you as pull requests.
+- **History:** every change is a commit with a date and a description. Going back takes one command.
+- **One source of truth:** you edit files on your computer in your editor, not with `nano` over SSH.
+- **Automation:** optionally, [Renovate](/en/setup/updates-renovate/) suggests new versions to you as pull requests.
 
-The repository is hosted on **Forgejo**, a lightweight Git platform that you host yourself. This way, your configurations don't end up with a third-party provider.
+The repository lives in **Forgejo**, a lean Git platform you host yourself. That way your configurations don't end up at a third-party provider.
 
 <OneWay />
 
-## Which folder will be used as the repository?
+## Which folder becomes the repository?
 
-The repository should contain the Compose files, not the data or the secrets. How this looks depends on your [directory structure](/en/wiki/directory-structure/):
+The repository holds the Compose files, not the data and not the secrets. What that looks like depends on your [directory structure](/en/wiki/directory-structure/):
 
-- **Per stack (default):**  `__ROOT__`becomes the repository. You can exclude`.gitignore` the folders  `data/`and the `.env`files using .
-- **Central:** Here, configuration and data are already separated. The repository is the `stack` folder`__ROOT__`; the data is stored separately in ```__DATA_ROOT__`. This works particularly well with Git because there are no large files in the repository folder. The `.git/exclude` file then just needs`.gitignore` to exclude the `.` `.env`files.
+- **Per stack (default):** `__ROOT__` becomes the repository. You exclude the `data/` folders and the `.env` files with a `.gitignore`.
+- **Central:** here configuration and data are already separate. The repository is the stack folder `__ROOT__`, and the data lives outside it under `__DATA_ROOT__`. That suits Git especially well, because nothing big sits in the repo folder. The `.gitignore` then only has to exclude the `.env` files.
 
-The commands below work for both versions.
+The commands below work for both variants.
 
-<Callout type="warning" title="No Secrets in the Repository">
-These `.env`files contain passwords and tokens. They should never be included in a Git repository—not even a private one. Once something is committed, it remains in the history forever. Instead, commit a file with`.env.example` placeholders so you know which variables a stack needs.
+<Callout type="warning" title="No secrets in the repository">
+The `.env` files contain passwords and tokens. They never belong in a Git repository, not even a private one. Whatever is committed once stays in the history forever. Commit a `.env.example` with placeholders instead, so you know which variables a stack needs.
 </Callout>
 
-## Set Up
+## Setting it up
 
 <Steps>
 
 <Step title="Install Forgejo">
-Like any other service, Forgejo runs as a stack. Git over SSH uses port 2222 so that it doesn't conflict with the server's SSH access.
+Forgejo runs as a stack like any other service. Git over SSH uses port 2222 so it doesn't clash with the server's own SSH access.
 
 ```bash
 mkdir -p __ROOT__/forgejo __DATA(forgejo)__
@@ -52,24 +48,24 @@ cd __ROOT__/forgejo
 docker compose up -d
 ```
 
-Then open it`https://git.__DOMAIN__`. The first time you launch it, Forgejo displays the initial configuration:
+Then open `https://git.__DOMAIN__`. On first access, Forgejo shows the initial configuration:
 
-- Database: **SQLite** is more than enough for a home lab.
-- Server domain`git.__DOMAIN__`, base URL`https://git.__DOMAIN__/`, SSH port **2222**.
-- **Disable self-registration** in the optional settings. Otherwise, anyone can create an account.
+- Database: **SQLite** is perfectly fine for a homelab.
+- Server domain `git.__DOMAIN__`, base URL `https://git.__DOMAIN__/`, SSH port **2222**.
+- In the optional settings, **disable self-registration**. Otherwise anyone can create an account.
 - Create your admin account there as well.
 
-Port 2222 must be accessible on your home network. You don't need to forward this port on your router.
+Do this right after the first start: until then, anyone who can reach the page can complete the installation. Port 2222 must be reachable on your home network. You don't need port forwarding on the router for it.
 </Step>
 
-<Step title="Create a repository in Forgejo">
-In Forgejo, click the **+** icon in the upper-right corner → **New Repository**. Enter a name (for example)`homelab`, set visibility **to private**. Leave the repository empty: no README, no files`.gitignore`, no license. The files will come directly from the server.
+<Step title="Create the repository in Forgejo">
+In Forgejo, click **+** → **New Repository** at the top right. Name it `homelab`, for example, with visibility **private**. Leave the repository empty: no README, no `.gitignore`, no license. The files will come from the server in a moment.
 
-In the commands below,  stands `DEIN-NAME`for your Forgejo username.
+In the commands below, `DEIN-NAME` stands for your Forgejo user name.
 </Step>
 
-<Step title="Write a .gitignore file">
-This file specifies`.gitignore` what Git ignores. It comes right after `__ROOT__`.
+<Step title="Write the .gitignore">
+The `.gitignore` defines what Git ignores. It goes directly into `__ROOT__`.
 
 ```bash
 cd __ROOT__
@@ -83,13 +79,13 @@ data/
 EOF
 ```
 
-`data/` Without a leading slash, this matches any folder with that name—such as `traefik/data/`,  and`vaultwarden/data/` so on. This also excludes Forgejo's own data.
+`data/` without a leading slash matches every folder with that name, so `traefik/data/`, `vaultwarden/data/` and so on. That also excludes Forgejo's own data.
 
-For each stack with , create`.env``.env.example` a : the same variables, but without actual values.
+For every stack with a `.env`, create a `.env.example`: the same variables, but without real values.
 </Step>
 
-<Step title="Create a repository and push">
-Set up Git with your name and create the repository. Before making your first commit`git status`, use to verify that neither `.env`nor `data/`folder appears in the list.
+<Step title="Create the repository and push">
+Set up Git once with your name and create the repository. Before the first commit, check with `git status` that no `.env` and no `data/` folder shows up in the list.
 
 ```bash
 git config --global user.name "Dein Name"
@@ -102,26 +98,26 @@ git status
 git commit -m "Initial import"
 ```
 
-To make your first push, use HTTPS and enter your Forgejo username and password:
+Use your own name in the first line. Do the first push over HTTPS with your Forgejo user name and password:
 
 ```bash
 git push https://git.__DOMAIN__/DEIN-NAME/homelab.git main
 ```
 
-After that, you'll see all the Compose files in the Forgejo web interface.
+Afterwards you'll see all Compose files in Forgejo's web interface.
 </Step>
 
-<Step title="The server is assigned a deploy key">
-From now on, the server should only **have read access**. To that end, it will be assigned its own SSH key, known as a "deploy key." This key is valid only for this one repository.
+<Step title="Give the server a deploy key">
+From now on, the server should only **read**. For that, it gets an SSH key of its own, a so-called deploy key. It only works for this one repository.
 
 ```bash
 ssh-keygen -t ed25519 -f ~/.ssh/forgejo_deploy -N "" -C "homelab-server"
 cat ~/.ssh/forgejo_deploy.pub
 ```
 
-Copy the line that appears. In Forgejo: Repository → **Settings** → **Deploy Keys** → **Add Deploy Key**. Do not check the "Write access" box.
+Copy the printed line. In Forgejo: repository → **Settings** → **Deploy Keys** → **Add Deploy Key**. Don't check write access.
 
-Because Forgejo runs on the same server, the server connects directly via `localhost`. This bypasses DNS and routers. To do this, add`~/.ssh/config` an entry to :
+Because Forgejo runs on the same server, the server connects directly through `localhost`. That bypasses DNS and the router. Add an entry to `~/.ssh/config` for it:
 
 ```bash
 cat >> ~/.ssh/config <<'EOF'
@@ -134,7 +130,7 @@ Host forgejo-local
 EOF
 ```
 
-Now link the local repository to Forgejo:
+Now link the local repository with Forgejo:
 
 ```bash
 cd __ROOT__
@@ -144,23 +140,23 @@ git branch --set-upstream-to=origin/main main
 git pull
 ```
 
-The first time you connect, SSH will ask if you trust the host. Reply with `yes`.  It `git pull`should display "Already up to date."
+On the first connection, SSH asks whether you trust the host. Answer `yes`. `git pull` should report "Already up to date".
 </Step>
 
 <Step title="Clone on your computer">
-On your laptop or PC, save your regular public SSH key in Forgejo: top right → **Settings** → **SSH/GPG Keys**. Then clone the repository:
+On your laptop or PC, add your regular public SSH key in Forgejo: top right → **Settings** → **SSH / GPG Keys**. Then clone the repository:
 
 ```bash
 git clone ssh://git@git.__DOMAIN__:2222/DEIN-NAME/homelab.git
 ```
 
-From now on, here’s what you do: Make changes here, commit them, and push them. You no longer edit the Compose files directly on the server; otherwise, conflicts will arise the next time you `git pull`. You’ll continue to maintain only the `.env`files on the server. To create a new stack, create a folder for it in the repository. The [Stack Builder](/en/werkzeuge/stack-builder/) will generate`compose.yaml` the appropriate one for you, and the [Compose Explainer](/en/werkzeuge/compose-erklaerer/) will walk you through a third-party one from a project documentation.
+From now on: you make changes here, commit and push them. You no longer edit the Compose files directly on the server, otherwise you'll get conflicts on the next `git pull`. Only the `.env` files are still maintained on the server. You create a new stack as a folder in the repository. The [stack builder](/en/tools/stack-builder/) generates the matching `compose.yaml`, and the [Compose explainer](/en/tools/compose-explainer/) explains someone else's from a project's docs.
 </Step>
 
-<Step title="Deployment script on the server">
-In the simplest case, the deployment is just  `git pull`and then  `docker compose up -d`in each stack folder.  `up -d`is harmless for stacks that haven't changed: Docker leaves containers whose configuration has remained the same alone and only recreates the ones that have changed.
+<Step title="Deploy script on the server">
+In the simplest case, the deployment is just `git pull` followed by `docker compose up -d` in every stack folder. `up -d` is harmless for stacks without changes: Docker leaves containers alone whose configuration stayed the same and only recreates changed ones.
 
-Create the script outside the repository so that it doesn't overwrite itself while it's running:
+Create the script outside the repository so it doesn't overwrite itself while it runs:
 
 ```bash
 mkdir -p ~/bin
@@ -183,17 +179,17 @@ EOF
 chmod +x ~/bin/homelab-deploy
 ```
 
-Try it out manually:
+Test it once by hand:
 
 ```bash
 ~/bin/homelab-deploy
 ```
 
-`--ff-only` Ensures that the script aborts instead of merging changes if someone has made direct changes on the server after all.  `--remove-orphans`Removes containers that you have deleted`compose.yaml` from a  . Stacks that are supposed to remain stopped have an empty file  placed in`.skip` their folder.
+`--ff-only` makes the script stop instead of mixing changes in case someone changed something directly on the server after all. `--remove-orphans` cleans up containers you deleted from a `compose.yaml`. Stacks that should stay stopped get an empty `.skip` file in their folder.
 </Step>
 
-<Step title="Perform regularly">
-To avoid having to connect to the server via SSH after a push, set the script to run regularly using cron. Open your crontab:
+<Step title="Run it regularly">
+So you don't have to SSH into the server after every push, let the script run regularly with cron. Open your crontab:
 
 ```bash
 crontab -e
@@ -205,21 +201,21 @@ and add this line. It checks for changes every 15 minutes:
 */15 * * * * $HOME/bin/homelab-deploy >> $HOME/homelab-deploy.log 2>&1
 ```
 
-From now on, here's your workflow: edit the file, commit, push, and wait a few minutes. You can see what happened in the log:
+From now on, your workflow is: change a file, commit, push, wait a few minutes. The log shows what happened:
 
 ```bash
 tail -n 50 ~/homelab-deploy.log
 ```
 </Step>
 
-<Step title="Advanced: Deploy Using Forgejo Actions">
-Instead of checking every 15 minutes, Forgejo can start the deployment immediately after each push. This is made possible by **Forgejo Actions**, a CI system similar to GitHub Actions. The jobs are executed by a separate program, the **Forgejo Runner**.
+<Step title="Advanced: deploy with Forgejo Actions">
+Instead of checking every 15 minutes, Forgejo can start the deployment right after each push. That's what **Forgejo Actions** is for, a CI system in the style of GitHub Actions. The jobs are run by a separate program, the **Forgejo Runner**.
 
-The general process:
+The rough steps:
 
-1. Enable actions for the repository in its settings.
-2. Install and register the Forgejo Runner on the server. To deploy on the same server, the Runner needs a label that runs jobs directly on the host instead of in a container (for example `homelab:host`). It will then run as your user, who is`docker` a member of the  group. The steps are outlined in the [Runner documentation](https://forgejo.org/docs/latest/admin/actions/runner-installation/).
-3. Add a workflow to the repository that calls the`main` script every time there's a push, for example`.forgejo/workflows/deploy.yaml`:
+1. Turn on Actions in the repository's settings.
+2. Install and register the Forgejo Runner on the server. For a deployment on the same server, the runner needs a label that runs jobs directly on the host instead of in a container (for example `homelab:host`). It then runs as your user, who is in the `docker` group. The steps are in the [runner documentation](https://forgejo.org/docs/latest/admin/actions/runner-installation/).
+3. Put a workflow into the repository that calls the script on every push to `main`, for example `.forgejo/workflows/deploy.yaml`:
 
 ```yaml
 on:
@@ -233,10 +229,10 @@ jobs:
       - run: ~/bin/homelab-deploy
 ```
 
-After that, you can delete the cron entry.
+Then you can remove the cron entry.
 
-<Callout type="warning" title="Runner with Host Access">
-A runner that runs directly on the host and has permission to control Docker effectively has root privileges. Therefore, register it only for your own repository—not for the entire instance—and do not allow external users to create workflows.
+<Callout type="warning" title="Runner with host access">
+A runner that runs directly on the host and may control Docker practically has root rights. So only register it for your own repository, not for the whole instance, and don't let other users create workflows.
 </Callout>
 </Step>
 
@@ -244,12 +240,12 @@ A runner that runs directly on the host and has permission to control Docker eff
 
 ## When something goes wrong
 
-- **`git pull` Stops with the message “Not possible to fast-forward”:** A file on the server has been modified that was also modified in the repository. Use  `git status`and  to see`git diff` which file it is. Apply the change to your repository on your computer and revert`git checkout -- <datei>` the file on the server using .
-- **An update failed:** `git revert`Undo the commit on your computer using  and push it. The next time the script runs, it will roll back to the old version.
-- **New stack won't start:** The `.env`. is probably missing. You'll need to create it manually on the server, for example from the `.env.example`. If that's not the problem, try [troubleshooting: first steps](/en/wiki/first-steps/).
+- **`git pull` stops with "Not possible to fast-forward":** a file was changed on the server that was also changed in the repository. `git status` and `git diff` show you what it is. Take the change over into your repository on your computer and reset the file on the server with `git checkout -- <file>`.
+- **An update is broken:** undo the commit on your computer with `git revert` and push. On the next run, the script rolls out the old version again.
+- **A new stack doesn't start:** the `.env` is probably missing. You create it by hand on the server, for example from the `.env.example`. If that's not it, [Troubleshooting: first steps](/en/wiki/first-steps/) helps.
 
-## Read more
+## Further reading
 
-- [Forgejo Documentation](https://forgejo.org/docs/latest/)
-- [Forgejo Actions for Administrators](https://forgejo.org/docs/latest/admin/actions/)
-- [Updates with Renovate](/en/setup/updates-renovate/): Updates as pull requests in this very repository
+- [Forgejo documentation](https://forgejo.org/docs/latest/)
+- [Forgejo Actions for administrators](https://forgejo.org/docs/latest/admin/actions/)
+- [Updates with Renovate](/en/setup/updates-renovate/): updates as pull requests in exactly this repository

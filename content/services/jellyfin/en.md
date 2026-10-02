@@ -1,7 +1,8 @@
 ---
-description: Your own media library for movies, TV shows, and music, with apps for your phone, TV, and browser.
+description: "Your own media library for movies, shows and music, with apps for your phone, TV and browser."
 notes:
-  - In the .env file, enter the folder containing your media under MEDIA_DIR. Jellyfin only reads from it; it does not write anything to it.
-  - An iGPU from Intel (Quick Sync) or AMD noticeably reduces the load on the CPU when converting videos. The block for this is commented out in the compose.yaml file.
-  - According to Cloudflare's Terms of Service, video streaming via a Cloudflare Tunnel is not permitted. To access the service from outside, use a reverse proxy with port forwarding or a VPN.
+  - "Finish the setup wizard right after the first start. Until then, anyone who can reach the page can create the admin account."
+  - "Put the folder with your media into MEDIA_DIR in the .env file. Jellyfin only reads it and never writes to it."
+  - "An Intel (Quick Sync) or AMD iGPU noticeably takes load off the CPU when converting videos. The block for it is commented out in compose.yaml."
+  - "Cloudflare's terms of service don't cover video streaming through a Cloudflare Tunnel. For access from outside, use a reverse proxy with port forwarding or a VPN."
 ---

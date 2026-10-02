@@ -1,89 +1,85 @@
 ---
-title: Paperless-ngx
-description: Ultimately, every letter, invoice, and contract ends up in Paperless-ngx as a searchable PDF—whether via scanner, network folder, or upload—automatically tagged with keywords and backed up with a database dump and export.
+title: "Paperless-ngx"
+description: "In the end, every letter, invoice and contract ends up as a searchable PDF in Paperless-ngx: via scanner, network folder or upload, tagged automatically and in your backup with a database dump and export."
 level: 2
 minutes: 45
-requires:
-  - Docker Compose
-  - Reverse Proxy
-  - Backups with borgmatic
-services:
-  - paperless-ngx
+requires: [Docker Compose, Reverse proxy, Backups with borgmatic]
+services: [paperless-ngx]
 ---
 
-Paperless-ngx is a document archive. You feed it a scan or a PDF, and it recognizes the text using **OCR** (Optical Character Recognition), creates a searchable version, and organizes the document by sender, type, and keywords. After that, you can find the utility bill from three years ago in seconds, instead of having to flip through folders on a shelf.
+Paperless-ngx is a document archive. You give it a scan or a PDF, it recognizes the text in it with **OCR** (optical character recognition, text recognition on images), creates a searchable version and sorts the document by sender, type and tags. Afterwards you find the utility bill from three years ago in seconds instead of leafing through binders on the shelf.
 
-Because Paperless quickly ends up containing very personal documents, a proper backup is essential from the very beginning. That is why it is the final step in this guide—and it is not optional.
+Because very personal papers quickly end up in Paperless, a clean backup belongs to it from the start. That's why it's the last step of this guide, and it isn't optional.
 
 <Steps>
 
-<Step title="Create a directory">
-Paperless consists of three containers: the application itself, a PostgreSQL database, and Redis (here in the compatible version Valkey) as a queue for tasks such as text recognition.
+<Step title="Create the folders">
+Paperless consists of three containers: the application itself, a PostgreSQL database and Redis (here in the compatible variant Valkey) as a queue for tasks like text recognition.
 
-There are two folders that are especially important for you:
+Two folders are especially important for you:
 
-- **consume**: the inbox. Anything that ends up here is imported by Paperless and then removed from the folder.
-- **export**: the export destination that you'll use later for the backup.
+- **consume**: the inbox. Paperless imports everything that lands here and then removes it from the folder.
+- **export**: the target for the export you'll use for the backup later.
 
-Before you start for the first time, create both as your user so you can enter data yourself:
+Create both as your user before the first start, so you can write into them yourself:
 
 ```bash
 mkdir -p __ROOT__/paperless-ngx __DATA(paperless-ngx)__/consume __DATA(paperless-ngx)__/export
 ```
 </Step>
 
-<Step title="Write the `compose.yaml` and `.env` files">
+<Step title="Write compose.yaml and .env">
 <ServiceFiles id="paperless-ngx" />
 
-A brief explanation of a few settings in the template:
+A few settings in the template, briefly explained:
 
-- `PAPERLESS_OCR_LANGUAGE=deu+eng` Recognizes German and English text. The image already supports both languages. Each additional language slows down text recognition, so only choose what you need.
-- `USERMAP_UID` and  `USERMAP_GID`specify the user ID that Paperless uses. Set it to your own (`id`it displays it), and then the files in  and`consume`  will belong to you as well`export`.
-- `PAPERLESS_URL` is the address you use to access Paperless. For security reasons, Paperless will then only accept requests sent to this address. If you try to access it using a different address, you'll receive a 400 error or a CSRF message when logging in.
-- `PAPERLESS_SECRET_KEY` Signs sessions. The value must remain secret and must not change after the first startup; otherwise, you'll be logged out everywhere.
+- `PAPERLESS_OCR_LANGUAGE=deu+eng` recognizes German and English text. The image ships with both languages. Every additional language makes text recognition slower, so only use what you need; for English documents only, `eng` is enough.
+- `USERMAP_UID` and `USERMAP_GID` define which user ID Paperless works with. Set them to your own (`id` shows it); then the files in `consume` and `export` belong to you as well.
+- `PAPERLESS_URL` is the address you open Paperless at. For security reasons, Paperless then only accepts requests to this address. If you open it under another address, you get an error 400 or a CSRF message when logging in.
+- `PAPERLESS_SECRET_KEY` signs sessions. The value must stay secret and must not change after the first start, otherwise you're logged out everywhere.
 </Step>
 
-<Step title="Get Started and Create an Admin Account">
+<Step title="Start and create the admin">
 ```bash
 cd __ROOT__/paperless-ngx
 docker compose up -d
 docker compose logs -f paperless-ngx
 ```
 
-When you start Paperless for the first time, it sets up the database. This takes one to two minutes. Once the log is quiet, create the first user. This user will be granted all permissions:
+On the first start, Paperless sets up the database. That takes a minute or two. As soon as the log calms down, create the first user. It gets all rights:
 
 ```bash
 docker compose exec paperless-ngx createsuperuser
 ```
 
-You'll be asked for your username, email address, and password. Then log in through your browser. You can create additional accounts—for example, for your partner—in the interface under "**Users & Groups**." Don't give them admin privileges if they're only supposed to upload documents.
+You'll be asked for a user name, email address and password. Then log in in the browser. You create more accounts, for your partner for example, in the interface under **Users & Groups**. Don't give them admin rights if they should only file documents.
 </Step>
 
-<Step title="Bring in documents">
-There are several ways you can combine as you like:
+<Step title="Get documents in">
+There are several ways, and you can combine them freely:
 
-- **Uploading in the browser:** Drag files onto the home page. You can do this on your phone, too—the camera acts as your scanner.
-- **"consume" folder:** Any file that ends`__DATA(paperless-ngx)__/consume` up in this folder is imported. This is the path for scanners and for anything that is supposed to happen automatically.
-- **Email:** Paperless can retrieve messages from an email account and import attachments. You can set this up under **"Email"** in the interface.
+- **Upload in the browser:** drag files onto the start page. That works on your phone too, where the camera becomes your scanner.
+- **consume folder:** every file that lands in `__DATA(paperless-ngx)__/consume` gets imported. That's the way for scanners and for everything that should happen automatically.
+- **Email:** Paperless can fetch a mailbox and import attachments. You set this up under **Mail** in the interface.
 
-Paperless processes PDFs, images such as JPG and PNG, and plain text files. For scanned documents, 300 dpi and grayscale are recommended. This is sufficient for good text recognition and keeps the file sizes small.
+Paperless processes PDFs, images like JPG and PNG, and plain text files. For scanned documents, 300 dpi and grayscale are worth it. That's enough for good text recognition and keeps the files small.
 
-During import, the original document remains unchanged. Paperless also creates an **archived PDF** containing the recognized text. You can then use the search bar at the top to find any word from your documents.
+On import, the original is kept unchanged. Next to it, Paperless creates an **archive PDF** with the recognized text. With the search field at the top, you can then find every word in your documents.
 </Step>
 
-<Step title="Connect the scanner and PC via Samba (optional)">
-Most network scanners and multifunction devices can scan directly to a Windows share (“Scan to SMB” or “Scan to Folder”). You can set up such a share using **Samba**, the Windows file-sharing service for Linux. Samba runs directly on the server here, not in the container.
+<Step title="Connect scanner and PC via Samba (optional)">
+Most network scanners and multifunction devices can scan directly into a Windows share ("Scan to SMB" or "Scan to Folder"). You provide such a share with **Samba**, the Windows file sharing service for Linux. Samba runs directly on the server here, not in the container.
 
 ```bash
 sudo apt install samba
 ```
 
-At the end, append a`/etc/samba/smb.conf` section for the inbox. Replace with`dein-benutzer` your Linux username:
+Append a section for the inbox at the end of `/etc/samba/smb.conf`. `__USER__` is your Linux user from "My setup":
 
 ```ini
 [paperless]
    path = __DATA(paperless-ngx)__/consume
-   valid users = dein-benutzer
+   valid users = __USER__
    writable = yes
    browseable = yes
    create mask = 0664
@@ -97,40 +93,40 @@ sudo smbpasswd -a $USER
 sudo systemctl restart smbd
 ```
 
-The firewall must allow Samba traffic from the home network, but not from the Internet:
+The firewall must let Samba through from the home network, but not from the internet:
 
 ```bash
 sudo ufw allow from 192.168.1.0/24 to any port 445 proto tcp
 ```
 
-Configure the network to suit your setup. Modern devices only need port 445. In the scanner, enter the destination along with`\\<Server-IP>\paperless` your username and Samba password. On your PC, open the same address in File Explorer and simply drag and drop your files into it.
+Adjust the network to yours. Current devices only need port 445. In the scanner, you then enter `\\<server-IP>\paperless` as the target, with the user and Samba password. On your PC, open the same address in Explorer and simply drag files in.
 
-<Callout title="Old Scanners and SMB1">
-Some older devices only support SMB1, an outdated and insecure version of the protocol. The latest version of Samba rightly disables it. In such cases, a firmware update or using “Scan to FTP” or “Scan to Email” is often a better option than re-enabling SMB1.
+<Callout title="Old scanners and SMB1">
+Some older devices only support SMB1, an outdated and insecure version of the protocol. Current Samba rightly turns it off. A firmware update, "Scan to FTP" or "Scan to Email" is then often the better way, instead of turning SMB1 back on.
 </Callout>
 </Step>
 
-<Step title="Organizing: Tags, Correspondents, Document Types">
-Paperless organizes documents based on three types of characteristics:
+<Step title="Get organized: tags, correspondents, document types">
+Paperless sorts documents with three kinds of attributes:
 
-| Characteristic | Example | Question |
+| Attribute | Example | Question |
 |---|---|---|
-| **Correspondent** | Municipal utilities, health insurance company, employer | Who sent it? |
-| **Document Type** | Invoice, Contract, Notice | What is it? |
-| **Day** | Taxes 2026, Car, Apartment | What is it part of? |
+| **Correspondent** | Utility company, health insurer, employer | Who is it from? |
+| **Document type** | Invoice, contract, notice | What is it? |
+| **Tag** | Taxes 2026, car, apartment | What does it belong to? |
 
-A document has one correspondent and one type, but any number of tags. Start by creating just a handful, and add more if you realize you're missing something when you're tagging it.
+A document has one correspondent and one type, but any number of tags. Only create a handful at first and add more when something is missing while filing.
 
-For automatic categorization, each attribute has its own **assignment algorithm**. The default setting, **“Automatic,”** learns from your previous categorizations. So if you manually sort the first twenty or thirty documents, Paperless will usually suggest the correct category on its own afterward. For cases with a clear attribute—such as a customer number—you can specify a fixed keyword instead. **Workflows** offer even more automation; for example, they can automatically tag all documents from the scanner with “Inbox.” You can find more information in the [Paperless user documentation](https://docs.paperless-ngx.com/usage/).
+For automatic assignment, every attribute has a **matching algorithm**. The default, **Auto**, learns from your previous assignments. So if you sort the first twenty or thirty documents by hand, Paperless will usually suggest the right thing itself afterwards. For cases with a clear marker, a customer number for example, you can set a fixed word instead. **Workflows** offer even more automation, for example giving every document from the scanner an "Inbox" tag. Everything else is in the [Paperless docs on usage](https://docs.paperless-ngx.com/usage/).
 </Step>
 
-<Step title="Backup: Database Dump and Export">
-For Paperless, you need two things in your backup:
+<Step title="Backup: database dump and export">
+For Paperless, you need two things in the backup:
 
-1. **A database dump.** It contains all the assignments, tags, and notes. The files in  alone`media` aren't enough, because without the database, they're just a bunch of PDFs.
-2. **An export using the `document_exporter`.** It saves all documents, along with a file containing`manifest.json` all metadata, to the folder`export`. This is the official, version-independent format that allows you to cleanly restore Paperless even on a new server or after a major update.
+1. **A dump of the database.** It holds all assignments, tags and notes. The files in `media` alone aren't enough, because without the database they're just a pile of PDFs.
+2. **An export with the `document_exporter`.** It writes all documents plus a `manifest.json` with all metadata into the `export` folder. That's the official, version-independent format you use to restore Paperless cleanly on a new server or after a big update.
 
-Borgmatic handles both of these tasks before every backup. If you've set up [backups with Borgmatic](/en/setup/backups-borgmatic/), add these lines to the `commands:`-block:
+borgmatic does both before every backup. If you've set up [Backups with borgmatic](/en/setup/backups-borgmatic/), add these lines to the `commands:` block:
 
 ```yaml
 commands:
@@ -143,12 +139,12 @@ commands:
           - docker compose -f __ROOT__/paperless-ngx/compose.yaml exec -T paperless-ngx document_exporter ../export --delete
 ```
 
-`../export` This is the path inside the container; it points to your folder`export`. The next time you run the exporter, it will only write new and modified files, and it will `--delete`remove files from deleted documents. If you already have a `commands:`-block, the lines from there will be included. If you’d rather set up the configuration with a few clicks, use the [borgmatic-configuration](/en/werkzeuge/borgmatic-konfiguration/) tool.
+`../export` is the path inside the container; it points to your `export` folder. Next time, the exporter only writes new and changed files, and `--delete` removes files of deleted documents. If you already have a `commands:` block, the lines go in there as well. If you'd rather click the configuration together, use the [borgmatic config](/en/tools/borgmatic-config/) tool.
 
-After that, check with  `sudo borgmatic config validate`and run a backup. If you then see  `paperless.sql`and a  `manifest.json`in your folders, everything is fine. To learn how to restore a dump and individual files, see "[Test Restore](/en/setup/testing-restores/)."
+Then check with `sudo borgmatic config validate` and run a backup once. If `paperless.sql` and a `manifest.json` are in your folders afterwards, everything fits. [Testing restores](/en/setup/testing-restores/) shows how to get back a dump and individual files.
 
-<Callout type="warning" title="Sensitive Data">
-Paperless contains bank statements, contracts, and copies of IDs. The backup must therefore be encrypted, which borgmatic handles. And Paperless itself shouldn't be accessible directly over the Internet: Use a [VPN](/en/setup/vpn-wireguard/) or, at the very least, set up [Tinyauth](/en/setup/tinyauth/) or [Pocket ID](/en/setup/pocket-id/) as an extra layer of security.
+<Callout type="warning" title="Sensitive data">
+Paperless holds bank statements, contracts and ID copies. So the backup must be encrypted, which borgmatic takes care of. And Paperless itself shouldn't hang openly on the internet: use a [VPN](/en/setup/vpn-wireguard/), or at least put [Tinyauth](/en/setup/tinyauth/) or [Pocket ID](/en/setup/pocket-id/) in front.
 </Callout>
 </Step>
 

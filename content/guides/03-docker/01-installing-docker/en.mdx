@@ -1,36 +1,33 @@
 ---
-title: Install Docker
-description: In the end, the Docker Engine and the Compose plugin from the official Docker repository will be running, and you'll start containers as a regular user without using `sudo`.
+title: "Installing Docker"
+description: "In the end, Docker Engine and the Compose plugin run from Docker's official repository, and you start containers as a regular user without sudo."
 level: 1
 minutes: 10
-requires:
-  - Debian or Ubuntu server
-  - SSH Access
-  - Users with sudo privileges
+requires: [Debian or Ubuntu server, SSH access, User with sudo rights]
 ---
 
-Docker is the foundation for all subsequent guides. Each service will eventually run as a container, as described in a `compose.yaml`. [The "What is Docker?"](/en/wiki/what-is-docker/) guide explains exactly what Docker is.
+Docker is the foundation for all further guides. Every service will run as a container, described in a `compose.yaml`. [What is Docker?](/en/wiki/what-is-docker/) explains what Docker is exactly.
 
 ## Why the official repository?
 
-There are several ways to install Docker. Debian and Ubuntu include their own packages (`docker.io`), and Ubuntu also offers a Snap package. Both are often older than the current version, and the Compose plugin is either missing or out of date. The Snap package also has limitations when accessing folders outside the home directory.
+There are several ways to install Docker. Debian and Ubuntu ship their own package (`docker.io`), and Ubuntu also offers a snap package. Both are often older than the current version, and the Compose plugin is missing or lags behind. The snap package also has restrictions when accessing folders outside the home directory.
 
-That's why you're using **Docker's official apt repository** here. You'll get the latest versions through regular package updates, including `docker compose`. The commands follow the official instructions for [Debian](https://docs.docker.com/engine/install/debian/) and [Ubuntu](https://docs.docker.com/engine/install/ubuntu/). If something doesn't work, check there to see if anything has changed.
+That's why you use **Docker's official apt repository** here. You get current versions through the regular package updates, including `docker compose`. The commands follow the official instructions for [Debian](https://docs.docker.com/engine/install/debian/) and [Ubuntu](https://docs.docker.com/engine/install/ubuntu/). If something doesn't work, check there whether anything has changed.
 
 <Steps>
 
-<Step title="Remove old or unknown packages">
-If a Docker version from the distribution is already installed, it will conflict with the official packages. This command removes it. On a fresh server, apt will simply report that the packages are not installed. That's fine.
+<Step title="Remove old or conflicting packages">
+If a Docker version from the distribution is already installed, it conflicts with the official packages. This command finds and removes them. On a fresh server it finds nothing, and apt at most reports that there's nothing to do. That's fine.
 
 ```bash
-for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove -y $pkg; done
+sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-doc docker-buildx podman-docker containerd runc 2>/dev/null | cut -f1)
 ```
 
-Existing images and containers under  `/var/lib/docker`will be preserved.
+Existing images and containers under `/var/lib/docker` are kept.
 </Step>
 
-<Step title="Retrieve the Docker signature key">
-Apt uses this key to verify that the packages actually come from Docker and haven't been altered along the way.
+<Step title="Get Docker's signing key">
+apt uses this key to check that the packages really come from Docker and weren't changed on the way.
 
 ```bash
 sudo apt-get update
@@ -40,11 +37,11 @@ sudo curl -fsSL "https://download.docker.com/linux/$(. /etc/os-release && echo "
 sudo chmod a+r /etc/apt/keyrings/docker.asc
 ```
 
-This part automatically engages`$(. /etc/os-release && echo "$ID")` or`debian` disengages`ubuntu`.
+The part `$(. /etc/os-release && echo "$ID")` fills in `debian` or `ubuntu` automatically.
 </Step>
 
-<Step title="Add a repository">
-Now tell apt where the Docker packages are located. The command automatically detects which version of Debian or Ubuntu you're using.
+<Step title="Add the repository">
+Now tell apt where the Docker packages are. The command detects by itself which Debian or Ubuntu version you're using.
 
 ```bash
 sudo tee /etc/apt/sources.list.d/docker.sources > /dev/null <<EOF
@@ -52,26 +49,27 @@ Types: deb
 URIs: https://download.docker.com/linux/$(. /etc/os-release && echo "$ID")
 Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
 Components: stable
+Architectures: $(dpkg --print-architecture)
 Signed-By: /etc/apt/keyrings/docker.asc
 EOF
 sudo apt-get update
 ```
 
-The output should`apt-get update` now include`download.docker.com` a line with .
+The output of `apt-get update` should now include a line with `download.docker.com`.
 
-<Callout title="For Debian and Ubuntu only">
-The commands read the identifier from `/etc/os-release`. On derivative distributions such as Linux Mint or Raspberry Pi OS, this doesn't always work. In that case, follow the appropriate instructions from the [official documentation](https://docs.docker.com/engine/install/).
+<Callout title="Debian and Ubuntu only">
+The commands read the ID from `/etc/os-release`. On derived distributions like Linux Mint or Raspberry Pi OS, it doesn't always fit. In that case, use the matching instructions from the [official docs](https://docs.docker.com/engine/install/).
 </Callout>
 </Step>
 
 <Step title="Install Docker and Compose">
-These packages include the Docker Engine (the service that runs containers), the command-line tool, and`docker` the Compose plugin.
+These packages bring the Docker Engine (the service that runs containers), the `docker` command-line tool and the Compose plugin.
 
 ```bash
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
-The Docker service starts immediately and will start at every boot from now on. Check it out:
+The Docker service starts right away and from now on at every boot. Check it:
 
 ```bash
 systemctl status docker --no-pager
@@ -79,43 +77,43 @@ docker --version
 docker compose version
 ```
 
-The last two commands still need to be run`sudo` here if they report a permission error. You'll fix that in the next step.
+The last two commands may still need `sudo` here if they report a permission error. You'll fix that in the next step.
 
-Make sure to`docker compose` use a space. This is the current plugin. You don't need the old standalone program with`docker-compose` a hyphen.
+Note `docker compose` with a space. That's the current plugin. You don't need the old standalone program `docker-compose` with a hyphen.
 </Step>
 
-<Step title="Add your user to the &quot;docker&quot; group">
-Without this step, you would have to type`sudo`  before every Docker command. Members of the  group are allowed`docker` to control the Docker service directly.
+<Step title="Add your user to the docker group">
+Without this step you'd have to put `sudo` in front of every Docker command. Members of the `docker` group may control the Docker service directly.
 
 ```bash
 sudo usermod -aG docker $USER
 ```
 
-The new group will take effect only after you log out`exit` and log back in via SSH. After that, `groups`the group will be displayed`docker`.
+The new group only applies after a new login. Log out with `exit` and back in over SSH. After that, `groups` shows the `docker` group.
 
-<Callout type="warning" title="The docker group has the same privileges as root">
-Anyone with Docker privileges can start a container that mounts the server's entire file system, allowing them to read and modify everything. Only add users to the group whom you would also grant sudo privileges to. You can find more information in the [official documentation](https://docs.docker.com/engine/security/#docker-daemon-attack-surface).
+<Callout type="warning" title="The docker group is as powerful as root">
+Anyone who can control Docker can start a container that mounts the server's complete file system, and so read and change everything. Only add users you'd also give sudo rights. You'll find background in the [official docs](https://docs.docker.com/engine/security/#docker-daemon-attack-surface).
 </Callout>
 </Step>
 
-<Step title="Test with &quot;hello-world&quot;">
-The image `hello-world`is a tiny test container. It displays a welcome message and then exits.
+<Step title="Test with hello-world">
+The `hello-world` image is a tiny test container. It prints a greeting and exits again.
 
 ```bash
 docker run --rm hello-world
 ```
 
-See`Hello from Docker!`, everything works: Docker downloaded the image, started a container, and you didn't need a `sudo`.  It `--rm`deletes the finished container right away.
+If you see `Hello from Docker!`, everything works: Docker downloaded the image, started a container, and you didn't need `sudo` for it. `--rm` deletes the stopped container right away.
 </Step>
 
 </Steps>
 
 ## Updates
 
-Docker is now available from a standard apt repository and is updated using `apt-update`sudo apt-get upgrade``, just like the rest of the system. If you have [automatic updates](/en/setup/automatic-updates/) set up, please note: By default, `unattended-upgrades` only installs updates from the distribution's sources, not from third-party repositories such as Docker's. So be sure to schedule a manual update from time to time:
+Docker now comes from a regular apt repository and is updated with `sudo apt-get upgrade`, just like the rest of the system. If you've set up [automatic updates](/en/setup/automatic-updates/), note: by default, unattended-upgrades only installs updates from the distribution's sources, not from third-party repositories like Docker's. So plan a manual update every now and then:
 
 ```bash
 sudo apt-get update && sudo apt-get upgrade
 ```
 
-Next up is the [directory structure](/en/setup/creating-the-directory-structure/). There, you specify where your stacks and their data are located.
+Next up is the [directory structure](/en/setup/creating-the-directory-structure/). There you decide where your stacks and their data live.

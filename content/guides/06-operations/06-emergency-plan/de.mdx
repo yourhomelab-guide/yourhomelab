@@ -270,7 +270,7 @@ Prüfe dann, ob der Name auf die richtige Adresse zeigt:
 dig +short vault.__DOMAIN__
 ```
 
-`dig` steckt im Paket `dnsutils` (`sudo apt install dnsutils`). Teste deine Dienste zum Schluss auch von außen, zum Beispiel mit dem Handy im Mobilfunknetz statt im WLAN.
+`dig` steckt im Paket `bind9-dnsutils` (`sudo apt install bind9-dnsutils`). Teste deine Dienste zum Schluss auch von außen, zum Beispiel mit dem Handy im Mobilfunknetz statt im WLAN.
 
 Die Zertifikate hat Traefik mit seinem Datenordner zurückbekommen, es muss also nichts neu anfordern. Klappt die Anforderung doch einmal nicht, starte Traefik nicht in einer Schleife neu. Let's Encrypt begrenzt, wie oft du Zertifikate anfordern darfst.
 </Step>

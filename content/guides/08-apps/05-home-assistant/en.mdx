@@ -1,56 +1,53 @@
 ---
-title: Home Assistant
-description: You decide whether Home Assistant runs as its own operating system in a VM or as a container alongside your other services. If you choose the container option, it will ultimately run on the host network behind your reverse proxy, with properly configured trusted proxies, and—if desired—with a Zigbee dongle.
+title: "Home Assistant"
+description: "You decide whether Home Assistant runs as its own operating system in a VM or as a container next to your other services. On the container path, it ends up running with host networking behind your reverse proxy, with correctly set trusted proxies and, if you like, a Zigbee stick."
 level: 2
 minutes: 45
-requires:
-  - Docker Compose
-  - Reverse Proxy
-  - Firewall with UFW
+requires: [Docker Compose, Reverse proxy, Firewall with UFW]
 ---
 
-[Home Assistant](https://www.home-assistant.io) is the hub for your smart home. It communicates with thousands of devices and services—from heating thermostats to power outlets to weather stations—and connects them through automations. Most of this happens locally, without going through a manufacturer’s cloud.
+[Home Assistant](https://www.home-assistant.io) is the hub of your smart home. It talks to thousands of devices and services, from radiator thermostats to smart plugs to weather stations, and connects them through automations. Most of it runs locally, without a detour through a manufacturer's cloud.
 
-Before you get started, you'll need to make a decision that doesn't come into play with other services: **how** to install Home Assistant.
+Before you start, there's a decision that doesn't come up with other services: **how** you install Home Assistant.
 
-## Home Assistant OS in a VM or container?
+## Home Assistant OS in a VM, or a container?
 
-Home Assistant is available in two officially supported versions:
+Home Assistant comes in two officially supported variants:
 
-- **Home Assistant OS (HAOS)** is a complete, lightweight operating system designed exclusively for Home Assistant. It automatically handles updates and backups and includes an app store for **apps** (formerly called “add-ons”). This lets you install apps like Zigbee2MQTT, an MQTT broker, or a code editor with a single click. On a Homelab server, HAOS runs in a **virtual machine**, for example on [Proxmox VE](/en/wiki/proxmox-ve/).
-- **Home Assistant Container** is simply the application as a Docker image. It fits perfectly with the approach this site takes: one instance`compose.yaml`, data stored locally`__ROOT__`, and updates via a new image. There are no apps for this. Anything you need—such as an MQTT broker—you run as a separate container alongside it.
+- **Home Assistant OS (HAOS)** is a complete, lean operating system just for Home Assistant. It takes care of updates and backups itself and comes with an app store, the **apps** (formerly called "add-ons"). With them, you install things like Zigbee2MQTT, an MQTT broker or a code editor with one click. On a homelab server, HAOS runs in a **virtual machine**, for example under [Proxmox VE](/en/wiki/proxmox-ve/).
+- **Home Assistant Container** is just the application as a Docker image. It fits exactly the path this site takes: a `compose.yaml`, data under `__ROOT__`, updates through a new image. In return, there are no apps. Whatever you need, an MQTT broker for example, you run as a separate container next to it.
 
 | | HAOS in a VM | Container |
 |---|---|---|
-| Updates | with a single click in the interface, including the operating system | New image tag, as with every stack |
-| Apps (Add-ons) | yes | No, additional services as separate containers |
-| Backup | Built-in, fully recoverable | Built-in for Home Assistant; additional services sold separately |
-| Resources | Your own VM, at least 2 GB of RAM, and 2 CPU cores | Runs in the background; usually requires a few hundred MB of RAM |
-| Requirement | Hypervisors such as Proxmox | Docker, which you already have |
-| Some features, such as Thread or Z-Wave | Fully set up via apps | set it up yourself |
+| Updates | with a click in the interface, including the operating system | new image tag, like any stack |
+| Apps (add-ons) | yes | no, extra services as separate containers |
+| Backup | built in, restorable as a whole | built in for Home Assistant, extra services separately |
+| Resources | its own VM, at least 2 GB RAM and 2 CPU cores | runs alongside, usually needs a few hundred MB of RAM |
+| Requirement | a hypervisor like Proxmox | Docker, which you already have |
+| Some features like Thread or Z-Wave | set up ready-made through apps | set up yourself |
 
-**My honest recommendation:** If your server runs on Proxmox or you're just getting started, use **HAOS in a VM**. This is the option recommended by the Home Assistant project. Most guides and forum posts are based on this setup, and updates require very little effort on your part. If, on the other hand, your server is a simple Linux system with Docker—as described in the guides on this site—and you don’t want to run a VM for it, the **container** is a good choice. You’ll have to do without the apps, but you’ll gain a unified operating environment for all services.
+**The honest recommendation:** if your server runs Proxmox or you're just starting out, use **HAOS in a VM**. It's the variant the Home Assistant project recommends. Most tutorials and forum posts assume it, and updates are little work. If, on the other hand, your server is a plain Linux with Docker, as in the guides on this site, and you don't want to run a VM for it, the **container** is a good choice. You give up the apps but gain a uniform way of running all services.
 
-For HAOS on Proxmox, download the KVM/Proxmox `qcow2`image from the [official guide](https://www.home-assistant.io/installation/alternative), import it as the hard drive for a new VM, and set the firmware to UEFI (OVMF). Home Assistant only starts with UEFI. From this guide, you’ll then only need the steps for the reverse proxy, the trusted proxies, and the USB drive. The proxy will then forward traffic to the VM’s IP address instead of []`host.docker.internal`, the UFW rules on the Docker server are no longer needed, and as the trusted proxy, enter the IP address of the server running your reverse proxy.
+For HAOS under Proxmox, download the `qcow2` image for KVM/Proxmox from the [official instructions](https://www.home-assistant.io/installation/alternative), import it as the disk of a new VM and set the firmware to UEFI (OVMF). Home Assistant only boots with UEFI. From this guide, you then only need the steps on the reverse proxy, the trusted proxies and the USB stick. The proxy then forwards to the VM's IP instead of `host.docker.internal`, the UFW rules on the Docker server don't apply, and as the trusted proxy you enter the IP of the server your reverse proxy runs on.
 
 The following steps describe the **container**.
 
 <Steps>
 
-<Step title="Why Host Network?">
-Normally, each container runs on its own Docker network, and only exposed ports are accessible. However, Home Assistant often finds devices on the home network on its own, for example via **mDNS** (devices register on the local network using their names) or **SSDP/UPnP**. This discovery process uses broadcast and multicast, which cannot leave a standard Docker network.
+<Step title="Why host networking?">
+Normally, every container sits in its own Docker network, and only published ports are reachable. But Home Assistant often finds devices on your home network by itself, for example through **mDNS** (devices announce themselves by name on the local network) or **SSDP/UPnP**. This discovery works with broadcast and multicast, and those don't get out of a normal Docker network.
 
-That's why Home Assistant runs with `network_mode: host`. The container then shares the network with the server itself. There is no port forwarding; Home Assistant listens directly on port  `8123`of the server.
+That's why Home Assistant runs with `network_mode: host`. The container then shares the network with the server itself. There's no port forwarding; Home Assistant listens directly on the server's port `8123`.
 
-This has two consequences:
+That has two consequences:
 
-- Home Assistant **cannot** be on your proxy network`__NETWORK__`. A container with a host network cannot be on any other network. The reverse proxy must therefore access Home Assistant via the server's address. The step on the reverse proxy shows you how to do this.
-- For Home Assistant, your **firewall** applies just as it does for any other program running directly on the server. The port is`8123` closed until you open it.
+- Home Assistant **can't** join your proxy network `__NETWORK__`. A container with host networking can't be in any other network. So the reverse proxy has to reach Home Assistant through the server's address. The step on the reverse proxy shows how.
+- Your **firewall** applies to Home Assistant like to any program running directly on the server. Port `8123` is closed until you open it.
 
-For this reason, there is no ready-made template for Home Assistant under "Services": The templates automatically connect each service to the proxy network, which doesn't work with the host network. So`compose.yaml` you'll have to write the template yourself.
+For this reason, there's no ready-made template for Home Assistant under services: the templates automatically put every service into the proxy network, which doesn't work with host networking. So you write the `compose.yaml` yourself.
 </Step>
 
-<Step title="Create a directory and a compose.yaml file">
+<Step title="Create the folder and compose.yaml">
 ```bash
 mkdir -p __ROOT__/home-assistant __DATA(home-assistant)__/config
 cd __ROOT__/home-assistant
@@ -76,39 +73,39 @@ services:
       - /run/dbus:/run/dbus:ro
 ```
 
-A new version of Home Assistant is released every month. The tag only `2026.9`includes this month's bug fixes. To upgrade to the next version, you need to manually change the tag, read the notes on breaking changes in [the](https://www.home-assistant.io/blog/categories/release-notes/) [release blog](https://www.home-assistant.io/blog/categories/release-notes/) beforehand, and restart. [Renovate](/en/setup/updates-renovate/) can automatically create a pull request for you.
+Home Assistant releases a new version every month. The `2026.9` tag only gets that month's bug fixes. For the jump to the next version, you change the tag deliberately, read the notes on breaking changes in the [release blog](https://www.home-assistant.io/blog/categories/release-notes/) first and restart. [Dockhand](/en/setup/portainer-dockhand/) shows you new tags as suggestions. If you keep your Compose files in Git, [Renovate](/en/setup/updates-renovate/) can optionally open a pull request for it.
 
-The official template also sets `privileged: true`. This gives the container almost full access to the server. You don't need this as long as you specifically grant access to individual devices, as shown in the step for the USB flash drive.
+The official template also sets `privileged: true`. That gives the container almost full access to the server. You don't need it as long as you pass through individual devices specifically, as shown in the step on the USB stick.
 </Step>
 
-<Step title="Open and Start the Firewall">
-To set it up for the first time, open port  `8123`for your home network. Customize the network to match yours:
+<Step title="Open the firewall and start">
+For the initial setup, open port `8123` for your home network. Adjust the network to yours:
 
 ```bash
 sudo ufw allow from 192.168.1.0/24 to any port 8123 proto tcp
 ```
 
-Then you start the container:
+Then start the container:
 
 ```bash
 docker compose up -d
 docker compose logs -f home-assistant
 ```
 
-In your browser`http://__SERVER_IP__:8123`, go to [your server's IP address]. A wizard will set up your account and ask for your location, time zone, and units. After that, Home Assistant will display the devices it has found on the network.
+In the browser, open `http://__SERVER_IP__:8123`, with your server's IP. A wizard creates your account (do this right away; until then, anyone on the network can create it) and asks for location, time zone and units. Afterwards, Home Assistant already shows the devices it found on the network.
 </Step>
 
-<Step title="Set Up a Reverse Proxy">
-For HTTPS and a clean URL, place Home Assistant behind your reverse proxy. Because it runs on the host network, the proxy needs a way to access the server itself. The following entry provides that`host.docker.internal:host-gateway`: It makes the server's address accessible`host.docker.internal` within the proxy container under the name .
+<Step title="Connect the reverse proxy">
+For HTTPS and a nice address, put Home Assistant behind your reverse proxy. Because it runs in the host network, the proxy needs a way to the server itself. The entry `host.docker.internal:host-gateway` gives you that: it makes the server's address reachable in the proxy container under the name `host.docker.internal`.
 
-**Traefik:** Add the following to `__ROOT__/traefik/compose.yaml`the service`traefik`:
+**Traefik:** add this to the `traefik` service in `__ROOT__/traefik/compose.yaml`:
 
 ```yaml
     extra_hosts:
       - host.docker.internal:host-gateway
 ```
 
-Then Home Assistant receives the  labels`compose.yaml`, but **not the** `networks:`. Traefik detects the host network and forwards `host.docker.internal`the request to :
+Then Home Assistant gets labels in its `compose.yaml`, but **no** `networks:`. Traefik detects the host network and forwards to `host.docker.internal`:
 
 ```yaml
     labels:
@@ -119,7 +116,7 @@ Then Home Assistant receives the  labels`compose.yaml`, but **not the** `network
       - traefik.http.services.home-assistant.loadbalancer.server.port=8123
 ```
 
-**Caddy:** Add the following as`extra_hosts` shown above and`__ROOT__/caddy/compose.yaml` redirect in the Caddyfile:
+**Caddy:** add `extra_hosts` as above in `__ROOT__/caddy/compose.yaml` and forward in the Caddyfile:
 
 ```
 home.__DOMAIN__ {
@@ -127,32 +124,32 @@ home.__DOMAIN__ {
 }
 ```
 
-**Nginx Proxy Manager:** `home.__DOMAIN__`Create a proxy host with the domain. For the "Forward Host," enter the IP address of your home network server here`__SERVER_IP__`, and for the "Port," enter `8123`. Enable **WebSockets support**; otherwise, the interface won't load.
+**Nginx Proxy Manager:** create a proxy host with the domain `home.__DOMAIN__`. As the forward host, enter your server's IP on the home network, here `__SERVER_IP__`, with port `8123`. Turn on **Websockets Support**; without it, the interface doesn't load.
 
-Then restart the proxy (`docker compose up -d`in its folder) so that it applies the change.
+Then restart the proxy (`docker compose up -d` in its folder) so it picks up the change.
 
-Now all that's missing is the firewall. The proxy's requests come from the Docker network`__NETWORK__`, not from your home network. Read the address range for this network:
+The firewall is still missing. The proxy's requests come from the Docker network `__NETWORK__`, not from your home network. Read out this network's address range:
 
 ```bash
 docker network inspect __NETWORK__ --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}'
 ```
 
-The output looks something like this: `172.18.0.0/16`. You should leave this section set`8123` to Port :
+The output looks something like `172.18.0.0/16`. Allow this range on port `8123`:
 
 ```bash
 sudo ufw allow from 172.18.0.0/16 to any port 8123 proto tcp
 ```
 </Step>
 
-<Step title="Setting Up Trusted Proxies in Home Assistant">
-If you try to access Home Assistant via the domain right now, you'll get a **400: Bad Request** error. This is intentional: Home Assistant does not accept requests from a proxy that you haven't explicitly trusted. Otherwise, any device could claim to be acting on behalf of another.
+<Step title="Set trusted proxies in Home Assistant">
+If you now open Home Assistant through the domain, you get an error **400: Bad Request**. That's intended: Home Assistant doesn't accept requests from a proxy you haven't explicitly trusted. Otherwise any device could claim to speak on behalf of another.
 
-So open Home Assistant again directly via  `http://__SERVER_IP__:8123`and go to **Settings → System → Network**. In the **HTTP** **Server** section, enable **“Trust X-Forwarded-For”** and enter the address range you just noted under **“Trusted proxies”**—for example, `172.18.0.0/16`. When you save, Home Assistant will restart. You must then confirm the new settings within five minutes; otherwise, they will be reset.
+So open Home Assistant once more directly at `http://__SERVER_IP__:8123` and go to **Settings → System → Network**. In the **HTTP server** section, turn on **Trust X-Forwarded-For** and enter the address range from before under **Trusted proxies**, so something like `172.18.0.0/16`. When you save, Home Assistant restarts. Afterwards you have to confirm the new settings within five minutes, otherwise it reverts them.
 
-The names of the options may be slightly different in the German interface. The [documentation on HTTP integration](https://www.home-assistant.io/integrations/http/) describes them in detail.
+The [docs on the HTTP integration](https://www.home-assistant.io/integrations/http/) describe the options in detail.
 
 <Callout title="Older versions: configuration.yaml">
-Up through version 2026.7, these settings were located in the file  `configuration.yaml`in the folder`__DATA(home-assistant)__/config`. In many online guides, you'll still find this block:
+Up to version 2026.7, these settings lived in the `configuration.yaml` file in the `__DATA(home-assistant)__/config` folder. Many tutorials online still show this block:
 
 ```yaml
 http:
@@ -161,39 +158,39 @@ http:
     - 172.18.0.0/16
 ```
 
-Starting with version 2026.8, Home Assistant imports an existing block into the interface during an update and prompts you to delete it from the file afterward under **Settings → System → Repairs**.
+From version 2026.8, Home Assistant takes over an existing block into the interface during the update and asks you under **Settings → System → Repairs** to delete it from the file afterwards.
 </Callout>
 
-Home Assistant should`https://home.__DOMAIN__` now load at . If the proxy reports instead`502 Bad Gateway`, it `8123`cannot reach port . Most often, the firewall rule you just set up is missing; see below for more on ["Bad Gateway" and "404" errors from the proxy](/en/wiki/bad-gateway/). Finally, enter the address as the Home Assistant URL under **Settings → System → Network**, and use it in the Companion app on your phone as well. You `8123`can then delete the rule for your home network on port  once you no longer need direct access (`sudo ufw status numbered`, then `sudo ufw delete <Nummer>`).
+Home Assistant should now load at `https://home.__DOMAIN__`. If the proxy reports `502 Bad Gateway` instead, it can't reach port `8123`. Usually the firewall rule from before is missing; more under [Bad Gateway and 404 from the proxy](/en/wiki/bad-gateway/). Finally, enter the address as the Home Assistant URL under **Settings → System → Network** and use it in the companion app on your phone too. You can delete the rule for your home network on port `8123` afterwards if you no longer need direct access (`sudo ufw status numbered`, then `sudo ufw delete <number>`).
 
-If you want to access Home Assistant while on the go, the same considerations apply as with any other service: A [VPN](/en/setup/vpn-wireguard/) is the most secure option. Login protection such as Tinyauth for Home Assistant is not compatible with the Companion app.
+If Home Assistant should also be reachable on the go, the same considerations apply as for any service: a [VPN](/en/setup/vpn-wireguard/) is the safest way. Login protection like Tinyauth in front of Home Assistant doesn't get along with the companion app.
 </Step>
 
-<Step title="Pass along the USB flash drive for Zigbee (optional)">
-Many smart home devices use **Zigbee**, an energy-efficient wireless standard. To use them, you'll need a USB dongle that acts as a wireless receiver—known as a coordinator. You'll need to connect it directly to the container.
+<Step title="Pass through a USB stick for Zigbee (optional)">
+Many smart home devices communicate via **Zigbee**, an energy-efficient radio standard. For that, you need a USB stick as the radio receiver, a so-called coordinator. You pass it through to the container specifically.
 
-It's best to connect the USB flash drive using a short USB extension cable. If you connect it directly to the server, the interference from USB 3 ports and hard drives will noticeably disrupt the wireless signal. Then look for the USB flash drive's fixed name:
+Ideally, plug the stick in with a short USB extension cable. Directly on the server, noise from USB 3 ports and disks noticeably disturbs the radio. Then look up the stick's stable name:
 
 ```bash
 ls -l /dev/serial/by-id/
 ```
 
-Enter the path from `/dev/serial/by-id/`, not `/dev/ttyUSB0`. The number may change after a restart, but the name under  `by-id`remains the same. `home-assistant`Enter it in the  `compose.yaml`under ; the name here is just an example:
+Use the path from `/dev/serial/by-id/`, not `/dev/ttyUSB0`. The number can change after a reboot; the name under `by-id` stays the same. Add it to the `compose.yaml` under `home-assistant`; the name here is just an example:
 
 ```yaml
     devices:
       - /dev/serial/by-id/usb-Example_Zigbee_Stick_1234-if00-port0:/dev/ttyUSB0
 ```
 
-Next, set`docker compose up -d` up the **Zigbee Home Automation (ZHA)** integration in Home Assistant and specify `/dev/ttyUSB0`it as a device. The alternative, Zigbee2MQTT, requires an additional MQTT broker and then runs as its own container.
+After `docker compose up -d`, set up the **Zigbee Home Automation (ZHA)** integration in Home Assistant and enter `/dev/ttyUSB0` as the device. The alternative, Zigbee2MQTT, additionally needs an MQTT broker and then runs as a separate container.
 
-If you're using HAOS in a Proxmox VM, you can instead pass the USB stick to the VM within Proxmox: in the VM, go to **Hardware → Add → USB Device**, preferably using the manufacturer and device IDs. Home Assistant will usually detect it on its own.
+With HAOS in a Proxmox VM, you pass the stick through to the VM in Proxmox instead: in the VM under **Hardware → Add → USB Device**, ideally by vendor and device ID. Home Assistant then usually finds it by itself.
 </Step>
 
 <Step title="Backup">
-Everything that makes Home Assistant what it is is found in`__DATA(home-assistant)__/config`: Settings, Automations, Devices, and the database with the history. With [borgmatic](/en/setup/backups-borgmatic/), the folder is automatically included because it is located`__ROOT__` under .
+Everything that makes up Home Assistant lives in `__DATA(home-assistant)__/config`: settings, automations, devices and the database with the history. With [borgmatic](/en/setup/backups-borgmatic/), the folder is included automatically because it's under `__ROOT__`.
 
-The database is an SQLite file that is constantly being written to. Therefore, be sure to set up the built-in automatic backups under **Settings → System → Backups**. Home Assistant stores these backups in a consistent state in the configuration folder, and borgmatic also backs them up. Make a note of the key that Home Assistant displays in your password manager. Without it, the backups cannot be restored.
+The database is an SQLite file that's written to constantly. So also set up the built-in automatic backups under **Settings → System → Backups**. Home Assistant stores them in a consistent state in the configuration folder, and borgmatic backs them up along with everything else. Note the key Home Assistant shows you there in your password manager. Without it, the backups can't be restored.
 </Step>
 
 </Steps>

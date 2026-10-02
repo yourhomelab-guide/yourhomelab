@@ -1,83 +1,81 @@
 ---
-title: Domain & DNS
-description: In the end, you'll have a domain whose subdomains all point to your server. If your IP address changes, DynDNS will automatically update the entry.
+title: "Domain & DNS"
+description: "In the end, you own a domain whose subdomains all point to your server. If your IP changes, DynDNS updates the record automatically."
 level: 1
 minutes: 15
-requires:
-  - Access to the Router
-  - Server with a static IP address on a home network
+requires: [Access to the router, Server with a static IP on the home network]
 ---
 
-With your own domain, you can access your services using names like  `fotos.__DOMAIN__`instead of an IP address and port. You also need it for valid TLS certificates from Let's Encrypt. The article "[DNS & Domains](/en/wiki/dns-domains/)" explains how DNS works behind the scenes.
+With your own domain, you reach your services under names like `fotos.__DOMAIN__` instead of an IP address and port. You also need it for valid TLS certificates from Let's Encrypt. The article [DNS & domains](/en/wiki/dns-domains/) explains how DNS works behind the scenes.
 
 <OneWay />
 
 <Steps>
 
-<Step title="Check the connection">
-Before you spend any money: Check whether your server can be accessed from the outside at all. Many connections (especially cable and fiber-optic) no longer have their own public IPv4 address, but instead use DS-Lite or CGNAT. In that case, you share an IPv4 address with other customers, and incoming connections won’t reach you.
+<Step title="Check your connection">
+Before you spend money: check whether your server can be reachable from outside at all. Many connections (especially cable and fiber) no longer have their own public IPv4 address, but DS-Lite or CGNAT instead. Then you share an IPv4 with other customers, and incoming connections don't reach you.
 
-Check your public address on the server:
+Ask for your public address on the server:
 
 ```bash
 curl -4 ifconfig.me
 curl -6 ifconfig.me
 ```
 
-Compare the IPv4 address with the WAN or Internet address that your router displays in its interface. If both are the same, you have your own public IPv4 address. If the router displays an address from  `100.64.0.0/10`(i.e.,  to`100.64.x.x` `100.127.x.x`) or no IPv4 address at all, you are behind CGNAT or DS-Lite.
+Compare the IPv4 with the WAN or internet address your router shows in its interface. If both are the same, you have your own public IPv4. If the router shows an address from `100.64.0.0/10` (that is `100.64.x.x` to `100.127.x.x`) or no IPv4 at all, you're behind CGNAT or DS-Lite.
 
-In that case, the A records below won't be much help. Read up on [CGNAT & DS-Lite](/en/wiki/cgnat-ds-lite/) and use a [Cloudflare Tunnel](/en/setup/cloudflare-tunnel/) or a VPN like Tailscale to access it. You'll still need a domain, though.
+In that case, the A records below won't help you much. Read [CGNAT & DS-Lite](/en/wiki/cgnat-ds-lite/) and use a [Cloudflare Tunnel](/en/setup/cloudflare-tunnel/) or a VPN like Tailscale for access. You still need a domain.
 </Step>
 
-<Step title="Buy a Domain">
-You purchase a domain from a registrar—a provider that manages and sells domains. For common domain extensions such as  or`.de` , you usually pay`.com` anywhere from a few euros to about 20 euros per year.
+<Step title="Buy a domain">
+You buy a domain from a registrar, a company that manages and sells domains. For common endings like `.de` or `.com`, you usually pay a few euros up to about 20 euros a year.
 
-What you should keep in mind:
+What to look out for:
 
-- **Renewal price**—not just the price for the first year. Bait-and-switch offers often become significantly more expensive afterward.
-- **Manage your DNS using an API or DynDNS** if your IP address changes (see below).
-- **A short, neutral name.** It appears in every address. Your real name is not required.
+- **The renewal price**, not just the first-year price. Teaser offers often get much more expensive afterwards.
+- **DNS management with an API or DynDNS**, in case your IP changes (see below).
+- **A short, neutral name.** It shows up in every address. Your real name isn't needed.
 
-If you want to use a [Cloudflare Tunnel](/en/setup/cloudflare-tunnel/) later on, Cloudflare will need to manage your DNS. This also works with a domain from another registrar: You simply enter Cloudflare's nameservers there.
+If you want to use a [Cloudflare Tunnel](/en/setup/cloudflare-tunnel/) later, Cloudflare has to take over DNS management. That also works with a domain from another registrar: you simply enter Cloudflare's name servers there.
 </Step>
 
-<Step title="Create A and AAAA Records">
-A DNS record associates a name with an address. An **A record** points to an IPv4 address, and an **AAAA record** points to an IPv6 address.
+<Step title="Create A and AAAA records">
+A DNS record maps a name to an address. An **A record** points to an IPv4 address, an **AAAA record** to an IPv6 address.
 
-Open your provider's DNS management interface and create the following entries:
+Open your provider's DNS management and create these records:
 
 | Type | Name | Value | TTL |
 | --- | --- | --- | --- |
-| A | `@` (the domain itself) | Your public IPv4 | 300 |
-| A | `*` | Your public IPv4 | 300 |
+| A | `@` (the domain itself) | your public IPv4 | 300 |
+| A | `*` | your public IPv4 | 300 |
 
-This entry is`*` a **wildcard record**: Any subdomain, such as  or`fotos.__DOMAIN__` , will point`passwort.__DOMAIN__` to your server. This means you don't have to create a separate entry for each new service. The reverse proxy will later determine which service responds based on the name.
+The `*` record is a **wildcard record**: every subdomain like `fotos.__DOMAIN__` or `passwort.__DOMAIN__` then points to your server. So you don't have to create a record for every new service. Which service answers is decided later by the reverse proxy, based on the name.
 
-The **TTL** (Time to Live) specifies how many seconds other servers are allowed to cache an entry. 300 seconds is a good value while you're still experimenting.
+The **TTL** (time to live) says how many seconds other servers may cache a record. 300 seconds is a good value while you're still trying things out.
 
-For IPv6, create the same two entries as AAAA records. Note: There is no NAT with IPv6. The value is the **server's** IPv6 address, not the router's:
+For IPv6, create the same two records as AAAA records. Careful: IPv6 has no NAT. The value is the IPv6 address **of the server**, not of the router:
 
 ```bash
 ip -6 addr show scope global
 ```
 
-Use the address that isn't marked`temporary` as . In the router, you'll also need to open the ports for that specific device for IPv6. If you're unsure, leave out the AAAA record for now. An incorrect AAAA record is worse than no AAAA record at all, because many devices prefer IPv6.
+Use the address that isn't marked `temporary`. For IPv6, you also have to open the ports on the router for exactly this device. If you're unsure, leave the AAAA record out for now. A wrong AAAA record is worse than none, because many devices prefer IPv6.
 </Step>
 
-<Step title="Set up DynDNS if your IP address changes">
-For most home internet connections, the public IP address changes occasionally—for example, after restarting the router. When that happens, your A record points to nowhere. **DynDNS** (dynamic DNS) solves this problem: A small program notifies your DNS provider of every new IP address.
+<Step title="Set up DynDNS if your IP changes">
+On most home connections, the public IP changes now and then, for example after a router restart. Then your A record points nowhere. **DynDNS** (dynamic DNS) solves this: a small program reports every new IP to your DNS provider.
 
-The easiest way is to use your router. The FRITZ!Box, for example, has a form under “Internet → Sharing → DynDNS” where you can enter an update URL, username, and password. You can find the values to enter there in your DNS provider’s help section. Many registrars provide their own DynDNS login credentials for this purpose.
+The easiest way is the router. The FRITZ!Box, for example, has a form for an update URL, user name and password under "Internet → Permit Access → DynDNS". Your DNS provider's help tells you which values to enter. Many registrars offer separate DynDNS credentials for this.
 
-If your router can't do that, or if your provider only supports an API, you can run a DynDNS client on the server. A popular choice is [ddclient](https://ddclient.net/), which is also available as a container. It supports many providers, including Cloudflare.
+If your router can't do it, or your provider only supports an API, a DynDNS client runs on the server. A common one is [ddclient](https://ddclient.net/), which is also available as a container. It supports many providers, including Cloudflare.
 
-Use DynDNS to update the entry for `@`. Your wildcard record `*`can then be`__DOMAIN__` a **CNAME** pointing to  instead of an A record. A CNAME is a reference to another name, so you only need to keep one entry up to date.
+Use DynDNS to update the `@` record. Your wildcard record `*` can then be a **CNAME** to `__DOMAIN__` instead of an A record. A CNAME is a reference to another name, so you only have to keep one record up to date.
 
-If you have a static IP address—for example, on a rented server—skip this step.
+If you have a static IP, for example on a rented server, skip this step.
 </Step>
 
-<Step title="Check entries">
-You can use  `dig`to query DNS entries directly. On Debian and Ubuntu, it's included in the package`bind9-dnsutils`:
+<Step title="Check the records">
+`dig` queries DNS records directly. On Debian and Ubuntu it's in the `bind9-dnsutils` package:
 
 ```bash
 sudo apt install bind9-dnsutils
@@ -86,27 +84,27 @@ dig +short test.__DOMAIN__ A
 dig +short __DOMAIN__ AAAA
 ```
 
-All queries should return your IP addresses.  `test`stands for any subdomain; it is resolved via the wildcard record. If nothing is returned, query a public resolver directly. This bypasses your router's cache:
+All queries should print your IP addresses. `test` stands for any subdomain; it's answered by the wildcard record. If nothing comes back, ask a public resolver directly. That bypasses your router's cache:
 
 ```bash
 dig +short test.__DOMAIN__ A @1.1.1.1
 ```
 
-On Windows and macOS, this also works`nslookup`:
+On Windows and macOS, `nslookup` works too:
 
 ```bash
 nslookup test.__DOMAIN__
 ```
 
-New entries often become visible within a few minutes. If you've just changed the name servers, it may take a few hours. As long as the DNS settings are incorrect, the reverse proxy won't receive a certificate later; see "[Certificate Missing](/en/wiki/certificate/)."
+New records are often visible after a few minutes. If you've only just changed the name servers, it can take a few hours. As long as DNS isn't right, the reverse proxy won't get a certificate later; see [Certificate missing](/en/wiki/certificate/).
 </Step>
 
-<Step title="Open ports 80 and 443">
-To ensure that requests from the Internet reach your server, the router forwards ports 80 (HTTP) and 443 (HTTPS) to your server's static IP address. The reverse proxy needs these two ports, and Let's Encrypt uses them to verify that you own the domain. For details on how this works and what it means for security, see [Port Forwarding](/en/wiki/port-forwarding/).
+<Step title="Forward ports 80 and 443">
+For requests from the internet to reach your server, the router forwards ports 80 (HTTP) and 443 (HTTPS) to your server's static IP. The reverse proxy needs these two ports, and Let's Encrypt uses them to check that you own the domain. How that works and what it means for security is covered in [Port forwarding](/en/wiki/port-forwarding/).
 
-Only open these two ports; do not open ports for individual services. The reverse proxy handles everything else. If a certificate still cannot be established later, search for "[certificate missing](/en/wiki/certificate/)" for help.
+Optionally, add 443 over UDP so browsers can use HTTP/3. Don't forward any other ports, especially not ports of individual services. The reverse proxy handles everything else. If you still don't get a certificate later, [Certificate missing](/en/wiki/certificate/) helps you find the cause.
 
-Next up is setting up a [reverse proxy using Traefik](/en/setup/reverse-proxy-traefik/) or the simpler [Nginx Proxy Manager](/en/setup/reverse-proxy-npm/).
+Next, continue with the [reverse proxy with Traefik](/en/setup/reverse-proxy-traefik/) or the simpler [Nginx Proxy Manager](/en/setup/reverse-proxy-npm/).
 </Step>
 
 </Steps>

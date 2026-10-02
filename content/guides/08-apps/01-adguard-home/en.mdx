@@ -1,41 +1,36 @@
 ---
-title: Ad Blocker with AdGuard Home
-description: "AdGuard Home runs as a DNS server on your home network and blocks ads and trackers on all your devices at the same time: cell phone, laptop, smart TV. Ultimately, your router distributes the server as a DNS, and you'll know how to handle any outages."
+title: "Ad blocking with AdGuard Home"
+description: "AdGuard Home runs as a DNS server on your home network and blocks ads and trackers for all devices at once: phone, laptop, smart TV. In the end, your router hands out the server as DNS, and you know how to deal with outages."
 level: 2
 minutes: 30
-requires:
-  - Fixed IP
-  - Docker Compose
-  - Reverse Proxy
-  - Access to the Router
-services:
-  - adguard-home
+requires: [Static IP, Docker Compose, Reverse proxy, Access to the router]
+services: [adguard-home]
 ---
 
-Every device constantly asks for addresses: Where is this`example.com`, where is that`ads.irgendwas.net`? A **DNS server** (Domain Name System, the Internet's "phone book"; see [DNS & Domains](/en/wiki/dns-domains/)) answers these questions. Usually, this is your router or your Internet service provider.
+Every device constantly asks for addresses: where is `example.com`, where is `ads.irgendwas.net`? A **DNS server** answers these questions (Domain Name System, the "phone book" of the internet; see [DNS & domains](/en/wiki/dns-domains/)). Usually that's your router or your internet provider.
 
-[AdGuard Home](https://github.com/AdguardTeam/AdGuardHome) takes on this role in your home network. If a device requests a known advertising or tracking address, AdGuard Home responds with “doesn’t exist.” The ad isn’t even loaded in the first place. This works on all devices, even those where you can’t install an ad blocker, such as on a smart TV or in apps. Plus, you can see which device is making calls, when, and to where.
+[AdGuard Home](https://github.com/AdguardTeam/AdGuardHome) takes over this role on your home network. When a device asks for a known ad or tracking address, AdGuard Home answers "doesn't exist". The ad is never even loaded. This works on all devices, including those where you can't install an ad blocker, like the smart TV or inside apps. On the side, you see which device calls home where and when.
 
-<Callout title="What AdGuard Home Can't Do">
-A DNS blocker only sees domain names, not the content of a page. Ads that come from the same address as the actual content (for example, on YouTube) slip through. That's why an additional blocker like uBlock Origin is still useful for the browser.
+<Callout title="What AdGuard Home can't do">
+A DNS blocker only sees domain names, not the content of a page. Ads that come from the same address as the actual content (on YouTube, for example) slip through. So an additional blocker like uBlock Origin in the browser still makes sense.
 </Callout>
 
 <OneWay />
 
-The best-known alternative is [Pi-hole](https://pi-hole.net). It essentially does the same thing and has a large community. AdGuard Home offers encrypted DNS (DNS-over-HTTPS) and a modern interface without any additional packages, and it runs as a single container. Both are good choices; the steps outlined here apply to AdGuard Home.
+The best-known alternative is [Pi-hole](https://pi-hole.net). At its core it does the same and has a large community. AdGuard Home comes with encrypted DNS (DNS-over-HTTPS) and a modern interface without extra packages, and runs as a single container. Both are a good choice; the steps here are for AdGuard Home.
 
 <Steps>
 
-<Step title="Open Port 53 (Ubuntu only)">
-DNS runs on **port 53**, via UDP and TCP. The container must use this port on the server so that other devices can reach it. However, on Ubuntu, **systemd-resolved** is already listening on that port: this is the service that resolves names for the server itself. It starts a small local DNS server, the **stub listener**, at the address `127.0.0.53:53`. Docker is then unable to expose port 53 and exits with an error`address already in use`.
+<Step title="Free up port 53 (Ubuntu only)">
+DNS runs on **port 53**, over UDP and TCP. The container has to take this port on the server so other devices can reach it. On Ubuntu, though, **systemd-resolved** already listens there: that's the service that resolves names for the server itself. It starts a small local DNS server, the **stub listener**, at the address `127.0.0.53:53`. Docker then can't publish port 53 and fails with `address already in use`.
 
-First, check whether the port is in use:
+First check whether the port is taken:
 
 ```bash
 sudo ss -tulpn | grep ':53 '
 ```
 
-If nothing is displayed, the port is free, and you can move on to the next step. On Debian, this is usually the case because systemd-resolved isn't installed there in the first place. If you see this`systemd-resolve`, simply disable the stub listener. systemd-resolved itself will continue to run.
+If there's no output, the port is free and you skip to the next step. On Debian that's the normal case, because systemd-resolved usually isn't installed there at all. If you see `systemd-resolve`, turn off only the stub listener. systemd-resolved itself keeps running.
 
 ```bash
 sudo mkdir -p /etc/systemd/resolved.conf.d
@@ -46,22 +41,22 @@ sudo systemctl restart systemd-resolved
 
 What the three commands do:
 
-- The file in  `/etc/systemd/resolved.conf.d/`sets `DNSStubListener=no`. systemd-resolved will then`127.0.0.53:53` no longer open . It is better to create a separate file in this folder than to modify the main file, because package updates will not overwrite it.
-- `/etc/resolv.conf` tells all programs which DNS server to use. In Ubuntu, it points to the stub server ( `nameserver 127.0.0.53`) by default. Without the stub server, this would have no effect. The link to  instead directly `/run/systemd/resolve/resolv.conf`enters the actual DNS servers that you specified when [setting up the static IP address](/en/setup/static-ip-hostname/)—usually your router.
-- The system will apply the settings when it restarts.
+- The file in `/etc/systemd/resolved.conf.d/` sets `DNSStubListener=no`. systemd-resolved then no longer opens `127.0.0.53:53`. A file of your own in this folder is better than changing the main file, because package updates don't overwrite it.
+- `/etc/resolv.conf` tells all programs which DNS server to ask. On Ubuntu it points to the stub by default (`nameserver 127.0.0.53`). Without the stub, that would lead nowhere. The link to `/run/systemd/resolve/resolv.conf` instead enters the real DNS servers directly, the ones you set when [setting up the static IP](/en/setup/static-ip-hostname/), usually your router.
+- The restart applies the setting.
 
-Next, verify that Port 53 is open and that the server is still resolving names:
+Then check that port 53 is free and the server still resolves names:
 
 ```bash
 sudo ss -tulpn | grep ':53 '
 ping -c1 debian.org
 ```
 
-So the server itself continues to query your router or a public DNS server—not AdGuard Home. This is intentional: even if the container isn't running, the server can still load updates and images. For more information on occupied ports, see "[Port Occupied](/en/wiki/port-in-use/)."
+So the server itself keeps asking your router or a public DNS server, not AdGuard Home. That's on purpose: if the container isn't running at some point, the server can still download updates and images. More on ports that are already taken under [Port already in use](/en/wiki/port-in-use/).
 </Step>
 
-<Step title="Launch AdGuard Home">
-Create the folder and place  and`compose.yaml`  inside it`.env`:
+<Step title="Start AdGuard Home">
+Create the folder and, in it, `compose.yaml` and `.env`:
 
 ```bash
 mkdir -p __ROOT__/adguard-home
@@ -70,35 +65,35 @@ cd __ROOT__/adguard-home
 
 <ServiceFiles id="adguard-home" />
 
-The configuration file is stored`data/conf` in `AdGuardHome.yaml`, and the statistics`data/work` and query log are stored in . Start the container:
+The configuration file `AdGuardHome.yaml` ends up in `data/conf`, statistics and the query log in `data/work`. Start the container:
 
 ```bash
 docker compose up -d
 docker compose logs -f adguard-home
 ```
 
-Press  to close`Strg+C` the log display.
+Press `Ctrl+C` to leave the log view.
 
-Port 53 is now accessible across the entire network, bypassing the firewall (see "[Firewall with UFW](/en/setup/firewall-ufw/)"). On a home network behind a router, this is intentional. **However, never open Port 53 on the router**, and do not run AdGuard Home this way on a server with a public IP address. An open DNS server on the Internet can quickly be exploited to launch attacks against third parties.
+Port 53 is now reachable on the whole network, bypassing the firewall (see [Firewall with UFW](/en/setup/firewall-ufw/)). On a home network behind the router, that's intended. But **never forward port 53 on your router**, and don't run AdGuard Home like this on a server with a public IP. An open DNS server on the internet quickly gets abused for attacks on others.
 </Step>
 
-<Step title="Run through the setup wizard">
-When you launch AdGuard Home for the first time, it displays a setup wizard on port 3000. Open it`https://adguard.__DOMAIN__`. Without a reverse proxy, you can access it using your server's IP address and the port listed in the `compose.yaml`.
+<Step title="Go through the setup wizard">
+On the first start, AdGuard Home shows a setup wizard on port 3000. Open `https://adguard.__DOMAIN__`. Without a reverse proxy, you reach it at your server's IP and the port from the `compose.yaml`.
 
-The most important point is on the second page:
+Do this right after starting: until then, anyone who can reach the page can set up AdGuard Home. The most important part comes on the second page:
 
 | Field | Value |
 | --- | --- |
-| Admin Web Interface: Network Interface | All Interfaces |
-| Admin Web Interface: Port | **3,000** (the proposed number is 80) |
-| DNS Server: Network Interface | All Interfaces |
-| DNS Server: Port | 53 |
+| Admin web interface: network interface | All interfaces |
+| Admin web interface: port | **3000** (80 is suggested) |
+| DNS server: network interface | All interfaces |
+| DNS server: port | 53 |
 
-Why 3000? The wizard runs on port 3000, and the finished interface runs on port 80 by default. However, your reverse proxy always forwards traffic to port 3000. If the interface stays on port 3000, the same address will work both before and after setup. “All interfaces” refers to the inside of the container. The configuration `compose.yaml`determines which ports are accessible from the outside.
+Why 3000? The wizard runs on port 3000, the finished interface on port 80 by default. Your reverse proxy, however, always forwards to port 3000. If the interface stays on 3000, the same address works before and after the setup. "All interfaces" refers to the inside of the container. Which ports are reachable from outside is defined by the `compose.yaml`.
 
-Next, create a username and password. Use a long password from your password manager. The last page explains how to set up devices. You'll do this right away through the router.
+Then create a user name and password. Use a long password from your password manager. The last page explains how to set up devices. You'll do that through the router in a moment.
 
-If you accidentally selected port 80, the interface will no longer be accessible. In that case, stop the container, change the`http:` line in  `address: 0.0.0.0:80`to  `__DATA(adguard-home)__/conf/AdGuardHome.yaml`under , and`address: 0.0.0.0:3000` restart it:
+If you picked port 80 by mistake, the interface is no longer reachable. Then stop the container, change the line `address: 0.0.0.0:80` under `http:` in `__DATA(adguard-home)__/conf/AdGuardHome.yaml` to `address: 0.0.0.0:3000` and start it again:
 
 ```bash
 cd __ROOT__/adguard-home
@@ -108,60 +103,60 @@ docker compose start
 ```
 </Step>
 
-<Step title="Select Upstream DNS and Blocklists">
-AdGuard Home only responds to requests it blocks itself. It forwards all other requests to an **upstream DNS server**. Under “Settings → DNS Settings,” an encrypted server is already listed (DNS-over-HTTPS, recognizable by `https://`). Your Internet service provider will then no longer be able to see which domain names you’re resolving. You can leave it as is or enter a different provider. Use “Test Upstreams” to check whether it responds.
+<Step title="Choose upstream DNS and blocklists">
+AdGuard Home only answers what it blocks itself. It passes all other requests on to an **upstream DNS server**. Under "Settings → DNS settings", an encrypted server is already entered (DNS-over-HTTPS, recognizable by `https://`). Your internet provider then no longer sees which names you resolve. You can leave it as is or enter another provider. "Test upstreams" checks whether it answers.
 
-The **blocklists** do the actual work. Under “Filters → DNS Blocklists,” the “AdGuard DNS filter” list is already active. By selecting “Add Blocklist → Select from List,” you can add additional lists by checking the boxes—for example, one of the HaGeZi lists. AdGuard Home updates them automatically.
+The actual work is done by the **blocklists**. Under "Filters → DNS blocklists", the "AdGuard DNS filter" list is already active. With "Add blocklist → Choose from the list", you can add more lists with a checkbox, for example one of the HaGeZi lists. AdGuard Home updates them automatically.
 
-More lists don’t automatically mean better. Every list can sometimes block something you need, such as a link in a newsletter email or an app’s login page. Start with one or two lists. If something doesn’t work, look up the address in the “Query Log” and unblock it there with a single click. AdGuard Home creates an exception rule for this under “Filters → Custom Filter Rules.”
+More lists don't automatically mean better. Every list sometimes blocks something you need, like a link in a newsletter email or an app's login. Start with one or two lists. If something doesn't work, look up the address in the "Query Log" and unblock it there with a click. AdGuard Home creates an exception rule under "Filters → Custom filtering rules" for it.
 </Step>
 
-<Step title="Try it now">
-Before you reconfigure the entire network, check the server specifically. The tool `dig`queries a specific DNS server. It is included in the package`dnsutils`. Run the commands on the server or on another Linux computer in your home network, substituting your server's IP address:
+<Step title="Test directly">
+Before you switch the whole network, test the server specifically. The `dig` tool asks a particular DNS server. It's in the `bind9-dnsutils` package. Run the commands on the server or on another Linux computer on your home network, with your server's IP:
 
 ```bash
-sudo apt install dnsutils
+sudo apt install bind9-dnsutils
 dig @__SERVER_IP__ debian.org +short
 dig @__SERVER_IP__ doubleclick.net +short
 ```
 
-The first request returns normal IP addresses. The second one targets a known advertising domain and should return`0.0.0.0`: It was blocked. You can see both requests in the "Query Log." On Windows, you can do the same with `nslookup doubleclick.net __SERVER_IP__`.
+The first query returns normal IP addresses. The second targets a known ad domain and should return `0.0.0.0`: it was blocked. You'll see both requests in the "Query Log". On Windows, the same works with `nslookup doubleclick.net __SERVER_IP__`.
 
-If you don't receive a response (`connection timed out`), the container isn't running or port 53 isn't exposed. Check  `docker compose ps`and the logs, as described in [Troubleshooting: First Steps](/en/wiki/first-steps/).
+If you get no answer (`connection timed out`), the container isn't running or port 53 isn't published. Check `docker compose ps` and the logs as described in [Troubleshooting: first steps](/en/wiki/first-steps/).
 </Step>
 
-<Step title="Set Up the Router as a DNS Server">
-To ensure that all devices use AdGuard Home, the router should distribute it. The devices receive their network settings from the router via **DHCP**, including the DNS server. If you enter your server’s IP address there, all devices will automatically query AdGuard Home. Depending on the router, this setting is called “Local DNS Server,” “DNS Server for DHCP,” or something similar.
+<Step title="Let the router hand out the DNS server">
+So that all devices use AdGuard Home, the router should hand it out. Devices get their network settings from the router via **DHCP**, including the DNS server. If you enter your server's IP there, all devices automatically ask AdGuard Home. Depending on the router, the setting is called "Local DNS server", "DNS server for DHCP" or similar.
 
-On a **FRITZ!Box,** you'll find them roughly here (the location may vary slightly depending on the FRITZ!OS version):
+On a **FRITZ!Box**, you'll find it roughly here (slightly different depending on the FRITZ!OS version and language):
 
-- "Home Network → Network → Network Settings → IP Addresses → IPv4 Settings." There, enter your server's IP address under "Local DNS Server."
-- In the IPv6 settings next to it, there is a corresponding field for DNSv6. If your network uses IPv6, the FRITZ!Box will otherwise continue to act as a DNS server, and some devices will bypass AdGuard Home through it.
+- "Home Network → Network → Network Settings → IP Addresses → IPv4 Settings". Enter your server's IP under "Local DNS server" there.
+- The IPv6 settings next to it have a matching field for DNSv6. If your network uses IPv6, the FRITZ!Box otherwise keeps handing out itself as the DNS server, and some devices bypass AdGuard Home that way.
 
-Do **not** configure the DNS server under “Internet → Access Data → DNS Server.” If you did, all requests would still be routed through AdGuard Home, but they would always be sent on behalf of the FRITZ!Box. You would only see a single device in the log.
+**Don't** set the DNS server under "Internet → Account Information → DNS Server". Then all requests would still land at AdGuard Home, but always on behalf of the FRITZ!Box. You'd only see a single device in the log.
 
-The devices won't adopt the new DNS server until they refresh their DHCP settings. The quickest way to do this is to briefly turn Wi-Fi off and then back on. After a few minutes, the devices will appear under "Clients" in the dashboard.
+Devices only pick up the new DNS server when they renew their DHCP settings. The quickest way is to turn Wi-Fi off and on again briefly. After a few minutes, the devices show up under "Clients" in the dashboard.
 
-Some devices and browsers bypass the router's DNS server, for example, by using a hard-coded, encrypted DNS. These do not appear in the log. This is normal and can only be changed on the device in question.
+Some devices and browsers bypass the router's DNS server, for example with encrypted DNS set up permanently. They then don't show up in the log. That's normal and can only be changed on the device itself.
 </Step>
 
-<Step title="Plan for Downtime">
-Now your entire home network depends on your server. **If the server is down or the container is stopped, DNS stops working on your home network.** Websites won’t load, and apps will show “no connection,” even though the Internet is actually working. This can happen faster than you think: an update that requires a restart, a power outage, or maintenance.
+<Step title="Plan for outages">
+Now your whole home network depends on your server. **If the server is off or the container stopped, DNS stops working on your home network.** Websites don't load, apps report "no connection" even though the internet is actually up. That happens faster than you'd think: an update with a reboot, a power outage, maintenance.
 
-So think about what you want to happen next:
+So think ahead about what should happen then:
 
-- **Second DNS Server in the Router**: Many routers allow a second entry. If you enter a public DNS server there, your network will continue to work even if AdGuard Home goes down. The catch: Devices use the second server not only in an emergency, but also from time to time. That means ads will get through there.
-- **Second AdGuard Home instance**: A second instance on a different device, such as a Raspberry Pi, with the same settings. Enter both IP addresses in the router. This is the cleanest solution, but it requires more maintenance. Learn more about setting up [multiple devices: Assigning roles](/en/wiki/multiple-devices/).
-- **Contingency Plan**: Accept that the service may go down, and write down how to reset the DNS entry in your router. Keep this note in a place where someone else in your household can find it (see [documentation](/en/wiki/documentation/)).
+- **Second DNS server in the router**: many routers allow a second entry. If you enter a public DNS server there, the network keeps working when AdGuard Home fails. The catch: devices don't only use the second server in an emergency, but also now and then. Ads get through then.
+- **Second AdGuard Home instance**: a second instance on another device, a Raspberry Pi for example, with the same settings. You enter both IPs in the router. That's the cleanest solution, but more maintenance. More on splitting things up in [Multiple devices: splitting the roles](/en/wiki/multiple-devices/).
+- **Emergency plan**: you accept the outage and write down how to reset the DNS entry in the router. Keep this note where someone else in your household can find it too (see [Documentation](/en/wiki/documentation/)).
 
-For now, the emergency plan is fine. Also, add AdGuard Home to [Uptime Kuma](/en/setup/uptime-kuma/). The "DNS" monitor type periodically queries the server for a name and alerts you if it doesn't receive a response.
+To start with, the emergency plan is fine. Also add AdGuard Home to [Uptime Kuma](/en/setup/uptime-kuma/). The "DNS" monitor type regularly asks the server for a name and alerts you when no answer comes.
 </Step>
 
 </Steps>
 
-## What happens next?
+## What's next?
 
-- **Local Addresses**: Under "Filter → DNS Redirects," you can configure it to point to`*.__DOMAIN__` your server's internal IP address. Devices on your home network can then access your services directly, without going through the Internet.
-- **Naming clients**: Under “Settings → Client Settings,” you can name devices and set different rules for individual devices, such as stricter filters for children’s devices.
-- **Dashboard**: The number of blocked requests is displayed right on your homepage.
-- **Backup**: Your settings are stored in `__DATA(adguard-home)__/conf`. They are [backed](/en/setup/backups-borgmatic/)`__ROOT__`[ up](/en/setup/backups-borgmatic/) along with the rest of .
+- **Local addresses**: under "Filters → DNS rewrites", you can point `*.__DOMAIN__` to your server's internal IP. Devices on your home network then reach your services directly, without a detour through the internet.
+- **Naming clients**: under "Settings → Client settings", you give devices names and can set different rules for individual devices, like stricter filters for children's devices.
+- **Dashboard**: [Homepage](/en/setup/dashboard-homepage/) shows the number of blocked requests right on your start page.
+- **Backup**: your settings live in `__DATA(adguard-home)__/conf`. They're [backed up](/en/setup/backups-borgmatic/) with the rest of `__ROOT__`.

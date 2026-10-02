@@ -161,5 +161,7 @@ mit Backup, siehe [MySQL-Doku zum Upgrade](https://dev.mysql.com/doc/refman/8.4/
 ## Vorbeugen
 
 - Datenbank-Images immer auf die Hauptversion pinnen: `postgres:18`, `mariadb:11` oder `mariadb:lts`.
-- Major-Updates von Datenbanken nie automatisch übernehmen, siehe [Updates mit Renovate](/de/einrichten/updates-renovate/).
+- Updates von Datenbanken nie automatisch übernehmen. In Dockhand nimmst du sie mit dem Label `dockhand.update=false` aus
+  (die Vorlagen dieser Seite setzen es schon). [Renovate](/de/einrichten/updates-renovate/) schlägt neue Hauptversionen nur als Pull
+  Request vor, den du bewusst und mit Backup mergst.
 - Vor jedem größeren Update ein frisches Backup, siehe [Updates](/de/nachschlagen/updates/).

@@ -74,7 +74,7 @@ services:
       - /run/dbus:/run/dbus:ro
 ```
 
-Home Assistant erscheint jeden Monat in einer neuen Version. Das Tag `2026.9` bekommt nur die Fehlerkorrekturen dieses Monats. Für den Sprung auf die nächste Version änderst du das Tag bewusst, liest vorher die Hinweise zu Breaking Changes im [Release-Blog](https://www.home-assistant.io/blog/categories/release-notes/) und startest neu. [Renovate](/de/einrichten/updates-renovate/) kann dir dafür automatisch einen Pull Request anlegen.
+Home Assistant erscheint jeden Monat in einer neuen Version. Das Tag `2026.9` bekommt nur die Fehlerkorrekturen dieses Monats. Für den Sprung auf die nächste Version änderst du das Tag bewusst, liest vorher die Hinweise zu Breaking Changes im [Release-Blog](https://www.home-assistant.io/blog/categories/release-notes/) und startest neu. [Dockhand](/de/einrichten/portainer-dockhand/) zeigt dir neue Tags als Vorschlag an. Führst du deine Compose-Dateien in Git, legt dir optional [Renovate](/de/einrichten/updates-renovate/) dafür einen Pull Request an.
 
 Die offizielle Vorlage setzt zusätzlich `privileged: true`. Damit hat der Container fast vollen Zugriff auf den Server. Das brauchst du nicht, solange du einzelne Geräte gezielt freigibst, wie im Schritt zum USB-Stick gezeigt.
 </Step>

@@ -1,35 +1,32 @@
 ---
-title: Monitoring with Beszel
-description: Beszel shows you your server's CPU, RAM, hard drives, network, and every container—along with their history—in a streamlined web interface. It also sends you a notification if a disk is running out of space or a server stops responding.
+title: "Monitoring with Beszel"
+description: "Beszel shows you CPU, RAM, disks, network and every container on your server, with history, in a lean web interface. In the end, it notifies you when the disk fills up or a server stops responding."
 level: 1
 minutes: 15
-requires:
-  - Docker Compose
-  - Reverse Proxy
-services:
-  - beszel
+requires: [Docker Compose, Reverse proxy]
+services: [beszel]
 ---
 
-Without monitoring, you won't notice problems until something stops working. Yet many outages show early warning signs: The hard drive fills up over the course of weeks, a container slowly consumes more and more RAM, or the CPU gets too hot in the summer. [Beszel](https://beszel.dev) makes these trends visible and is very resource-efficient in doing so. You can find more information under [Monitoring](/en/wiki/monitoring/).
+Without monitoring, you only notice problems when something stops working. Yet many failures announce themselves: the disk fills up over weeks, a container slowly eats more and more RAM, the CPU runs too hot in summer. [Beszel](https://beszel.dev) makes such trends visible and is very frugal about it. You'll find the background under [Monitoring](/en/wiki/monitoring/).
 
 Beszel consists of two parts:
 
-- The **Hub** is the web interface. It stores the measurement data and sends alerts. You only need it once.
+- The **hub** is the web interface. It stores the measurements and sends alerts. You only need it once.
 - The **agent** runs on every server you want to monitor. It measures the values and sends them to the hub. In this guide, it runs on the same server as the hub.
 
-The agent establishes an encrypted **WebSocket** connection (a persistent connection over HTTPS) to the hub on its own. Therefore, you don't need to open a port for it in the firewall.
+The agent itself opens an encrypted **WebSocket** connection (a persistent connection over HTTPS) to the hub. That's why you don't need to open a port in the firewall for it.
 
 <Steps>
 
-<Step title="Set Up the Stroke">
-Like any other service, the hub gets its own folder under `__ROOT__`. Its data is stored in the subfolder `data/`.
+<Step title="Set up the hub">
+Like every service, the hub gets its own folder under `__ROOT__`. Its data ends up in the `data/` subfolder.
 
 ```bash
 mkdir -p __ROOT__/beszel
 cd __ROOT__/beszel
 ```
 
-Place  and`compose.yaml`  there`.env`:
+Create `compose.yaml` and `.env` there:
 
 <ServiceFiles id="beszel" />
 
@@ -39,35 +36,35 @@ Then start the hub:
 docker compose up -d
 ```
 
-If you're using Nginx Proxy Manager, enable "WebSockets Support" for the proxy host. Otherwise, the agent won't be able to connect later. Traefik and Caddy automatically forward WebSockets.
+If you use Nginx Proxy Manager, turn on "Websockets Support" for the proxy host. Otherwise the agent can't connect later. Traefik and Caddy forward WebSockets automatically.
 
-<Callout type="warning" title="Do not enable login protection beforehand">
-Beszel has its own login process. Do not place Tinyauth or any other Forward-Auth middleware in front of it: The agent connects via the address  `/api/beszel/agent-connect`and cannot log in interactively there. Instead, Beszel supports OAuth on its own, for example with [Pocket ID](/en/setup/pocket-id/) (see [the Beszel documentation](https://beszel.dev/guide/oauth)).
+<Callout type="warning" title="Don't put login protection in front">
+Beszel has its own login. Don't put Tinyauth or any other forward auth middleware in front of it: the agent connects through the address `/api/beszel/agent-connect` and can't log in interactively there. Instead, Beszel supports OAuth itself, for example with [Pocket ID](/en/setup/pocket-id/) (see the [Beszel docs](https://beszel.dev/guide/oauth)).
 </Callout>
 </Step>
 
-<Step title="Create an Admin Account">
-Open it in`https://beszel.__DOMAIN__` your browser. The first time you visit the site, create an account using your email address and a password. Choose a long, random password from your password manager. This account will also serve as the administrator account.
+<Step title="Create the admin account">
+Open `https://beszel.__DOMAIN__` in the browser. On first access, you create an account with email and password. Use a long, random password from your password manager. This account is the administrator at the same time.
 </Step>
 
-<Step title="Create a system in the hub">
-Click "Add System" in the upper-right corner (or "System hinzufügen" in the German interface). In the dialog box, enter the following:
+<Step title="Add the system in the hub">
+Click "Add System" at the top right. In the dialog, enter:
 
 | Field | Value |
 | --- | --- |
-| Name | Name of your server, e.g., `homeserver` |
-| Host / IP | Your server's IP address, here `__SERVER_IP__` |
+| Name | Your server's name, e.g. `homeserver` |
+| Host / IP | Your server's IP, here `__SERVER_IP__` |
 
-Below that, the dialog box displays two values that you'll need for the agent right away:
+Below that, the dialog shows two values you'll need for the agent in a moment:
 
-- **Public Key**: This allows the agent to recognize that it is communicating with your hub.
-- **Token**: The agent uses this to log in to the hub.
+- **Public Key**: the agent uses it to recognize that it's talking to your hub.
+- **Token**: the agent uses it to log in to the hub.
 
 Leave the dialog open and switch to the terminal.
 </Step>
 
-<Step title="Start Agent">
-The agent gets its own stack. It runs with `network_mode: host`, meaning directly on the server's network rather than on a Docker network. This is the only way it can see the actual network interfaces. It reads the statistics from your containers via the Docker socket.
+<Step title="Start the agent">
+The agent gets its own stack. It runs with `network_mode: host`, that is directly in the server's network instead of a Docker network. Only that way does it see the real network cards. It reads your containers' statistics through the Docker socket.
 
 ```bash
 mkdir -p __ROOT__/beszel-agent __DATA(beszel-agent)__
@@ -79,7 +76,8 @@ cd __ROOT__/beszel-agent
 ```yaml
 services:
   beszel-agent:
-    image: henrygd/beszel-agent:latest
+    # Same version as the hub
+    image: henrygd/beszel-agent:0.20
     container_name: beszel-agent
     restart: unless-stopped
     network_mode: host
@@ -93,7 +91,7 @@ services:
       - TOKEN=${TOKEN}
 ```
 
-`.env` (Copy the values from the open dialog; enclose the key in quotation marks because it contains a space):
+`.env` (copy the values from the open dialog; put the key in quotes because it contains a space):
 
 ```bash
 KEY="ssh-ed25519 AAAA..."
@@ -106,54 +104,54 @@ docker compose up -d
 docker compose logs -f
 ```
 
-After a few seconds, the log should show that the WebSocket connection to the hub is established. Use  to stop`Strg+C` the display.
+After a few seconds, the log should say that the WebSocket connection to the hub is up. Press `Ctrl+C` to leave the view.
 </Step>
 
 <Step title="Check the system">
-In the dialog box, click "Add System" or "System hinzufügen." The server will appear in the list. If its entry turns green, data is coming in. If you click on the server, you’ll see usage trends for CPU, RAM, disk, network, and—if available—temperatures, as well as CPU and RAM usage for each individual container.
+Click "Add System" in the dialog. The server appears in the list. When its dot turns green, data is arriving. Click the server to see history for CPU, RAM, disk, network and, if available, temperatures, plus CPU and RAM of every single container.
 
-If the dot remains red, check:
+If the dot stays red, check:
 
-- Is it accessible from`https://beszel.__DOMAIN__` the server itself? Test: `curl -I https://beszel.__DOMAIN__`. Some routers do not forward internal requests back to their own public address (missing NAT loopback). In that case, a local DNS entry that points the domain to the internal IP address will help.
-- Votes  `KEY`and  `TOKEN`in the `.env`? Run again`docker compose up -d` after making a change.
-- [Common Issues](https://beszel.dev/guide/common-issues) in the Beszel Documentary.
+- Is `https://beszel.__DOMAIN__` reachable from the server itself? Test: `curl -I https://beszel.__DOMAIN__`. Some routers don't route requests from inside back to their own public address (missing NAT loopback). A local DNS record that points the domain to the internal IP helps then.
+- Are `KEY` and `TOKEN` in the `.env` right? After a change, run `docker compose up -d` again.
+- The [common issues](https://beszel.dev/guide/common-issues) in the Beszel docs.
 </Step>
 
-<Step title="Set Up Notifications">
-For Beszel to warn you, it needs a channel. Open “Settings → Notifications.” Beszel offers two options:
+<Step title="Set up notifications">
+For Beszel to warn you, it needs a channel. Open "Settings → Notifications". Beszel knows two ways:
 
-- **Email**: Enter your email address. To do this, Beszel needs to be able to send emails. You can enter your email provider's SMTP settings in the admin settings, which you can access via the user menu.
-- **Webhook / Push**: Beszel uses [Shoutrrr URLs](https://beszel.dev/guide/notifications/) and thus supports ntfy, Telegram, Discord, Gotify, and Matrix, among others. For example, to send a push notification to a cell phone via the public ntfy server, simply use:
+- **Email**: enter your address. Beszel must be able to send mail for this. You enter your mail provider's SMTP details in the admin settings linked from the user menu.
+- **Webhook / push**: Beszel uses [Shoutrrr](https://beszel.dev/guide/notifications/) URLs and so supports ntfy, Telegram, Discord, Gotify and Matrix, among others. For a push message to your phone through the public ntfy server, this is enough, for example:
 
 ```bash
 ntfy://ntfy.sh/ein-langes-zufaelliges-topic
 ```
 
-To do this, install the ntfy app and subscribe to the same topic. Anyone who knows the topic name can read the messages. So choose a long, random name—or set up your own ntfy server later. The exact URL format for each service is listed in the [Beszel documentation](https://beszel.dev/guide/notifications/). The [Notifications](/en/setup/notifications/) guide explains which channel is right for you and how to run ntfy yourself.
+Install the ntfy app and subscribe to the same topic. Anyone who knows the topic name can read along, so choose it long and random, or run your own ntfy server later. The exact URL format for each service is in the [Beszel docs](https://beszel.dev/guide/notifications/). The guide [Notifications](/en/setup/notifications/) shows which channel suits you and how to run ntfy yourself.
 </Step>
 
-<Step title="Set Alarms">
-You set alerts on a per-system basis. In the system list, click the bell icon next to your server. A good place to start:
+<Step title="Set the alerts">
+You set alerts per system. In the system list, click the bell icon next to your server. Sensible to start with:
 
-| Alarm | Proposal |
+| Alert | Suggestion |
 | --- | --- |
-| Status | To: Notifies you if the server stops responding |
-| Disk Usage | 85% or more |
-| Memory Usage | 90% or higher, for 10 minutes or more |
-| CPU Usage | 90% or higher, for 10 minutes or more |
-| Temperature | only if your server reports sensor readings |
+| Status | on: reports when the server stops responding |
+| Disk Usage | from 85 % |
+| Memory Usage | from 90 %, for 10 minutes |
+| CPU Usage | from 90 %, for 10 minutes |
+| Temperature | only if your server reports sensors |
 
-The duration helps prevent false alarms: A brief spike in load during an update is normal, but ten minutes of full load is not. If the hard drive alarm goes off, go to [“Hard Drive Full](/en/wiki/disk-full/)” to see where the space has gone. Using the “All Systems” tab, you can apply the same settings to any new server later on.
+The duration prevents false alarms: a short load spike during an update is normal, ten minutes at full load less so. If the disk alert fires, [Disk full](/en/wiki/disk-full/) helps you find where the space went. Through the "All Systems" tab, you can apply the same values to every new server later.
 </Step>
 
-<Step title="Connect Additional Servers">
-Each additional server requires only one agent. Create a new system in the Hub using “Add System,” and launch the same agent stack on the server using the new key and token.  `HUB_URL`remains the same. Since the agent establishes the connection, this also works with a VPS in the cloud. For instructions on how to distribute tasks across multiple devices, see [“Multiple Devices: Assigning Roles](/en/wiki/multiple-devices/).”
+<Step title="Connect more servers">
+Every further server only needs an agent. Add a new system in the hub with "Add System" and start the same agent stack on the server with the new key and token. `HUB_URL` stays the same. Because the agent opens the connection, this also works for a VPS in the cloud. [Multiple devices: splitting the roles](/en/wiki/multiple-devices/) explains how to spread tasks over several devices.
 
-You should always update Hub and Agent together when installing updates to ensure that their versions are compatible.
+Always update the hub and agents together, so the versions match.
 </Step>
 
 </Steps>
 
-<Callout title="Beszel complements, but does not replace, an external check">
-If the entire server goes down, Beszel will also go down if it's running on that server. In that case, the status alert will only be helpful for other servers. [Uptime Kuma](/en/setup/uptime-kuma/) checks whether your services are accessible from the outside—ideally from a second location.
+<Callout title="Beszel complements an outside check, it doesn't replace it">
+If the whole server goes down, Beszel goes down with it if it runs there. The status alert then only helps for other servers. Whether your services are reachable from outside is checked by [Uptime Kuma](/en/setup/uptime-kuma/), ideally from a second location.
 </Callout>

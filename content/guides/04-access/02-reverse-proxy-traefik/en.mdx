@@ -1,31 +1,28 @@
 ---
-title: Reverse Proxy with Traefik
-description: A reverse proxy receives all requests on ports 80 and 443 and forwards them to the correct container based on the hostname. To do this, Traefik reads the labels from your containers and retrieves the TLS certificates from Let's Encrypt itself.
+title: "Reverse proxy with Traefik"
+description: "A reverse proxy receives all requests on ports 80 and 443 and forwards them to the right container based on the host name. Traefik reads your containers' labels for this and gets the TLS certificates from Let's Encrypt by itself."
 level: 2
 minutes: 25
-requires:
-  - Docker Compose
-  - Domain
-services:
-  - traefik
+requires: [Docker Compose, Domain]
+services: [traefik]
 ---
 
 <Callout title="Traefik or Nginx Proxy Manager?">
-Traefik is a bit more complicated at first, but it offers the most options: The configuration is available as labels directly within each`compose.yaml` service; you can enable middleware such as login protection by applying a label to it, and everything can be versioned as a file. If you want to keep things simple at first, use [Nginx Proxy Manager](/en/setup/reverse-proxy-npm/) with its web interface.
+Traefik is a bit more complicated at first, but offers the most options: the configuration lives as labels right in each service's `compose.yaml`, you put middlewares like login protection in front with a label, and everything can be versioned as files. If you want to keep it simple for now, use [Nginx Proxy Manager](/en/setup/reverse-proxy-npm/) with its web interface.
 </Callout>
 
 <Steps>
 
-<Step title="Create a proxy network">
-All services that Traefik is supposed to reach are connected to a shared Docker network. You create it once and then reference it in each stack.
+<Step title="Create the proxy network">
+All services that Traefik should reach sit in a shared Docker network. You create it once and then reference it in every stack.
 
 ```bash
 docker network create __NETWORK__
 ```
 </Step>
 
-<Step title="Create a directory">
-Each stack gets its own folder under `__ROOT__`. Traefik's persistent data—that is, the certificates—is stored in `__DATA(traefik)__`.
+<Step title="Create the folder">
+Each stack gets its own folder under `__ROOT__`. Traefik's persistent data, that is the certificates, lives in `__DATA(traefik)__`.
 
 ```bash
 mkdir -p __ROOT__/traefik __DATA(traefik)__/letsencrypt
@@ -34,14 +31,14 @@ chmod 600 __DATA(traefik)__/letsencrypt/acme.json
 ```
 </Step>
 
-<Step title="Write the `compose.yaml` and `.env` files">
-The configuration is located in `compose.yaml`. Values that differ between servers are specified in the `.env`.
+<Step title="Write compose.yaml and .env">
+The configuration goes into `compose.yaml`. Values that differ between servers go into `.env`.
 
 <ServiceFiles id="traefik" />
 </Step>
 
-<Step title="Start and Check">
-When Traefik starts up for the first time, it retrieves the certificate. You can see in the log whether the TLS challenge is successful.
+<Step title="Start and check">
+On the first start, Traefik fetches the certificate. The log shows whether the TLS challenge succeeds.
 
 ```bash
 cd __ROOT__/traefik
@@ -49,27 +46,50 @@ docker compose up -d
 docker compose logs -f traefik
 ```
 
-If the log reports errors during the challenge or if the browser displays Traefik's default certificate, [the "Certificate Missing"](/en/wiki/certificate/) section will help.
+If the log reports challenge errors or the browser shows Traefik's default certificate, [Certificate missing](/en/wiki/certificate/) helps.
 </Step>
 
-<Step title="Connect the first service">
-A container is attached to Traefik via labels. After that, it can be accessed at its subdomain with a valid certificate.
+<Step title="Connect your first service">
+A container is attached to Traefik with labels and must sit in the proxy network. It no longer needs a port of its own. To try it, change the `compose.yaml` of the whoami stack from the [first stack](/en/setup/first-stack/) like this:
 
 ```yaml
-labels:
-  - traefik.enable=true
-  - traefik.http.routers.whoami.rule=Host(`whoami.__DOMAIN__`)
-  - traefik.http.routers.whoami.tls.certresolver=le
+services:
+  whoami:
+    image: traefik/whoami:latest
+    container_name: whoami
+    restart: unless-stopped
+    networks:
+      - __NETWORK__
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.whoami.rule=Host(`whoami.__DOMAIN__`)
+      - traefik.http.routers.whoami.entrypoints=websecure
+      - traefik.http.routers.whoami.tls.certresolver=le
+
+networks:
+  __NETWORK__:
+    external: true
 ```
 
-If the subdomain returns a "Bad Gateway" response, Traefik cannot reach the container. The common causes are listed under "[Bad Gateway](/en/wiki/bad-gateway/)."
+```bash
+cd __ROOT__/whoami
+docker compose up -d
+```
 
-<Callout title="Integrate Your Own Services">
-For services from the [catalog](/en/services/), “My Setup” automatically sets the labels. For everything else, the [Proxy Configuration](/en/werkzeuge/proxy-konfiguration/) tool generates the appropriate labels based on the subdomain, container name, and port.
+After a few seconds, `https://whoami.__DOMAIN__` is reachable with a valid certificate. This requires a DNS record for the subdomain; see [Domain & DNS](/en/setup/domain-dns/).
+
+If the subdomain answers with "Bad Gateway", Traefik can't reach the container. The usual causes are listed under [Bad Gateway](/en/wiki/bad-gateway/).
+
+<Callout title="The dashboard only from the home network">
+The template publishes the Traefik dashboard at `traefik.__DOMAIN__`. It only shows information and doesn't allow changes, but it reveals your services and routes. That's why the middleware `dashboard-lan` sits in front of it: it only lets addresses from the home network through (`10.0.0.0/8` and `192.168.0.0/16`); everyone else gets `403 Forbidden`. Once you've set up [Tinyauth](/en/setup/tinyauth/), you can protect it with a login instead and use it on the go as well. If you don't need the dashboard, delete the `labels` lines and the `--api.dashboard=true` option.
+</Callout>
+
+<Callout title="Connecting your own services">
+For services from the [catalog](/en/services/), "My setup" sets the labels automatically. For everything else, the [proxy config](/en/tools/proxy-config/) tool creates the matching labels from subdomain, container name and port.
 </Callout>
 
 <Callout title="Services on another device?">
-Traefik reads labels only from containers on this Docker host. If a service is running on a second device, such as a Raspberry Pi, you can either set up a separate reverse proxy for it there or enter it here with its IP address and port. The "[Multiple Devices: Assign Roles" section](/en/wiki/multiple-devices/) compares both approaches.
+Traefik only reads labels from containers on this Docker host. If a service runs on a second device, a Raspberry Pi for example, give it its own reverse proxy there or add it here statically with IP and port. [Multiple devices: splitting the roles](/en/wiki/multiple-devices/) compares both approaches.
 </Callout>
 </Step>
 

@@ -1,49 +1,47 @@
 ---
-title: Cloudflare Tunnel
-description: Ultimately, a service under your domain will be accessible from the Internet without you having to open a port on your router. This also works behind CGNAT and DS-Lite.
+title: "Cloudflare Tunnel"
+description: "In the end, a service is reachable from the internet under your domain without opening a port on your router. This also works behind CGNAT and DS-Lite."
 level: 2
 minutes: 20
-requires:
-  - Docker Compose
-  - Domain with DNS hosted by Cloudflare
+requires: [Docker Compose, Domain with DNS at Cloudflare]
 ---
 
-With a tunnel, your server establishes an outbound connection to Cloudflare on its own. Requests to your domain first go to Cloudflare and are routed to you through this tunnel. Because the connection goes from the inside out, you don’t need to open any ports or have a public IPv4 address. The article [“Tunnels”](/en/wiki/tunnels/) explains how tunnels work in general.
+With a tunnel, your server itself opens an outgoing connection to Cloudflare. Requests to your domain first land at Cloudflare and reach you through this tunnel. Because the connection goes from inside to outside, you need no port forwarding and no public IPv4. The article [Tunnels](/en/wiki/tunnels/) explains how tunnels work in general.
 
-The program on your side is called `cloudflared`. It runs as a container in the proxy network and accesses your services there by name.
+The program on your side is called `cloudflared`. It runs as a container in the proxy network and reaches your services there by their names.
 
-## Pros and Cons
+## Pros and cons
 
-| Advantages | Disadvantages |
+| Pros | Cons |
 | --- | --- |
-| No open ports on the router | TLS Ends at Cloudflare: Cloudflare Can View Your Traffic in Plain Text |
-| Works behind CGNAT and DS-Lite | You're at the mercy of a U.S. provider and its rules |
-| Your home IP address remains hidden | In the free plan, uploads are limited to 100 MB per request |
-| Free, no need for your own server | Video streaming (Jellyfin, Plex) is not permitted under the Terms of Service |
+| No open port on the router | TLS ends at Cloudflare: Cloudflare can see your traffic unencrypted |
+| Works behind CGNAT and DS-Lite | You depend on a US provider and its rules |
+| Your home IP stays hidden | On the free plan, uploads are limited to 100 MB per request |
+| Free, no server of your own needed | Video streaming (Jellyfin, Plex) isn't covered by the terms of service |
 
-For services like a password manager or photo storage, the first drawback is this: You’re entrusting Cloudflare with your data in plain text. If you don’t want that, it’s better to use a [VPN](/en/setup/vpn-wireguard/) for private services and reserve the tunnel only for things that are meant to be public anyway. [A comparison of access methods](/en/wiki/access-methods-compared/) provides an overview.
+For services like a password manager or photos, the first con means: you trust Cloudflare with your data in plain text. If you don't want that, use a [VPN](/en/setup/vpn-wireguard/) for private services and only use the tunnel for things that are meant to be public anyway. [Access methods compared](/en/wiki/access-methods-compared/) gives an overview.
 
 <Steps>
 
-<Step title="Transfer a domain to Cloudflare">
-The tunnel only works with a domain whose DNS is managed by Cloudflare. Create a free account with [Cloudflare](https://dash.cloudflare.com/), add your domain, and enter the two nameservers that Cloudflare provides in your registrar's control panel.
+<Step title="Move your domain to Cloudflare">
+The tunnel only works with a domain whose DNS Cloudflare manages. Create a free account at [Cloudflare](https://dash.cloudflare.com/), add your domain and enter the two name servers Cloudflare shows you at your registrar.
 
-It may take anywhere from a few minutes to several hours for Cloudflare to mark the domain as active. For more information on DNS, see the [Domain & DNS](/en/setup/domain-dns/) Guide.
+It can take a few minutes up to several hours until Cloudflare reports the domain as active. More on DNS in the guide [Domain & DNS](/en/setup/domain-dns/).
 </Step>
 
-<Step title="Create a tunnel">
-You manage tunnels in Cloudflare's **Zero Trust dashboard**. The first time you access it, select a plan—the free one is sufficient.
+<Step title="Create the tunnel">
+You manage tunnels in the Cloudflare dashboard.
 
-1. In the Zero Trust dashboard, open "Networks → Tunnels" and create a new tunnel of the **Cloudflared** type.
-2. Give it a name, such as `homelab`.
-3. Select **Docker** as the environment. Cloudflare will show you a `docker run`command.
-4. Just copy the long **token** that comes after the period`--token`. You don't need the command itself.
+1. Open **Networking → Tunnels** and choose **Create a tunnel**.
+2. Give it a name, such as `homelab`, and confirm with **Create Tunnel**.
+3. Choose **Docker** as the environment. Cloudflare shows you a `docker run` command.
+4. Copy only the long **token** after `--token` from it. You don't need the command itself. Leave the page open; it's waiting for the first connection.
 
-The menu items on Cloudflare change from time to time. The current instructions can be found in the [official documentation](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/create-remote-tunnel/).
+Cloudflare changes its menus from time to time. The current instructions are in the [official documentation](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/).
 </Step>
 
-<Step title="Create a directory and a .env file">
-The token is a secret: whoever has it can run your tunnel. That's why it goes in the `.env`, not the `compose.yaml`.
+<Step title="Create the folder and .env">
+The token is a secret: whoever has it can run your tunnel. So it goes into the `.env`, not into the `compose.yaml`.
 
 ```bash
 mkdir -p __ROOT__/cloudflared
@@ -52,21 +50,23 @@ nano .env
 chmod 600 .env
 ```
 
-Contents of`.env`:
+Contents of the `.env`:
 
 ```bash
 TUNNEL_TOKEN=hier-den-token-einfuegen
 ```
+
+Replace the value with your token.
 </Step>
 
-<Step title="Write a compose.yaml file">
-`cloudflared` Reads the token from the variable`TUNNEL_TOKEN`. The container is hosted on the proxy network so that it can access your services by container name. It doesn't need any ports because it only connects to the outside world.
+<Step title="Write compose.yaml">
+`cloudflared` reads the token from the `TUNNEL_TOKEN` variable. The container sits in the proxy network so it can reach your services by container name. It needs no ports, because it only connects outward.
 
 ```yaml
 services:
   cloudflared:
-    # Pin a specific version tag once it runs, see hub.docker.com/r/cloudflare/cloudflared
-    image: cloudflare/cloudflared:latest
+    # Version tags are dates (year.month.patch), see hub.docker.com/r/cloudflare/cloudflared
+    image: cloudflare/cloudflared:2026.9.3
     container_name: cloudflared
     restart: unless-stopped
     command: tunnel --no-autoupdate run
@@ -81,42 +81,41 @@ networks:
 ```
 </Step>
 
-<Step title="Start and Check">
-Start the Stack.  It connects`cloudflared` to Cloudflare immediately.
+<Step title="Start and check">
+Start the stack. `cloudflared` connects to Cloudflare right away.
 
 ```bash
 docker compose up -d
 docker compose logs -f cloudflared
 ```
 
-After a short while, several lines containing  should appear`Registered tunnel connection` in the log. Type  to stop`Strg+C` the display. In the Zero Trust dashboard, the tunnel now shows as "**Healthy**."
+After a short time, the log should show several lines with `Registered tunnel connection`. Press `Ctrl+C` to leave the view. In the dashboard, the tunnel now shows as **Healthy**, and you can continue with **Continue**.
 </Step>
 
-<Step title="Publish Service">
-Now you'll tell Cloudflare which name corresponds to which service. Open the tunnel in the dashboard and add an entry under "**Public Hostname**" (or "Published application routes," depending on your dashboard version). Here's an example using [Uptime Kuma](/en/services/uptime-kuma/):
+<Step title="Publish a service">
+Now tell Cloudflare which name leads to which service. Under **Networking → Tunnels**, open your tunnel, switch to the **Routes** tab and choose **Add route → Published application**. [Uptime Kuma](/en/services/uptime-kuma/) serves as the example:
 
 | Field | Value |
 | --- | --- |
 | Subdomain | `status` |
 | Domain | `__DOMAIN__` |
-| Type | `HTTP` |
-| URL | `uptime-kuma:3001` |
+| Service URL | `http://uptime-kuma:3001` |
 
-In the URL field, enter the **container name** and the port **within the container**. This works because  `cloudflared`and the service `__NETWORK__`are on the same network. Cloudflare creates the appropriate DNS record itself and handles the certificate.
+For the URL, enter the **container name** and the port **inside the container**. That works because `cloudflared` and the service sit in the same `__NETWORK__` network. Cloudflare creates the matching DNS record itself and takes care of the certificate.
 
-Then open `https://status.__DOMAIN__`. You should see Uptime Kuma. If Cloudflare displays a "Bad Gateway" error instead, it's usually because the container name, port, or network settings are incorrect; see [Bad Gateway](/en/wiki/bad-gateway/).
+Then open `https://status.__DOMAIN__`. You should see Uptime Kuma. If Cloudflare shows a "Bad Gateway" error instead, usually the container name, port or network is wrong; see [Bad Gateway](/en/wiki/bad-gateway/).
 </Step>
 
-<Step title="Secure Access">
-Everything you post via the tunnel is publicly available on the Internet. The tunnel is not a substitute for logging in.
+<Step title="Secure access">
+Everything you publish through the tunnel is public on the internet. The tunnel doesn't replace a login.
 
-- Only publish services that have their own, well-designed sign-in process.
-- For everything else, add a login step. You can do this directly in Cloudflare using **Access** in the Zero Trust Dashboard (see [the Cloudflare documentation on Access](https://developers.cloudflare.com/cloudflare-one/applications/)), or with a third-party service like [Pocket ID](/en/setup/pocket-id/) or [Tinyauth](/en/setup/tinyauth/).
-- Do not expose administrative interfaces such as Portainer or the interface of your reverse proxy.
+- Only publish services that have a good login of their own.
+- For everything else, put a login in front. You can do that directly at Cloudflare with **Access** in the Zero Trust dashboard (see the [Cloudflare docs on Access](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/http-apps/self-hosted-public-app/)), or with a service of your own like [Pocket ID](/en/setup/pocket-id/) or [Tinyauth](/en/setup/tinyauth/).
+- Don't publish admin interfaces like Portainer or your reverse proxy's interface.
 </Step>
 
 </Steps>
 
-<Callout title="Combining Tunnels and Traefik">
-Instead of having each service point to its own container, you can also have the tunnel point to Traefik. Then the labels and middleware from the other guides will work. But there’s a catch: Without open ports, Traefik can’t obtain a certificate via TLS challenge and will redirect HTTP to HTTPS. So you’ll need to adjust the tunnel’s TLS settings or switch Traefik to DNS challenge mode. This is more for advanced users; the options are described in the [Cloudflare documentation on origin settings](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/configure-tunnels/origin-configuration/).
+<Callout title="Combining the tunnel with Traefik">
+Instead of pointing each service at its own container, you can also point the tunnel at Traefik. Then the labels and middlewares from the other guides apply. But there are catches: without open ports, Traefik can't get a certificate through the TLS challenge, and it redirects HTTP to HTTPS. So you have to adjust the tunnel's TLS settings or switch Traefik to the DNS challenge. That's more for advanced users; the options are in the [Cloudflare docs on HTTPS origins behind a tunnel](https://developers.cloudflare.com/tunnel/troubleshooting/https-origins/).
 </Callout>

@@ -1,38 +1,36 @@
 ---
-title: Set Up Pocket ID
-description: "Ultimately, Pocket ID will run under its own subdomain: a central login service where you sign in using a passkey instead of a password, and the first OIDC client for one of your services."
+title: "Setting up Pocket ID"
+description: "In the end, Pocket ID runs on its own subdomain: a central login service where you sign in with a passkey instead of a password, plus a first OIDC client for one of your services."
 level: 2
 minutes: 20
-requires:
-  - Reverse Proxy with HTTPS
-  - Domain
-services:
-  - pocket-id
+requires: [Reverse proxy with HTTPS, Domain]
+services: [pocket-id]
 ---
 
-Many services have their own user management systems. With five services, you have five passwords, five login pages, and five places where you have to create or block a user. [Single sign-on](/en/wiki/single-sign-on/) solves this problem: One central service verifies your identity, and the other services trust it.
+Many services come with their own user management. With five services, you have five passwords, five login pages and five places where you have to create or lock a user. [Single sign-on](/en/wiki/single-sign-on/) solves this: one central service checks who you are, and the other services trust it.
 
-Pocket ID is one such central service—a so-called **OIDC provider**. OIDC (OpenID Connect) is the open standard through which a service says, “Please log in there and come back with a confirmation.” Pocket ID supports only one type of login: **passkeys**. A passkey is a key pair managed by your device (cell phone, laptop, password manager, or hardware key). There is no password that anyone can guess or intercept.
+Pocket ID is such a central service, a so-called **OIDC provider**. OIDC (OpenID Connect) is the open standard through which a service says: "Please sign in over there and come back with a confirmation." Pocket ID knows only one way to sign in: **passkeys**. A passkey is a key pair managed by your device (phone, laptop, password manager or hardware key). There's no password that someone could guess or phish.
 
 <Callout title="Requirement: HTTPS">
-Browsers only allow passkeys on sites with valid HTTPS. Therefore, set up your reverse proxy first, for example, using [Traefik](/en/setup/reverse-proxy-traefik/) or [Nginx Proxy Manager](/en/setup/reverse-proxy-npm/). Pocket ID will then run under `id.__DOMAIN__`.
+Browsers only allow passkeys on sites with valid HTTPS. So set up your reverse proxy first, e.g. with [Traefik](/en/setup/reverse-proxy-traefik/) or [Nginx Proxy Manager](/en/setup/reverse-proxy-npm/). Pocket ID will then run at `id.__DOMAIN__`.
 </Callout>
 
 <Steps>
 
-<Step title="Write the `compose.yaml` and `.env` files">
-Like any other service, Pocket ID gets its own folder under `__ROOT__`. The database (SQLite) and uploaded images are stored in `data/`, so they are included in your backup.
+<Step title="Write compose.yaml and .env">
+Like every service, Pocket ID gets its own folder under `__ROOT__`. The database (SQLite) and uploaded images end up in `data/`, so they're included in your backup.
 
 <ServiceFiles id="pocket-id" />
 
-Two variables are important:
+Three variables matter:
 
-- `APP_URL` is Pocket ID's public address. It must be exactly correct, because passkeys are permanently tied to this domain. If the domain changes later, the registered passkeys will no longer work.
-- `TRUST_PROXY=true` Pocket ID says that it runs behind a reverse proxy. Then, in the audit log, it sees your visitors' actual IP addresses instead of the proxy's.
+- `APP_URL` is Pocket ID's public address. It must be exactly right, because passkeys are bound to this domain. If the domain changes later, the registered passkeys stop working.
+- `ENCRYPTION_KEY` encrypts the signing keys in the database. The random value is already filled into the `.env`. Also keep it in your password manager: without it, a backup of the database is worthless.
+- `TRUST_PROXY=true` tells Pocket ID that it runs behind a reverse proxy. Then the audit log shows your visitors' real IP addresses instead of the proxy's.
 </Step>
 
-<Step title="Start and Check">
-Start the stack and check the log. If there are no errors and the container is running, Pocket ID is ready.
+<Step title="Start and check">
+Start the stack and watch the log. If no errors appear and the container is running, Pocket ID is ready.
 
 ```bash
 cd __ROOT__/pocket-id
@@ -40,71 +38,71 @@ docker compose up -d
 docker compose logs -f pocket-id
 ```
 
-Press  to exit`Strg+C` the log view; the container will continue to run. If errors occur, see [Troubleshooting: First Steps](/en/wiki/first-steps/).
+Press `Ctrl+C` to leave the log view; the container keeps running. If errors show up, [Troubleshooting: first steps](/en/wiki/first-steps/) helps.
 </Step>
 
-<Step title="Create an Admin Account">
-Immediately after the first launch, there are no users yet. You create the first one on the setup page. That user automatically becomes an administrator.
+<Step title="Create the admin account">
+Right after the first start, there's no user yet. You create the first one on the setup page. It automatically becomes the administrator.
 
-Open in your browser:
+Open in the browser:
 
 ```text
 https://id.__DOMAIN__/setup
 ```
 
-Enter your first name, last name, username, and email address, then submit the form.
+Enter first name, last name, user name and email address, and submit the form.
 
 <Callout type="warning" title="Don't wait">
-The setup page is publicly accessible as long as no account has been created yet. Therefore, create the admin account immediately after starting the system.
+The setup page is publicly reachable as long as no account exists. So create the admin account right after starting.
 </Callout>
 </Step>
 
-<Step title="Register Passkey">
-After you create an account, Pocket ID will prompt you to set up a passkey. Your browser or operating system will then ask where you want to store the passkey: in a password manager, on your phone, or on a hardware key such as a YubiKey.
+<Step title="Register a passkey">
+After creating the account, Pocket ID asks you to set up a passkey. Your browser or operating system then asks where to store it: in your password manager, on your phone or on a hardware key like a YubiKey.
 
-Next, go to "**My Account" and** register a **second passkey** on a different device. That way, if you lose your cell phone, you'll still be able to log in.
+Afterwards, register a **second passkey** on another device under **My Account**. If you lose your phone, you can still get in.
 
-Try logging out and then logging back in to make sure everything is working properly.
+Log out and back in once to check that everything works.
 </Step>
 
-<Step title="Emergency: Locked Out">
-If you no longer have access to one of your passkeys, you can generate a one-time login link on the server. It's valid for one hour.
+<Step title="Emergency: locked out">
+If you no longer have access to any of your passkeys, create a one-time login code on the server. It's only valid for a short time.
 
 ```bash
 cd __ROOT__/pocket-id
 docker compose exec pocket-id /app/pocket-id one-time-access-token DEIN_BENUTZERNAME
 ```
 
-The output contains a URL. Open it, log in with it, and register a new passkey right away.
+Replace `DEIN_BENUTZERNAME` with your user name. The output contains a code and a link. Open the link or enter the code on the "Login Code" page, sign in with it and register a new passkey right away.
 </Step>
 
-<Step title="Create an OIDC Client for a Service">
-To allow a service to sign in via Pocket ID, you must create an **OIDC client** for it. This is an entry that specifies which service is allowed to request sign-ins and where Pocket ID redirects users afterward.
+<Step title="Create an OIDC client for a service">
+For a service to sign in through Pocket ID, you create an **OIDC client** for it. That's an entry that defines which service may request sign-ins and where Pocket ID redirects afterwards.
 
-1. In the admin area, open "**OIDC Clients"** and click "**Add OIDC Client**."
-2. Enter a **name**, such as the name of the service. It will appear on the login page.
-3. Enter the **callback URL**. This is the address within the service to which Pocket ID redirects you after you log in. You can find this information in the documentation for the respective service. For [Tinyauth](/en/setup/tinyauth/), for example, it is `https://login.__DOMAIN__/api/oauth/callback/generic`.
+1. In the admin area, open **OIDC Clients** and click **Add OIDC Client**.
+2. Enter a **name**, e.g. the service's name. It appears on the sign-in page.
+3. Enter the **callback URL**. That's the address in the service that Pocket ID redirects to after sign-in. Which one that is, the service's docs tell you. For [Tinyauth](/en/setup/tinyauth/), for example, it's `https://login.__DOMAIN__/api/oauth/callback/pocketid`.
 4. Save the client.
 
-Pocket ID will then show you **the client ID**, **client secret**, and the **OIDC Discovery URL**:
+Pocket ID then shows you the **client ID**, the **client secret** and the **OIDC discovery URL**:
 
 ```text
 https://id.__DOMAIN__/.well-known/openid-configuration
 ```
 
-Enter these three values when connecting to the service. Many services only need the Discovery URL (sometimes called the "Issuer URL," in which case it excludes the portion starting with ""`/.well-known`) and retrieve the rest on their own. The secret belongs in the service's`.env` , not in the `compose.yaml`. If you lose it, you can generate a new one in Pocket ID.
+Enter these three values in the service. Many services only need the discovery URL (sometimes called "issuer URL", then without the part from `/.well-known` on) and fetch the rest themselves. The secret belongs in the service's `.env`, not in the `compose.yaml`. If you lose it, you can create a new one in Pocket ID.
 
-The Pocket ID guide has ready-made instructions for many popular services: [pocket-id.org/docs](https://pocket-id.org/docs).
+The Pocket ID docs have ready-made instructions for many popular services: [pocket-id.org/docs](https://pocket-id.org/docs).
 </Step>
 
-<Step title="Invite additional users (optional)">
-Under **"Users**," you can create additional accounts, such as for your family. To allow someone to register their first passkey, generate a one-time **login code** or sign-up link for the account and share it with them.
+<Step title="Invite more users (optional)">
+Under **Users**, you create more accounts, for your family for example. So that someone can register their first passkey, create a one-time **login code** or sign-in link for the account and pass it on.
 
-**User** **groups** let you control who is allowed to use which service: In the OIDC client, you can then select the appropriate group under "**Allowed User Groups**."
+With **User Groups**, you control who may use which service: in the OIDC client, pick the matching group under **Allowed User Groups**.
 </Step>
 
 </Steps>
 
-## What about services without OIDC?
+## And services without OIDC?
 
-Pocket ID only protects services that support OIDC themselves. Many small tools have no login process at all or only a simple one. For these, there’s [Tinyauth](/en/setup/tinyauth/): It acts as middleware in the reverse proxy in front of the service and retrieves the login credentials before the request even arrives. Tinyauth can use Pocket ID as an authentication method. This way, you can log in everywhere with the same passkey.
+Pocket ID only protects services that support OIDC themselves. Many small tools have no login at all or only a simple one. For them, there's [Tinyauth](/en/setup/tinyauth/): it sits in the reverse proxy as middleware in front of the service and asks for the login before the request even arrives. Tinyauth can use Pocket ID as a sign-in method. That way you sign in everywhere with the same passkey.

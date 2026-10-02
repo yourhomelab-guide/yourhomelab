@@ -1,114 +1,111 @@
 ---
-title: Install the operating system
-description: Your server is running a minimal installation of Debian 13 or Ubuntu Server LTS without a desktop, and you can log in from another computer via SSH.
+title: "Installing the OS"
+description: "Your server runs a lean Debian 13 or Ubuntu Server LTS without a desktop, and you can log in over SSH from another computer."
 level: 1
 minutes: 40
-requires:
-  - Server Hardware
-  - USB flash drive, 4 GB or more
-  - Monitor and Keyboard for Installation
+requires: [Server hardware, USB stick with at least 4 GB, Monitor and keyboard for the installation]
 ---
 
-A home lab server doesn't need a graphical user interface. A minimal Linux installation without a desktop boots up faster, uses less RAM, and has fewer software components that could introduce updates and security vulnerabilities. You can easily manage the server later via SSH from your regular computer. All other guides on this page are based on **Debian** or **Ubuntu Server**.
+A homelab server doesn't need a graphical interface. A minimal Linux without a desktop boots faster, needs less RAM and has less software that can bring updates and security holes. Later you'll manage the server comfortably over SSH from your regular computer. All other guides on this site assume **Debian** or **Ubuntu Server**.
 
 <OneWay />
 
-<Callout title="Do you use a VPS?">
-Then you can skip the installation. On the provider’s website, select Debian or Ubuntu as the image in the web interface; you can often add your SSH key there as well. After one to two minutes, the server will be up and running, and you’ll receive its IP address. Then skip straight to the “Connect via SSH” step. If you’ve only been given root access, create your own user account in the [“Users & sudo”](/en/setup/users-sudo/) guide.
+<Callout title="Using a VPS?">
+Then you can skip the installation. In your provider's web interface, pick Debian or Ubuntu as the image; often you can add your SSH key right there too. After a minute or two the server is running and you get its IP address. Then jump straight to the step "Connect over SSH". If you only got root access, create your own user in the guide [Users & sudo](/en/setup/users-sudo/).
 </Callout>
 
-<Callout title="Do you use Proxmox?">
-Then you install Debian or Ubuntu the same way, only in a VM instead of directly on the hardware. You create the VM in the Proxmox interface and mount the ISO image as a virtual drive; you don't need a USB drive for this. For more information, see [“Proxmox VE](/en/wiki/proxmox-ve/) and [Operating Models at a Glance](/en/wiki/operating-models/).”
+<Callout title="Using Proxmox?">
+Then you install Debian or Ubuntu the same way, just in a VM instead of directly on the hardware. Create the VM in the Proxmox interface and attach the ISO image as a virtual drive; you don't need a USB stick for that. More in [Proxmox VE](/en/wiki/proxmox-ve/) and [Operating models at a glance](/en/wiki/operating-models/).
 </Callout>
 
 <Steps>
 
 <Step title="Choose Debian or Ubuntu Server">
-Both systems provide a good foundation. The commands in the guides work the same way on both.
+Both systems are a good foundation. The commands in the guides work the same on both.
 
-- **Debian 13** is lightweight, very stable, and doesn't change much. It's a good choice if you want a system that runs smoothly.
-- **Ubuntu Server LTS** is based on Debian, comes with slightly newer packages, and has a very guided installer. LTS stands for Long-Term Support: These versions receive updates for five years.
+- **Debian 13** is lean, very stable and changes little. A good choice if you want a quiet system.
+- **Ubuntu Server LTS** is based on Debian, ships somewhat newer packages and has a very guided installer. LTS stands for Long Term Support: these versions get updates for five years.
 
-If you don't have a preference, go with Debian. Download the appropriate image from the official website:
+If you have no preference, go with Debian. Download the matching image from the official site:
 
-- Debian: [debian.org/download](https://www.debian.org/download) (the “netinst” image for amd64; it downloads the packages from the Internet during installation)
+- Debian: [debian.org/download](https://www.debian.org/download) (the "netinst" image for amd64; it downloads packages from the internet during installation)
 - Ubuntu Server: [ubuntu.com/download/server](https://ubuntu.com/download/server) (the current LTS version)
 </Step>
 
-<Step title="Create an Installation USB Drive">
-You'll need to write the downloaded ISO image to a USB flash drive. Simply copying the files isn't enough; the flash drive must be made bootable. All data on the flash drive will be lost in the process.
+<Step title="Create the installation USB stick">
+You need to write the downloaded ISO image to a USB stick. Simply copying it isn't enough; the stick has to become bootable. All data on the stick will be lost.
 
-- **Windows, macOS, Linux**: [balenaEtcher](https://etcher.balena.io/) – Select an image, select a USB drive, click “Flash.”
-- **Windows**: Alternatively, [Rufus](https://rufus.ie/).
-- **Linux Terminal**: Use `dd`. First, use  to check very`lsblk` carefully which device is your flash drive, because  will overwrite`dd` it without asking.
+- **Windows, macOS, Linux**: [balenaEtcher](https://etcher.balena.io/) – choose the image, choose the stick, "Flash".
+- **Windows**: alternatively [Rufus](https://rufus.ie/).
+- **Linux terminal**: with `dd`. Check very carefully with `lsblk` first which device your stick is, because `dd` overwrites without asking.
 
 ```bash
 lsblk
 sudo dd if=debian-13-amd64-netinst.iso of=/dev/sdX bs=4M status=progress conv=fsync
 ```
 
-Replace  `/dev/sdX`with your stick and the filename with that of your image.
+Replace `/dev/sdX` with your stick and the file name with that of your image.
 </Step>
 
-<Step title="Boot from a USB flash drive">
-Connect the monitor, keyboard, and a **LAN cable** to the server. With a cable, the installer will detect the network immediately, and you won't need to set up Wi-Fi.
+<Step title="Boot from the USB stick">
+Connect a monitor, a keyboard and a **LAN cable** to the server. With a cable, the installer finds the network right away and you don't have to set up Wi-Fi.
 
-Plug in the USB flash drive and turn on the computer. Immediately after turning it on, press the key for the boot menu. Which key that is depends on the manufacturer; it's often `F12`, `F11`,  or`F10` `Esc`. Select the USB flash drive from the menu.
+Plug in the USB stick and turn on the computer. Right after powering on, press the key for the boot menu. Which key that is depends on the manufacturer, often `F12`, `F11`, `F10` or `Esc`. Pick the USB stick there.
 
-If the USB drive doesn't appear, check the BIOS/UEFI settings to see if booting from USB is allowed. You can leave Secure Boot enabled; Debian and Ubuntu support it.
+If the stick doesn't show up, check in the BIOS/UEFI whether booting from USB is allowed. You can leave Secure Boot on; Debian and Ubuntu support it.
 </Step>
 
 <Step title="Install Debian">
-From the Start menu, select **"Install"** (the text-based version is perfectly fine). The installer will ask the following questions one after another:
+In the start menu, choose **Install** (the text version is perfectly fine). The installer asks, one after another:
 
-1. **Language, location, keyboard**: whatever you prefer.
-2. **Computer name (hostname)**: a short name in lowercase letters, e.g., `homelab`. The server will later appear on the network under this name.
-3. **Domain name**: Leave blank.
-4. **Root password**: **Leave it blank**. Debian will then lock the root account, and your regular user account will automatically be granted root `sudo`privileges. This is how all the guides on this page work.
-5. **Username and password**: your regular account. Choose a strong password. Enter the username at the top under "My Setup," and it will appear in all the commands in the guides.
-6. **Partitioning**: “Guided – Use Entire Hard Drive” and “All Files on One Partition” are the easiest options to start with. Be sure to select the correct drive if more than one is installed.
-7. **Package Manager**: Select a mirror server near you; leave the proxy field blank.
+1. **Language, location, keyboard**: as you like.
+2. **Hostname**: a short name in lowercase, e.g. `homelab`. The server will show up on the network under this name.
+3. **Domain name**: leave empty.
+4. **Root password**: **leave empty**. Debian then locks the root account, and your regular user automatically gets `sudo` rights. That's how all guides on this site work too.
+5. **User and password**: your regular account. Choose a strong password. Enter the user name above under "My setup", then it appears in all commands in the guides.
+6. **Partitioning**: "Guided – use entire disk" and "All files in one partition" is the simplest choice to start with. Make sure you pick the right disk if there are several.
+7. **Package manager**: pick a mirror near you, leave the proxy empty.
 
-The most important step comes when **selecting software**. Check the boxes as follows:
+The most important step comes at **Software selection**. Set the checkboxes like this:
 
-- **Debian desktop environment** (English: “Debian desktop environment”): from
-- All desktops (GNOME, KDE, Xfce, etc.): off
+- **Debian desktop environment**: off
+- all desktops (GNOME, KDE, Xfce …): off
 - **SSH server**: on
-- **Standard system tools**: on
+- **Standard system utilities**: on
 
-Install the GRUB bootloader on the system drive. The computer will then restart. Remove the USB flash drive.
+Install the GRUB boot loader on the system disk. Then the computer restarts. Remove the USB stick.
 
-<Callout title="But should I set a root password?">
-In that case, your user won't receive a `sudo`. You can fix this by logging in as root (`su -`), then running`usermod -aG sudo __USER__`  and`apt install sudo` , and logging back in.
+<Callout title="Set a root password after all?">
+Then your user doesn't get `sudo`. You can fix that later: log in as root (`su -`), then run `apt install sudo` and `usermod -aG sudo __USER__`, and log in again.
 </Callout>
 </Step>
 
-<Step title="Or: Install Ubuntu Server">
-If you selected Ubuntu, the installer will guide you through similar questions:
+<Step title="Or: install Ubuntu Server">
+If you chose Ubuntu, the installer walks you through similar questions:
 
-1. Select **a language and keyboard**.
-2. **Installation type**: “Ubuntu Server” is sufficient. The “minimized” version is even smaller, but comes with fewer tools, which you’ll then have to install separately.
-3. **Network**: The LAN connection automatically receives an IP address via DHCP. Leave it that way. You'll set up a static IP address in the next guide.
-4. **Storage**: “Use an entire disk.” By default, Ubuntu sets up an LVM and often doesn’t use all the available space for the system. Check the size in the summary and`ubuntu-lv` set it to the maximum if necessary.
-5. **Profile**: Name, server name (e.g., `homelab`), username, and password.
-6. **SSH**: Check the box next to "**Install OpenSSH server**."
-7. **Featured Server Snaps**: Do not select anything. You'll install Docker later directly from the official repository.
+1. Choose **language and keyboard**.
+2. **Type of installation**: "Ubuntu Server" is enough. The "minimized" variant is even smaller but comes with fewer tools, which you'd then have to install yourself.
+3. **Network**: The LAN connection gets an address via DHCP automatically. Leave it like that. You'll set up the static address in the next guide.
+4. **Storage**: "Use an entire disk". By default, Ubuntu sets up LVM and often doesn't use all the space for the system. In the summary, check the size of `ubuntu-lv` and set it to the maximum if needed.
+5. **Profile**: name, server name (e.g. `homelab`), user name and password.
+6. **SSH**: check **Install OpenSSH server**.
+7. **Featured server snaps**: select nothing. You'll install Docker cleanly from the official repository later.
 
-After installation, restart the computer and remove the USB flash drive.
+After the installation, restart and remove the USB stick.
 </Step>
 
-<Step title="Log In and Find Your IP Address">
-Log in to the server directly using your username. Then you'll be able to find out which IP address it was assigned on your home network:
+<Step title="Log in and find the IP address">
+Log in directly on the server with your user. Then find out which IP address it got on your home network:
 
 ```bash
 ip -br address
 ```
 
-The line with your network card (e.g.,  or`enp1s0` `eno1`) shows the address, such as `192.168.1.50/24`. The number after the slash is not part of the address. Write down the address.
+The line with your network card (e.g. `enp1s0` or `eno1`) shows the address, something like `192.168.1.50/24`. The number after the slash isn't part of the address. Write the address down.
 </Step>
 
-<Step title="Update System">
-The installation media is usually a few weeks old by now. Get the latest updates right away:
+<Step title="Update the system">
+The installation media is usually a few weeks old already. Get the current updates right away:
 
 ```bash
 sudo apt update
@@ -117,16 +114,20 @@ sudo reboot
 ```
 </Step>
 
-<Step title="Connect via SSH">
-From now on, you no longer need a monitor or keyboard connected to the server. Open a terminal on your regular computer (in Windows, use PowerShell or Windows Terminal—SSH is already included there) and connect:
+<Step title="Connect over SSH">
+From now on you no longer need a monitor and keyboard on the server. Open a terminal on your regular computer (on Windows, PowerShell or Windows Terminal, which already include SSH) and connect:
 
 ```bash
 ssh __USER__@192.168.1.50
 ```
 
-Replace the address with the one you just found. The first time you connect, SSH will ask if you trust the server. Confirm by pressing `yes`. [The "SSH Basics" section](/en/wiki/ssh-basics/) explains what happens during this process.
+Replace the address with the one you just found. On the first connection, SSH asks whether you trust the server. Confirm with `yes`. [SSH basics](/en/wiki/ssh-basics/) explains what happens there.
 
-The address you're currently using was assigned by the router via DHCP and may change. That's why, in the next guide, you'll assign the server a [static IP address and a hostname](/en/setup/static-ip-hostname/). After that, you'll replace the password with [an SSH key](/en/setup/ssh-keys/).
+The address you're using right now was assigned by the router via DHCP and can change. That's why in the next guide you give the server a [static IP and a hostname](/en/setup/static-ip-hostname/). After that you replace the password with [SSH keys](/en/setup/ssh-keys/).
 </Step>
 
 </Steps>
+
+<Callout title="Quick start with the setup script">
+User, SSH key, firewall, automatic updates, Docker and, if you like, reverse proxy, Dockhand, Pocket ID and Tinyauth: the [server setup assistant](/en/tools/server-setup-script/) can put these steps from the next guides together into one script. [The server setup script explained](/en/wiki/setup-script/) covers what it does in detail. You still set up the static IP from the next guide yourself.
+</Callout>

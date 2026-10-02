@@ -47,7 +47,7 @@ Jeder Eintrag hat eine **TTL** (Time to Live) in Sekunden. So lange dürfen Reso
 
 Für Einträge, die sich oft ändern, etwa bei wechselnder IP, ist eine kurze TTL von wenigen Minuten sinnvoll. Planst du einen Umzug, senke die TTL ein paar Stunden vorher.
 
-Ob ein Eintrag stimmt, prüfst du auf der Kommandozeile. `dig` steckt unter Debian und Ubuntu im Paket `dnsutils` bzw. `bind9-dnsutils`:
+Ob ein Eintrag stimmt, prüfst du auf der Kommandozeile. `dig` steckt unter Debian und Ubuntu im Paket `bind9-dnsutils`:
 
 ```bash
 dig +short A __DOMAIN__

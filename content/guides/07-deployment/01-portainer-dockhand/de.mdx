@@ -64,7 +64,7 @@ Die Vorlagen sind an dein Setup angepasst. Mit Traefik bekommt der Dienst Labels
 
 <ServiceFiles id="dockhand" />
 
-Portainer nutzt das Tag `lts` (Long Term Support), also die stabile Linie mit weniger häufigen Updates. Wie du später auf feste Versionen umstellst und sie automatisch aktuell hältst, zeigt [Updates mit Renovate](/de/einrichten/updates-renovate/).
+Portainer nutzt das Tag `lts` (Long Term Support), also die stabile Linie mit weniger häufigen Updates. Wie du deine Container aktuell hältst, steht weiter unten unter „Updates mit Dockhand“.
 </Step>
 
 <Step title="Starten">
@@ -89,7 +89,7 @@ Mit `Strg+C` verlässt du die Log-Ansicht, der Container läuft weiter.
   ```
 
   Mach die Einrichtung direkt nach dem Start: Nach fünf Minuten ohne Admin-Konto sperrt sich Portainer aus Sicherheitsgründen. Dann hilft `docker compose restart`, und im Log steht ein neues Token. Wähle danach die lokale Umgebung („Get Started“).
-- **Dockhand** zeigt nach dem Start direkt die lokale Docker-Umgebung. Leg in den Einstellungen einen Benutzer an und prüfe, dass die Anmeldung wirklich aktiv ist, bevor du die Oberfläche von anderen Geräten aus nutzt.
+- **Dockhand** startet ohne Login und zeigt direkt die lokale Docker-Umgebung. Leg unter *Settings → Authentication* einen Benutzer an und schalte danach die Anmeldung ein. Lade die Seite neu und prüfe, dass Dockhand nach Benutzername und Passwort fragt. Erledige das direkt nach dem Start.
 
 Nimm ein langes, zufälliges Passwort und speichere es in deinem Passwortmanager.
 </Step>
@@ -118,7 +118,7 @@ So gehst du vor:
 
 1. Lass alle Container per Update-Prüfung überwachen und schalte Benachrichtigungen ein.
 2. Schalte automatische Updates für Dienste ein, deren Tag nur eine Hauptversion festlegt (z. B. `:2`, `:v5`, `:lts`). Dort bringen Updates Fehlerkorrekturen und Sicherheitsupdates, aber keine großen Umbauten.
-3. **Datenbanken nie automatisch.** Container wie `postgres` oder `mariadb` nimmst du aus, am einfachsten mit dem Label `dockhand.update=false` in der `compose.yaml`. Die Vorlagen dieser Seite setzen es bei Datenbanken schon. Datenbank-Updates gehören zu einem frischen Backup, siehe [Datenbank-Version passt nicht](/de/nachschlagen/datenbank-version/).
+3. **Datenbanken nie automatisch.** Container wie `postgres` oder `mariadb` nimmst du aus, am einfachsten mit dem Label `dockhand.update=false` in der `compose.yaml`. Die Vorlagen dieser Seite setzen es bei Datenbanken schon. Datenbank-Updates gehören zu einem frischen Backup, siehe [Datenbank startet nach Update nicht](/de/nachschlagen/datenbank-version/).
 4. Größere Sprünge (neuer Tag) machst du von Hand: Release Notes lesen, Backup, Tag ändern, `docker compose up -d`.
 
 <Callout title="Und Renovate?">

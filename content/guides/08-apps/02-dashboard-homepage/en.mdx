@@ -1,31 +1,28 @@
 ---
-title: Dashboard with Homepage
-description: "Homepage is the home screen for your Homelab: All services are displayed as tiles on a single page, along with their status, real-time metrics from Uptime Kuma or AdGuard Home, and a search bar. The configuration is contained in just a few YAML files."
+title: "Dashboard with Homepage"
+description: "Homepage is the start page for your homelab: all services sit as tiles on one page, with status, live values from Uptime Kuma or AdGuard Home and a search bar. The configuration lives in a few YAML files."
 level: 1
 minutes: 25
-requires:
-  - Docker Compose
-  - Reverse Proxy
-services:
-  - homepage
+requires: [Docker Compose, Reverse proxy]
+services: [homepage]
 ---
 
-As you add more services, the list of addresses you need to remember keeps growing. [Homepage](https://gethomepage.dev) collects them all on a single page. Each service gets a tile with an icon, a link, and—if desired—real-time data: how many requests AdGuard Home has blocked, whether everything is green in Uptime Kuma, and whether a container is running. The page works well as a browser homepage, even for the whole family.
+With every service, the list of addresses you have to remember grows. [Homepage](https://gethomepage.dev) collects them on one page. Every service gets a tile with an icon, a link and, if you like, live data: how many requests AdGuard Home has blocked, whether everything is green in Uptime Kuma, whether a container is running. The page works well as the browser start page, for the family too.
 
-The website has no click-based interface for configuration. You define everything in YAML files, just like in a [...]`compose.yaml`. That sounds like more work, but it has one advantage: The files are stored in [...]`__ROOT__`, are included in backups, and can be versioned with Git.
+Homepage has no click interface for setup. You describe everything in YAML files, just like in a `compose.yaml`. That sounds like more work, but has an advantage: the files live in `__ROOT__`, end up in the backup and can be versioned with Git.
 
 <OneWay />
 
-If you prefer to build using drag-and-drop in your browser, check out [Homarr](https://homarr.dev). Homarr has a graphical editor, user accounts, and many integrations, but it’s a bit more resource-intensive. Both approaches lead to a good dashboard.
+If you'd rather build with drag and drop in the browser, take a look at [Homarr](https://homarr.dev). Homarr has a graphical editor, user accounts and many integrations, but is somewhat heavier. Both paths lead to a good dashboard.
 
 <Callout type="warning" title="Dashboards show a lot">
-A dashboard with widgets reveals which services you're running and displays data from them. The login credentials for the widgets are stored in the configuration. Therefore, don't make your homepage publicly accessible on the Internet. Set up a login screen (last step) or make it accessible only on your home network and via [VPN](/en/setup/vpn-wireguard/).
+A dashboard with widgets reveals which services you run and shows data from them. The credentials for the widgets live in the configuration. So don't expose Homepage to the internet unprotected. Put a login in front (last step) or only reach it from your home network and through a [VPN](/en/setup/vpn-wireguard/).
 </Callout>
 
 <Steps>
 
-<Step title="Go to the Homepage">
-Create the folder and place  and`compose.yaml`  inside it`.env`:
+<Step title="Start Homepage">
+Create the folder and, in it, `compose.yaml` and `.env`:
 
 ```bash
 mkdir -p __ROOT__/homepage
@@ -34,32 +31,32 @@ cd __ROOT__/homepage
 
 <ServiceFiles id="homepage" />
 
-The stack consists of two containers.  `homepage`is the dashboard.  `socket-proxy`gives it read access to Docker; see the “Integrate Docker” step for more information.
+The stack consists of two containers. `homepage` is the dashboard. `socket-proxy` gives it read access to Docker; more on that in the step "Connect Docker".
 
-The variable is important`.env`. For security reasons, the`HOMEPAGE_ALLOWED_HOSTS` homepage only responds to requests sent to addresses listed there. It must contain exactly the address you type into the browser, without the period`https://`. Separate multiple entries with commas, without spaces. If you are not using a reverse proxy, include the server’s IP address with the port, i.e., `__SERVER_IP__:3002`.
+The `HOMEPAGE_ALLOWED_HOSTS` variable in the `.env` is important. For security reasons, Homepage only answers requests to addresses listed there. It must contain exactly the address you type in the browser, without `https://`. Separate several entries with commas, without spaces. If you don't use a reverse proxy, the server's IP with port goes in, so `__SERVER_IP__:3002`.
 
 ```bash
 docker compose up -d
 docker compose logs -f homepage
 ```
 
-When you start it for the first time, Homepage creates`__DATA(homepage)__/config` sample files in . Open `https://home.__DOMAIN__`. You'll see a page with placeholder tiles. If you see an error message about the host check instead, compare the address in the log with `HOMEPAGE_ALLOWED_HOSTS`.
+On the first start, Homepage creates example files in `__DATA(homepage)__/config`. Open `https://home.__DOMAIN__`. You'll see a page with placeholder tiles. If you see an error message about the host check instead, compare the address in the log with `HOMEPAGE_ALLOWED_HOSTS`.
 </Step>
 
 <Step title="The configuration files">
-All your settings are stored in `__DATA(homepage)__/config`. The most important files are:
+Everything you set up lives in `__DATA(homepage)__/config`. The most important files:
 
-| File | Contents |
+| File | Content |
 | --- | --- |
-| `settings.yaml` | Title, Language, Colors, Layout |
-| `services.yaml` | Your services as tiles, organized into groups |
-| `widgets.yaml` | The bar at the top: Search, Time, Weather |
+| `settings.yaml` | Title, language, colors, layout |
+| `services.yaml` | Your services as tiles, in groups |
+| `widgets.yaml` | The bar at the top: search, time, weather |
 | `bookmarks.yaml` | Simple link lists without status |
 | `docker.yaml` | Connection to Docker |
 
-The files belong to your user (via  `PUID`and  `PGID`in the `.env`), so you can edit them without `sudo`. Homepage reloads them every time the page is refreshed; there's no need to restart the container. Pay attention to indentation: YAML uses spaces, never tabs. Homepage displays a broken entry as an error on the page.
+The files belong to your user (through `PUID` and `PGID` in the `.env`), so you edit them without `sudo`. Homepage reads them again on every page reload; there's no need to restart the container. Watch the indentation: YAML works with spaces, never with tabs. Homepage shows a broken entry as an error on the page.
 
-Start with`settings.yaml`:
+Start with `settings.yaml` (set `language` to `en` for an English interface):
 
 ```yaml
 title: Homelab
@@ -67,8 +64,8 @@ language: de
 ```
 </Step>
 
-<Step title="List Services">
-In  you create`services.yaml` groups, and within them, the services. Replace the sample content with, for example:
+<Step title="Add services">
+In `services.yaml`, you create groups and, inside them, the services. Replace the example content with something like this:
 
 ```yaml
 - Werkzeuge:
@@ -89,19 +86,19 @@ In  you create`services.yaml` groups, and within them, the services. Replace the
         description: Serverwerte
 ```
 
-The fields in detail:
+Group names and descriptions are free text, so name them whatever you like. The fields in detail:
 
-- `href` is the link that the tile opens.
-- `icon` Retrieves an icon from the [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons). Use  `sh-`davor to use the icons from selfh.st/icons, and  to use general`mdi-` icons.
-- `siteMonitor` Checks an address and displays a dot along with the response time. Use the **internal** address from the container name and port here. The homepage is hosted on the proxy network and`__NETWORK__` can reach the other containers directly. This also works if the service is behind a login.
+- `href` is the link the tile opens.
+- `icon` fetches an icon from the [Dashboard Icons](https://github.com/homarr-labs/dashboard-icons). With `sh-` in front, you use the icons from [selfh.st/icons](https://selfh.st/icons/); with `mdi-`, general icons.
+- `siteMonitor` checks an address and shows a dot with the response time. Use the **internal** address made of container name and port here. Homepage sits in the proxy network `__NETWORK__` and reaches the other containers directly. That also works when the service is behind a login.
 
-All options are listed in the [documentation for services.yaml](https://gethomepage.dev/configs/services/).
+All options are in the [docs on services.yaml](https://gethomepage.dev/configs/services/).
 </Step>
 
-<Step title="Add Widgets">
-There are two types of widgets.
+<Step title="Add widgets">
+There are two kinds of widgets.
 
-**Info widgets** appear at the top of the page and come in`widgets.yaml`:
+**Info widgets** sit at the top of the page and go into `widgets.yaml`:
 
 ```yaml
 - search:
@@ -114,7 +111,7 @@ There are two types of widgets.
       timeStyle: short
 ```
 
-**Service widgets** are attached to a tile and display data from the service. To do this, the Home screen queries the service's API. Two examples of this are`services.yaml`:
+**Service widgets** are attached to a tile and show data from the service. Homepage queries the service's API for this. Two examples for `services.yaml`:
 
 ```yaml
 - Betrieb:
@@ -135,25 +132,25 @@ There are two types of widgets.
           password: "{{HOMEPAGE_VAR_ADGUARD_PASSWORD}}"
 ```
 
-The Uptime-Kuma widget reads a [status page](/en/setup/uptime-kuma/).  `slug`is its short name. The AdGuard widget requires the login credentials for the web interface.
+The Uptime Kuma widget reads a [status page](/en/setup/uptime-kuma/); `slug` is its short name. The AdGuard widget needs the web interface's credentials.
 
-Do not write passwords directly into the YAML file. Replace "Homepage" `{{HOMEPAGE_VAR_…}}`with the environment variable of the same name. Add the following `compose.yaml`to the service under`homepage``environment`:
+Don't write passwords directly into the YAML file. Homepage replaces `{{HOMEPAGE_VAR_…}}` with the environment variable of the same name. Add this under `environment` for the `homepage` service in the `compose.yaml`:
 
 ```yaml
       - HOMEPAGE_VAR_ADGUARD_PASSWORD=${HOMEPAGE_VAR_ADGUARD_PASSWORD}
 ```
 
-Enter`.env` the value into the  and restart`docker compose up -d` with . This keeps secrets in one place; see [.env & Secrets](/en/setup/env-secrets/). The list of all widgets is in the [homepage documentation](https://gethomepage.dev/widgets/).
+Put the value into the `.env` and restart with `docker compose up -d`. That way secrets stay in one place; see [.env & secrets](/en/setup/env-secrets/). The list of all widgets is in the [Homepage docs](https://gethomepage.dev/widgets/).
 </Step>
 
-<Step title="Integrate Docker">
-The homepage can display, for each tile, whether the container is running and how much CPU and RAM it is using. To do this, it must be able to query Docker.
+<Step title="Connect Docker">
+For every tile, Homepage can show whether the container is running and how much CPU and RAM it uses. For that, it has to be able to ask Docker.
 
-The obvious approach would be to mount the Docker socket into`/var/run/docker.sock` the container. This file is used to control Docker. **Anyone with access to the socket has root privileges on the server**: they can start containers that mount the entire file system. The (`:ro`read-only) attribute does not change this. It only protects the file itself, not the commands sent through it.
+The obvious way would be to mount the Docker socket `/var/run/docker.sock` into the container. Docker is controlled through this file. **Whoever has access to the socket has root rights on the server**: they can start containers that mount the whole file system. The `:ro` (read-only) suffix doesn't change that. It only protects the file itself, not the commands sent through it.
 
-That is why the stack contains the `socket-proxy`. It has the socket, but only allows read requests (`POST=0`) and only to containers (`CONTAINERS=1`). The website communicates with the proxy instead of with Docker. It is accessible only from within the stack, not from the outside.
+That's why the stack contains the `socket-proxy`. It has the socket but only lets read requests through (`POST=0`), and only for containers (`CONTAINERS=1`). Homepage talks to the proxy instead of Docker. The proxy is only reachable within the stack, not from outside.
 
-Enter`docker.yaml` the proxy here:
+Add the proxy to `docker.yaml`:
 
 ```yaml
 my-docker:
@@ -161,14 +158,14 @@ my-docker:
   port: 2375
 ```
 
-Now you can connect a tile to a container. In the service, enter the following in the `services.yaml`: field:
+Now you can connect a tile with a container. Add this to the service in `services.yaml`:
 
 ```yaml
         server: my-docker
         container: vaultwarden
 ```
 
-Alternatively, you can describe the tile directly in the service. The homepage automatically finds containers with matching **labels**. In the Vaultwarden service`compose.yaml`, it would look like this:
+Alternatively, describe the tile right at the service. Homepage finds containers with matching **labels** automatically. In Vaultwarden's `compose.yaml`, that would look like this:
 
 ```yaml
     labels:
@@ -179,17 +176,17 @@ Alternatively, you can describe the tile directly in the service. The homepage a
       - homepage.description=Passwörter
 ```
 
-If you use Traefik, the service already has a `labels`-block. You just add the homepage labels. You can combine both approaches. To start with,  is easier`services.yaml` to follow because everything is in one place.
+If you use Traefik, the service already has a `labels` block. The Homepage labels simply go in alongside. You can mix both ways. To start with, `services.yaml` is clearer, because everything is in one place.
 </Step>
 
-<Step title="Secure Access">
-Finally, make sure not everyone can see your dashboard. Here are three ways to do that, from the simplest to the most convenient:
+<Step title="Secure access">
+Finally, make sure not everyone can see your dashboard. Three ways, from the simplest to the most comfortable:
 
-- **Only on your home network**: You do not create a public DNS entry, or you can only access the website via [VPN](/en/setup/vpn-wireguard/).
-- **Login first**: With Traefik, you can configure [Tinyauth](/en/setup/tinyauth/) or [Pocket ID](/en/setup/pocket-id/) as middleware in front of your homepage. A single login then protects all services equally.
-- **Built-in Password**: Starting with version 2, Homepage has supported simple login via password or OIDC. The variables for this are listed in the [installation instructions](https://gethomepage.dev/installation/#security-authentication).
+- **Home network only**: that's the default. With Traefik or Caddy, the template only lets addresses from the home network through; with Nginx Proxy Manager, you create an access list for this. On the go, you then reach Homepage through a [VPN](/en/setup/vpn-wireguard/).
+- **Login in front**: with Traefik, put [Tinyauth](/en/setup/tinyauth/) or [Pocket ID](/en/setup/pocket-id/) in front of Homepage as middleware. One login then protects all services the same way.
+- **Built-in password**: since version 2, Homepage has a simple login with a password or OIDC. The variables for it are in the [installation guide](https://gethomepage.dev/installation/#security-authentication).
 
-You can find more on this topic under "[Minimizing Your Attack Surface](/en/wiki/attack-surface/)."
+You'll find more on this topic under [Keeping the attack surface small](/en/wiki/attack-surface/).
 </Step>
 
 </Steps>

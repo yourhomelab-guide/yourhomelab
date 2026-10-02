@@ -32,8 +32,8 @@
     "by": "deepl"
   },
   "content/guides/01-preparation/02-installing-the-os/de.mdx": {
-    "hash": "c20f3c259f2bfc5b",
-    "by": "deepl"
+    "hash": "4be7560bd9851a5c",
+    "by": "claude"
   },
   "content/guides/01-preparation/03-static-ip-hostname/de.mdx": {
     "hash": "c1962da6147eca46",
@@ -48,28 +48,28 @@
     "by": "deepl"
   },
   "content/guides/02-securing/02-users-sudo/de.mdx": {
-    "hash": "369b64bfa199bb72",
-    "by": "deepl"
+    "hash": "0aadcc202d5f456e",
+    "by": "claude"
   },
   "content/guides/02-securing/03-hardening-ssh/de.mdx": {
     "hash": "affe8376beea439c",
     "by": "deepl"
   },
   "content/guides/02-securing/04-firewall-ufw/de.mdx": {
-    "hash": "d24dda785e80c567",
-    "by": "deepl"
+    "hash": "1dd7046fb2ee0c78",
+    "by": "claude"
   },
   "content/guides/02-securing/05-automatic-updates/de.mdx": {
-    "hash": "490b2a41ce4df0e4",
-    "by": "deepl"
+    "hash": "c44575599a30b69e",
+    "by": "claude"
   },
   "content/guides/02-securing/de.md": {
     "hash": "740fc136fc41e7be",
     "by": "claude"
   },
   "content/guides/03-docker/01-installing-docker/de.mdx": {
-    "hash": "95c3f95bdcb950cd",
-    "by": "deepl"
+    "hash": "61f2bd70dad79eb4",
+    "by": "claude"
   },
   "content/guides/03-docker/02-creating-the-directory-structure/de.mdx": {
     "hash": "49e6764bc2980e96",
@@ -88,36 +88,36 @@
     "by": "claude"
   },
   "content/guides/04-access/01-domain-dns/de.mdx": {
-    "hash": "17256fbb3b6960dd",
-    "by": "deepl"
+    "hash": "29861daad4ecd051",
+    "by": "claude"
   },
   "content/guides/04-access/02-reverse-proxy-traefik/de.mdx": {
-    "hash": "3f3ac92799f51d78",
-    "by": "deepl"
+    "hash": "987806e8bf64b8e3",
+    "by": "claude"
   },
   "content/guides/04-access/03-reverse-proxy-npm/de.mdx": {
-    "hash": "4a6d43e62aa68173",
-    "by": "deepl"
+    "hash": "a682323643ebff99",
+    "by": "claude"
   },
   "content/guides/04-access/04-vpn-wireguard/de.mdx": {
     "hash": "fd3a653eff482167",
     "by": "deepl"
   },
   "content/guides/04-access/05-cloudflare-tunnel/de.mdx": {
-    "hash": "d191128049e05ab7",
-    "by": "deepl"
+    "hash": "1ce58d8eb0fac0c0",
+    "by": "claude"
   },
   "content/guides/04-access/de.md": {
     "hash": "edc652d1f27bb7f9",
     "by": "claude"
   },
   "content/guides/05-login-protection/01-pocket-id/de.mdx": {
-    "hash": "c173a9661989f952",
-    "by": "deepl"
+    "hash": "e8be9aa7c520c61a",
+    "by": "claude"
   },
   "content/guides/05-login-protection/02-tinyauth/de.mdx": {
-    "hash": "bd3d0497570c46b2",
-    "by": "deepl"
+    "hash": "f0052084c905115d",
+    "by": "claude"
   },
   "content/guides/05-login-protection/03-crowdsec/de.mdx": {
     "hash": "3a0da32a708b2106",
@@ -136,8 +136,8 @@
     "by": "deepl"
   },
   "content/guides/06-operations/03-monitoring-beszel/de.mdx": {
-    "hash": "f9ff8a0b7c63dd74",
-    "by": "deepl"
+    "hash": "5a927fcf084bfa7c",
+    "by": "claude"
   },
   "content/guides/06-operations/04-uptime-kuma/de.mdx": {
     "hash": "493227a6f764adf6",
@@ -160,40 +160,40 @@
     "by": "claude"
   },
   "content/guides/07-deployment/01-portainer-dockhand/de.mdx": {
-    "hash": "8157e1d2a863926a",
-    "by": "deepl"
+    "hash": "aabe0ba4efecc3e6",
+    "by": "claude"
   },
   "content/guides/07-deployment/02-git-deployments-forgejo/de.mdx": {
-    "hash": "c2a7796611176878",
-    "by": "deepl"
+    "hash": "85076a59585014f4",
+    "by": "claude"
   },
   "content/guides/07-deployment/03-updates-renovate/de.mdx": {
-    "hash": "ae799c6b4fb6131b",
-    "by": "deepl"
+    "hash": "c207531f889f7619",
+    "by": "claude"
   },
   "content/guides/07-deployment/de.md": {
     "hash": "a969a1c0ac34035e",
     "by": "claude"
   },
   "content/guides/08-apps/01-adguard-home/de.mdx": {
-    "hash": "32188bcc645bee7b",
-    "by": "deepl"
+    "hash": "449b74d3560c68e8",
+    "by": "claude"
   },
   "content/guides/08-apps/02-dashboard-homepage/de.mdx": {
-    "hash": "c6ecfedee09e3eea",
-    "by": "deepl"
+    "hash": "54c4fef648c38d07",
+    "by": "claude"
   },
   "content/guides/08-apps/03-jellyfin/de.mdx": {
     "hash": "467215b4444ec040",
     "by": "deepl"
   },
   "content/guides/08-apps/04-paperless-ngx/de.mdx": {
-    "hash": "d1a22690d22f461a",
-    "by": "deepl"
+    "hash": "be0d68a3946b24ad",
+    "by": "claude"
   },
   "content/guides/08-apps/05-home-assistant/de.mdx": {
-    "hash": "b0f942a159d1606f",
-    "by": "deepl"
+    "hash": "f6cdff527005de2c",
+    "by": "claude"
   },
   "content/guides/08-apps/de.md": {
     "hash": "c8ee3d39c38bdbbd",
@@ -208,15 +208,15 @@
     "by": "claude"
   },
   "content/services/adguard-home/de.md": {
-    "hash": "b4b593c0ba34800c",
-    "by": "deepl"
+    "hash": "514cdb2c9999c75d",
+    "by": "claude"
   },
   "content/services/authentik/de.md": {
-    "hash": "bacab3375ad98808",
+    "hash": "3f6e0c63f20d5202",
     "by": "claude"
   },
   "content/services/beszel/de.md": {
-    "hash": "ef5c639f557fbd73",
+    "hash": "b19df9bdf1b1ee4d",
     "by": "claude"
   },
   "content/services/caddy/de.md": {
@@ -224,11 +224,11 @@
     "by": "claude"
   },
   "content/services/dockhand/de.md": {
-    "hash": "61ee2a3726ce4ecb",
+    "hash": "5b95de7d67499853",
     "by": "claude"
   },
   "content/services/forgejo/de.md": {
-    "hash": "361aee5e4cd6bd1f",
+    "hash": "fc4fcc97d4ffa924",
     "by": "claude"
   },
   "content/services/homepage/de.md": {
@@ -236,19 +236,19 @@
     "by": "deepl"
   },
   "content/services/immich/de.md": {
-    "hash": "fc45c56db5c01b51",
+    "hash": "fdb8cec7c8a42078",
     "by": "claude"
   },
   "content/services/jellyfin/de.md": {
-    "hash": "be3526ed724883fa",
-    "by": "deepl"
+    "hash": "340d9779bff1f6e4",
+    "by": "claude"
   },
   "content/services/nextcloud/de.md": {
-    "hash": "a7017ffb77822cf1",
+    "hash": "068561a4062bdd55",
     "by": "claude"
   },
   "content/services/nginx-proxy-manager/de.md": {
-    "hash": "59e2e09ed63c0717",
+    "hash": "19be2d34c474a911",
     "by": "claude"
   },
   "content/services/ntfy/de.md": {
@@ -260,15 +260,15 @@
     "by": "deepl"
   },
   "content/services/pocket-id/de.md": {
-    "hash": "285cc6eabc240a61",
+    "hash": "9aa21dd48c380997",
     "by": "claude"
   },
   "content/services/portainer/de.md": {
-    "hash": "dfdf29f8bd24e298",
+    "hash": "05c47630b4953394",
     "by": "claude"
   },
   "content/services/tinyauth/de.md": {
-    "hash": "a14dac984b23712e",
+    "hash": "fc939dafeb0611ee",
     "by": "claude"
   },
   "content/services/traefik/de.md": {
@@ -276,7 +276,7 @@
     "by": "claude"
   },
   "content/services/uptime-kuma/de.md": {
-    "hash": "beb3ade51b4b033e",
+    "hash": "38be7a41b654446c",
     "by": "claude"
   },
   "content/services/vaultwarden/de.md": {
@@ -334,6 +334,10 @@
   "content/wiki/02-systems/06-multiple-devices/de.mdx": {
     "hash": "1a1463cbf111df1f",
     "by": "deepl"
+  },
+  "content/wiki/02-systems/07-setup-script/de.mdx": {
+    "hash": "821daab4efca7783",
+    "by": "claude"
   },
   "content/wiki/03-containers/01-what-is-docker/de.mdx": {
     "hash": "38f15f686d645efd",
