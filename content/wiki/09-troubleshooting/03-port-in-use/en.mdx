@@ -1,18 +1,15 @@
 ---
-title: Port in use
-description: Docker can't start a container because another program is already using the port. Find out which program is using it, and either free up the port or switch to a different one.
+title: "Port already in use"
+description: "Docker can't start a container because another program is already using the port. You find out who's using it and free it up or switch to another port."
 level: 2
-related:
-  - ip-ports-nat
-  - docker-networks
-  - first-steps
+related: [ip-ports-nat, docker-networks, first-steps]
 practice: first-stack
 ---
 
 ## Symptom
 
-`docker compose up -d` aborts, and the container remains in the status`Created`. The message varies depending on the Docker version
-something like this:
+`docker compose up -d` aborts, and the container stays in the `Created` state. Depending on the Docker version, the
+message looks something like this:
 
 ```text
 Error response from daemon: driver failed programming external connectivity on endpoint pihole:
@@ -26,38 +23,37 @@ listen tcp4 0.0.0.0:80: bind: address already in use
 
 The number after the colon is the port in use on the host.
 
-## Why This Happens
+## Why this happens
 
-A port on the host can be used by only **one** program at a time. With`ports: - "80:80"`  the
-Docker container to forward port 80 from the host to it. Is another program or another
-Containers—that won't work. For more information on ports[,](/en/wiki/ip-ports-nat/) see "[IP, Ports & NAT](/en/wiki/ip-ports-nat/)."
+A port on the host can only be used by **one** program at a time. With `ports: - "80:80"`, the container asks Docker
+to forward the host's port 80 to it. If another program or container is already listening there, this fails.
+[IP, ports & NAT](/en/wiki/ip-ports-nat/) explains more about ports.
 
 ## Causes
 
-1. **Another container is using the port.** For example, two stacks that both use`8080:8080` it, or an old one
-   A container that is still running.
-2. **Port 80 or 443: a web server on the host.** An Apache or nginx server installed earlier, or a second one
-   Reverse Proxy.
-3. **Port 53: systemd-resolved.** On Ubuntu, the local DNS service listens on `127.0.0.53:53`. This conflicts with
-   DNS services such as Pi-hole or AdGuard Home.
+1. **Another container uses the port.** For example two stacks that both use `8080:8080`, or an old container that's
+   still running.
+2. **Port 80 or 443: a web server on the host.** An Apache or nginx installed earlier, or a second reverse proxy.
+3. **Port 53: systemd-resolved.** On Ubuntu, the local DNS service listens on `127.0.0.53:53`. That clashes with DNS
+   services like Pi-hole or AdGuard Home.
 4. **The same port appears twice in the `compose.yaml`.**
 
 ## Check
 
-Which port is in use? Replace  `80`with your port:
+Who's using the port? Replace `80` with your port:
 
 ```bash
 sudo ss -tulpn | grep ':80 '
 ```
 
-The last column lists the program, for example `users:(("nginx",pid=812,fd=6))`. If it says `docker-proxy`, then it is
-A container. Which one is shown:
+The last column names the program, for example `users:(("nginx",pid=812,fd=6))`. If it says `docker-proxy`, it's a
+container. This shows which one:
 
 ```bash
 docker ps --filter publish=80
 ```
 
-Whether a web server is running as a system service:
+Whether a web server runs as a system service:
 
 ```bash
 systemctl status apache2 nginx
@@ -67,34 +63,48 @@ systemctl status apache2 nginx
 
 ### Another container
 
-Stop the old container, or assign a different host port to the new one. On the left is the port on the host, and on the right is the
-in the container. Just change the one on the left:
+Stop the old container, or give the new one a different host port. The port on the host is on the left, the one in the
+container on the right. You only change the left one:
 
 ```yaml
 ports:
   - "8081:8080"
 ```
 
-Behind a reverse proxy, you usually don't need one at all for web services`ports:`. The proxy reaches the container via
-the network`__NETWORK__`. Then the conflict disappears entirely. Which ports a taken-over `compose.yaml`
-The [Compose](/en/werkzeuge/compose-erklaerer/) [Guide](/en/werkzeuge/compose-erklaerer/) shows you which ones have been published and which addresses they are associated with.
+Behind a reverse proxy, web services usually don't need `ports:` at all. The proxy reaches the container through the
+`__NETWORK__` network. Then the conflict disappears completely. The [Compose explainer](/en/tools/compose-explainer/)
+shows you which ports a `compose.yaml` you've taken over publishes and which address they're bound to.
 
-### Old Web Server on Ports 80/443
+### Old web server on port 80/443
 
 If you no longer need it, stop and disable it:
 
 ```bash
 sudo systemctl disable --now apache2
-# oder
+# or
 sudo systemctl disable --now nginx
 ```
 
-You can then uninstall it using  `sudo apt remove apache2`or `sudo apt remove nginx`.
+Afterwards you can uninstall it with `sudo apt remove apache2` or `sudo apt remove nginx`.
 
 ### Port 53 and systemd-resolved
 
-You're just disabling the local DNS stub. After that, the server will continue to resolve names via the
-DNS server on your network.
+<Os is="ubuntu">
+
+On Ubuntu Server, systemd-resolved always runs and takes `127.0.0.53:53`. So for a DNS service like AdGuard Home, you
+have to turn the stub off.
+
+</Os>
+
+<Os is="debian">
+
+On Debian, systemd-resolved usually isn't installed at all. Check with `systemctl is-active systemd-resolved`. If it
+doesn't say `active`, that's not the cause, and you can skip this section.
+
+</Os>
+
+You only turn off the local DNS stub. The server's name resolution keeps working afterwards through the DNS servers
+from your network.
 
 ```bash
 sudo mkdir -p /etc/systemd/resolved.conf.d
@@ -103,19 +113,19 @@ sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 sudo systemctl restart systemd-resolved
 ```
 
-Then use  to check `sudo ss -tulpn | grep ':53 '`that the port is free, and use  `ping -c1 debian.org`to check that the
-Name resolution still works. On Debian, systemd-resolved usually isn't installed at all.
+Afterwards, check with `sudo ss -tulpn | grep ':53 '` that the port is free, and with `ping -c1 debian.org` that name
+resolution still works.
 
-### Bind to a specific IP address
+### Binding to a specific IP
 
-If the server has multiple IP addresses, a service can listen on only one of them:
+If the server has several IP addresses, a service can also listen on just one of them:
 
 ```yaml
 ports:
   - "__SERVER_IP__:53:53/udp"
 ```
 
-## Don't forget the firewall
+## Remember the firewall
 
-If you're using a new port that needs to be accessible from the outside, you may need to open it in UFW. Note: From Docker
-Published ports bypass UFW. For details, see the "[Firewall with UFW"](/en/setup/firewall-ufw/) guide.
+If you use a new port that should be reachable from outside, you may have to allow it in UFW. Careful: ports published
+by Docker bypass UFW. Details are in the guide [Firewall with UFW](/en/setup/firewall-ufw/).

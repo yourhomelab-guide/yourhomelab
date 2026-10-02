@@ -91,6 +91,20 @@ Deinstallieren kannst du ihn danach mit `sudo apt remove apache2` bzw. `sudo apt
 
 ### Port 53 und systemd-resolved
 
+<Os is="ubuntu">
+
+Unter Ubuntu Server läuft systemd-resolved immer und belegt `127.0.0.53:53`. Für einen DNS-Dienst wie AdGuard Home
+musst du den Stub also abschalten.
+
+</Os>
+
+<Os is="debian">
+
+Unter Debian ist systemd-resolved meist gar nicht installiert. Prüfe es mit `systemctl is-active systemd-resolved`.
+Steht dort nicht `active`, liegt es nicht daran, und du kannst diesen Abschnitt überspringen.
+
+</Os>
+
 Du schaltest nur den lokalen DNS-Stub ab. Die Namensauflösung des Servers funktioniert danach weiter über die
 DNS-Server aus deinem Netz.
 
@@ -102,7 +116,7 @@ sudo systemctl restart systemd-resolved
 ```
 
 Prüfe danach mit `sudo ss -tulpn | grep ':53 '`, dass der Port frei ist, und mit `ping -c1 debian.org`, dass die
-Namensauflösung noch geht. Unter Debian ist systemd-resolved meist gar nicht installiert.
+Namensauflösung noch geht.
 
 ### Auf eine bestimmte IP binden
 

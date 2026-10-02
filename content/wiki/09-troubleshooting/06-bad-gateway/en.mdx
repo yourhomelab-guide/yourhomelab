@@ -1,18 +1,14 @@
 ---
-title: '"Bad Gateway" and "404" from the proxy'
-description: The reverse proxy is running, but instead of your service, you're getting a 502 Bad Gateway, 504 Gateway Timeout, or 404 error. This means the proxy can't find the container or can't reach it.
+title: "Bad Gateway and 404 from the proxy"
+description: "The reverse proxy is running, but instead of your service you get 502 Bad Gateway, 504 Gateway Timeout or 404. Then the proxy can't find the container or can't reach it."
 level: 2
-related:
-  - reverse-proxy-explained
-  - docker-networks
-  - dns-domains
-  - first-steps
+related: [reverse-proxy-explained, docker-networks, dns-domains, first-steps]
 practice: reverse-proxy-traefik
 ---
 
 ## Symptom
 
-The browser displays one of these errors:
+The browser shows one of these errors:
 
 ```text
 404 page not found
@@ -20,26 +16,25 @@ Bad Gateway
 Gateway Timeout
 ```
 
-The headline alone gives away a lot:
+The message already tells you a lot:
 
-| Announcement | Meaning |
+| Message | Meaning |
 | --- | --- |
-| `404 page not found` (Traefik) | No rule matches the address. Traefik doesn't even recognize the service. |
-| `502 Bad Gateway` | The proxy recognizes the service but does not receive a response from the container. |
-| `504 Gateway Timeout` | The proxy tries, but can't get through. This is often a network problem. |
+| `404 page not found` (Traefik) | No rule matches the address. Traefik doesn't know the service at all. |
+| `502 Bad Gateway` | The proxy knows the service but gets no answer from the container. |
+| `504 Gateway Timeout` | The proxy tries but doesn't get through. Often a network problem. |
 
-["Reverse Proxy](/en/wiki/reverse-proxy-explained/) Explained[" provides](/en/wiki/reverse-proxy-explained/) more [information](/en/wiki/reverse-proxy-explained/) on the role of a proxy.
+[Reverse proxy explained](/en/wiki/reverse-proxy-explained/) explains more about the proxy's role.
 
 ## Causes
 
-1. **The container isn't running.** It has crashed or is stuck in a [restart loop](/en/wiki/restart-loop/).
-2. **The container is not on the network`__NETWORK__`.** The proxy can only reach containers with which it has a
-   The network shares.
-3. **Incorrect port.** The proxy is accessing a port that the app is not listening on.
-4. **`traefik.enable=true` is missing (Traefik).** Traefik ignores all containers on this page that do not have this label.
-5. **The host rule or DNS settings are incorrect. There is** a typo in `Host(...)`, or the subdomain does not point to the server.
-6. **The container is (`unhealthy`Traefik).** Traefik does not forward traffic to containers whose health check fails.
-7. **NPM: Incorrect forward host or port.**
+1. **The container isn't running.** It crashed or is stuck in a [restart loop](/en/wiki/restart-loop/).
+2. **The container isn't on the `__NETWORK__` network.** The proxy can only reach containers it shares a network with.
+3. **Wrong port.** The proxy talks to a port the app doesn't listen on.
+4. **`traefik.enable=true` is missing (Traefik).** On this site, Traefik ignores all containers without this label.
+5. **Host rule or DNS doesn't match.** A typo in `Host(...)`, or the subdomain doesn't point to the server.
+6. **The container is `unhealthy` (Traefik).** Traefik doesn't forward to containers whose health check fails.
+7. **NPM: wrong forward host or port.**
 
 ## Check
 
@@ -50,27 +45,27 @@ cd __ROOT__/myapp
 docker compose ps
 ```
 
-**Is it stuck in the proxy network?** This output must include both the proxy and your container:
+**Is it on the proxy network?** This output must include both the proxy and your container:
 
 ```bash
 docker network inspect __NETWORK__ --format '{{range .Containers}}{{.Name}} {{end}}'
 ```
 
-**On which port does the app listen?** That information is in the image's documentation. There's also a note that says:
+**Which port does the app listen on?** That's in the image's docs. This also gives a hint:
 
 ```bash
 docker image inspect --format '{{json .Config.ExposedPorts}}' <image>
 ```
 
-**Is the container accessible from the proxy network?** A disposable container on the same network checks directly.
-Enter the container name and port:
+**Is the container reachable from the proxy network?** A throwaway container on the same network asks directly. Fill
+in the container name and port:
 
 ```bash
 docker run --rm --network __NETWORK__ curlimages/curl -sI http://myapp:8080
 ```
 
-If you receive a response or`HTTP/1.1 200` a redirect, the network and port are correct. In that case, the problem lies with the
-Proxy Configuration.
+If an answer comes back with `HTTP/1.1 200` or a redirect, network and port are right. Then it's the proxy
+configuration.
 
 **What does the proxy say?**
 
@@ -79,13 +74,13 @@ cd __ROOT__/traefik
 docker compose logs --tail 100 traefik | grep -i -E "error|myapp"
 ```
 
-**DNS:**  `dig +short myapp.__DOMAIN__`Must provide your server's IP address.
+**DNS:** `dig +short myapp.__DOMAIN__` must return your server's IP.
 
 ## Solution
 
-### Add to Network
+### Add the network
 
-The service that the proxy is supposed to access requires the external network:
+The service the proxy should reach needs the external network:
 
 ```yaml
 services:
@@ -98,10 +93,11 @@ networks:
     external: true
 ```
 
-The [Compose](/en/werkzeuge/compose-erklaerer/) [Explainer](/en/werkzeuge/compose-erklaerer/) shows you which networks a service is connected to and whether a network is integrated`external`.
+The [Compose explainer](/en/tools/compose-explainer/) shows you which networks a service is on and whether a
+network is included as `external`.
 
-If the container is connected to multiple networks—for example, also to an internal network for the database—tell Traefik which one
-It should use that one. Otherwise, it might choose an IP address it can't reach, and you'll get`504`:
+If the container is on several networks, for example also on an internal network to the database, tell Traefik which
+one to use. Otherwise it may pick an IP it can't reach, and you get `504`:
 
 ```yaml
 labels:
@@ -110,8 +106,8 @@ labels:
 
 ### Specify the port (Traefik)
 
-If the image exposes multiple ports or none at all, Traefik won't know which one to use. Specify it. This means
-the port **in** the container, not a port from `ports:`:
+If the image exposes several ports or none, Traefik doesn't know which one to use. Specify it. This means the port
+**inside** the container, not a port from `ports:`:
 
 ```yaml
 labels:
@@ -122,8 +118,8 @@ labels:
   - traefik.http.services.myapp.loadbalancer.server.port=8080
 ```
 
-The [Proxy Configuration](/en/werkzeuge/proxy-konfiguration/) tool generates the appropriate labels for your service.
-After changes to labels:
+The [proxy configuration](/en/tools/proxy-config/) tool generates the right labels for your service.
+After changing labels:
 
 ```bash
 cd __ROOT__/myapp
@@ -132,18 +128,18 @@ docker compose up -d
 
 ### Nginx Proxy Manager
 
-The following applies to the proxy host:
+In the proxy host:
 
-- **Forward Hostname / IP:** the container name, for example `myapp`. Not `localhost`, because that would be the NPM container
-  yourself.
-- **Forward Port:** the port in the container, not the mapped host port.
-- **Scheme:** usually `http`. Only`https` if the app itself supports TLS.
+- **Forward Hostname / IP:** the container name, for example `myapp`. Not `localhost`, because that would be the NPM
+  container itself.
+- **Forward Port:** the port inside the container, not the mapped host port.
+- **Scheme:** usually `http`. Only `https` if the app itself speaks TLS.
 
-Both the NPM and the service must be `__NETWORK__`connected to the network.
+NPM and the service both have to be on the `__NETWORK__` network.
 
 ### Caddy
 
-In the Caddyfile, the destination is specified in exactly the same way as the container name and internal port:
+In the Caddyfile, the target is also given as the container name and internal port:
 
 ```text
 myapp.__DOMAIN__ {
@@ -151,4 +147,4 @@ myapp.__DOMAIN__ {
 }
 ```
 
-Reload after making a change:  `docker compose restart caddy`in Caddy's Stack folder.
+Reload after a change: `docker compose restart caddy` in Caddy's stack folder.

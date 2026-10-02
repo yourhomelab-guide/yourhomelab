@@ -1,25 +1,21 @@
 ---
-title: "Troubleshooting: First Steps"
-description: A service isn't running, and you don't know where to start? By following a set sequence of just a few commands, you can find most errors in a few minutes.
+title: "Troubleshooting: first steps"
+description: "A service isn't running, and you don't know where to start? With a fixed order of a few commands, you'll find most errors in a few minutes."
 level: 1
-related:
-  - logs
-  - docker-compose
-  - docker-networks
-  - backup-strategies
+related: [logs, docker-compose, docker-networks, backup-strategies]
 practice: first-stack
 ---
 
 ## Stay calm
 
-Almost every error in the Homelab has a cause that can be found somewhere: in the log, in the container's status, or in the
-Configuration. Frantically trying things out usually makes it worse, because afterward you won't remember which change
-which has had an effect. Three rules can help:
+Almost every error in a homelab has a cause that's written down somewhere: in the log, in the container's status or
+in the configuration. Frantic trial and error usually makes it worse, because afterwards you no longer know which
+change did what. Three rules help:
 
-- **Read first, then make changes.** Check the status and logs before you do anything.
-- **One change at a time.** Change a value, restart, and check. If it doesn't help, undo it.
-- **Back up before experimenting.** Before you start working with data or databases, back up the data folder.
-  A quick copy will do for now:
+- **Read first, then change.** Look at the status and logs before you touch anything.
+- **One change at a time.** Change one value, restart, check. If it doesn't help, undo it.
+- **Backup before experiments.** Before you touch data or databases, back up the data folder. A quick copy is enough
+  for the moment:
 
 ```bash
 cd __ROOT__/myapp
@@ -28,43 +24,43 @@ sudo cp -a __DATA(myapp)__ __DATA(myapp)__.bak-$(date +%F)
 docker compose start
 ```
 
-Replace  with`myapp` the name of your stack, for example `vaultwarden`.
+Replace `myapp` with the name of your stack, for example `vaultwarden`.
 
-## 1. Is the container even running?
+## 1. Is the container running at all?
 
-Navigate to the stack folder and view the status of all containers, including the stopped ones:
+Change into the stack folder and show the status of all containers, including stopped ones:
 
 ```bash
 cd __ROOT__/myapp
 docker compose ps -a
 ```
 
-Pay attention to the column`STATUS`:
+Watch the `STATUS` column:
 
 | Status | Meaning |
 | --- | --- |
-| `Up 3 hours` | It's working. The problem is more likely with the network or proxy. |
-| `Up 2 minutes (unhealthy)` | It's running, but the health check fails. |
-| `Restarting (1) 5 seconds ago` | Crashes and restarts. See "[Restart Loop](/en/wiki/restart-loop/)." |
-| `Exited (1) 10 minutes ago` | Terminated with an error code. The logs reveal why. |
-| `Exited (137)` | Crashes, often due to insufficient memory. |
+| `Up 3 hours` | Running. The problem is more likely the network or the proxy. |
+| `Up 2 minutes (unhealthy)` | Running, but the health check fails. |
+| `Restarting (1) 5 seconds ago` | Crashes and gets restarted. See [restart loop](/en/wiki/restart-loop/). |
+| `Exited (1) 10 minutes ago` | Exited with an error code. The logs tell you why. |
+| `Exited (137)` | Killed, often because of a lack of memory. |
 
-## 2. Read logs
+## 2. Read the logs
 
-The last few lines of the log almost always state the reason:
+The last lines of the log almost always name the reason:
 
 ```bash
 docker compose logs --tail 50
 docker compose logs --tail 50 -f <service>
 ```
 
-`-f` Follow the log in real time; exit with `Strg+C`. Look for the **first** error message, not the last one.
-Consequential errors often mask the actual cause. Read more about this in the article "[Logs](/en/wiki/logs/)."
+`-f` follows the log live; exit with `Ctrl+C`. Look for the **first** error message, not the last. Follow-up errors
+often hide the actual cause. More in the article [Logs](/en/wiki/logs/).
 
-## 3. Check Configuration
+## 3. Check the configuration
 
-Typos in the  `compose.yaml`or missing variables in the  `.env`are very common. `docker compose config`
-reads both and displays the final configuration as Docker sees it:
+Typos in the `compose.yaml` or missing variables in the `.env` are very common. `docker compose config` reads both and
+shows the final configuration as Docker sees it:
 
 ```bash
 docker compose config
@@ -76,75 +72,75 @@ If a variable is missing, you'll see a warning like this:
 WARN[0000] The "DB_PASSWORD" variable is not set. Defaulting to a blank string.
 ```
 
-<Callout type="warning" title="Contains Secrets">
-  The output of  contains`docker compose config` your passwords in plain text. Do not post them in forums without checking them first.
+<Callout type="warning" title="Contains secrets">
+  The output of `docker compose config` contains your passwords in plain text. Don't post it in forums without checking.
 </Callout>
 
-Don't`compose.yaml` understand a section of your text? The [Compose Guide](/en/werkzeuge/compose-erklaerer/)
-explains each line.
+Don't understand a section of your `compose.yaml`? The [Compose explainer](/en/tools/compose-explainer/) explains
+every line.
 
-## 4. Details with `docker inspect`
+## 4. Details with docker inspect
 
-`docker inspect` shows everything Docker knows about a container. The full output is long, so you can filter it
+`docker inspect` shows everything Docker knows about a container. The full output is long, so you filter
 specifically:
 
 ```bash
-# Status, Exit-Code und ob der Speicher ausging
+# Status, exit code and whether memory ran out
 docker inspect --format '{{.State.Status}} exit={{.State.ExitCode}} oom={{.State.OOMKilled}}' <container>
 
-# In welchen Netzwerken hängt der Container?
+# Which networks is the container on?
 docker inspect --format '{{range $name, $net := .NetworkSettings.Networks}}{{$name}} {{end}}' <container>
 
-# Welche Ordner sind eingebunden?
+# Which folders are mounted?
 docker inspect --format '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{println}}{{end}}' <container>
 ```
 
-The container name is displayed in`docker compose ps` the first column.
+`docker compose ps` shows the container name in the first column.
 
-## 5. Ports and Resources
+## 5. Ports and resources
 
-To see which ports are in use and by which program, run`ss`:
+`ss` shows which ports are taken and by which program:
 
 ```bash
 sudo ss -tulpn
 ```
 
-Here's a quick look at storage space and utilization:
+Plus a quick look at disk space and load:
 
 ```bash
 df -h
 docker stats --no-stream
 ```
 
-## An Overview of Common Mistakes
+## Common errors at a glance
 
 <Cards>
   <Card title="Permission denied">
-    The container must not write to its data folder. [Read the article](/en/wiki/permission-denied/)
+    The container may not write to its data folder. [To the article](/en/wiki/permission-denied/)
   </Card>
-  <Card title="Port in use">
-    `address already in use` At the start. [Read the article](/en/wiki/port-in-use/)
+  <Card title="Port already in use">
+    `address already in use` at startup. [To the article](/en/wiki/port-in-use/)
   </Card>
   <Card title="No certificate">
-    The browser warns that the proxy cannot obtain a Let's Encrypt certificate. [Read the article](/en/wiki/certificate/)
+    The browser warns; the proxy doesn't get a Let's Encrypt certificate. [To the article](/en/wiki/certificate/)
   </Card>
-  <Card title="Restart Loop">
-    The container keeps restarting. [Read the article](/en/wiki/restart-loop/)
+  <Card title="Restart loop">
+    The container keeps restarting. [To the article](/en/wiki/restart-loop/)
   </Card>
   <Card title="Bad Gateway">
-    The proxy returns a 502, 504, or 404 error. [Read the article](/en/wiki/bad-gateway/)
+    The proxy reports 502, 504 or 404. [To the article](/en/wiki/bad-gateway/)
   </Card>
   <Card title="Database won't start">
-    After an update, the database version is no longer compatible. [Read the article](/en/wiki/database-version/)
+    After an update, the database version no longer fits. [To the article](/en/wiki/database-version/)
   </Card>
-  <Card title="Hard Drive Full">
-    `no space left on device`. [Read the article](/en/wiki/disk-full/)
+  <Card title="Disk full">
+    `no space left on device`. [To the article](/en/wiki/disk-full/)
   </Card>
 </Cards>
 
 ## If you're stuck
 
-- Copy the error message into a search engine or into the project's issues on GitHub. You're rarely the first one.
-- Read the release notes if the error occurred after an update. Breaking changes are listed there.
-- If you ask a question in a forum, include: an image with a tag, relevant parts of the text (`compose.yaml`without any secrets), and the
-  Log entries surrounding the first error.
+- Paste the error message into a search engine or the project's issues on GitHub. You're rarely the first.
+- Read the release notes if the error appeared after an update. Breaking changes are listed there.
+- If you ask in a forum, include: the image with its tag, the relevant parts of the `compose.yaml` (without secrets)
+  and the log lines around the first error.

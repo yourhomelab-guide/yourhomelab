@@ -1,19 +1,14 @@
 ---
-title: Hard Drive Full
-description: "Services crash, updates fail, and databases report write errors: The hard drive is full. This is usually caused by old images, unchecked logs, or backups."
+title: "Disk full"
+description: "Services crash, updates fail, databases report write errors: the disk is full. Usually old images, unchecked logs or backups are behind it."
 level: 1
-related:
-  - logs
-  - monitoring
-  - backup-strategies
-  - first-steps
+related: [logs, monitoring, backup-strategies, first-steps]
 practice: monitoring-beszel
 ---
 
 ## Symptom
 
-Suddenly, a lot of things stop working at the same time. One  `docker compose pull`crashes, containers fail to start, and in the
-The logs say:
+Suddenly many things stop working at once. A `docker compose pull` aborts, containers don't start, and the logs say:
 
 ```text
 write /var/lib/docker/tmp/GetImageBlob123456: no space left on device
@@ -25,41 +20,41 @@ PANIC:  could not write to file "pg_wal/xlogtemp.42": No space left on device
 
 ## Causes
 
-1. **Old images.** Every update downloads a new image. The old ones remain on the system, often totaling several gigabytes.
+1. **Old images.** Every update downloads a new image. The old ones stay behind, often several gigabytes.
 2. **Container logs without rotation.** By default, Docker writes logs without a size limit.
-3. **Old backups or dumps** on the same disk that are never cleaned up.
-4. **Build cache** if you build images yourself.
-5. **Data from the services themselves**, such as photos, downloads, or media.
+3. **Old backups or dumps** on the same disk that never get cleaned up.
+4. **Build cache**, if you build images yourself.
+5. **The services' own data**, such as photos, downloads or media.
 
 ## Check
 
-How full is each drive?
+How full is which disk?
 
 ```bash
 df -h
 ```
 
-Also of interest are  `/`and the disk on which  `__ROOT__`is located. If it reads  `Use%`100%, it is full.
+What matters is `/` and the disk `__ROOT__` lives on. If `Use%` says 100%, it's full.
 
-How much space does Docker take up, and how much of that could be freed up (`RECLAIMABLE`)?
+How much does Docker use, and how much of it could be freed (`RECLAIMABLE`)?
 
 ```bash
 docker system df
 ```
 
-Which container logs are large?
+Which container logs are big?
 
 ```bash
 sudo du -sh /var/lib/docker/containers/*/*-json.log | sort -h | tail -5
 ```
 
-Which stack takes up the most space?
+Which stack uses the most?
 
 ```bash
 sudo du -h -d1 __ROOT__ | sort -h
 ```
 
-And the system log:
+And the system journal:
 
 ```bash
 journalctl --disk-usage
@@ -67,14 +62,14 @@ journalctl --disk-usage
 
 ## Solution
 
-### Remove Old Images
+### Remove old images
 
 ```bash
 docker image prune -a
 ```
 
-This deletes all images that are not currently being used by a container. If a stack is not currently running, its`docker compose up -d`
-Just re-image it later. The data won't be affected.
+This deletes all images no container is currently using. If a stack isn't running right now, `docker compose up -d`
+simply downloads its image again later. Data isn't affected.
 
 Remove the build cache if you build images yourself:
 
@@ -82,52 +77,52 @@ Remove the build cache if you build images yourself:
 docker builder prune
 ```
 
-<Callout type="warning" title="Be careful with --volumes">
-  `docker system prune` cleans up stopped containers, unused networks, and untagged images. It also `--volumes`deletes
-  Volumes that are not currently being used by any container, and thus may contain data from a stopped stack. Leave the option
-  Docker never touches`__ROOT__` bind mounts.
+<Callout type="warning" title="Careful with --volumes">
+  `docker system prune` cleans up stopped containers, unused networks and untagged images. With `--volumes`, it also
+  deletes volumes no container is currently using, and with them possibly the data of a stopped stack. Leave the
+  option out. Docker never touches bind mounts under `__ROOT__`.
 </Callout>
 
-### Empty large logs and enable rotation
+### Empty large logs and turn on rotation
 
-You can clear a huge log file while the system is running, without deleting the file. You found`du` the path above using:
+You empty a huge log while it's running, without deleting the file. You found the path above with `du`:
 
 ```bash
 sudo truncate -s 0 /var/lib/docker/containers/<id>/<id>-json.log
 ```
 
-To prevent this from happening again, configure log rotation. You can find instructions on how to do this in the article "[Logs](/en/wiki/logs/)."
-in the section on log rotation.
+So this doesn't happen again, set up log rotation. How is explained in the article [Logs](/en/wiki/logs/), in
+the section on log rotation.
 
-Here's how to reduce the size of the log file to 500 MB:
+You shrink the journal to 500 MB like this:
 
 ```bash
 sudo journalctl --vacuum-size=500M
 ```
 
-### Old Backups and Packages
+### Old backups and packages
 
-If backups are stored on the same disk, delete the old versions. With borgmatic,  `keep_daily`& Co. and  take care of `compact`that
-Automatically; see "[Backups with Borgmatic](/en/setup/backups-borgmatic/)." Also, forget about old dumps and `.bak`copies.
-not from earlier experiments.
+If backups live on the same disk, delete old states. With borgmatic, `keep_daily` & co. and `compact` do this
+automatically, see [Backups with borgmatic](/en/setup/backups-borgmatic/). Also don't forget old dumps and `.bak`
+copies from earlier experiments.
 
-To delete`apt` downloaded packages from , use:
+You delete packages downloaded by `apt` with:
 
 ```bash
 sudo apt clean
 sudo apt autoremove
 ```
 
-### When the data itself becomes too large
+### When the data itself gets too big
 
-If a service simply outgrows its disk space, cleaning it up won't be a permanent solution. In that case, its data belongs on a
-a larger or additional disk. Using the "central" mode from [the directory structure](/en/wiki/directory-structure/)
-you can store the data separately from the configuration.
+If a service simply outgrows the disk, cleaning up won't help for long. Then its data belongs on a bigger or
+additional disk. With the "central" mode from [Directory structure](/en/wiki/directory-structure/), you can
+store the data separately from the configuration.
 
-## After Cleaning Up
+## After cleaning up
 
-Databases that were interrupted while writing are usually restored automatically when the system restarts. Start the
-Restart the affected stacks and check their logs:
+Databases that were interrupted mid-write usually recover on their own when restarted. Restart the affected stacks and
+check their logs:
 
 ```bash
 cd __ROOT__/myapp
@@ -139,6 +134,6 @@ docker compose logs --tail 30
 
 ## Prevention
 
-Get a warning before the disk is full. [Beszel,](/en/setup/monitoring-beszel/) for example, can warn you when it reaches 85%
-Send a message to the reception desk. The guide explains how the message will be sent to your cell phone.
-[Notifications](/en/setup/notifications/). For more information, see [Monitoring](/en/wiki/monitoring/).
+Get warned before the disk is full. [Beszel](/en/setup/monitoring-beszel/) can send you a message from 85% usage,
+for example. How the message gets to your phone is shown in the guide [Notifications](/en/setup/notifications/).
+Background in [Monitoring](/en/wiki/monitoring/).

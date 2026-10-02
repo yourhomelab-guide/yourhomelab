@@ -1,18 +1,15 @@
 ---
-title: Permission denied
-description: The container starts, but it cannot write to its data folder. In most cases, the folder's owner and permissions do not match those of the user under which the process is running in the container.
+title: "Permission denied"
+description: "The container starts but can't write to its data folder. Usually the folder's owner and permissions don't match the user the process in the container runs as."
 level: 2
-related:
-  - volumes-bind-mounts
-  - directory-structure
-  - first-steps
+related: [volumes-bind-mounts, directory-structure, first-steps]
 practice: creating-the-directory-structure
 ---
 
 ## Symptom
 
-The container terminates shortly after starting or enters a [restart loop](/en/wiki/restart-loop/).
-The log contains a message such as:
+The container exits shortly after starting or ends up in a [restart loop](/en/wiki/restart-loop/).
+The log shows a message like:
 
 ```text
 mkdir: cannot create directory '/data/config': Permission denied
@@ -20,52 +17,51 @@ chown: changing ownership of '/var/lib/postgresql/data': Operation not permitted
 Error: EACCES: permission denied, open '/app/data/db.sqlite'
 ```
 
-## Why This Happens
+## Why this happens
 
-Processes in a container run under a user ID (UID) and group ID (GID), just like on the host. Linux
-It only recognizes numbers, not names. If a container with UID 1000 writes to a bind mount that belongs to root (UID 0),
-Linux rejects this. The user's name in the container does not matter.
+Processes in a container run under a user ID (UID) and group ID (GID), just like on the host. Linux only knows
+numbers here, not names. If a container with UID 1000 writes to a bind mount owned by root (UID 0), Linux refuses.
+The user's name inside the container doesn't matter.
 
 ## Causes
 
-1. **Docker created the folder itself.** If the path to a bind mount does not yet exist at startup, Docker
-   Set it to `root:root`. If the service is not running as root, it is not allowed to write there.
-2. **The image runs intentionally without root privileges.** Many modern (rootless) images use a fixed UID, often `1000`,
-   sometimes also  `65532`or its own. The data folder must belong to this UID.
-3. **PUID/PGID are missing or incorrect.** Images from linuxserver.io, for example, read the variables  `PUID`and  `PGID`and
-   will then run under this UID/GID.
-4. **Files were copied as root.** For example, when restoring a backup using  `sudo cp`or `sudo tar`.
-5. **The restrictions are too strict**—for example, for`700` a different owner.
+1. **Docker created the folder itself.** If a bind mount's path doesn't exist yet at startup, Docker creates it, as
+   `root:root`. If the service doesn't run as root, it may not write there.
+2. **The image deliberately runs without root privileges.** Many modern images (rootless) use a fixed UID, often
+   `1000`, sometimes `65532` or one of their own. The data folder has to belong to this UID.
+3. **PUID/PGID are missing or wrong.** Images from linuxserver.io, for example, read the `PUID` and `PGID` variables
+   and then run under that UID/GID.
+4. **Files were copied as root.** For example when restoring a backup with `sudo cp` or `sudo tar`.
+5. **The permissions are too strict**, for example `700` for a different owner.
 
 ## Check
 
-In the commands,  `myapp`represents your stack, and  `<service>`represents the service name from the `compose.yaml`.
+In the commands, `myapp` stands for your stack and `<service>` for the service name from the `compose.yaml`.
 
-Who owns the data folder?  shows`-n` numbers instead of names:
+Who owns the data folder? `-n` shows numbers instead of names:
 
 ```bash
 ls -ln __DATA(myapp)__
 ```
 
-Under which UID is the process running in the container?
+Which UID does the process in the container run as?
 
 ```bash
 cd __ROOT__/myapp
 docker compose exec <service> id
 ```
 
-If the container doesn't run long enough`exec`, check to see if the image specifies a user. An empty field means root:
+If the container doesn't run long enough for `exec`, check whether the image specifies a user. Empty means root:
 
 ```bash
 docker image inspect --format '{{.Config.User}}' <image>
 ```
 
-Your own UID and GID are displayed on`id` the host. On Debian and Ubuntu, the first user created usually has
-`1000`.
+`id` on the host shows your own UID and GID. On Debian and Ubuntu, the first user created usually has `1000`.
 
 ## Solution
 
-**Assign the folder to the correct user.** Use the UID and GID from the verification step:
+**Give the folder to the right user.** Use the UID and GID from the check:
 
 ```bash
 cd __ROOT__/myapp
@@ -74,7 +70,7 @@ sudo chown -R 1000:1000 __DATA(myapp)__
 docker compose up -d
 ```
 
-**For images with a PUID/PGID**, enter your own UID/GID in the `compose.yaml`field, and the folder will belong to you:
+**For images with PUID/PGID**, enter your own UID/GID in the `compose.yaml`, and the folder belongs to you:
 
 ```yaml
 environment:
@@ -86,28 +82,29 @@ environment:
 sudo chown -R __PUID__:__PGID__ __DATA(myapp)__
 ```
 
-**Create the folder before running Docker for the first time.** This prevents Docker from creating it as the root directory:
+**Create the folder before the first start.** That keeps Docker from creating it as root:
 
 ```bash
 mkdir -p __DATA(myapp)__
 ```
 
-The image's documentation usually specifies which UID it expects. Often, it also includes a ready-to-use `chown`command. Which
-The [Compose](/en/werkzeuge/compose-erklaerer/) [guide](/en/werkzeuge/compose-erklaerer/) shows you, line by line, how to set`compose.yaml` bind mounts and variables.
+The image's docs usually state which UID it expects. Often there's a ready-made `chown` command there too. The
+[Compose explainer](/en/tools/compose-explainer/) shows you line by line which bind mounts and variables your
+`compose.yaml` sets.
 
 <Callout type="warning" title="No chmod 777">
-  `chmod -R 777` It appears to fix the error, but it allows any process on the server to read the data and
-  to change. Some programs, such as databases or SSH, will even refuse to start if the permissions are too permissive. Set
-  I'd rather contact the right owner.
+  `chmod -R 777` seems to make the error go away, but allows every process on the server to read and change the data.
+  Some programs, such as databases or SSH, even refuse to start with permissions that are too open. Set the right owner
+  instead.
 </Callout>
 
-**Do not change the database settings.** Official images of Postgres or MariaDB set the permissions for their data folder
-when you first run it. If the folder then has an unexpected UID (such as `999`), that's normal. Don't change it.
+**Don't bend databases.** Official images of Postgres or MariaDB set the permissions of their data folder themselves
+at the first start. If the folder then has an unexpected UID (such as `999`), that's normal. Don't change it.
 
 ## SELinux
 
-On Fedora, RHEL, or Rocky Linux, SELinux may block access even though the permissions are correct. In that case, the extension
-`:Z` on the bind mount, for example`- __DATA(myapp)__:/data:Z`. On Debian and Ubuntu, SELinux is usually not
-Active—you don't need that there.
+On Fedora, RHEL or Rocky Linux, SELinux can block access even though the permissions are right. Then the `:Z` suffix
+on the bind mount helps, for example `- __DATA(myapp)__:/data:Z`. On Debian and Ubuntu, SELinux normally isn't active,
+so you don't need it there.
 
-For more background information on bind mounts, see "[Volumes & Bind Mounts](/en/wiki/volumes-bind-mounts/)."
+More background on bind mounts is under [Volumes & bind mounts](/en/wiki/volumes-bind-mounts/).

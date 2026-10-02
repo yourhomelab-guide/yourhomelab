@@ -445,15 +445,15 @@
   },
   "content/wiki/09-troubleshooting/01-first-steps/de.mdx": {
     "hash": "7ff6f432e83e4169",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/wiki/09-troubleshooting/02-permission-denied/de.mdx": {
     "hash": "ab5f7994440a17a1",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/wiki/09-troubleshooting/03-port-in-use/de.mdx": {
-    "hash": "a53d460ed8eea310",
-    "by": "deepl"
+    "hash": "d2ad221209f55e18",
+    "by": "claude"
   },
   "content/wiki/09-troubleshooting/04-certificate/de.mdx": {
     "hash": "6267e62215c91a0d",
@@ -465,7 +465,7 @@
   },
   "content/wiki/09-troubleshooting/06-bad-gateway/de.mdx": {
     "hash": "60567dc6de07d80c",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/wiki/09-troubleshooting/07-database-version/de.mdx": {
     "hash": "429bf2f91ca7db7c",
@@ -473,7 +473,7 @@
   },
   "content/wiki/09-troubleshooting/08-disk-full/de.mdx": {
     "hash": "d3635755d50637c2",
-    "by": "deepl"
+    "by": "claude"
   },
   "src/i18n/de.json#banner.label": {
     "hash": "2362c7ffde83a464",
