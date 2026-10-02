@@ -1,120 +1,112 @@
 ---
-title: Hardware Overview
-description: You don't need an expensive server to get started. An affordable mini-PC is enough for many services. Here's a look at the different types of devices available and what to look for in terms of RAM, SSD, and power consumption.
+title: "Hardware overview"
+description: "You don't need an expensive server to get started. A frugal mini PC is enough for many services. Here you see which device classes there are and what matters for RAM, SSD and power consumption."
 level: 1
-related:
-  - costs-power
-  - cloud-hybrid-local
-  - truenas-unraid
-  - proxmox-ve
+related: [costs-power, cloud-hybrid-local, truenas-unraid, proxmox-ve]
 practice: choosing-hardware
 ---
 
 <OneWay />
 
-## What Matters
+## What matters
 
-A home lab server runs around the clock, usually without much to do. That's why three things are especially important:
+A homelab server runs around the clock, mostly without much to do. So three things count above all:
 
-- **Power consumption in idle mode.** The computer spends most of its time idle. Whether it draws 8 or 50 watts while doing so makes a
-  year makes a noticeable difference. Sample calculations can be found under "[Costs & Electricity Consumption](/en/wiki/costs-power/),"
-  The [electricity calculator](/en/werkzeuge/stromrechner/) calculates your own values.
-- **Random Access Memory (RAM).** Every container uses memory. For many services, RAM is more of a bottleneck than the
-  Computing power.
-- **Quiet and compact.** The device is often placed in the hallway, on a shelf, or next to the router.
+- **Power consumption at idle.** The computer spends most of its time waiting. Whether it draws 8 or 50 watts while
+  doing so makes a noticeable difference over a year. Example calculations are in
+  [Costs & power consumption](/en/wiki/costs-power/), and the [power calculator](/en/tools/power-calculator/)
+  works out your own numbers.
+- **Memory (RAM).** Every container takes up memory. With many services, RAM is more of a bottleneck than computing
+  power.
+- **Quiet and small.** The device often sits in the hallway, on a shelf or next to the router.
 
-Raw computing power, on the other hand, is rarely a deciding factor. A current entry-level processor is sufficient for password managers,
-It easily handles file synchronization, monitoring, and a reverse proxy.
+Raw computing power, on the other hand, rarely matters. A current entry-level processor easily handles a password
+manager, file sync, monitoring and a reverse proxy.
 
-## Device Classes
+## The device classes
 
 <Cards>
   <Card title="Mini PC (N100/N150 class)">
-    New, compact computers with energy-efficient Intel processors. Low power consumption, quiet, and x86-based like a standard PC.
-    For most beginners, this is the obvious choice.
+    New, compact computers with frugal Intel processors. Low power draw, quiet, x86 like a normal PC. The obvious
+    choice for most beginners.
   </Card>
-  <Card title="Used Business Mini PC">
-    Discontinued small-form-factor business computers, such as the Lenovo ThinkCentre Tiny, HP EliteDesk/ProDesk Mini, or Dell
-    OptiPlex Micro. Rugged, easily upgradeable, and often affordable when bought used.
+  <Card title="Used business mini PC">
+    Retired small-form-factor office computers, such as Lenovo ThinkCentre Tiny, HP EliteDesk/ProDesk Mini or Dell
+    OptiPlex Micro. Sturdy, easy to upgrade and often cheap used.
   </Card>
   <Card title="Raspberry Pi">
-    Very energy-efficient and compact. It uses an ARM processor, so not every Docker image will run on it. Good for a few,
-    easy tasks.
+    Very frugal and small. Uses an ARM processor, so not every Docker image runs on it. Good for a few light services.
   </Card>
   <Card title="NAS">
-    Ready-to-use storage devices with multiple hard drive bays, such as those from Synology or QNAP. Great for storage,
-    With Docker, this is often limited and comes with little RAM.
+    Ready-made storage devices with several drive bays, for example from Synology or QNAP. Strong on storage, often
+    limited with Docker and shipped with little RAM.
   </Card>
-  <Card title="Old Desktop PC">
-    It doesn't cost anything if you already have it, and it offers plenty of space for hard drives. However, when idle, it usually uses significantly
-    more electricity.
+  <Card title="Old desktop PC">
+    Costs nothing if you already have it, and offers lots of room for disks. Usually draws considerably more power at
+    idle, though.
   </Card>
   <Card title="VPS">
-    A rented virtual server in a data center. No hardware at home, a static IP address, but monthly costs and
-    not much storage space.
+    A rented virtual server in a data center. No hardware at home, fixed IP, but monthly costs and little storage.
   </Card>
 </Cards>
 
-## In comparison
+## Compared
 
-These figures are rough estimates. Actual power consumption depends heavily on the model, the hard drives installed, and
-depends on the BIOS settings.
+The values are rough guidelines. Actual consumption depends heavily on the model, the installed disks and the BIOS
+settings.
 
-| Device                      | Idle (rough)          | Strengths                               | Weaknesses                                |
+| Device                     | Idle (rough)             | Strengths                             | Weaknesses                               |
 | -------------------------- | ------------------------ | ------------------------------------- | ---------------------------------------- |
-| N100/N150 Mini PC          | about 5–10 W              | Economical, quiet, new with a warranty      | Usually only one RAM slot, limited space for hard drives |
-| Used Business Mini PC | about 8–15 W            | Rugged, upgradeable, affordable           | Older CPU, used, no warranty      |
-| Raspberry Pi               | about 3–5 W               | Very economical, tiny                  | ARM, SD Card as a Vulnerability          |
-| NAS (2–4 drive bays)        | about 15–40 W with panels | Plenty of storage, hard drive redundancy  | Docker is often limited; low RAM      |
-| Old Desktop PC           | about 30–70 W             | Available, plenty of space                 | High power consumption, noisy               |
-| VPS                        | no electricity of its own       | Fixed IP, no device at home          | Monthly costs, limited storage        |
+| Mini PC N100/N150          | about 5–10 W             | Frugal, quiet, new with warranty      | Usually only one RAM slot, little room for disks |
+| Used business mini PC      | about 8–15 W             | Sturdy, upgradable, cheap             | Older CPU, no warranty when used         |
+| Raspberry Pi               | about 3–5 W              | Very frugal, tiny                     | ARM, SD card as a weak spot              |
+| NAS (2–4 bays)             | about 15–40 W with disks | Lots of storage, disk redundancy      | Docker often limited, little RAM         |
+| Old desktop PC             | about 30–70 W            | Already there, lots of room           | High power draw, loud                    |
+| VPS                        | no power of your own     | Fixed IP, no device at home           | Monthly costs, little storage            |
 
-## RAM
+## Memory
 
 As a rough guide:
 
-- **4 GB** is enough for a handful of lightweight services, such as a reverse proxy, password manager, and monitoring.
-- **8–16 GB** is a good starting point for a typical home lab with databases and a file cloud.
-- **That's all** you need for storage-intensive services like photo archives with facial recognition, or if you also
-  want to run virtual machines, for example with [Proxmox VE](/en/wiki/proxmox-ve/).
+- **4 GB** is enough for a handful of light services, such as a reverse proxy, password manager and monitoring.
+- **8–16 GB** is a comfortable start for a typical homelab with databases and a file cloud.
+- You need **more** for memory-hungry services like photo archives with face recognition, or if you also want to run
+  virtual machines, for example with [Proxmox VE](/en/wiki/proxmox-ve/).
 
-When purchasing, check to see if you can upgrade the RAM. Many N100 mini PCs have only a single slot.
+When buying, check whether you can add RAM later. Many N100 mini PCs only have a single slot.
 
-## Storage: SSDs and Hard Drives
+## Storage: SSD and hard disks
 
-Install the system on an **SSD**. It's fast, quiet, and energy-efficient. An NVMe SSD with 256–512 GB is sufficient for
-The operating system, containers, and the data for most services.
+Install the system on an **SSD**. It's fast, quiet and frugal. An NVMe SSD with 256–512 GB is enough for the
+operating system, containers and the data of most services.
 
-For large amounts of data, such as photos or videos, **hard disk drives (HDDs)** are also used. They are less expensive per terabyte,
-But they also require additional power and make noise. There’s usually no room for them in a mini-PC, so a
-An external enclosure connected via USB or a separate NAS.
+For large amounts of data like photos or videos, **hard disks (HDD)** come in. They're cheaper per terabyte but draw
+extra power and make noise. A mini PC usually has no room for them; then an external USB enclosure or a separate NAS
+helps.
 
-<Callout type="warning" title="Raspberry Pi and SD Cards">
-SD cards do not handle continuous write operations well and may fail without warning. Run a Pi as
-It's better to use an SSD for the server, either via USB or, in the case of the Raspberry Pi 5, via an NVMe adapter.
+<Callout type="warning" title="Raspberry Pi and SD cards">
+SD cards don't cope well with constant writes and can fail without warning. Better run a Pi as a server with an SSD,
+via USB or, on the Raspberry Pi 5, through an NVMe adapter.
 </Callout>
 
 ## ECC memory
 
-**ECC** (Error Correcting Code) is a type of memory that detects and corrects individual bit errors. In servers in the
-It's the standard in data centers. In forums, it's mainly discussed in connection with ZFS and
-[TrueNAS](/en/wiki/truenas-unraid/) is recommended.
+**ECC** (error correcting code) is memory that detects and corrects single-bit errors. It's standard in data center
+servers. In forums, it's recommended mainly in connection with ZFS and [TrueNAS](/en/wiki/truenas-unraid/).
 
-ECC is not a requirement to get started. Mini PCs and most desktop systems don't support it at all. If
-If you're planning to set up a large data repository containing valuable data in the future, it's worth taking a look at this. More important than ECC are
-In any case, make sure you have good backups.
+ECC isn't a requirement to get started. Mini PCs and most desktop systems don't support it at all. If you later plan
+a big data store with valuable data, it's worth a look. Good backups matter more than ECC in any case.
 
-## And what about the architecture?
+## What about the architecture?
 
-Most mini-PCs, business computers, and desktops use **x86-64** (also known as amd64). There is software available for practically every
-Docker image. The Raspberry Pi and some cloud servers use **ARM64**. Many well-known projects offer images for both
-Some architectures are supported, but not all. Check the project page beforehand if you're using ARM.
+Most mini PCs, business computers and desktops use **x86-64** (also called amd64). Practically every Docker image
+exists for it. The Raspberry Pi and some cloud servers use **ARM64**. Many well-known projects offer images for both
+architectures, but not all. Check the project page beforehand if you go with ARM.
 
-## Recommendations for Getting Started
+## Recommendation to start
 
-An N100/N150-class mini PC or a used business mini PC with 16 GB of RAM and an NVMe SSD is suitable for the
-a good, affordable starting point for most beginners. If you just want to give it a try, even an old computer will do, one that
-that you already have lying around, or a small VPS. To figure out which model fits your plan,
-[Cloud, Hybrid](/en/wiki/cloud-hybrid-local/), [or On-Premises?](/en/wiki/cloud-hybrid-local/) The Guide's Specific Recommendations
-[Select hardware](/en/setup/choosing-hardware/). To see which devices others are actually using, go to
-[Homelabs](/en/homelabs/).
+A mini PC of the N100/N150 class or a used business mini PC with 16 GB of RAM and an NVMe SSD is a good, frugal base
+for most beginners. If you want to try things out first, an old computer that's lying around anyway or a small VPS
+will do too. Which model fits your plan is covered in [Cloud, hybrid or local?](/en/wiki/cloud-hybrid-local/),
+and the concrete choice in the guide [Choosing hardware](/en/setup/choosing-hardware/). Which devices others
+actually use is shown under [Homelabs](/en/homelabs/).

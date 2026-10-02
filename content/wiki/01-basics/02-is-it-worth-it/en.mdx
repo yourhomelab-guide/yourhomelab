@@ -1,89 +1,84 @@
 ---
-title: When is it worth it?
-description: Self-hosting offers control, a learning experience, and often lower ongoing costs. In return, you take on the time commitment and responsibility—especially for backups. An honest look at both sides.
+title: "Is it worth it?"
+description: "Self-hosting brings control, learning and often lower running costs. In return, you take on time and responsibility, above all for backups. An honest look at both sides."
 level: 1
-related:
-  - what-is-self-hosting
-  - costs-power
-  - backup-strategies
-  - attack-surface
+related: [what-is-self-hosting, costs-power, backup-strategies, attack-surface]
 ---
 
 ## The short answer
 
-Self-hosting is worth it if you enjoy tinkering, want to be in control of your own data, and are willing to,
-to take care of your system on a regular basis. It's not as worthwhile if you just want to save money or use a service
-must be accessible under all circumstances.
+Self-hosting is worth it if you enjoy tinkering, want to keep your data in your own hands and are willing to look
+after your system regularly. It's less worth it if you only want to save money or if a service has to be reachable
+under all circumstances.
 
-## Arguments in favor of this
+## What speaks for it
 
-- **Control over your data.** Photos, passwords, and documents are stored on your device. No service provider analyzes them
-  ... suddenly changes the terms or discontinues the service.
-- **No subscription trap.** Many cloud services charge monthly, per person, or per unit of storage. Your own server
-  The main costs are electricity and, initially, hardware. The exact amount is shown in
-  [Costs & Power Consumption](/en/wiki/costs-power/)—it calculates these for your device
-  [Electricity calculator](/en/werkzeuge/stromrechner/) off.
-- **You'll learn a lot.** Linux, networks, DNS, certificates, containers: This knowledge will also help you in your career or when
-  An understanding of how the Internet works.
-- **Freedom of choice.** You can combine the software that works best for you and aren't tied to any one ecosystem.
-- **Storage is inexpensive.** Large amounts of data, such as photo archives or media files, are often significantly
-  cheaper than in the cloud.
+- **Control over your data.** Photos, passwords and documents live on your hardware. No provider analyzes them,
+  suddenly changes the terms or shuts the service down.
+- **No subscription spiral.** Many cloud services cost money every month, per person or per gigabyte. A server of
+  your own mainly costs power and the hardware once. How much exactly is shown in
+  [Costs & power consumption](/en/wiki/costs-power/), and the
+  [power calculator](/en/tools/power-calculator/) works it out for your device.
+- **You learn a lot.** Linux, networks, DNS, certificates, containers: this knowledge also helps at work or in
+  understanding how the internet works.
+- **Freedom of choice.** You combine the software that suits you and aren't tied to one ecosystem.
+- **Storage is cheap.** Large amounts of data like photo archives or media are often much cheaper on your own disks
+  than in the cloud.
 
-## Arguments against it
+## What speaks against it
 
-- **Time required.** Setup takes a few evenings. After that, you'll need time for updates and occasional bug fixes.
-  and new versions that do things a little differently than the old ones. Expect to spend about half an hour to an hour per week,
-  when everything is going well, and more when it isn't.
-- **You're the support person.** If a hard drive fails in the middle of the night or a container stops starting up, you're the one who handles it.
-  When others (family, friends) use your services, they depend on you.
-- **Availability.** Power outages, router restarts, moving, vacations: A home server isn't as reliable as a
-  Data center. That's fine for most consumer services, but not for everything.
-- **Security is up to you.** A service you put online will be targeted by automated
-  Found by scanners. Updates and a small [attack surface](/en/wiki/attack-surface/) are a must.
-- **Hardware and electricity also cost money.** You won't save anything compared to a free service.
+- **Time.** Setting things up takes a few evenings. After that, you need time for updates, occasional errors and new
+  versions that do things a bit differently than the old ones. Expect about half an hour to an hour a week when
+  everything runs, and more when it doesn't.
+- **You are the support.** If a disk fails at night or a container stops starting, it's on you. If others (family,
+  friends) use your services, they depend on you.
+- **Availability.** Power outage, router restart, moving house, vacation: a server at home isn't as reliable as a
+  data center. For most private services that's fine, but not for everything.
+- **Security is up to you.** A service you put on the internet is found by automated scanners within hours. Updates
+  and a small [attack surface](/en/wiki/attack-surface/) are a must.
+- **Hardware and power cost money too.** Compared to a free offering, you don't save anything.
 
-## The Most Important Responsibility: Backups
+## The most important responsibility: backups
 
-With a cloud provider, someone else makes sure your data survives a hard drive failure. With the
-Self-hosting is all about you. That's the point that beginners most often underestimate.
+With a cloud provider, someone else makes sure your data survives a disk failure. With self-hosting, that's you.
+It's the point beginners underestimate most often.
 
-<Callout type="warning" title="No Backup, No Self-Hosting">
-If you store photos or passwords only on your server, without backing them up somewhere else, they are
-less secure in the cloud than before. Set up backups before you move important data, and test the
-Restore at least once.
+<Callout type="warning" title="No self-hosting without backups">
+If you keep photos or passwords only on your server, without a copy in another place, they're less protected than
+before in the cloud. Set up backups before you move important data, and test restoring at least once.
 </Callout>
 
-A tried-and-true rule of thumb is **3-2-1**: three copies of your data, on two different types of media, with one of them stored off-site.
-[Backup strategies](/en/wiki/backup-strategies/) and the guide explain how this works in practice
+A proven rule of thumb is **3-2-1**: three copies of your data, on two different media, one of them off-site. What
+that looks like in practice is explained in [Backup strategies](/en/wiki/backup-strategies/) and the guide
 [Backups with borgmatic](/en/setup/backups-borgmatic/).
 
-## When It's Best to Skip It
+## When you'd better not
 
-Not every service is equally suitable. In these cases, you should think carefully:
+Not every service is equally suitable. Think carefully in these cases:
 
-- **Email server.** Technically feasible, but a hassle in practice. Many Internet service providers block outbound port 25 for
-  Residential connections—and the dynamic IP addresses associated with them—are often blacklisted. To make sure your emails don't end up in the spam folder,
-  Among other things, you'll need valid SPF, DKIM, and DMARC records, a proper reverse DNS record, and a
-  A clean IP reputation. And if your server goes down, in the worst-case scenario, important emails won't be delivered. For email
-  A reputable provider with its own domain is usually the better choice.
-- **Services that must always be running.** When an outage causes real damage, such as to business data or
-  For services that others rely on, you'll need more than just a single server at home.
-- **The only place to store irreplaceable data.** As long as there is no working backup, keep the originals
-  I'd rather have them stay where they are now.
-- **If you don't have time.** A server that hasn't received updates for months is a risk. In that case, a
-  A well-maintained cloud service is the safer choice.
+- **Mail server.** Technically possible, practically tedious. Many internet providers block outgoing port 25 on
+  residential lines, and the dynamic IP addresses of residential lines are often on blocklists. To keep your mail
+  out of spam folders, you need correct SPF, DKIM and DMARC records, a matching reverse DNS entry and a clean IP
+  reputation, among other things. And if your server goes down, important mail may not arrive at all in the worst
+  case. For email, a good provider with your own domain is usually the better choice.
+- **Services that must always run.** If an outage causes real damage, for example with business data or services
+  others rely on, you need more than a single server at home.
+- **Only copy of irreplaceable data.** As long as there's no working backup, keep the originals where they are now
+  as well.
+- **If you don't have the time.** A server that gets no updates for months is a risk. Then a well-maintained cloud
+  service is the safer choice.
 
-## A Good Middle Ground
+## A good middle ground
 
-You don't have to choose between everything or nothing. Many people run services at home where data sovereignty and
-Keep track of your storage space—such as photos, files, and passwords—and store your email with a provider. Also, a
-A rented server might be the right way to get started—see "[Cloud, Hybrid, or On-Premises?](/en/wiki/cloud-hybrid-local/)"
+You don't have to choose all or nothing. Many people run services at home where data ownership and storage space
+matter, for example photos, files and passwords, and leave email with a provider. A rented server can also be the
+right start, see [Cloud, hybrid or local?](/en/wiki/cloud-hybrid-local/).
 
-Accessing your [data](/en/wiki/vpn/) while on the go isn't an all-or-nothing situation either: You can access your
-Services, without making them publicly available on the Internet. This significantly reduces the risk.
+Access on the go isn't all or nothing either: through a [VPN](/en/wiki/vpn/), you reach your services
+without putting them on the public internet. That lowers the risk considerably.
 
-<Callout title="Honest Self-Assessment">
-Ask yourself: Do I enjoy setting this up? Do I have a little time each week? Am I willing to take backups seriously?
-Ready? If you say “yes” three times, nothing stands in the way of getting started. The
-[Getting Started Wizard](/en/werkzeuge/einstiegs-assistent/).
+<Callout title="An honest self-assessment">
+Ask yourself: Do I enjoy setting things up? Do I have a little time every week? Am I willing to take backups
+seriously? If you say "yes" three times, nothing stands in the way of getting started. Where best to begin is
+worked out by the [getting-started assistant](/en/tools/getting-started/).
 </Callout>

@@ -1,54 +1,51 @@
 ---
-title: Cloud, hybrid, or on-premises?
-description: Before you buy hardware or rent a server, it’s worth asking yourself where your services should run. There are three models, and each has different strengths in terms of cost, data sovereignty, and accessibility.
+title: Cloud, hybrid or local?
+description: Before you buy hardware or rent a server, it's worth asking where your services should run. There are three models, and each has different strengths in cost, data ownership and reachability.
 level: 1
-related:
-  - hardware-overview
-  - cgnat-ds-lite
-  - access-methods-compared
+related: [hardware-overview, cgnat-ds-lite, access-methods-compared]
 practice: choosing-hardware
 ---
 
 <OneWay />
 
-## The Three Models
+## The three models
 
 <Cards>
   <Card title="Local">
-    The server is located in your home—perhaps a mini-PC or an old laptop. Your data never leaves your home.
+    The server is at your home, for example a mini PC or an old laptop. Your data never leaves the house.
   </Card>
   <Card title="Hybrid">
-    The data is stored at home; a small cloud server or a tunnel handles requests from the Internet.
+    The data stays at home, and a small cloud server or a tunnel takes the requests from the internet.
   </Card>
   <Card title="Cloud">
-    You rent a virtual server (VPS) in a data center. Static IP, no hardware at home, monthly fees.
+    You rent a virtual server (VPS) in a data center. Fixed IP, no device at home, monthly costs.
   </Card>
 </Cards>
 
-## In comparison
+## Compared
 
-|                 | Local                            | Hybrid                                 | Cloud                          |
-| --------------- | -------------------------------- | -------------------------------------- | ------------------------------ |
-| **Costs**      | Hardware: one-time cost; after that, electricity  | Hardware plus a small VPS              | Monthly Rent               |
-| **Data Sovereignty** | Completely with you              | Data at home, received by the provider   | At the provider's                  |
-| **Accessibility** | It depends on the connection        | Well, even without a public IPv4 address        | Very good, static IP             |
-| **Effort**     | Medium                           | Higher, two systems                    | Low                         |
-| **Good for**     | Photos, media, large amounts of data | Public Services Using Data at Home  | Small Services, Getting Started |
+|                  | Local                            | Hybrid                                  | Cloud                          |
+| ---------------- | -------------------------------- | --------------------------------------- | ------------------------------ |
+| **Costs**        | Hardware once, then power        | Hardware plus a small VPS               | Monthly rent                   |
+| **Data ownership** | Entirely with you              | Data at home, entry point at a provider | With the provider              |
+| **Reachability** | Depends on your internet line    | Good, even without a public IPv4        | Very good, fixed IP            |
+| **Effort**       | Medium                           | Higher, two systems                     | Low                            |
+| **Good for**     | Photos, media, large amounts of data | Public services with data at home   | Small services, first steps    |
 
-## Decision-Making Guide
+## Help with deciding
 
 <Quiz
   questions={[
     {
-      question: "Where should your data be stored?",
+      question: "Where should your data live?",
       answers: [
-        { label: "Only at my house", points: { lokal: 2 } },
-        { label: "At home, but accessible from anywhere", points: { hybrid: 2 } },
-        { label: "Whatever—as long as it works", points: { cloud: 2 } },
+        { label: "Only at my home", points: { lokal: 2 } },
+        { label: "At home, but reachable from anywhere", points: { hybrid: 2 } },
+        { label: "Doesn't matter, as long as it runs", points: { cloud: 2 } },
       ],
     },
     {
-      question: "Does your connection have a public IPv4 address?",
+      question: "Does your internet line have a public IPv4 address?",
       answers: [
         { label: "Yes", points: { lokal: 1 } },
         { label: "No, DS-Lite or CGNAT", points: { hybrid: 2, cloud: 1 } },
@@ -59,28 +56,29 @@ practice: choosing-hardware
       question: "How much hardware do you want to run?",
       answers: [
         { label: "None", points: { cloud: 3 } },
-        { label: "A small calculator", points: { lokal: 1, hybrid: 1 } },
-        { label: "Feel free to bring multiple devices", points: { lokal: 2 } },
+        { label: "One small computer", points: { lokal: 1, hybrid: 1 } },
+        { label: "Several devices are fine", points: { lokal: 2 } },
       ],
     },
   ]}
   results={{
     lokal: {
       title: "Local",
-      text: "A server at your home is enough. To access it while on the go, use a VPN like WireGuard or Tailscale without opening any ports.",
+      text: "A server at your home is enough. For access on the go, use a VPN like WireGuard or Tailscale, without opening ports.",
     },
     hybrid: {
       title: "Hybrid",
-      text: "The data stays at home; a small VPS or a tunnel serves as the public entry point. This works even without a public IPv4 address.",
+      text: "The data stays at home, and a small VPS or a tunnel serves as the public entry point. That also works without a public IPv4.",
     },
     cloud: {
       title: "Cloud",
-      text: "A rented VPS is the easiest way to get started: a static IP address, no need for equipment at home. Still, be sure to store your backups outside the provider's servers.",
+      text: "A rented VPS is the easiest start: fixed IP, no device at home. Still keep your backups outside that provider.",
     },
   }}
 />
 
-The quiz only identifies the location. It compares which infrastructure runs on top of it.
-[An Overview of Operating Models](/en/wiki/operating-models/). Do you have multiple devices, such as a Pi, a mini PC, and
-A VPS helps with [multiple devices: assigning roles](/en/wiki/multiple-devices/). The entire setup process, from hardware to access
-The [setup wizard](/en/werkzeuge/einstiegs-assistent/) will walk you through the process.
+The quiz only settles the location. Which foundation runs on it is compared in
+[Operating models at a glance](/en/wiki/operating-models/). If you have several devices, say a Pi, a mini PC
+and a VPS, [Multiple devices: assigning roles](/en/wiki/multiple-devices/) helps. The
+[getting-started assistant](/en/tools/getting-started/) walks you through the whole start, from hardware to
+access.
