@@ -42,6 +42,9 @@ services:
     image: mariadb:lts
     container_name: nextcloud-db
     restart: unless-stopped
+    labels:
+      # Dockhand: never update the database automatically (only with a fresh backup)
+      - dockhand.update=false
     # Isolation level Nextcloud expects
     command: --transaction-isolation=READ-COMMITTED
     environment:

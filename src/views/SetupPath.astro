@@ -80,6 +80,7 @@ const stageTools: Record<string, ToolId[]> = {
                 </span>
                 <span class="g-t">
                   <span>{g.entry.data.title}</span>
+                  {g.entry.data.optional && <span class="opt">{t(lang, 'setup.optional')}</span>}
                   <span class="cur" data-current-hint={g.id} hidden>
                     {t(lang, 'setup.continueHere')}
                   </span>
@@ -145,6 +146,7 @@ const stageTools: Record<string, ToolId[]> = {
   .g-t { display: flex; flex-direction: column; gap: 3px; }
   .g-t span:first-child { font-size: 17px; font-weight: 600; }
   .guide.stub .g-t span:first-child { color: var(--text-4); }
+  .opt { font-size: 13px; color: var(--text-3); font-weight: 600; }
   .cur { font-size: 13px; color: var(--accent); font-weight: 600; }
   .min { font-size: 13.5px; color: var(--muted); min-width: 56px; text-align: right; }
   @media (max-width: 720px) {

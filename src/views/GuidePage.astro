@@ -60,6 +60,7 @@ const file = sourcePath(guide.entry);
     <div class="meta">
       <Level lang={lang} level={d.level} />
       <span class="pill">{t(lang, 'setup.minutes', { n: d.minutes })}</span>
+      {d.optional && <span class="pill">{t(lang, 'setup.optional')}</span>}
       {d.requires.length > 0 && <span class="pill">{t(lang, 'setup.requires', { list: d.requires.join(', ') })}</span>}
     </div>
     {!guide.translated && <Notice lang={lang} kind="untranslated" file={file} />}

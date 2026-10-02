@@ -3,7 +3,7 @@ title: "Updates"
 description: "Updates schließen Sicherheitslücken und bringen neue Funktionen, können aber auch etwas kaputt machen. Hier erfährst du, welche Updates es gibt und wie du sie ohne böse Überraschungen einspielst."
 level: 1
 related: [images-tags, backup-strategies, attack-surface, monitoring]
-practice: updates-renovate
+practice: portainer-dockhand
 ---
 
 ## Zwei Arten von Updates
@@ -92,12 +92,28 @@ Unabhängig vom Werkzeug ist die Abwägung dieselbe:
 | **Pro** | Sicherheitslücken schnell geschlossen, kein Aufwand | Du liest Changelogs, reagierst auf Breaking Changes |
 | **Contra** | Ein fehlerhaftes Update legt nachts einen Dienst lahm, ohne dass du es merkst | Du musst daran denken, Updates bleiben liegen |
 
-Ein guter Mittelweg: **automatisch benachrichtigen, bewusst aktualisieren.** Tools wie
-[Diun](https://crazymax.dev/diun/) melden dir neue Image-Versionen, ohne sie einzuspielen. Wenn du Watchtower oder
-einen Fork trotzdem nutzt, dann eher für unkritische Dienste und mit fest gepinnten Major-Versionen.
+Ein guter Mittelweg: **automatisch benachrichtigen, kleine Updates automatisch, große bewusst.** Tools wie
+[Diun](https://crazymax.dev/diun/) melden dir neue Image-Versionen nur, ohne sie einzuspielen.
 
-## Renovate: Updates als Pull Request
+## Dockhand: Updates mit Prüfung (Empfehlung)
 
+Nutzt du [Dockhand](/de/einrichten/portainer-dockhand/) als Oberfläche, bringt es diesen Mittelweg schon mit:
+
+- Es prüft nach Zeitplan, ob es für die Tags deiner Container neue Images gibt, und meldet sich auf Wunsch.
+- Automatische Updates schaltest du pro Container oder für alle ein. Aktualisiert wird nur innerhalb des Tags aus
+  der `compose.yaml`: Bei `:2` kommen alle Versionen 2.x, Version 3 nicht.
+- Mit aktivem Schwachstellen-Scanner wird das neue Image vorher geprüft. Fällt es durch, läuft der alte Container
+  weiter.
+- Neuere Tags (etwa eine neue Hauptversion) zeigt Dockhand als Vorschlag mit Release Notes an. Den Tag änderst du
+  selbst.
+
+Datenbanken nimmst du aus (Label `dockhand.update=false`), sie aktualisierst du nur mit frischem Backup. Für die
+meisten Homelabs ist das der beste Kompromiss aus Sicherheit und Aufwand. Wie du es einrichtest, steht im Guide
+[Portainer oder Dockhand](/de/einrichten/portainer-dockhand/).
+
+## Renovate: Updates als Pull Request (optional)
+
+Renovate ist optional und lohnt sich vor allem, wenn du ohnehin mit Git arbeitest.
 Führst du deine Compose-Dateien in einem Git-Repository, etwa in Forgejo, kann
 [Renovate](https://docs.renovatebot.com/) die Arbeit übernehmen. Renovate durchsucht das Repository nach Image-Tags
 und öffnet für jede neue Version einen **Pull Request** mit Link zu den Release Notes. Du prüfst, führst zusammen,
@@ -110,6 +126,8 @@ Version kam, was bei der Fehlersuche hilft. Wie du das einrichtest, zeigt der Gu
 ## Eine einfache Routine
 
 - Betriebssystem: Sicherheitsupdates automatisch, Neustart bei Bedarf.
-- Container: einmal pro Woche oder alle zwei Wochen Changelogs lesen, `pull` und `up -d`.
+- Container: Dockhand prüft täglich und spielt Updates innerhalb des Tags ein. Ohne Dockhand: einmal pro Woche oder
+  alle zwei Wochen Changelogs lesen, `pull` und `up -d`.
+- Neue Hauptversionen: Release Notes lesen, Tag in der `compose.yaml` ändern, `up -d`.
 - Nach dem Update kurz prüfen, ob alles läuft, zum Beispiel in [Uptime Kuma](/de/dienste/uptime-kuma/).
 - Datenbanken und Major-Versionen: nur mit frischem Backup und etwas Zeit.

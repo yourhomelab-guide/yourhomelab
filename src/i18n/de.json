@@ -93,6 +93,7 @@
   "setup.lead": "In acht Etappen vom leeren Rechner zum laufenden Homelab. Die Etappen bauen aufeinander auf, jeder Guide lässt sich abhaken.",
   "setup.helper": "Unsicher, wo du anfangen sollst?",
   "setup.quickStart": "Lieber alles auf einmal?",
+  "setup.optional": "Optional",
   "setup.allTools": "Alle Werkzeuge",
   "setup.stageTools": "Passende Werkzeuge:",
   "setup.progress": "Dein Fortschritt",

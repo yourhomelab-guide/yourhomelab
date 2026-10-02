@@ -5,7 +5,12 @@ level: 3
 minutes: 30
 requires: [Compose-Dateien in Forgejo, Deploy-Skript aus dem Forgejo-Guide]
 services: [forgejo]
+optional: true
 ---
+
+<Callout title="Optional">
+Diesen Guide brauchst du nicht unbedingt. Container-Updates erledigt [Dockhand](/de/einrichten/portainer-dockhand/) einfacher: Es prüft täglich, aktualisiert auf Wunsch automatisch innerhalb des Tags und kann neue Images vorher auf Schwachstellen scannen. Renovate lohnt sich, wenn du deine Compose-Dateien in Git führst und jede neue Version, auch neue Hauptversionen, als Pull Request sehen willst. Beides lässt sich kombinieren: Dockhand für kleine Updates, Renovate für neue Tags.
+</Callout>
 
 Container aktualisieren sich nicht von selbst. Wer `latest` benutzt und ab und zu `docker compose pull` ausführt, bekommt zwar neue Versionen, weiß aber nicht, welche. Kommt mit einem Update ein Fehler, gibt es keinen einfachen Weg zurück.
 

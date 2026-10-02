@@ -52,6 +52,9 @@ services:
     image: postgres:16-alpine
     container_name: authentik-postgresql
     restart: unless-stopped
+    labels:
+      # Dockhand: never update the database automatically (only with a fresh backup)
+      - dockhand.update=false
     environment:
       - POSTGRES_USER=authentik
       - POSTGRES_PASSWORD=${PG_PASS}

@@ -1487,6 +1487,10 @@
     "hash": "1e14bdf34c3bdead",
     "by": "claude"
   },
+  "src/i18n/de.json#setup.optional": {
+    "hash": "59be71333c960fd0",
+    "by": "claude"
+  },
   "src/i18n/de.json#setup.progress": {
     "hash": "3bc71e937546beac",
     "by": "claude"

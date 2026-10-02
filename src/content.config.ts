@@ -60,6 +60,8 @@ const guides = defineCollection({
     requires: z.array(z.string()).default([]),
     /** Service ids this guide relates to (shown on the service page) */
     services: z.array(z.string()).default([]),
+    /** Nice to have, not needed for the rest of the path (shown as a badge) */
+    optional: z.boolean().default(false),
     status,
   }),
 });

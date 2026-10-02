@@ -8,6 +8,7 @@ requires:
   - Deployment script from the Forgejo Guide
 services:
   - forgejo
+optional: true
 ---
 
 Containers don't update themselves. If you use`latest` them and run`docker compose pull` them from time to time, you'll get new versions, but you won't know which ones. If an update introduces a bug, there's no easy way to roll back.

@@ -41,6 +41,9 @@ services:
     image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0
     container_name: immich-database
     restart: unless-stopped
+    labels:
+      # Dockhand: never update the database automatically (only with a fresh backup)
+      - dockhand.update=false
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${DB_PASSWORD}

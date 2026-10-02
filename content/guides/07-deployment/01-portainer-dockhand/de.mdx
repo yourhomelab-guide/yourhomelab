@@ -105,6 +105,26 @@ Eine öffentlich erreichbare Portainer- oder Dockhand-Oberfläche ohne zusätzli
 
 </Steps>
 
+## Updates mit Dockhand
+
+Dockhand kann dir auch die Container-Updates abnehmen. Das ist der einfachste Weg, deine Dienste aktuell zu halten, und unsere Empfehlung, solange du deine Stacks nicht in Git verwaltest. Es funktioniert auch für Stacks, die du per CLI unter `__ROOT__` angelegt hast.
+
+- **Update-Prüfung:** Dockhand prüft nach Zeitplan (z. B. täglich), ob es für die Tags deiner Container neue Images gibt. Container mit Update bekommen ein Abzeichen, und auf Wunsch schickt dir Dockhand eine Benachrichtigung.
+- **Automatische Updates:** In den Einstellungen eines Containers schaltest du automatische Updates mit eigenem Zeitplan ein, z. B. nachts um 3 Uhr. Alternativ gilt das für alle Container der Umgebung. Dockhand lädt das neue Image, baut den Container mit unveränderter Konfiguration neu und startet ihn.
+- **Mit Sicherheitsprüfung:** Ist ein Schwachstellen-Scanner aktiv (Grype oder Trivy, in den Einstellungen), lädt Dockhand das neue Image erst unter einem temporären Namen, scannt es und tauscht nur, wenn es deine Kriterien erfüllt, z. B. „keine kritischen Lücken“ oder „nicht mehr Lücken als bisher“. Sonst läuft der alte Container weiter.
+- **Neue Versionen als Vorschlag:** Automatisch aktualisiert wird immer nur innerhalb des Tags, der in deiner `compose.yaml` steht. Bei `ghcr.io/pocket-id/pocket-id:v2` kommen also alle Versionen 2.x, Version 3 aber nicht. Gibt es einen neueren Tag, zeigt Dockhand ihn mit den Release Notes an. Den Tag änderst du dann bewusst selbst.
+
+So gehst du vor:
+
+1. Lass alle Container per Update-Prüfung überwachen und schalte Benachrichtigungen ein.
+2. Schalte automatische Updates für Dienste ein, deren Tag nur eine Hauptversion festlegt (z. B. `:2`, `:v5`, `:lts`). Dort bringen Updates Fehlerkorrekturen und Sicherheitsupdates, aber keine großen Umbauten.
+3. **Datenbanken nie automatisch.** Container wie `postgres` oder `mariadb` nimmst du aus, am einfachsten mit dem Label `dockhand.update=false` in der `compose.yaml`. Die Vorlagen dieser Seite setzen es bei Datenbanken schon. Datenbank-Updates gehören zu einem frischen Backup, siehe [Datenbank-Version passt nicht](/de/nachschlagen/datenbank-version/).
+4. Größere Sprünge (neuer Tag) machst du von Hand: Release Notes lesen, Backup, Tag ändern, `docker compose up -d`.
+
+<Callout title="Und Renovate?">
+[Updates mit Renovate](/de/einrichten/updates-renovate/) ist **optional**. Es lohnt sich, wenn du deine Compose-Dateien in Git führst ([Git-Deployments mit Forgejo](/de/einrichten/git-deployments-forgejo/)): Dann schlägt Renovate jede neue Version als Pull Request vor, und die Git-Historie zeigt, wann welche Version kam. Für die meisten Homelabs reicht Dockhand.
+</Callout>
+
 ## CLI-Stacks und UI-Stacks
 
 In der Oberfläche siehst du auch die Stacks, die du vorher per `docker compose` unter `__ROOT__` gestartet hast. Docker merkt sich über Labels, welche Container zu welchem Compose-Projekt gehören, und genau das lesen beide Werkzeuge aus. Starten, stoppen, Logs lesen und neu starten klappt deshalb für alle Stacks.

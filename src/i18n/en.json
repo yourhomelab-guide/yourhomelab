@@ -93,6 +93,7 @@
   "setup.lead": "Eight stages from an empty machine to a running homelab. The stages build on each other, and you can tick off every guide.",
   "setup.helper": "Not sure where to start?",
   "setup.quickStart": "Rather do it all at once?",
+  "setup.optional": "Optional",
   "setup.allTools": "All tools",
   "setup.stageTools": "Helpful tools:",
   "setup.progress": "Your progress",

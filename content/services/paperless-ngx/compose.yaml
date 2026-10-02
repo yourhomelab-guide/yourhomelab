@@ -34,6 +34,9 @@ services:
     image: postgres:18
     container_name: paperless-ngx-db
     restart: unless-stopped
+    labels:
+      # Dockhand: never update the database automatically (only with a fresh backup)
+      - dockhand.update=false
     environment:
       - POSTGRES_DB=paperless
       - POSTGRES_USER=paperless

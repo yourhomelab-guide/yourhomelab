@@ -99,7 +99,7 @@ sudo needrestart
 
 unattended-upgrades kümmert sich nur um Pakete des Betriebssystems. Zwei wichtige Dinge bleiben außen vor:
 
-- **Deine Container.** Die Images in deinen `compose.yaml`-Dateien aktualisiert unattended-upgrades nie. Eine Lücke in Vaultwarden oder Nextcloud bleibt offen, bis du ein neues Image ziehst. Wie du das planbar machst, zeigt der Guide [Updates mit Renovate](/de/einrichten/updates-renovate/). Den Hintergrund erklärt [Updates](/de/nachschlagen/updates/).
+- **Deine Container.** Die Images in deinen `compose.yaml`-Dateien aktualisiert unattended-upgrades nie. Eine Lücke in Vaultwarden oder Nextcloud bleibt offen, bis du ein neues Image ziehst. Am einfachsten übernimmt das später [Dockhand](/de/einrichten/portainer-dockhand/) mit geprüften automatischen Updates. Wer seine Compose-Dateien in Git führt, kann optional [Renovate](/de/einrichten/updates-renovate/) nutzen. Den Hintergrund erklärt [Updates](/de/nachschlagen/updates/).
 - **Docker selbst.** Docker installierst du später aus dem Paket-Repository von Docker. Das steht nicht in der Standardliste von unattended-upgrades. Spiel es deshalb von Zeit zu Zeit von Hand ein:
 
 ```bash
