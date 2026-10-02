@@ -196,7 +196,6 @@ const linkMap = (() => {
 function toXml(text) {
   const keep = [];
   const links = [];
-  const hold = (s) => `<x i="${keep.push(s) - 1}"/>`;
   let s = text;
   // Placeholders first, so nothing inside them is touched
   s = s.replace(/`[^`]+`/g, (m) => `\u0000${keep.push(m) - 1}\u0000`);

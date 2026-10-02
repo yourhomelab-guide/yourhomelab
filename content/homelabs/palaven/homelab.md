@@ -18,7 +18,7 @@ monitoring: Uptime Kuma für die Erreichbarkeit, Dozzle für Logs. Beszel ist ge
 services: [Traefik, Authentik, Vaultwarden, Immich, Jellyfin, Nextcloud, Paperless-ngx, Uptime Kuma, Dockhand, AdGuard Home, Unbound, WG-Easy, Headscale, Headplane, Tailscale, Gluetun, Audiobookshelf, Navidrome, Feishin, Seerr, Wizarr, MediaManager, BookOrbit, Shelfmark, ReadmeABook, Sonarr, Radarr, Bazarr, Prowlarr, Maintainerr, Tautulli, Tdarr, SABnzbd, Recyclarr, Seafile, Paperless-GPT, Outline, Overleaf, Anchor, n8n, Tududi, Norish, Open WebUI, Ollama, SearXNG, Synapse, Synapse Admin, Mautrix WhatsApp, Dozzle, Filebrowser, Gocron, borgmatic, BentoPDF, Vert, IT-Tools, Omni-Tools, Web-Check]
 ---
 
-## Zwei Server, keiner davon zuhause
+### Zwei Server, keiner davon zuhause
 
 Palaven läuft komplett im Rechenzentrum. Das Arbeitstier ist ein gemieteter Root-Server bei Hetzner: ein Core i7-8700
 mit 64 GB RAM, zwei gespiegelten NVMe-SSDs für System und Datenbanken und zwei gespiegelten 8-TB-Platten für Medien,
@@ -28,7 +28,7 @@ Der zweite Server ist ein winziger VPS bei Netcup mit einem vCore und 1 GB RAM. 
 betreibt **Headscale** mit **Headplane** als Oberfläche, also den eigenen Koordinationsserver für das Tailnet. So
 hängt das private Netz nicht an einem fremden Anbieter, und der große Server bleibt frei für die Dienste.
 
-## Vom offenen Server zum Tailnet
+### Vom offenen Server zum Tailnet
 
 Am Anfang war jeder Dienst über den Reverse Proxy aus dem Internet erreichbar. Inzwischen ist das umgedreht: Nur noch
 eine Handvoll Dienste, die wirklich öffentlich sein müssen, hängen direkt am Netz. Alles andere ist nur im Tailnet
@@ -40,7 +40,7 @@ und einem Gluetun-Container. Gluetun baut die Verbindung zu AirVPN auf, Tailscal
 an. Jedes Gerät im Tailnet kann so per Klick über einen von fünf VPN-Standorten ins Internet gehen, ohne dass auf dem
 Handy eine eigene VPN-App laufen muss. Vorher lief Gluetun mit CyberGhost.
 
-## Ein Login für alles: der Palaven Account
+### Ein Login für alles: der Palaven Account
 
 Jeder, der Palaven nutzt, hat genau ein Konto in **Authentik**, den „Palaven Account“. Es gilt eine feste Regel:
 
@@ -52,7 +52,7 @@ Jeder, der Palaven nutzt, hat genau ein Konto in **Authentik**, den „Palaven A
 Ein offenes Problem sind Gäste: Eine Kommilitonin nutzt Overleaf mit, vielleicht kommen weitere dazu. Für solche
 befristeten Zugänge soll eigentlich kein vollwertiger Palaven Account entstehen. Eine gute Lösung dafür steht noch aus.
 
-## Wer Palaven nutzt
+### Wer Palaven nutzt
 
 Palaven ist kein Ein-Personen-Labor. Im Alltag nutzen es zwei Personen intensiv, von Laptops, Handys und zuhause aus.
 Dazu kommt die Familie: Eltern und Geschwister nutzen vor allem Immich und Jellyfin, der Großvater Nextcloud. Für
@@ -62,7 +62,7 @@ Interessierten ist angedacht.
 Das prägt die Auswahl: Dienste müssen ohne Erklärung funktionieren, Apps für Handy und Fernseher haben, und ein Ausfall
 fällt sofort auf.
 
-## Eine Compose-Datei, ein Muster
+### Eine Compose-Datei, ein Muster
 
 Alle Stacks folgen demselben Aufbau. So sieht ein typischer Dienst aus, hier die Notiz-App Anchor:
 
@@ -108,7 +108,7 @@ Die Regeln dahinter:
 
 Verwaltet werden die Stacks mit Dockhand, die Logs liest Dozzle mit, und wiederkehrende Aufgaben laufen über Gocron.
 
-## Was alles läuft
+### Was alles läuft
 
 Rund 60 Container, grob sortiert:
 
@@ -128,7 +128,7 @@ Rund 60 Container, grob sortiert:
 - **Werkzeuge:** BentoPDF, Vert, IT-Tools, Omni-Tools, Web-Check, Filebrowser und zwei kleine selbst gebaute
   Einzweck-Apps.
 
-## Was als Nächstes kommt
+### Was als Nächstes kommt
 
 Die Liste wird nicht kürzer. Ganz oben stehen:
 

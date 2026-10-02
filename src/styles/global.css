@@ -161,6 +161,12 @@ mark { background: var(--warn-bg); color: var(--warn-fg); border-radius: 4px; pa
 }
 .copy-btn:hover { background: var(--accent-50); }
 .copy-btn.is-copied { background: var(--accent); color: #fff; }
+/* Fenced code in plain Markdown (e.g. homelab stories), which doesn't go through CodeBlock */
+.prose > pre {
+  background: var(--code-bg); border-radius: 14px; padding: 14px 16px; margin: 0; overflow-x: auto; scrollbar-width: thin;
+  font-family: var(--mono); font-size: 13.5px; line-height: 1.7; color: var(--tk-plain);
+}
+.prose > pre code { font: inherit; background: none; padding: 0; color: inherit; }
 /* Narrow screens: copy button above the command, so the code gets the full width */
 @media (max-width: 600px) {
   .code { flex-wrap: wrap; gap: 4px; padding-top: 10px; }

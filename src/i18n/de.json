@@ -42,7 +42,7 @@
   "home.popular": "Beliebte Dienste",
   "home.homelabsTitle": "Homelabs aus der Community",
   "home.homelabsLead": "Wie betreiben es andere? Vom einzelnen Mini-PC bis zum Cluster: Schau dir echte Setups an und zeig dein eigenes.",
-  "home.allHomelabs": "Alle {n} Homelabs",
+  "home.allHomelabs": "Alle Homelabs ({n})",
   "home.allServices": "Alle {n} Dienste",
   "home.faqTitle": "Häufige Fragen",
   "home.faqLead": "Was yourhomelab ist, was nicht, und wo du sonst noch Hilfe findest.",
