@@ -1,78 +1,73 @@
 ---
-title: Monitoring
-description: Monitoring lets you know how your server is doing and whether your services are available before anyone else tells you. To get started, two simple tools are all you need.
+title: "Monitoring"
+description: "Monitoring tells you how your server is doing and whether your services are reachable, before someone else tells you. Two small tools are enough to start."
 level: 1
-related:
-  - logs
-  - updates
-  - backup-strategies
+related: [logs, updates, backup-strategies]
 practice: monitoring-beszel
 ---
 
-## Why monitor at all?
+## Why monitoring at all?
 
-Without monitoring, you won't notice problems until something stops working: The photos won't load, the password manager
-Doesn't sync. This is often a sign of things to come. The hard drive is slowly filling up, and a container keeps starting
-It's happening again—the RAM is constantly at its limit. Monitoring reveals such trends and sounds the alarm,
-if something breaks down.
+Without monitoring, you only notice problems when something stops working: the photos don't load, the password
+manager doesn't sync. Often there are warning signs beforehand. The disk slowly fills up, a container keeps
+restarting, memory is permanently at its limit. Monitoring makes such developments visible and raises the alarm when
+something goes down.
 
-## Three Perspectives
+## Three angles
 
-Monitoring in the home lab answers three different questions. Each one requires a different tool.
+Monitoring in a homelab answers three different questions. Each needs a different tool.
 
-| Question | What Is Measured | Sample Tool |
+| Question | What's measured | Example tool |
 | --- | --- | --- |
 | **How is the server doing?** | CPU, RAM, disk space, temperature, network, usage per container | Beszel |
-| **Is the service available?** | Is the website responding? Is the status code correct? Is the certificate about to expire? | Uptime Kuma |
-| **What happened?** | Service error messages and events | Logs, see [Logs](/en/wiki/logs/) |
+| **Is the service reachable?** | Does the website answer? Is the status code right? Is the certificate about to expire? | Uptime Kuma |
+| **What happened?** | Error messages and events from the services | Logs, see [Logs](/en/wiki/logs/) |
 
-Resource monitoring shows you trends and causes. Availability monitoring shows you what the user sees.
-A server may appear to be in perfect working order, while the reverse proxy is configured incorrectly and no one can access your services
-achieved. Conversely, a website can still respond even though the disk will be full in two days. That's why both are worthwhile.
+Resource monitoring shows you trends and causes. Availability monitoring shows you what users see. A server can look
+perfectly healthy while the reverse proxy is misconfigured and nobody can reach your services. Conversely, a website
+can still answer although the disk will be full in two days. That's why both are worth it.
 
 ## Resources: Beszel
 
-[Beszel](/en/services/beszel/) consists of two parts: the **hub** with a web interface and a small **agent**,
-which runs on every monitored server and sends metrics to the hub. You can view trends for CPU, RAM, hard drives,
-Network-wide and for each Docker container individually. This way, you can see, for example, which container is suddenly using a lot of memory.
+[Beszel](/en/services/beszel/) consists of two parts: the **hub** with a web interface and a small **agent** that runs
+on every monitored server and delivers metrics to the hub. You see history for CPU, RAM, disks, network and for each
+Docker container individually. That way you can tell, for example, which container suddenly needs a lot of memory.
 
-Beszel is intentionally streamlined. Large-scale solutions like Prometheus with Grafana offer more features, but for getting started, they are
-much more time-consuming. You can always switch later.
+Beszel is deliberately lean. Big solutions like Prometheus with Grafana can do more, but are considerably more work
+to start with. You can always switch later.
 
 ## Availability: Uptime Kuma
 
-[Uptime Kuma](/en/services/uptime-kuma/) checks at regular intervals to see if your services are responding. Among other things, it can
-Access HTTP(S) pages, test ports, ping hosts, and query Docker containers. It also issues a warning if a
-TLS certificate is about to expire. If you'd like, you can create a status page from it to share with your family or roommates.
+[Uptime Kuma](/en/services/uptime-kuma/) checks at fixed intervals whether your services answer. Among other things, it
+can open HTTP(S) pages, test ports, ping hosts and query Docker containers. It also warns you when a TLS certificate
+is about to expire. If you like, you build a status page from it to share with family or roommates.
 
-<Callout title="Check from the outside">
-  Uptime Kuma, running on the same server, cannot see what's happening externally. If the server or your Internet connection goes down,
-  Monitoring will also fail, and it won't be able to warn you anymore. That's why it's best to run Uptime Kuma on a
-  another device, such as a small VPS, or add an external monitoring service that checks your public
-  calls addresses from outside.
+<Callout title="Check from outside">
+  Uptime Kuma on the same server can't see what happens from outside. If the server or your internet line goes down,
+  monitoring goes down with it and can no longer warn you. So ideally run Uptime Kuma on another device, for example a
+  small VPS, or add an external check service that calls your public addresses from outside.
 </Callout>
 
 ## Notifications
 
-Monitoring isn't very helpful if you have to check the dashboard every day. So set up notifications. Beszel
-and Uptime Kuma can be contacted via email, Telegram, Discord, Matrix, or
-[ntfy](https://ntfy.sh) (push notifications on your cell phone). The guide shows you how to set this up
-[Notifications](/en/setup/notifications/).
+Monitoring doesn't help much if you have to look at the dashboard every day. So set up notifications. Beszel and
+Uptime Kuma can notify you by email, Telegram, Discord, Matrix or [ntfy](https://ntfy.sh) (push messages to your
+phone), among others. How to set that up is shown in the guide [Notifications](/en/setup/notifications/).
 
-Here are a few tips to help ensure the warnings remain useful:
+A few tips so the warnings stay useful:
 
-- **A few important alerts.** Service unavailable, hard drive about 85 percent full, certificate expiring.
-  If you keep getting warnings, you'll eventually ignore them.
-- **Set thresholds with patience.** Brief CPU spikes are normal. Only issue a warning if a value remains high for several minutes.
-- **Test the notification.** Both tools have a "Test" button. Use it before you rely on it.
+- **Few, important alarms.** Service unreachable, disk more than about 85 percent full, certificate expiring. If you
+  get warnings all the time, you'll eventually ignore them.
+- **Patient thresholds.** Short CPU spikes are normal. Only warn when a value stays high for a few minutes.
+- **Test the notification.** Both tools have a test button. Use it before you rely on it.
 
-## Monitor Backups, Too
+## Monitor backups too
 
-A backup job that has been silently failing for weeks is a classic problem. Uptime Kuma has the solution for this
-Monitor Type: **Push**. Your backup script calls a URL at the end. If this call fails, you'll receive a warning.
-This way, you can also spot errors that don't generate an error message.
+A backup job that has been failing silently for weeks is a classic problem. Uptime Kuma has the **push** monitor type
+for this: your backup script calls a URL at the end. If that call doesn't come, you get a warning. That way you also
+notice failures that produce no error message.
 
-## How do I get started?
+## How to start?
 
 1. Install Beszel and set up the agent on your server:
    [Monitoring with Beszel](/en/setup/monitoring-beszel/).
@@ -80,4 +75,4 @@ This way, you can also spot errors that don't generate an error message.
    [Uptime Kuma](/en/setup/uptime-kuma/).
 3. Set up and test notifications.
 
-This way, you'll know how your server is doing and be the first to know about any outages.
+Then you know how your server is doing and are the first to hear about outages.

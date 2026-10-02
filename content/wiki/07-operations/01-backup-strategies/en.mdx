@@ -1,126 +1,121 @@
 ---
-title: Backup Strategies
-description: "At some point, something will break: a hard drive, an update, or a wrong command. With a simple strategy, your data will still be safe, and you'll know exactly what you're backing up and where."
+title: "Backup strategies"
+description: "Sooner or later something breaks: a disk, an update or a wrong command. With a simple strategy, your data is still safe, and you know exactly what you back up where."
 level: 1
-related:
-  - directory-structure
-  - volumes-bind-mounts
-  - managing-secrets
-  - env-files
+related: [directory-structure, volumes-bind-mounts, managing-secrets, env-files]
 practice: backups-borgmatic
 ---
 
-## Why Backups Are Essential
+## Why backups are a must
 
-As long as you're just trying out services, data loss is annoying. But as soon as you have photos, passwords, or documents
-If it's on your server, it's a problem. The most common causes are nothing out of the ordinary: a hard drive fails,
-An update wrecks a database; you accidentally delete the wrong folder. Less common, but worse:
-Ransomware (malware that encrypts your data), theft, fire, or water damage.
+As long as you're only trying out services, losing data is annoying. But as soon as photos, passwords or documents
+live on your server, it's a real problem. The most common causes are unspectacular: a disk dies, an update wrecks a
+database, you accidentally delete the wrong folder. Rarer, but worse: ransomware (malware that encrypts your data),
+theft, fire or water damage.
 
-A backup is a **copy of your data stored in a different location** that you can restore in case of an emergency. It's important to
-Part Two: A backup you've never restored is just a hope.
+A backup is a **copy of your data in another place** that you can restore in an emergency. The second part is what
+matters: a backup you've never restored is just a hope.
 
-## The 3-2-1 Rule
+## The 3-2-1 rule
 
 The best-known rule of thumb for backups is:
 
 - **3** copies of your data (the original plus two backups),
-- on 2 different media or devices,
-- including **1** copy stored offsite.
+- on **2** different media or devices,
+- **1** of them off-site.
 
-For a home lab, for example, this means: The data is stored on the server, and a backup is made to a USB drive or
-A NAS on the home network, with a second encrypted backup stored in cloud storage or on a friend's computer.
-The local copy can be quickly restored, while the external copy protects against fire and theft.
+For a homelab, that means for example: the data lives on the server, one backup goes to a USB disk or a NAS on your
+home network, and a second backup goes encrypted to cloud storage or to a computer at a friend's place. The local copy
+is restored quickly; the external one protects against fire and theft.
 
 ## RAID is not a backup
 
-RAID distributes data across multiple hard drives in such a way that the failure of a single drive doesn't cause any problems. That's handy,
-because the server just keeps running. But RAID mirrors **every** change immediately: If you delete a file or
-If ransomware encrypts your photos, it happens on all drives at the same time. RAID therefore protects data availability,
-not your data. The same applies to sync services like Nextcloud or Syncthing: They, too, reliably spread errors.
+RAID spreads data across several disks so that the failure of one disk doesn't break anything. That's handy, because
+the server simply keeps running. But RAID mirrors **every** change immediately: if you delete a file or ransomware
+encrypts your photos, it happens on all disks at once. So RAID protects availability, not your data. The same goes
+for sync services like Nextcloud or Syncthing: they reliably distribute mistakes too.
 
 ## Versioning
 
-A good backup system keeps several snapshots from the past. If you don't realize until two weeks later that
-If a file is corrupted, yesterday's backup won't help you. Common retention rules include, for example: the most recent
-Keep 7 daily, 4 weekly, and 6 monthly records; delete older ones.
+A good backup keeps several **states** (snapshots) from the past. If you only notice after two weeks that a file is
+damaged, yesterday's backup won't help you. Common retention rules are, for example: keep the last 7 daily,
+4 weekly and 6 monthly states, delete older ones.
 
-Modern backup tools store only the changes (deduplication). As a result, many snapshots take hardly any
-First place.
+Modern backup tools only store the changes (deduplication). So many snapshots take up hardly more space than one.
 
 ## Encryption
 
-Your backups contain everything: databases, configuration, and the `.env`files containing passwords and API keys.
-If a backup is stored off-site, it should therefore **always** be **encrypted**—before it leaves your server.
-In that case, the storage provider won't be able to do anything with it either.
+Your backups contain everything: databases, configuration and the `.env` files with passwords and API keys. So if a
+backup is stored off-site, it should **always be encrypted**, before it leaves your server. Then even the storage
+provider can't do anything with it.
 
-<Callout type="warning" title="The password doesn't just belong on the server">
-  Without the password or key for your backup repository, the backup is worthless. Be sure to store it in a separate
-  somewhere else, such as in your password manager or printed out. If the server goes down, that's when you'll need it most.
+<Callout type="warning" title="The password doesn't belong only on the server">
+  Without the password or key of your backup repository, the backup is worthless. Keep it in another place as well,
+  for example in your password manager or printed out. If the server is gone, that's when you need it most.
 </Callout>
 
-## What You Should Back Up
+## What you should back up
 
-This is where the directory structure of this site comes in handy: Everything related to your home lab is located under a
-a single folder, by default`__ROOT__`. Within it, each service has its own folder with `compose.yaml`, `.env`
-and the data in `data/`. A backup of  therefore contains`__ROOT__` everything you need to restore your data.
-For more information, see "[Directory Structure](/en/wiki/directory-structure/)."
+This is where this site's directory structure pays off: everything that belongs to your homelab lives under a single
+folder, `__ROOT__` by default. In it, each service has its own folder with `compose.yaml`, `.env` and the data in
+`data/`. So a backup of `__ROOT__` contains everything you need to restore. More under
+[Directory structure](/en/wiki/directory-structure/).
 
 You don't need to back up:
 
-- **Docker images**: It downloads them again `docker compose pull`at any time.
-- **The operating system**: A fresh install is faster than restoring from a system backup. But make a note of this:
-  what changes you made to the system (see [the documentation](/en/wiki/documentation/)).
+- **Docker images**: `docker compose pull` downloads them again at any time.
+- **The operating system**: reinstalling is faster than restoring a system backup. But note what you've changed on
+  the system (see [Documentation](/en/wiki/documentation/)).
 
-### Databases require extra attention
+### Databases need extra attention
 
-A database is constantly writing to its files. If you copy these files while the system is running, the backup may
-contain an incomplete state that the database will later be unable to read. Two simple solutions:
+A database writes to its files constantly. If you copy these files while it's running, the backup may contain a
+half-finished state the database can't read later. Two simple solutions:
 
-1. **Create a dump:** Before backing up, export the database to a file and include it in the backup.
-   For PostgreSQL, something like this:
+1. **Create a dump:** before the backup, export the database to a file and back that up too. For PostgreSQL, for
+   example:
 
    ```bash
    cd __ROOT__/immich
    docker compose exec -T database pg_dumpall -U postgres > data/db-dump.sql
    ```
 
-   The name of the database container (`database`) and the user depend on the specific stack.
+   The name of the database container (`database`) and the user depend on the stack.
 
-2. **Briefly pause the stack:** `docker compose stop`, Backup, `docker compose start`. This is the easiest way; it means
-   But a few minutes of downtime—usually at night—isn't a problem.
+2. **Briefly stop the stack:** `docker compose stop`, backup, `docker compose start`. That's the simplest, but means a
+   few minutes of downtime, usually no problem at night.
 
-SQLite databases (a single file, such as those used by Vaultwarden or Uptime Kuma) are also affected.
-Many services describe in their documentation how to back them up properly. It's worth taking a look.
+SQLite databases (a single file, for example with Vaultwarden or Uptime Kuma) are affected too. Many services
+describe in their docs how to back them up correctly. It's worth a look.
 
 ## Tools
 
-There are three tried-and-true tools for Linux servers. All three encrypt, deduplicate, and manage snapshots.
+There are three proven tools for Linux servers. All three encrypt, deduplicate and manage snapshots.
 
 <Cards>
   <Card title="BorgBackup + borgmatic">
-    Borg is very mature and efficient. Borgmatic supplements a single configuration file for sources,
-    Storage, checks, and hooks. The target is a local disk or a computer running SSH and Borg; there are
-    There are also specialized providers for this. The guides on this site use Borgmatic.
+    Borg is very mature and efficient. borgmatic adds a single configuration file for sources, retention, checks and
+    hooks. The target is a local disk or a computer with SSH and Borg; there are also specialized providers for it.
+    The guides on this site use borgmatic.
   </Card>
   <Card title="restic">
-    A single program with encryption always enabled. Saves data locally, via SFTP, or directly to S3-compatible
-    Cloud storage that doesn't require anything to be installed on the target device.
+    A single program, encryption always on. Stores locally, via SFTP or directly in S3-compatible cloud storage,
+    without anything having to be installed on the target.
   </Card>
   <Card title="Kopia">
-    Similar to Restic, but it also includes a web interface and a desktop app.
+    Similar to restic, but also comes with a web interface and a desktop app.
   </Card>
 </Cards>
 
-Any of them are good choices. More important than the tool itself is that the backup runs **automatically**, such as via a cron job or
-systemd timer, and that you check regularly to make sure it's working.
+All of them are a good choice. More important than the tool is that the backup runs **automatically**, for example
+with a cron job or systemd timer, and that you check regularly whether it works.
 
-The tool generates a suitable configuration for`config.yaml` borgmatic, including database dumps and retention policies
-[borgmatic configuration](/en/werkzeuge/borgmatic-konfiguration/) from your setup.
+The [borgmatic configuration](/en/tools/borgmatic-config/) tool generates a suitable `config.yaml` for
+borgmatic from your setup, including database dumps and retention rules.
 
-## Test Restore
+## Testing restores
 
-Regularly test for emergencies: Restore a service from the backup to another computer or to another
-Restore the folder and check to see if it opens and if your data is there. Only then will you know that your backup works.
-The ["Test Restore](/en/setup/testing-restores/)" guide shows you how to do this. What to do if the entire server
-It's best to outline in advance what to do in case of an [emergency](/en/setup/emergency-plan/).
+Rehearse the emergency regularly: restore a service from the backup on another computer or in another folder and
+check whether it starts and your data is there. Only then do you know your backup is any good. How that works is
+shown in the guide [Testing restores](/en/setup/testing-restores/). What to do if the whole server fails is best
+decided beforehand in an [emergency plan](/en/setup/emergency-plan/).

@@ -1,85 +1,80 @@
 ---
-title: Logs
-description: If a service fails to start or behaves strangely, the answers are almost always in the logs. Here, you'll learn where to find them and how to keep them from filling up your hard drive.
+title: "Logs"
+description: "When a service doesn't start or behaves strangely, the answers are almost always in the logs. Here you learn where to find them and how to keep them from filling up your disk."
 level: 2
-related:
-  - monitoring
-  - docker-compose
-  - updates
+related: [monitoring, docker-compose, updates]
 ---
 
 ## What are logs?
 
-Logs are the records that programs generate while running: startup messages, warnings, errors, and accesses.
-When troubleshooting, they are usually the first and best clue. If a container fails to start or keeps restarting,
-Now, the reason is almost always found in the last few lines of his log.
+Logs are the records programs write while they work: startup messages, warnings, errors, access. When troubleshooting,
+they're usually the first and best clue. If a container doesn't start or keeps restarting, the reason is almost always
+in the last lines of its log.
 
-On a home lab server, there are two sources:
+On a homelab server, there are two sources:
 
-- **Container logs**: Everything a service running in a container writes to standard output. Docker collects this information.
-- **System logs**: Messages from the operating system and its services, such as SSH, Docker itself, or updates. These are collected
-  On Debian and Ubuntu, systemd's **journald**.
+- **Container logs**: everything a service in a container writes to standard output. Docker collects it.
+- **System logs**: messages from the operating system and its services, such as SSH, Docker itself or updates. On
+  Debian and Ubuntu, systemd's **journald** collects them.
 
-## Reading Container Logs
+## Reading container logs
 
-The "Stack" folder displays the`docker compose logs` logs for all containers in the stack:
+In the stack folder, `docker compose logs` shows the logs of all containers in the stack:
 
 ```bash
 cd __ROOT__/vaultwarden
 docker compose logs
 ```
 
-For longer logs, a few options can be helpful:
+For longer logs, a few options help:
 
 ```bash
-# Live mitlesen (beenden mit Strg+C)
+# Follow live (exit with Ctrl+C)
 docker compose logs -f
 
-# Nur die letzten 100 Zeilen
+# Only the last 100 lines
 docker compose logs --tail 100
 
-# Nur die letzte Stunde, mit Zeitstempel
+# Only the last hour, with timestamps
 docker compose logs --since 1h -t
 
-# Nur einen bestimmten Dienst des Stacks
+# Only one specific service of the stack
 docker compose logs -f vaultwarden
 ```
 
-The options can be combined; for example, `docker compose logs -f --tail 50`. That is the typical command,
-if you've just restarted a service and want to see what happens. Use  to filter`grep` by
-Keywords:
+The options can be combined, for example `docker compose logs -f --tail 50`. That's the typical command when you've
+just restarted a service and want to watch what happens. With `grep`, you filter by keywords:
 
 ```bash
 docker compose logs --since 24h | grep -i error
 ```
 
-## System Logs with journalctl
+## System logs with journalctl
 
-You can view the system logs using `journalctl`. If it shows only a few or no entries, your user account is missing
-Read permissions. Then put  before`sudo` it.
+You read the system's logs with `journalctl`. If it shows few or no entries, your user lacks read access. Then put
+`sudo` in front.
 
 ```bash
-# Logs des Docker-Dienstes, live
+# Logs of the Docker service, live
 journalctl -u docker -f
 
-# SSH-Logins seit gestern
+# SSH logins since yesterday
 journalctl -u ssh --since yesterday
 
-# Nur Fehler seit dem letzten Start
+# Only errors since the last boot
 journalctl -b -p err
 ```
 
-The journal sets its own size limit, so you usually don't have to worry about it.
+The journal limits its own size, so you normally don't have to worry about it.
 
-## Log Rotation: The Underestimated Pitfall
+## Log rotation: the underestimated trap
 
-By default, Docker stores container logs using the logging driver as`json-file` a file located at
-`/var/lib/docker/containers/`. These files are continuously written to, **with no size limit**.
-A "chatty" container can accumulate many gigabytes over the course of months until the hard drive is full and nothing
-That's all.
+By default, Docker stores container logs with the `json-file` logging driver as files under
+`/var/lib/docker/containers/`. These files keep growing **without a size limit**. A chatty container can pile up many
+gigabytes over months until the disk is full and nothing works anymore.
 
-The solution is **log rotation**: Once a log file reaches a certain size, Docker starts a new one and
-deletes the oldest ones. You set this up`/etc/docker/daemon.json` once in a central location:
+The solution is **log rotation**: once a log file reaches a certain size, Docker starts a new one and deletes the
+oldest. You set this up once, centrally, in `/etc/docker/daemon.json`:
 
 ```json
 {
@@ -91,8 +86,8 @@ deletes the oldest ones. You set this up`/etc/docker/daemon.json` once in a cent
 }
 ```
 
-This means that Docker stores a maximum of three files per container, each 10 MB in size. The values must be entered as text enclosed in quotation marks
-. Alternatively, you can use the driver`local`, which rotates on its own and compresses to save space:
+With this, Docker keeps at most three files of 10 MB each per container. The values have to be text in quotes.
+Alternatively, use the `local` driver, which rotates on its own and compresses to save space:
 
 ```json
 {
@@ -100,44 +95,44 @@ This means that Docker stores a maximum of three files per container, each 10 MB
 }
 ```
 
-If the file already exists, add the entries instead of overwriting them. Then restart Docker:
+If the file already exists, add the entries instead of overwriting it. Then restart Docker:
 
 ```bash
 sudo nano /etc/docker/daemon.json
 sudo systemctl restart docker
 ```
 
-<Callout type="warning" title="Applies only to new containers">
-  This setting applies only to containers **created** after this change. Simply restarting the system is not enough.
-  Recreate existing stacks using  `docker compose up -d --force-recreate`in the respective stack folder.
+<Callout type="warning" title="Only applies to new containers">
+  The setting only applies to containers that are **recreated** afterwards. A simple restart isn't enough. Recreate
+  existing stacks with `docker compose up -d --force-recreate` in the respective stack folder.
 </Callout>
 
-If you want to use different values for a specific service, you can do that in its configuration using`compose.yaml` the key
-`logging:`. For details, see the [Docker documentation on logging drivers](https://docs.docker.com/engine/logging/configure/).
+If you want different values for a single service, you can set them in its `compose.yaml` with the `logging:` key.
+Details are in the [Docker documentation on logging drivers](https://docs.docker.com/engine/logging/configure/).
 
-The following shows how much space the container logs currently occupy:
+This shows how much space container logs currently take up:
 
 ```bash
 sudo du -sh /var/lib/docker/containers/
 ```
 
-## Browser Logs: Dozzle
+## Logs in the browser: Dozzle
 
-If you prefer to read logs in your browser, you can try [Dozzle](https://dozzle.dev). Dozzle is a small container,
-which displays the logs of all containers in real time in a web interface, with search and filter functions. It doesn't store anything itself,
-Instead, it reads directly from Docker. This requires access to the Docker socket. So don't run Dozzle
-not directly to the Internet, but only to the home network, via VPN, or behind login protection such as
-[Tinyauth](/en/setup/tinyauth/).
+If you'd rather read logs in the browser, try [Dozzle](https://dozzle.dev). Dozzle is a small container that shows
+the logs of all containers live in a web interface, with search and filters. It doesn't store anything itself but
+reads directly from Docker. For that, it needs access to the Docker socket. So don't put Dozzle on the internet
+unprotected, only on your home network, via VPN or behind login protection like [Tinyauth](/en/setup/tinyauth/).
 
-## Troubleshooting Tips
+If you already use [Dockhand or Portainer](/en/setup/portainer-dockhand/), you usually don't need Dozzle: both
+show every container's logs in the browser as well.
 
-- **Is the container constantly restarting?**  `docker compose ps`Shows the status and  `docker compose logs --tail 50`the reason.
-  Typical causes and solutions can be found under "[Container in a Restart Loop](/en/wiki/restart-loop/)."
-- **Is something not working after an update?** Look for the first error message in the logs, not the last one.
-  Consequential errors often mask the actual cause.
-- **Service is unavailable, but the container is running?** Then it's worth taking a look at the reverse proxy logs.
-- Is **the error message unclear?** Copy it into a search engine or post it in the project's issues. You rarely
-  The first one.
+## Troubleshooting tips
 
-You can find step-by-step instructions for the search at
-[Troubleshooting: First Steps](/en/wiki/first-steps/).
+- **Container keeps restarting?** `docker compose ps` shows the status, `docker compose logs --tail 50` the reason.
+  Typical causes and solutions are under [Container in a restart loop](/en/wiki/restart-loop/).
+- **Something doesn't work after an update?** Look for the first error message in the logs, not the last. Follow-up
+  errors often hide the actual cause.
+- **Service unreachable, but the container is running?** Then the reverse proxy's logs are worth a look.
+- **Error message makes no sense?** Paste it into a search engine or the project's issues. You're rarely the first.
+
+A step-by-step guide to troubleshooting is under [Troubleshooting: first steps](/en/wiki/first-steps/).

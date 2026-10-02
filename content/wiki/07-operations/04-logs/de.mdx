@@ -126,6 +126,9 @@ sondern liest direkt bei Docker mit. Dafür braucht es Zugriff auf den Docker-So
 ungeschützt ins Internet, sondern nur ins Heimnetz, per VPN oder hinter einen Login-Schutz wie
 [Tinyauth](/de/einrichten/tinyauth/).
 
+Nutzt du schon [Dockhand oder Portainer](/de/einrichten/portainer-dockhand/), brauchst du Dozzle meist nicht: Beide
+zeigen die Logs jedes Containers ebenfalls im Browser.
+
 ## Tipps zur Fehlersuche
 
 - **Container startet ständig neu?** `docker compose ps` zeigt den Status, `docker compose logs --tail 50` den Grund.
