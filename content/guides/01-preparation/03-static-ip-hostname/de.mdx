@@ -46,12 +46,16 @@ sudo reboot
 Wenn du die Adresse geändert hast, verbindest du dich danach mit der neuen Adresse. Damit bist du fertig und kannst direkt beim Schritt **Hostname prüfen** weitermachen.
 </Step>
 
-<Step title="Alternative: statische IP auf Debian (ifupdown)">
+<Step title="Alternative: statische IP auf dem Server">
 Nur nötig, wenn du keine Reservierung im Router einrichten kannst oder willst. Wähl dann eine Adresse **außerhalb** des DHCP-Bereichs deines Routers, sonst vergibt der Router sie womöglich zusätzlich an ein anderes Gerät. Den Bereich findest du in den DHCP-Einstellungen des Routers.
 
 <Callout type="warning" title="Am besten direkt am Server arbeiten">
 Ein Tippfehler in der Netzwerkkonfiguration kann die SSH-Verbindung trennen. Mach diesen Schritt am besten mit Monitor und Tastatur am Server.
 </Callout>
+
+Wie das geht, hängt vom System ab. Angezeigt wird der Weg für das Betriebssystem aus „Mein Setup“.
+
+<Os is="debian">
 
 Debian verwaltet das Netzwerk auf Servern mit `ifupdown`. Öffne die Konfiguration:
 
@@ -75,12 +79,12 @@ nameserver 192.168.1.1
 ```
 
 Starte den Server danach neu (`sudo reboot`) und verbinde dich mit der neuen Adresse.
-</Step>
 
-<Step title="Alternative: statische IP auf Ubuntu (netplan)">
-Ubuntu Server konfiguriert das Netzwerk mit **netplan**. Auch hier gilt: Adresse außerhalb des DHCP-Bereichs wählen.
+</Os>
 
-Die Installation hat die Konfiguration über cloud-init angelegt. Damit cloud-init deine Änderungen nicht wieder überschreibt, schaltest du dessen Netzwerkverwaltung ab:
+<Os is="ubuntu">
+
+Ubuntu Server konfiguriert das Netzwerk mit **netplan**. Die Installation hat die Konfiguration über cloud-init angelegt. Damit cloud-init deine Änderungen nicht wieder überschreibt, schaltest du dessen Netzwerkverwaltung ab:
 
 ```bash
 echo 'network: {config: disabled}' | sudo tee /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
@@ -110,6 +114,12 @@ network:
         addresses: [192.168.1.1]
 ```
 
+Die Datei darf nur root lesen, sonst warnt netplan:
+
+```bash
+sudo chmod 600 /etc/netplan/50-cloud-init.yaml
+```
+
 Teste die Konfiguration mit `netplan try`. Wenn du die neue Einstellung nicht innerhalb von zwei Minuten mit `Enter` bestätigst, stellt netplan die alte wieder her. So sperrst du dich nicht aus:
 
 ```bash
@@ -117,6 +127,8 @@ sudo netplan try
 ```
 
 Wenn die Verbindung steht, bestätige mit `Enter` und verbinde dich danach mit der neuen Adresse.
+
+</Os>
 </Step>
 
 <Step title="Hostname prüfen und setzen">

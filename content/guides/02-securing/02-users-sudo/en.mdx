@@ -12,10 +12,20 @@ On a Linux system, root may do anything, without asking. One typo as root can wi
 
 That depends on how your server was set up:
 
-- **Ubuntu Server:** The installer always creates a user with sudo rights, and root has no password. You're done. At most, check quickly with `sudo whoami`.
-- **Debian without a root password:** If you left the root password empty in the installer, your user automatically gets sudo rights. Also done.
-- **Debian with a root password:** Your user exists but isn't allowed to use sudo. Often sudo isn't even installed. Switch to root with `su -` (the minus matters: only then does the shell find commands like `usermod`) and continue with step 2.
-- **Rented server with root only:** Many hosting providers deliver servers with root only. Do all the steps.
+<Os is="ubuntu">
+
+- **Installed with the Ubuntu installer:** it always creates a user with sudo rights, and root has no password. You're done. At most, check quickly with `sudo whoami`.
+- **Rented server with root only:** many hosting providers deliver servers with root only. Do all the steps.
+
+</Os>
+
+<Os is="debian">
+
+- **Installed without a root password:** if you left the root password empty in the installer, your user automatically gets sudo rights. You're done. At most, check quickly with `sudo whoami`.
+- **Installed with a root password:** your user exists but isn't allowed to use sudo. Often sudo isn't even installed. Switch to root with `su -` (the minus matters: only then does the shell find commands like `usermod`) and continue with step 2.
+- **Rented server with root only:** many hosting providers deliver servers with root only. Do all the steps.
+
+</Os>
 
 In the examples, the new user is called `__USER__`, as entered in "My setup". Use your own name, lowercase and without spaces, and enter it there.
 

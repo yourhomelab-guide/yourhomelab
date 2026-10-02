@@ -246,6 +246,7 @@ docker network create __NETWORK__
 | `<OneWay />` | The "One way among many" box |
 | `<Cards>` + `<Card title="…">…</Card>` | Cards side by side |
 | `<Quiz questions={…} results={…} />` | Decision helper, see `wiki/01-basics/03-cloud-hybrid-local/de.mdx` |
+| `<Os is="ubuntu">…</Os>` (or `"debian"`) | Content for one operating system only. The visitor picks Debian or Ubuntu in "My setup"; the other variant is hidden. Leave blank lines inside so Markdown is parsed. Add `inline` for a short piece inside a sentence. Never wrap a whole `<Step>` (the step counter would be off): put both variants inside one step instead. |
 
 Tables, lists, links and images are plain Markdown.
 

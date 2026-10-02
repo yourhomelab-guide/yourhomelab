@@ -141,4 +141,27 @@ sudo journalctl -u ssh -n 50
 
 Oft liest man den Rat, SSH auf einen anderen Port als 22 zu legen. Das macht die Logs ruhiger, weil weniger Bots anklopfen. Sicherer wird der Server dadurch kaum, denn mit Schlüssel-Login sind die Rateversuche ohnehin chancenlos. Dieser Guide lässt den Port deshalb bei 22.
 
+Willst du den Port trotzdem ändern, ergänze in deiner Datei unter `/etc/ssh/sshd_config.d/` eine Zeile wie `Port 2200`. Erlaube den neuen Port vorher in der [Firewall](/de/einrichten/firewall-ufw/) (`sudo ufw allow 2200/tcp`), sonst sperrst du dich aus, und nimm nicht 2222, den nutzt [Forgejo](/de/dienste/forgejo/) für Git. Prüfe die Konfiguration mit `sudo sshd -t` und übernimm sie:
+
+<Os is="debian">
+
+```bash
+sudo systemctl restart ssh
+```
+
+</Os>
+
+<Os is="ubuntu">
+
+Ubuntu startet SSH über `ssh.socket`. Dabei legt systemd fest, auf welchem Port gelauscht wird, und liest den Port aus deiner Konfiguration erst nach einem `daemon-reload`:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart ssh.socket
+```
+
+</Os>
+
+Teste die Anmeldung mit `ssh -p 2200 …` in einem neuen Terminal, bevor du die alte Sitzung schließt. Erst dann entfernst du die Firewall-Regel für Port 22.
+
 Noch besser ist es, wenn SSH gar nicht aus dem Internet erreichbar ist. Zuhause gibst du Port 22 im Router einfach nicht frei und kommst von unterwegs per [VPN](/de/einrichten/vpn-wireguard/) ins Heimnetz. Im nächsten Schritt beschränkt außerdem die [Firewall](/de/einrichten/firewall-ufw/), wer überhaupt verbinden darf. Mehr dazu in [Angriffsfläche klein halten](/de/nachschlagen/angriffsflaeche/).

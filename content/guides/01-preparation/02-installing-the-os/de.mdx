@@ -25,12 +25,14 @@ Dann installierst du Debian oder Ubuntu genauso, nur in einer VM statt direkt au
 Beide Systeme sind gute Grundlagen. Die Befehle in den Guides funktionieren auf beiden gleich.
 
 - **Debian 13** ist schlank, sehr stabil und ändert sich wenig. Eine gute Wahl, wenn du ein ruhiges System willst.
-- **Ubuntu Server LTS** baut auf Debian auf, bringt etwas neuere Pakete mit und hat einen sehr geführten Installer. LTS steht für Long Term Support: Diese Versionen bekommen fünf Jahre lang Updates.
+- **Ubuntu Server LTS** baut auf Debian auf, bringt etwas neuere Pakete mit und hat einen sehr geführten Installer. LTS steht für Long Term Support: Diese Versionen bekommen fünf Jahre lang Updates. Aktuell ist Ubuntu 26.04 LTS, 24.04 LTS wird weiter gepflegt.
 
 Wenn du keine Vorliebe hast, nimm Debian. Lade das passende Image von der offiziellen Seite herunter:
 
 - Debian: [debian.org/download](https://www.debian.org/download) (das „netinst“-Image für amd64, es lädt die Pakete während der Installation aus dem Netz)
 - Ubuntu Server: [ubuntu.com/download/server](https://ubuntu.com/download/server) (die aktuelle LTS-Version)
+
+Stell deine Wahl oben unter **„Mein Setup“** ein. Die Guides zeigen dir dann an den Stellen, an denen sich Debian und Ubuntu unterscheiden, nur noch den passenden Weg.
 </Step>
 
 <Step title="Installations-USB-Stick erstellen">
@@ -56,7 +58,9 @@ Steck den USB-Stick ein und schalte den Rechner ein. Drück direkt nach dem Eins
 Wenn der Stick nicht auftaucht, schau im BIOS/UEFI nach, ob Booten von USB erlaubt ist. Secure Boot kannst du eingeschaltet lassen, Debian und Ubuntu unterstützen es.
 </Step>
 
-<Step title="Debian installieren">
+<Step title="System installieren">
+<Os is="debian">
+
 Wähl im Startmenü **Install** (die Textversion reicht völlig). Der Installer fragt nacheinander:
 
 1. **Sprache, Standort, Tastatur**: nach deinen Wünschen.
@@ -79,20 +83,25 @@ Den Bootloader GRUB installierst du auf die Systemplatte. Danach startet der Rec
 <Callout title="Doch ein Root-Passwort vergeben?">
 Dann bekommt dein Benutzer kein `sudo`. Du kannst es nachholen: als root anmelden (`su -`), dann `apt install sudo` und `usermod -aG sudo __USER__` ausführen und dich neu anmelden.
 </Callout>
-</Step>
 
-<Step title="Oder: Ubuntu Server installieren">
-Wenn du Ubuntu gewählt hast, führt dich der Installer durch ähnliche Fragen:
+</Os>
+
+<Os is="ubuntu">
+
+Der Installer von Ubuntu Server fragt nacheinander:
 
 1. **Sprache und Tastatur** wählen.
 2. **Installationstyp**: „Ubuntu Server“ reicht. Die Variante „minimized“ ist noch kleiner, bringt aber weniger Werkzeuge mit, die du dann nachinstallieren musst.
 3. **Netzwerk**: Die LAN-Verbindung bekommt automatisch eine Adresse per DHCP. So lassen. Die feste Adresse richtest du im nächsten Guide ein.
 4. **Speicher**: „Use an entire disk“. Ubuntu legt dabei standardmäßig ein LVM an und nutzt oft nicht den ganzen Platz für das System. Prüf in der Zusammenfassung die Größe von `ubuntu-lv` und setz sie bei Bedarf auf das Maximum.
-5. **Profil**: Name, Servername (z. B. `homelab`), Benutzername und Passwort.
-6. **SSH**: Häkchen bei **Install OpenSSH server** setzen.
-7. **Featured Server Snaps**: nichts auswählen. Docker installierst du später sauber aus dem offiziellen Repository.
+5. **Profil**: Name, Servername (z. B. `homelab`), Benutzername und Passwort. Trag den Benutzernamen oben unter „Mein Setup“ ein, dann steht er in allen Befehlen der Guides.
+6. **Ubuntu Pro**: „Skip for now“. Für ein Homelab brauchst du es nicht, du kannst es später jederzeit kostenlos aktivieren.
+7. **SSH**: Häkchen bei **Install OpenSSH server** setzen.
+8. **Featured Server Snaps**: nichts auswählen. Docker installierst du später sauber aus dem offiziellen Repository.
 
 Nach der Installation neu starten und den USB-Stick abziehen.
+
+</Os>
 </Step>
 
 <Step title="Anmelden und IP-Adresse herausfinden">

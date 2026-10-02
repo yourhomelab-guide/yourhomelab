@@ -22,8 +22,24 @@ Die bekannteste Alternative ist [Pi-hole](https://pi-hole.net). Es macht im Kern
 
 <Steps>
 
-<Step title="Port 53 freimachen (nur Ubuntu)">
-DNS läuft über **Port 53**, per UDP und TCP. Diesen Port muss der Container auf dem Server belegen, damit andere Geräte ihn erreichen. Unter Ubuntu lauscht dort aber schon **systemd-resolved**: Das ist der Dienst, der für den Server selbst Namen auflöst. Er startet einen kleinen lokalen DNS-Server, den **Stub-Listener**, auf der Adresse `127.0.0.53:53`. Docker kann Port 53 dann nicht veröffentlichen und bricht mit `address already in use` ab.
+<Step title="Port 53 freimachen">
+DNS läuft über **Port 53**, per UDP und TCP. Diesen Port muss der Container auf dem Server belegen, damit andere Geräte ihn erreichen.
+
+<Os is="debian">
+
+Unter Debian ist der Port normalerweise frei, weil systemd-resolved dort meist gar nicht installiert ist. Prüf es trotzdem kurz:
+
+```bash
+sudo ss -tulpn | grep ':53 '
+```
+
+Kommt keine Ausgabe, ist der Port frei und du machst mit dem nächsten Schritt weiter. Siehst du `systemd-resolve`, gehst du vor wie unter Ubuntu: Stell dazu unter „Mein Setup“ kurz Ubuntu ein, dann erscheinen hier die Befehle.
+
+</Os>
+
+<Os is="ubuntu">
+
+Unter Ubuntu lauscht dort schon **systemd-resolved**: Das ist der Dienst, der für den Server selbst Namen auflöst. Er startet einen kleinen lokalen DNS-Server, den **Stub-Listener**, auf der Adresse `127.0.0.53:53`. Docker kann Port 53 dann nicht veröffentlichen und bricht mit `address already in use` ab.
 
 Prüfe zuerst, ob der Port belegt ist:
 
@@ -31,7 +47,7 @@ Prüfe zuerst, ob der Port belegt ist:
 sudo ss -tulpn | grep ':53 '
 ```
 
-Kommt keine Ausgabe, ist der Port frei und du springst zum nächsten Schritt. Unter Debian ist das der Normalfall, weil systemd-resolved dort meist gar nicht installiert ist. Siehst du `systemd-resolve`, schaltest du nur den Stub-Listener ab. systemd-resolved selbst läuft weiter.
+Siehst du `systemd-resolve`, schaltest du nur den Stub-Listener ab. systemd-resolved selbst läuft weiter.
 
 ```bash
 sudo mkdir -p /etc/systemd/resolved.conf.d
@@ -53,7 +69,9 @@ sudo ss -tulpn | grep ':53 '
 ping -c1 debian.org
 ```
 
-Der Server selbst fragt also weiter deinen Router oder einen öffentlichen DNS-Server, nicht AdGuard Home. Das ist Absicht: Läuft der Container einmal nicht, kann der Server trotzdem Updates und Images laden. Mehr zu belegten Ports steht unter [Port belegt](/de/nachschlagen/port-belegt/).
+</Os>
+
+Der Server selbst fragt weiter deinen Router oder einen öffentlichen DNS-Server, nicht AdGuard Home. Das ist Absicht: Läuft der Container einmal nicht, kann der Server trotzdem Updates und Images laden. Mehr zu belegten Ports steht unter [Port belegt](/de/nachschlagen/port-belegt/).
 </Step>
 
 <Step title="AdGuard Home starten">

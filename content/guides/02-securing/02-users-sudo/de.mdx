@@ -13,10 +13,20 @@ root darf auf einem Linux-System alles, ohne Rückfrage. Ein Tippfehler als root
 
 Das hängt davon ab, wie dein Server eingerichtet wurde:
 
-- **Ubuntu Server:** Der Installer legt immer einen Benutzer mit sudo-Rechten an, root hat kein Passwort. Du bist fertig. Prüf höchstens kurz mit `sudo whoami`.
-- **Debian ohne root-Passwort:** Hast du im Installer das root-Passwort leer gelassen, bekommt dein Benutzer automatisch sudo-Rechte. Ebenfalls fertig.
-- **Debian mit root-Passwort:** Dein Benutzer existiert, darf aber kein sudo. Oft ist sudo gar nicht installiert. Wechsle mit `su -` zu root (das Minus ist wichtig, erst damit findet die Shell Befehle wie `usermod`) und mach mit Schritt 2 weiter.
+<Os is="ubuntu">
+
+- **Installiert mit dem Ubuntu-Installer:** Er legt immer einen Benutzer mit sudo-Rechten an, root hat kein Passwort. Du bist fertig. Prüf höchstens kurz mit `sudo whoami`.
 - **Gemieteter Server mit nur root:** Viele Hoster liefern Server nur mit root aus. Mach alle Schritte.
+
+</Os>
+
+<Os is="debian">
+
+- **Ohne root-Passwort installiert:** Hast du im Installer das root-Passwort leer gelassen, bekommt dein Benutzer automatisch sudo-Rechte. Du bist fertig. Prüf höchstens kurz mit `sudo whoami`.
+- **Mit root-Passwort installiert:** Dein Benutzer existiert, darf aber kein sudo. Oft ist sudo gar nicht installiert. Wechsle mit `su -` zu root (das Minus ist wichtig, erst damit findet die Shell Befehle wie `usermod`) und mach mit Schritt 2 weiter.
+- **Gemieteter Server mit nur root:** Viele Hoster liefern Server nur mit root aus. Mach alle Schritte.
+
+</Os>
 
 In den Beispielen heißt der neue Benutzer `__USER__`, so wie in „Mein Setup“ eingetragen. Nimm deinen eigenen Namen, kleingeschrieben und ohne Leerzeichen, und trag ihn dort ein.
 

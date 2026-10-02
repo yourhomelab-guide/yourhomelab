@@ -81,6 +81,9 @@ export const LAN_RANGES = ['10.0.0.0/8', '192.168.0.0/16'];
 export type Proxy = (typeof proxies)[number];
 
 /** Default values for "Mein Setup". Keys are also the placeholder names (upper-cased) used in templates. */
+export const oses = ['debian', 'ubuntu'] as const;
+export type OsId = (typeof oses)[number];
+
 export const defaultSetup = {
   domain: 'example.com',
   email: 'admin@example.com',
@@ -92,6 +95,8 @@ export const defaultSetup = {
   dataRoot: '/srv/homelab/data',
   serverIp: '192.168.1.10',
   user: 'alex',
+  /** Server operating system; guides show the matching instructions (see the <Os> MDX component) */
+  os: 'debian' as OsId,
   tz: 'Europe/Berlin',
   puid: '1000',
   pgid: '1000',

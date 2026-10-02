@@ -21,8 +21,24 @@ The best-known alternative is [Pi-hole](https://pi-hole.net). At its core it doe
 
 <Steps>
 
-<Step title="Free up port 53 (Ubuntu only)">
-DNS runs on **port 53**, over UDP and TCP. The container has to take this port on the server so other devices can reach it. On Ubuntu, though, **systemd-resolved** already listens there: that's the service that resolves names for the server itself. It starts a small local DNS server, the **stub listener**, at the address `127.0.0.53:53`. Docker then can't publish port 53 and fails with `address already in use`.
+<Step title="Free up port 53">
+DNS runs on **port 53**, over UDP and TCP. The container has to take this port on the server so other devices can reach it.
+
+<Os is="debian">
+
+On Debian, the port is normally free, because systemd-resolved usually isn't installed there at all. Check it quickly anyway:
+
+```bash
+sudo ss -tulpn | grep ':53 '
+```
+
+If there's no output, the port is free and you continue with the next step. If you see `systemd-resolve`, proceed as on Ubuntu: briefly set Ubuntu under "My setup", and the commands appear here.
+
+</Os>
+
+<Os is="ubuntu">
+
+On Ubuntu, **systemd-resolved** already listens there: that's the service that resolves names for the server itself. It starts a small local DNS server, the **stub listener**, at the address `127.0.0.53:53`. Docker then can't publish port 53 and fails with `address already in use`.
 
 First check whether the port is taken:
 
@@ -30,7 +46,7 @@ First check whether the port is taken:
 sudo ss -tulpn | grep ':53 '
 ```
 
-If there's no output, the port is free and you skip to the next step. On Debian that's the normal case, because systemd-resolved usually isn't installed there at all. If you see `systemd-resolve`, turn off only the stub listener. systemd-resolved itself keeps running.
+If you see `systemd-resolve`, turn off only the stub listener. systemd-resolved itself keeps running.
 
 ```bash
 sudo mkdir -p /etc/systemd/resolved.conf.d
@@ -52,7 +68,9 @@ sudo ss -tulpn | grep ':53 '
 ping -c1 debian.org
 ```
 
-So the server itself keeps asking your router or a public DNS server, not AdGuard Home. That's on purpose: if the container isn't running at some point, the server can still download updates and images. More on ports that are already taken under [Port already in use](/en/wiki/port-in-use/).
+</Os>
+
+The server itself keeps asking your router or a public DNS server, not AdGuard Home. That's on purpose: if the container isn't running at some point, the server can still download updates and images. More on ports that are already taken under [Port already in use](/en/wiki/port-in-use/).
 </Step>
 
 <Step title="Start AdGuard Home">

@@ -32,7 +32,7 @@
     "by": "deepl"
   },
   "content/guides/01-preparation/02-installing-the-os/de.mdx": {
-    "hash": "4be7560bd9851a5c",
+    "hash": "f03d9caba3666b03",
     "by": "claude"
   },
   "content/guides/01-preparation/03-static-ip-hostname/de.mdx": {
@@ -48,7 +48,7 @@
     "by": "deepl"
   },
   "content/guides/02-securing/02-users-sudo/de.mdx": {
-    "hash": "0aadcc202d5f456e",
+    "hash": "48a376205cc273c9",
     "by": "claude"
   },
   "content/guides/02-securing/03-hardening-ssh/de.mdx": {
@@ -176,7 +176,7 @@
     "by": "claude"
   },
   "content/guides/08-apps/01-adguard-home/de.mdx": {
-    "hash": "449b74d3560c68e8",
+    "hash": "1000a1e5864c3421",
     "by": "claude"
   },
   "content/guides/08-apps/02-dashboard-homepage/de.mdx": {
@@ -1111,6 +1111,18 @@
     "hash": "d1f203eaa3c17198",
     "by": "claude"
   },
+  "src/i18n/de.json#os.debian": {
+    "hash": "183d3b3c03fbf112",
+    "by": "claude"
+  },
+  "src/i18n/de.json#os.only": {
+    "hash": "7a9ad9e05f7244d5",
+    "by": "claude"
+  },
+  "src/i18n/de.json#os.ubuntu": {
+    "hash": "a775333405841f2f",
+    "by": "claude"
+  },
   "src/i18n/de.json#page.edit": {
     "hash": "ecf1c6aaf9d58ea7",
     "by": "claude"
@@ -1579,6 +1591,10 @@
     "hash": "229ac8590d4c493d",
     "by": "claude"
   },
+  "src/i18n/de.json#setupDialog.os": {
+    "hash": "d73575eec0014b61",
+    "by": "claude"
+  },
   "src/i18n/de.json#setupDialog.reset": {
     "hash": "e08b720282f76868",
     "by": "claude"
@@ -1653,6 +1669,10 @@
   },
   "src/i18n/de.json#summary.network": {
     "hash": "7831c04124b640f8",
+    "by": "claude"
+  },
+  "src/i18n/de.json#summary.os": {
+    "hash": "6725e7bbcd28f3a8",
     "by": "claude"
   },
   "src/i18n/de.json#summary.proxy": {

@@ -14,6 +14,8 @@ loadAnalytics();
 
 function refresh() {
   const s = getSetup();
+  // Shows the matching <Os> blocks (CSS in global.css)
+  document.documentElement.dataset.os = s.os;
   renderVariants(s);
   applyPlaceholders(document, s);
   renderSummaries(s);

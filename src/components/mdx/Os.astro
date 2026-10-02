@@ -1,0 +1,30 @@
+---
+/**
+ * <Os is="ubuntu">…</Os> – content for one operating system only. The visitor picks Debian or Ubuntu in
+ * "Mein Setup"; the other variant is hidden via the `data-os` attribute on <html> (see client/app.ts).
+ * Without a choice, the default from defaultSetup is shown. `inline` renders a <span> for use inside a sentence.
+ */
+import type { OsId } from '../../config/site';
+import { langFromUrl, t } from '../../lib/i18n';
+
+interface Props {
+  is: OsId;
+  inline?: boolean;
+}
+const { is, inline = false } = Astro.props;
+const lang = langFromUrl(Astro.url);
+const label = t(lang, 'os.only', { os: t(lang, `os.${is}`) });
+---
+
+{
+  inline ? (
+    <span class="os-only" data-os-only={is}>
+      <slot />
+    </span>
+  ) : (
+    <div class="os-only os-block" data-os-only={is}>
+      <span class="os-tag">{label}</span>
+      <slot />
+    </div>
+  )
+}

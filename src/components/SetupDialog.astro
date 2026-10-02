@@ -1,5 +1,5 @@
 ---
-import { defaultSetup, proxies } from '../config/site';
+import { defaultSetup, oses, proxies } from '../config/site';
 import { t, type Lang } from '../lib/i18n';
 
 interface Props {
@@ -70,6 +70,10 @@ const d = defaultSetup;
 
       <fieldset>
         <legend>{t(lang, 'setupDialog.sec4')}</legend>
+        <div class="row">
+          <span class="lbl">{t(lang, 'setupDialog.os')}</span>
+          {oses.map((o) => <label class="opt"><input type="radio" name="os" value={o} checked={o === d.os} /><span>{t(lang, `os.${o}`)}</span></label>)}
+        </div>
         <div class="grid2">
           <label>{t(lang, 'setupDialog.serverIp')}<input name="serverIp" value={d.serverIp} autocomplete="off" spellcheck="false" /></label>
           <label>{t(lang, 'setupDialog.user')}<input name="user" value={d.user} autocomplete="off" spellcheck="false" /></label>

@@ -235,3 +235,10 @@ mark { background: var(--warn-bg); color: var(--warn-fg); border-radius: 4px; pa
 .gl-tip::after { content: ''; position: absolute; left: var(--arrow, 50%); width: 10px; height: 10px; margin-left: -5px; background: inherit; transform: rotate(45deg); }
 .gl-tip[data-side='top']::after { bottom: -5px; }
 .gl-tip[data-side='bottom']::after { top: -5px; }
+
+/* ------------------------------------------------------- os-specific blocks */
+/* <Os is="…">: only the variant for the OS from "Mein Setup" is visible (data-os on <html>, default Debian) */
+html:not([data-os='ubuntu']) [data-os-only='ubuntu'],
+html[data-os='ubuntu'] [data-os-only='debian'] { display: none !important; }
+.os-block { display: flex; flex-direction: column; gap: 12px; border-left: 3px solid var(--accent); padding: 2px 0 2px 16px; }
+.os-tag { align-self: flex-start; font-size: 12px; font-weight: 600; letter-spacing: 0.02em; color: var(--accent-600); background: var(--accent-50); border-radius: 999px; padding: 3px 10px; }
