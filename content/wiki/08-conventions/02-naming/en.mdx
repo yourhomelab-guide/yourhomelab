@@ -1,12 +1,8 @@
 ---
-title: Naming
-description: "Folders, stacks, containers, subdomains, and networks: With a consistent naming convention, you'll still be able to find your way around even months later. Here's the convention used by all the templates on this page."
+title: "Naming"
+description: "Folders, stacks, containers, subdomains and networks: with a fixed naming scheme, you'll still find your way around after months. Here is the scheme all templates on this site use."
 level: 1
-related:
-  - directory-structure
-  - docker-compose
-  - docker-networks
-  - dns-domains
+related: [directory-structure, docker-compose, docker-networks, dns-domains]
 practice: first-stack
 ---
 
@@ -14,31 +10,32 @@ practice: first-stack
 
 ## Why a naming scheme?
 
-Names appear in many places in a home lab: in folders, in `docker ps`, in logs, in monitoring, in the
-Browser address bar. If the same service has a different name in every field, you'll be searching constantly. A consistent naming convention saves you
-this search. And it makes commands predictable: You know the name of the container without having to look it up.
+In a homelab, names show up in many places: in folders, in `docker ps`, in logs, in monitoring, in the browser's
+address bar. If the same service is called something different everywhere, you're constantly searching. A fixed
+scheme saves you that. And it makes commands predictable: you know what the container is called without looking.
 
-The rule on this page is simple: **Each service has a name, and that name applies everywhere.**
+This site's rule is simple: **a service has one name, and it applies everywhere.**
 
-## Folder, Stack, and Container
+## Folder, stack and container
 
-A service's name is its ID, for example  `vaultwarden`or `nextcloud`. Lowercase letters, numbers, and
-Hyphens, no spaces.
+A service's name is its ID, for example `vaultwarden` or `nextcloud`. Lowercase letters, digits and hyphens, no
+spaces.
 
 - **Folder:** `__ROOT__/vaultwarden`
-- **Stack Name:** Docker Compose uses the folder name as the project name by default. So you don't need to do anything.
+- **Stack name:** without further settings, Docker Compose uses the folder name as the project name. So you don't
+  have to do anything.
 - **Container:** `container_name: vaultwarden`
 
-Without it, Compose would`container_name` generate`vaultwarden-vaultwarden-1` names such as (project, service, number). The
-It works, but it's long and hard to type. Just use a fixed name`docker logs vaultwarden`.
+Without `container_name`, Compose would generate names like `vaultwarden-vaultwarden-1` (project, service, number).
+That works, but it's long and hard to type. With a fixed name, `docker logs vaultwarden` is enough.
 
-The [Stack Builder](/en/werkzeuge/stack-builder/) follows this pattern. The folders and `compose.yaml`files,
-So the ones he generates are already appropriately named.
+The [stack builder](/en/tools/stack-builder/) sticks to this scheme. So the folders and `compose.yaml` files it
+generates are already named correctly.
 
-## Aid Containers
+## Helper containers
 
-Many services consist of multiple containers, such as an app, a database, and a cache. The main container
-is named after the folder; all others follow this pattern`<id>-<rolle>`:
+Many services consist of several containers, for example an app, a database and a cache. The main container is named
+like the folder, all others follow the scheme `<id>-<role>`:
 
 ```yaml
 services:
@@ -50,63 +47,63 @@ services:
     container_name: nextcloud-redis
 ```
 
-The keys are`services:` short (`db`, `redis`). The containers can be accessed using these names
-within the stack, for example with `MYSQL_HOST=db`. Each one looks similar`compose.yaml`, and in `docker ps`
-you can still tell right away which database belongs to which service.
+The keys under `services:` stay short (`db`, `redis`). Under these names, the containers reach each other within the
+stack, for example with `MYSQL_HOST=db`. That way every `compose.yaml` looks similar, and in `docker ps` you still see
+at once which database belongs to which service.
 
-Common roles are `db`, `redis`,  or`worker` `cron`. The important thing is that you always use the same ones.
+Common roles are `db`, `redis`, `worker` or `cron`. All that matters is that you always use the same ones.
 
 <Callout type="warning" title="container_name must be unique">
-  A server cannot have two containers with the same name. If you had one in each of two stacks,
-  If there is a container named `db`, the second one will not start. The prefix with the ID prevents this.
+  There can't be two containers with the same name on one server. If you had a container called `db` in each of two
+  stacks, the second wouldn't start. The prefix with the ID prevents that.
 </Callout>
 
 ## Subdomains
 
-The subdomain is the name you type into the browser. It can be shorter or more descriptive than the ID, for
-Example:
+The subdomain is the name you type in the browser. Here it may be shorter or more descriptive than the ID, for
+example:
 
-| Service      | Subdomain            |
+| Service     | Subdomain            |
 | ----------- | -------------------- |
 | vaultwarden | `vault.__DOMAIN__`   |
-| Nextcloud   | `cloud.__DOMAIN__`   |
+| nextcloud   | `cloud.__DOMAIN__`   |
 | forgejo     | `git.__DOMAIN__`     |
 | pocket-id   | `id.__DOMAIN__`      |
 
-The templates on this page include a suggestion. Consider whether you want to sort by function (`git`, `fotos`) or by
-product (`forgejo`, `immich`). Function names have one advantage: If you change the product later,
-The address remains the same. Learn more about domains under [DNS & Domains](/en/wiki/dns-domains/).
+The templates on this site come with a suggestion. Think about whether you want to name by function (`git`,
+`photos`) or by product (`forgejo`, `immich`). Function names have one advantage: if you switch products later, the
+address stays the same. More on domains under [DNS & domains](/en/wiki/dns-domains/).
 
 ## Networks
 
-- **Proxy network:** A shared network that hosts the reverse proxy and all web services. It is called
-  `__NETWORK__` and is applied by hand just once:
+- **Proxy network:** a shared network the reverse proxy and all web services are on. Here it's called `__NETWORK__`
+  and is created once by hand:
 
   ```bash
   docker network create __NETWORK__
   ```
 
-- **Stack Network:** Compose automatically assigns each stack its own network named `<projekt>_default`,
-  For example`nextcloud_default`, databases are just sitting there, isolated from the rest.
+- **Stack network:** Compose automatically gives every stack its own network called `<project>_default`, for example
+  `nextcloud_default`. Databases are only on that one and are therefore separated from the rest.
 
-You rarely need additional networks. If you do, give them a name that describes their purpose, such as `monitoring`.
-For more information, see [Docker Networks](/en/wiki/docker-networks/).
+You'll rarely need more networks. If you do, give them a name that describes the purpose, such as `monitoring`. More
+under [Docker networks](/en/wiki/docker-networks/).
 
-## Host Names
+## Hostnames
 
-Your devices need names, too. A hostname should be short and consist only of lowercase letters, numbers, and hyphens.
-include them but don't reveal what's running on them. Popular schemes include `homelab`, `nas`, , or`pi` numbered sequences
-`srv01`, `srv02`. Some people also use planets or characters from books. It's a matter of taste, as long as you
-. The guide "[Static IP & Hostname](/en/setup/static-ip-hostname/)" explains how to set the hostname.
+Your devices need names too. A hostname should be short, contain only lowercase letters, digits and hyphens, and not
+give away what runs on it. Popular schemes are `homelab`, `nas`, `pi` or numbered ones like `srv01`, `srv02`. Some
+people use planets or characters from books. That's a matter of taste, as long as you stick with it. How to set the
+hostname is shown in the guide [Static IP & hostname](/en/setup/static-ip-hostname/).
 
-## In a nutshell
+## In short
 
-| What                  | Diagram                    | Example               |
+| What                 | Scheme                    | Example                |
 | -------------------- | ------------------------- | ---------------------- |
 | Folder               | `__ROOT__/<id>`           | `__ROOT__/nextcloud`   |
-| Stack (Project)      | = Folder Name              | `nextcloud`            |
-| Main Container       | `<id>`                    | `nextcloud`            |
-| Aid Container       | `<id>-<rolle>`            | `nextcloud-db`         |
-| Subdomain            | briefly, by function       | `cloud.__DOMAIN__`     |
-| Proxy network       | once, together         | `__NETWORK__`          |
-| Hostname             | short, lowercase letters     | `homelab`              |
+| Stack (project)      | = folder name             | `nextcloud`            |
+| Main container       | `<id>`                    | `nextcloud`            |
+| Helper container     | `<id>-<rolle>`            | `nextcloud-db`         |
+| Subdomain            | short, by function        | `cloud.__DOMAIN__`     |
+| Proxy network        | once, shared              | `__NETWORK__`          |
+| Hostname             | short, lowercase          | `homelab`              |

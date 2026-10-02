@@ -1,37 +1,33 @@
 ---
-title: .env files
-description: Passwords and settings don't belong in the `compose.yaml` file. Here, you'll learn how `.env`, `env_file`, and `environment` work together and where the common pitfalls lie.
+title: ".env files"
+description: "Passwords and settings don't belong hard-coded in the compose.yaml. Here you learn how .env, env_file and environment work together and where the typical pitfalls are."
 level: 1
-related:
-  - docker-compose
-  - managing-secrets
-  - directory-structure
+related: [docker-compose, managing-secrets, directory-structure]
 practice: env-secrets
 ---
 
-## Why use a .env file?
+## Why an .env file?
 
-One describes`compose.yaml` *how* a service runs. Passwords, tokens, and values that vary from server to server
-Do not include files that do not meet these criteria. Otherwise, you won't be able to share the file, add it to Git, or simply upload it to
-copy to another computer.
+A `compose.yaml` describes *how* a service runs. Passwords, tokens and values that differ from server to server don't
+belong in it. Otherwise you can't share the file, put it in Git or simply copy it to another computer.
 
-The solution: It contains`compose.yaml` only references such as `${DB_PASSWORD}`. The actual values are stored in a file
-named  `.env`in the same folder. Docker Compose reads them automatically at startup.
+The solution: the `compose.yaml` only contains references like `${DB_PASSWORD}`. The real values are in a file called
+`.env` in the same folder. Docker Compose reads it automatically at startup.
 
-## Three Paths, Three Purposes
+## Three ways, three purposes
 
-The terms sound similar, but they mean different things.
+The terms sound similar but do different things.
 
-| Way              | Where                        | What Happens                                                   |
+| Way              | Where                     | What happens                                                   |
 | ---------------- | ------------------------- | -------------------------------------------------------------- |
-| `.env`           | File in the Stack folder     | Returns values for  `${…}`in the  `compose.yaml`(interpolation) |
-| `environment:`   | In the `compose.yaml`     | Sets environment variables **in the container**                      |
+| `.env`           | File in the stack folder  | Supplies values for `${…}` in the `compose.yaml` (interpolation) |
+| `environment:`   | In the `compose.yaml`     | Sets environment variables **in the container**                |
 | `env_file:`      | In the `compose.yaml`     | Loads all lines of a file into the container as environment variables |
 
-The most important point: It **doesn't** automatically end`.env` up in the container. Its sole purpose is to `compose.yaml`
-to fill in. A value is only added to the container via  (`environment:`or `env_file:`).
+The most important point: the `.env` does **not** end up in the container automatically. It only serves to fill in the
+`compose.yaml`. Only through `environment:` (or `env_file:`) does a value arrive in the container.
 
-The templates on this page therefore follow this pattern:
+That's why the templates on this site use this pattern:
 
 ```yaml
 services:
@@ -47,65 +43,66 @@ TZ=__TZ__
 DB_PASSWORD=ein-langes-zufaelliges-passwort
 ```
 
-This way, you can see exactly`compose.yaml` which variables a container receives. This is`env_file:` useful when a
-The service requires a great many variables. However, everything is then passed on from the file, including values that the container doesn't even
-doesn't need. If you set the same variable to  `environment:`and over `env_file:`,  wins`environment:`.
+That way you see exactly in the `compose.yaml` which variables a container gets. `env_file:` is handy when a service
+needs very many variables. But then it passes on everything in the file, including values the container doesn't need.
+If you set the same variable in `environment:` and via `env_file:`, `environment:` wins.
 
-## Interpolation and Default Values
+## Interpolation and default values
 
-Interpolation means that Compose replaces  `${VAR}`with the value from the  (`.env`or from your shell) before it executes the
-The container starts. There are a few useful options:
+Interpolation means Compose replaces `${VAR}` with the value from the `.env` (or from your shell) before it starts the
+containers. There are a few useful variants:
 
-| Spelling       | Meaning                                                  |
+| Notation           | Meaning                                                    |
 | ------------------ | ---------------------------------------------------------- |
-| `${VAR}`           | Value of `VAR`, empty if not set                   |
-| `${VAR:-standard}` | `standard`, if  is not`VAR` set or is empty         |
-| `${VAR-standard}`  | `standard` only if it is not set at all`VAR`           |
-| `${VAR:?Fehler}`   | Terminates with an error message if  is missing`VAR` or empty  |
+| `${VAR}`           | Value of `VAR`, empty if not set                           |
+| `${VAR:-standard}` | `standard` if `VAR` is not set or empty                    |
+| `${VAR-standard}`  | `standard` only if `VAR` isn't set at all                  |
+| `${VAR:?Fehler}`   | Aborts with an error message if `VAR` is missing or empty  |
 
-`${VAR:?…}` It's worth doing for required fields like passwords. Then the stack won't start with an empty password, but rather
-tells you what's missing. All the details are in the
-[Official documentation on interpolation](https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/).
+`${VAR:?…}` is worth it for required values like passwords. Then the stack doesn't start with an empty password but
+tells you what's missing. All details are in the
+[official docs on interpolation](https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/).
 
-If a variable is set`.env` both in your shell and in the , the shell takes precedence. This can sometimes be surprising,
-if you've set`export` something to  for testing purposes beforehand.
+If a variable is set both in your shell and in the `.env`, the shell wins. That sometimes surprises people who set
+something with `export` for testing earlier.
 
-## Pitfalls in Quoting
+## Quoting pitfalls
 
-Most problems with .`.env`files are caused by quotation marks and special characters.
+Most problems with `.env` files come from quotes and special characters.
 
-- **The dollar sign.** Compose also`$` replaces it in values`.env`. A password like  then `abc$def`becomes `abc`.
-  If you enclose such values in single quotes, they will be treated as literal values: `PASSWORD='abc$def'`. In the
-  `compose.yaml` You yourself write the dollar sign as `$$`.
-- **Quotation marks in `environment:`.** In the list format, the quotation marks are`- KEY="wert"` part of the value.
-  So the container is included along`"wert"` with the quotation marks. Just type `- KEY=wert`.
-- **Comments.** Lines that begin`#` with  are comments. A  in the middle`#` of a value without quotation marks
-  Can be treated as a comment if there is a space before it. If in doubt, enclose the value in quotation marks.
-- **Spaces around the period`=`.** Write it without`KEY=wert` spaces. This is unambiguous in all tools.
+- **The dollar sign.** Compose also replaces `$` in values in the `.env`. A password like `abc$def` then becomes `abc`.
+  Put such values in single quotes, and they stay literal: `PASSWORD='abc$def'`. In the `compose.yaml` itself, you
+  write a literal dollar sign as `$$`.
+- **Quotes in `environment:`.** In the list form `- KEY="wert"`, the quotes are part of the value. So the container
+  gets `"wert"` including the quotes. Simply write `- KEY=wert`.
+- **Comments.** Lines starting with `#` are comments. A `#` in the middle of an unquoted value may count as a comment
+  if there's a space before it. When in doubt, put the value in quotes.
+- **Spaces around the `=`.** Write `KEY=wert` without spaces. That's unambiguous in all tools.
 
-The easiest way to get around all of this is to use passwords made up of letters and numbers, for example,
-`openssl rand -hex 32`. They're still long enough, though.
+The easiest way around all this is passwords made of letters and digits, for example from `openssl rand -hex 32`.
+They're still long enough.
 
-## Testing with `docker compose config`
+## Checking with docker compose config
 
-Before you guess, see what Compose actually does with it:
+Before you guess, have Compose show you what it actually makes of it:
 
 ```bash
 cd __ROOT__/nextcloud
 docker compose config
 ```
 
-The command displays the final configuration, including all the values used. If a variable is missing, you'll see a
-Warning. Caution: The output contains your passwords in plain text. Do not copy them into a forum without checking them first.
+The command prints the final configuration with all values filled in. If a variable is missing, you'll see a warning.
+Careful: the output contains your passwords in plain text. Don't paste it into a forum without checking.
 
-If you've copied some code from`compose.yaml` a project's documentation and don't understand every line, the
-[Compose Guide](/en/werkzeuge/compose-erklaerer/). It explains the file line by line and highlights common issues.
+If you've taken a `compose.yaml` from a project's docs and don't understand every line, the
+[Compose explainer](/en/tools/compose-explainer/) helps. It explains the file line by line and flags typical
+problems.
 
 ## .env.example for Git
 
-It contains`.env` secrets and should never be placed in a public repository. However, if someone were to access your
-`compose.yaml` who use it know which variables are needed. That's what the following are for`.env.example`: the same keys,
-but with placeholders instead of actual values.
+The `.env` contains secrets and never belongs in a public repository. Still, someone using your `compose.yaml` should
+know which variables are needed. That's what `.env.example` is for: the same keys, but with placeholders instead of
+real values.
 
 ```bash
 # .env.example
@@ -113,11 +110,11 @@ TZ=Europe/Berlin
 DB_PASSWORD=change-me
 ```
 
-This one goes`.env.example` into Git, and that one goes into`.env` the `.gitignore`. The service templates on this page are exactly the same
-built. For each service, the [Stack Builder](/en/werkzeuge/stack-builder/) immediately provides a ready-made  `.env`with
-randomly generated secrets. For more information on how to protect your secrets, see "[Manage Secrets](/en/wiki/managing-secrets/)."
+The `.env.example` goes into Git, the `.env` into the `.gitignore`. The service templates on this site are built the
+same way. The [stack builder](/en/tools/stack-builder/) delivers a ready `.env` with randomly generated secrets for
+each service. How to protect secrets beyond that is covered under [Managing secrets](/en/wiki/managing-secrets/).
 
-<Callout type="warning" title="Set Permissions">
-  This  should`.env` only be readable by you. You can`chmod 600 .env` make sure of that by using . And remember: Anyone who
-  If someone finds a file in your backup, they'll have your passwords. That's why you should always encrypt your backups.
+<Callout type="warning" title="Set permissions">
+  The `.env` should only be readable by you. `chmod 600 .env` makes sure of that. And remember: whoever finds the file
+  in a backup has your passwords. So always encrypt backups.
 </Callout>
