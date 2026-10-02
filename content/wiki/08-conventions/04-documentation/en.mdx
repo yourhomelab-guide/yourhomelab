@@ -1,11 +1,8 @@
 ---
-title: Documentation
-description: In six months, you won't remember why you set something up that way. A few quick notes in the right place will save your evening, especially when you restore the system.
+title: "Documentation"
+description: "Six months from now, you won't remember why you set something up the way you did. A few short notes in the right place will save your evening then, especially during a restore."
 level: 1
-related:
-  - directory-structure
-  - backup-strategies
-  - naming
+related: [directory-structure, backup-strategies, naming]
 practice: git-deployments-forgejo
 ---
 
@@ -13,45 +10,44 @@ practice: git-deployments-forgejo
 
 ## Why document?
 
-Everything seems fine when you first set it up. A few months later, an update causes a problem, or the hard drive fails. Then
-You're looking at your own setup as if it were someone else's. Which port was that? Didn't the app need another one?
-What's the next step after the restore?
+While you're setting things up, everything is clear. A few months later, an update breaks something, or the disk
+fails. Then you stand in front of your own setup as if it were a stranger's. Which port was it? Didn't the app need
+one more step after the restore?
 
-Good Homelab documentation is concise. It's meant to help you in those exact moments, not to explain every single setting.
-You don't need to write down again what's`compose.yaml` already in the .
+Good homelab documentation is short. It should help you in exactly these moments, not explain every setting. What's
+already in the `compose.yaml` doesn't need writing down again.
 
 ## Where the notes belong
 
 There are two common ways. Both are fine.
 
 <Cards>
-  <Card title="README per Stack">
-    A short note in`README.md` each department's folder. The note is right where you need it, and it goes wherever you go
-    the service when you move or back it up.
+  <Card title="README per stack">
+    A short `README.md` in each service's folder. The note sits exactly where you need it and moves along with the
+    service when you migrate or back it up.
   </Card>
-  <Card title="Key Notes">
-    One file, one wiki, or one note-taking app for your entire home lab. Great for keeping track of all your devices and
-    Services. Note: If it's running on the Homelab itself, it might not be accessible in an emergency.
+  <Card title="Central notes">
+    One file, a wiki or a notes app for the whole homelab. Good for an overview of all devices and services. Careful:
+    if it runs on the homelab itself, it may not be reachable in an emergency.
   </Card>
 </Cards>
 
-Many people combine both: a brief overview for each stack`README.md`, plus a central overview with a network map and
-Device list. It's important that the restore instructions remain readable even when the server isn't running. Create a
-Save a copy outside of Homelab—for example, in your password manager or as a printed copy.
+Many combine both: a short `README.md` per stack, plus a central overview with a network plan and a device list. What
+matters is that the restore instructions are readable even when the server isn't running. Keep a copy outside the
+homelab, for example in your password manager or printed out.
 
-## What should I write down?
+## What to write down?
 
-For each service, these points are usually sufficient:
+Per service, these points are usually enough:
 
-- **Purpose and Address:** What is the service used for, and under which subdomain does it run?
-- **Ports:** Which ports are open to the outside world, and why? For example, SSH for Forgejo on `2222`.
-- **Dependencies:** Does the service require other services, such as Pocket ID for login or an SMTP server for email?
-- **Special features:** Anything you've created yourself that isn't listed`compose.yaml` in the . For example, a command
-  after installation or a setting in the web interface.
-- **Restore Steps:** How do you restore the service from the backup? Does a database have to be restored from a dump
-  be recorded?
+- **Purpose and address:** what is the service for, and which subdomain does it run on?
+- **Ports:** which ports are open to the outside, and why? For example SSH for Forgejo on `2222`.
+- **Dependencies:** does the service need other services, like Pocket ID for login or an SMTP server for mail?
+- **Special cases:** everything you did by hand that isn't in the `compose.yaml`. Like a command after installation or
+  a setting in the web interface.
+- **Restore steps:** how do you get the service back from the backup? Does a database have to be restored from a dump?
 
-One for`README.md` Nextcloud might look like this:
+A `README.md` for Nextcloud could look like this:
 
 ```markdown
 # Nextcloud
@@ -60,7 +56,7 @@ Dateien und Kalender, erreichbar unter cloud.__DOMAIN__
 
 - Abhängigkeiten: Traefik, Pocket ID (Login per OIDC)
 - Datenbank: MariaDB (nextcloud-db), Dump liegt vor dem Backup in data/db-dump.sql
-- Besonderheit: Hintergrundjobs per Cron auf dem Host eingerichtet
+- Besonderheit: Hintergrundjobs laufen im Container nextcloud-cron, in den Einstellungen auf „Cron“ gestellt
 
 ## Restore
 1. Ordner aus dem Backup zurückspielen
@@ -68,30 +64,29 @@ Dateien und Kalender, erreichbar unter cloud.__DOMAIN__
 3. Dump einspielen, dann docker compose up -d
 ```
 
-That's usually all it takes. Write the note right after you've set something up. Later on, you won't have the time or the
-Reminder.
+Write your own in whatever language you like. It rarely takes more than that. Write the note right after you've set
+something up. Later you'll lack the time or the memory.
 
-The [Docu-Export](/en/werkzeuge/doku-export/) provides a starting point: It takes your setup and your services
-A Markdown file containing ports, paths, and restore steps. You can then customize it to include your specific requirements.
+The [docs export](/en/tools/docs-export/) gives you a starting point: it turns your setup and services into a Markdown
+file with ports, paths and restore steps. You then add your special cases.
 
-## The Network Plan
+## The network plan
 
-It's worth taking a quick look at the entire home lab: What devices are there, what IP addresses do they have, and what's running where?
-A simple table will suffice:
+For the whole homelab, a small overview pays off: which devices are there, which IP do they have, what runs where? A
+simple table is enough:
 
-| Device     | IP             | Task                        |
+| Device    | IP             | Role                           |
 | --------- | -------------- | ------------------------------ |
-| Router    | `192.168.1.1`  | DHCP, Port Forwarding 80/443      |
-| homelab   | `192.168.1.10` | Docker host, all stacks       |
-| nas       | `192.168.1.20` | Backup Destination                    |
+| Router    | `192.168.1.1`  | DHCP, port forwarding 80/443   |
+| homelab   | `192.168.1.10` | Docker host, all stacks        |
+| nas       | `192.168.1.20` | Backup target                  |
 
-Add port forwarding rules on the router, VPN access settings, and where your domain is registered. These are the things you tend to forget
-the fastest, because you only have to set them up once.
+Add the port forwarding on the router, VPN access and where your domain is registered. These are the things you
+forget fastest, because you only set them up once.
 
 ## Documentation in Git
 
-If your Compose files and READMEs are stored in a Git repository, you automatically have a version history: Every change is
-Record the date and a brief description. That way, you'll be able to see later when you changed an image tag and why.
-That part is`.env` left out. The guide explains how to set up your own Git server
-[Git deployments with Forgejo](/en/setup/git-deployments-forgejo/). For a Git-friendly folder structure, see
-[Directory structure](/en/wiki/directory-structure/).
+If your Compose files and READMEs live in a Git repository, you automatically get a history: every change is recorded
+with a date and a short description. Later you'll see when you changed an image tag and why. The `.env` stays out of
+it. The guide [Git deployments with Forgejo](/en/setup/git-deployments-forgejo/) shows how this works with your own Git
+server. For a Git-friendly folder structure, see [Directory structure](/en/wiki/directory-structure/).

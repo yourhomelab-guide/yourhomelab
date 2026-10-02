@@ -1,70 +1,66 @@
 ---
-title: Port Forwarding
-description: When you open a port, your router forwards requests from the Internet to a computer on your home network. This is the most direct route to the outside world—which is why you should open as few ports as possible; ideally, only ports 80 and 443 to the reverse proxy.
+title: "Port forwarding"
+description: "With port forwarding, your router passes requests from the internet on to a computer on your home network. It's the most direct way out, and that's why the rule is: forward as little as possible, ideally only 80 and 443 to the reverse proxy."
 level: 1
-related:
-  - ip-ports-nat
-  - reverse-proxy-explained
-  - attack-surface
-  - access-methods-compared
+related: [ip-ports-nat, reverse-proxy-explained, attack-surface, access-methods-compared]
 practice: reverse-proxy-traefik
 ---
 
-## Why You Need Port Forwarding
+## Why you need port forwarding
 
-Your router separates your home network from the Internet. Traffic flows freely from the inside out, but nothing comes in from the outside—at least not at first. When a request arrives from the Internet, the router doesn’t know which device it’s intended for, so it discards it.
+Your router separates your home network from the internet. From inside to outside, everything gets through; from outside to inside, nothing does at first. When a request arrives from the internet, the router doesn't know which device is meant and drops it.
 
-**Port*** ***forwarding** changes this for a specific port. You tell the router: "Send everything that comes in on port 443 to my server at 192.168.1.10." This makes your server accessible to the whole world on that port—not just to you, but also to any scanner searching the Internet for open ports.
+**Port forwarding** changes that for a specific port. You tell the router: "Send everything that arrives on port 443 to my server `__SERVER_IP__`." That makes your server reachable on this port for the whole world. Not just for you, but also for every scanner that searches the internet for open ports.
 
-A **port** is a number that allows a computer to offer multiple services at the same time. For more information, see "[IP, Ports & NAT](/en/wiki/ip-ports-nat/)."
+A **port** is a number through which a computer can offer several services at the same time. More in [IP, ports & NAT](/en/wiki/ip-ports-nat/).
 
 ## Only 80 and 443, and only to the reverse proxy
 
-The most important rule: Open exactly two ports—**80 (HTTP) and 443 (HTTPS)**—and forward both to your [reverse proxy](/en/wiki/reverse-proxy-explained/). The proxy receives all requests, checks the hostname, and forwards them to the appropriate container. It handles the TLS certificates and can integrate login protection such as Tinyauth or Pocket ID.
+The most important rule: forward exactly two ports, **80 (HTTP) and 443 (HTTPS)**, and send both to your [reverse proxy](/en/wiki/reverse-proxy-explained/). The proxy receives all requests, checks the host name and passes them on to the right container. It takes care of the TLS certificates and can put login protection like Tinyauth or Pocket ID in front.
 
-That way, you have exactly one entry point that you need to keep an eye on. Every additional service gets only a subdomain, but no separate open port.
+That way you have exactly one entrance to keep an eye on. Every further service only gets a subdomain, not an open port of its own.
 
-You mainly need port 80 for redirecting HTTP to HTTPS and, depending on the settings, for Let's Encrypt certificate validation. If your proxy retrieves certificates via the DNS challenge and you can do without the redirect, port 443 alone is sufficient.
+You mainly need port 80 for redirecting HTTP to HTTPS and, depending on the setup, for Let's Encrypt's certificate check. If your proxy gets certificates through the DNS challenge and you can do without the redirect, 443 alone is enough.
 
-<Callout type="warning" title="Never share directly">
-Admin interfaces (Portainer, router, NAS, or Proxmox web interfaces), SSH (port 22), databases (such as 3306 or 5432), and dashboards should never be exposed directly to the Internet. These services are specifically targeted, and all it takes is a single weak password or an outdated version. Use a [VPN](/en/wiki/vpn/) for accessing them while on the go.
+<Callout type="warning" title="Never forward directly">
+Admin interfaces (Portainer, router, NAS or Proxmox web interfaces), SSH (port 22), databases (such as 3306 or 5432) and dashboards never belong directly on the internet. These services are targeted specifically, and a single weak password or an old version is enough. For that kind of access on the go, use a [VPN](/en/wiki/vpn/).
 </Callout>
 
-## Here's how to set them up
+## How to set it up
 
-The menu names vary from router to router, but the process is always similar:
+The menus are named differently on every router, but the process is always similar:
 
-1. **Static IP for the server:** The router needs to know where to forward traffic. Assign your server a static address on your home network (see [Static IP & Hostname](/en/setup/static-ip-hostname/)).
-2. **Set up port forwarding:** Select the server in the router and open ports 80 and 443 (TCP). On a FRITZ!Box, you'll find this under "Internet → Port Forwarding."
-3. **Firewall on the server:** Ports 80 and 443 must also be open there, for example using UFW (see "[Firewall with UFW](/en/setup/firewall-ufw/)").
-4. **Test from outside** your network**:** Access your domain via the cellular network, not Wi-Fi. With some routers, accessing the domain via its public address from your own network may not work, even though everything works fine from outside the network. If the browser warns you about an invalid certificate, see "[Missing Certificate"](/en/wiki/certificate/) for further assistance.
+1. **Static IP for the server:** the router has to know where to forward to. Give your server a fixed address on your home network (see [Static IP & hostname](/en/setup/static-ip-hostname/)).
+2. **Create the forwarding:** in the router, select the server and forward ports 80 and 443 (TCP). On a FRITZ!Box, you'll find this under "Internet → Permit Access".
+3. **Firewall on the server:** 80 and 443 must be open there too, with UFW for example (see [Firewall with UFW](/en/setup/firewall-ufw/)).
+4. **Test from outside:** open your domain over the mobile network, not from your Wi-Fi. From your own network, calling the public address doesn't work with some routers, even though everything works from outside. If the browser warns about an invalid certificate, [Certificate missing](/en/wiki/certificate/) helps.
 
-To ensure that your domain always points to the correct address when your IPv4 address changes, you'll also need **DynDNS**. With DynDNS, your router or a small program automatically notifies your DNS provider of the new address. Learn more in the [DNS & Domains](/en/wiki/dns-domains/) section.
+So your domain always points to the right address, you also need **DynDNS** if your IPv4 address changes. The router or a small program then reports the new address to your DNS provider automatically. More in [DNS & domains](/en/wiki/dns-domains/).
 
 <Callout title="Docker and UFW">
-Ports that you expose`ports:` in a  `compose.yaml`with  are opened directly in the firewall by Docker, bypassing UFW. Therefore, only expose the ports of the reverse proxy. All other services remain on`ports:` the proxy network without  `__NETWORK__`.
+Ports you publish with `ports:` in a `compose.yaml` are opened by Docker directly in the firewall, bypassing UFW. So only publish the reverse proxy's ports. All other services sit in the proxy network `__NETWORK__` without `ports:`.
 </Callout>
 
-## IPv6: "Allow" here refers to a firewall rule
+## IPv6: forwarding means a firewall rule here
 
-With IPv4, all devices on the home network share a single public address, and the router uses NAT to translate it. With **IPv6**, each device has its own globally unique address. There is nothing to forward. Instead, the router’s firewall blocks incoming connections, and “unblocking” is an exception to this firewall rule.
+With IPv4, all devices on your home network share one public address, and the router translates with NAT. With **IPv6**, every device has its own globally valid address. There's nothing to redirect. Instead, the router's firewall blocks incoming connections, and the "forwarding" is an exception in that firewall.
 
-This has two consequences:
+That has two consequences:
 
-- You'll **also** need to enable IPv6. On many routers, this is a separate checkbox or a separate section next to the IPv4 setting.
-- The rule applies to a specific server address. If the prefix assigned to you by your provider changes, the router must update the rule accordingly. Good routers do this automatically if you set up the rule for the device rather than for a static address.
+- You have to create the IPv6 forwarding **in addition**. On many routers, it's a separate checkbox or section next to the IPv4 forwarding.
+- The forwarding applies to a specific address of the server. If the prefix your provider assigns changes, the router has to update the rule. Good routers do this automatically if you create the forwarding for the device instead of a fixed address.
 
-After setting it up, check to see if your server is actually only accessible via IPv6 on ports 80 and 443. A common mistake is configuring IPv6 access for "all ports" on the device.
+After setting it up, check that your server is really only reachable on 80 and 443 over IPv6. A common mistake is an IPv6 forwarding for "all ports" of the device.
 
-## When Port Forwarding Doesn't Work
+## When port forwarding doesn't work
 
-Port forwarding requires that your connection have its **own public IPv4 address**. This isn’t the case with many cable and fiber-optic connections: With DS-Lite or CGNAT, you share the IPv4 address with other customers, and external requests don’t even reach your router. [The article “CGNAT & DS-Lite”](/en/wiki/cgnat-ds-lite/) explains what this means.
+Port forwarding requires your connection to have **its own public IPv4 address**. On many cable and fiber connections, that's not the case: with DS-Lite or CGNAT, you share the IPv4 address with other customers, and requests from outside never even reach your router. [CGNAT & DS-Lite](/en/wiki/cgnat-ds-lite/) explains what that means.
 
-Then your options are IPv6 (only for visitors who have IPv6 themselves), a [tunnel,](/en/wiki/tunnels/) or a small VPS as an entry point. For an overview, see ["Access Methods Compared](/en/wiki/access-methods-compared/)."
+Then you're left with IPv6 (only for visitors who have IPv6 themselves), a [tunnel](/en/wiki/tunnels/) or a small VPS as the entrance. [Access methods compared](/en/wiki/access-methods-compared/) gives an overview.
 
-## In a nutshell
+## In short
 
-- Only open ports 80 and 443, both to the reverse proxy.
-- Never expose admin interfaces, SSH, or databases—that's what VPNs are for.
-- Enable IPv6 separately and check it thoroughly.
-- Traditional port forwarding does not work without a public IPv4 address.
+- Only forward 80 and 443, both to the reverse proxy.
+- Never forward admin interfaces, SSH or databases; that's what a VPN is for.
+- Forward IPv6 separately and check it carefully.
+- Without a public IPv4, classic port forwarding doesn't work.

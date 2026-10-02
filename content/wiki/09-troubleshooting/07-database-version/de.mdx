@@ -31,7 +31,7 @@ nächste Hauptversion. Hintergrund dazu in [Images & Tags](/de/nachschlagen/imag
 
 1. **Tag `latest` oder kein Tag** beim Datenbank-Image.
 2. **Tag bewusst erhöht**, ohne die Daten zu migrieren.
-3. **Ein Update-Tool** wie Watchtower oder Renovate hat die Hauptversion erhöht.
+3. **Ein Update-Tool** hat die Hauptversion erhöht: Renovate per gemergtem Pull Request, oder Watchtower bzw. Dockhand bei einem Tag wie `latest`.
 
 ## Prüfen
 
@@ -108,7 +108,7 @@ wieder einspielen (Restore).
      db:
        image: postgres:18
        volumes:
-         - ./data/db:/var/lib/postgresql
+         - __DATA(myapp)__/db:/var/lib/postgresql
    ```
 
    ```bash

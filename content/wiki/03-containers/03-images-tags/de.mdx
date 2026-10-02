@@ -3,7 +3,7 @@ title: "Images & Tags"
 description: "Der Tag hinter dem Doppelpunkt entscheidet, welche Version eines Dienstes du bekommst. Wer ihn bewusst wählt, hat Updates im Griff statt von ihnen überrascht zu werden."
 level: 1
 related: [what-is-docker, docker-compose, updates]
-practice: updates-renovate
+practice: portainer-dockhand
 ---
 
 ## Aufbau eines Image-Namens
@@ -83,7 +83,9 @@ Digests von Hand zu pflegen ist mühsam. Sinnvoll werden sie, wenn ein Tool wie 
 
 ## Updates im Griff behalten
 
-Feste Tags haben einen Haken: Irgendwer muss sie hochzählen. Hier hilft **Renovate**. Das Tool prüft regelmäßig deine Compose-Dateien in einem Git-Repository, findet neuere Tags und schlägt die Änderung als Pull Request vor. Du liest die Release Notes, klickst auf "Mergen", und das Update ist dokumentiert. Wie du das aufsetzt, zeigt [Updates mit Renovate](/de/einrichten/updates-renovate/). Allgemeines zu Update-Strategien steht in [Updates](/de/nachschlagen/updates/).
+Feste Tags haben einen Haken: Irgendwer muss sie hochzählen. Am einfachsten hilft dir dabei **Dockhand**: Es spielt Updates innerhalb des Tags auf Wunsch automatisch ein und zeigt dir neuere Tags mit Release Notes an. Den Tag änderst du dann selbst. Wie das geht, steht in [Portainer oder Dockhand](/de/einrichten/portainer-dockhand/).
+
+Führst du deine Compose-Dateien in Git, kann optional **Renovate** die Tags hochzählen. Das Tool findet neuere Tags und schlägt die Änderung als Pull Request vor. Du liest die Release Notes, klickst auf "Mergen", und das Update ist dokumentiert. Wie du das aufsetzt, zeigt [Updates mit Renovate](/de/einrichten/updates-renovate/). Allgemeines zu Update-Strategien steht in [Updates](/de/nachschlagen/updates/).
 
 Alte Images bleiben nach einem Update auf der Platte liegen. Aufräumen kannst du mit:
 

@@ -1,58 +1,54 @@
 ---
-title: Docker Networks
-description: Docker networks control which containers are allowed to communicate with each other and what is accessible from the outside. Anyone familiar with this principle will only expose the ports that are truly necessary.
+title: "Docker networks"
+description: "Docker networks control which containers may talk to each other and what's reachable from outside. Once you know the principle, you only publish the ports that are really needed."
 level: 2
-related:
-  - docker-compose
-  - reverse-proxy-explained
-  - attack-surface
-  - ip-ports-nat
+related: [docker-compose, reverse-proxy-explained, attack-surface, ip-ports-nat]
 practice: reverse-proxy-traefik
 ---
 
-## Why have your own networks?
+## Why separate networks?
 
-Each container has its own network interface with its own IP address. These addresses are located in virtual networks that Docker creates on the server. They are not directly accessible from the outside.
+Every container has its own network interface with its own IP address. These addresses live in virtual networks that Docker creates on the server. They aren't directly reachable from outside.
 
-That's by design. A database should only communicate with its app—not with the internet or other services. Docker networks isolate your stacks from one another, and you decide exactly where a connection is needed.
+That's intended. A database should only talk to its app, not to the internet and not to other services. Docker networks separate your stacks from each other, and you decide specifically where a connection is needed.
 
-## Each stack has its own network
+## Every stack has its own network
 
-When you start a stack with `docker compose up -d`, Compose automatically creates a **bridge network** for it. It is named after the folder with the suffix `_default`, for example `nextcloud_default`. All containers in this stack are connected to it; containers from other stacks are not.
+When you start a stack with `docker compose up -d`, Compose automatically creates a **bridge network** for it. It's named after the folder with the suffix `_default`, for example `nextcloud_default`. All containers of this stack sit in it; containers of other stacks don't.
 
-A bridge network is a virtual switch on the server. The containers within it can communicate with one another. They connect to the outside world—such as the Internet—via the server, for example, to download updates.
+A bridge network is a virtual switch on the server. The containers in it can reach each other. Outward, they go through the server to the internet, for updates for example.
 
-## Containers can be found by their names
+## Containers find each other by name
 
-Container IP addresses change with every restart. That's why Docker comes with its own DNS service: In custom networks—including the Compose stack network—you can access a container using its **service name** from the `compose.yaml`. The  also works`container_name`.
+Container IP addresses change with every restart. That's why Docker comes with its own DNS service: in networks you create yourself, including Compose's stack network, you reach a container by its **service name** from the `compose.yaml`. The `container_name` works too.
 
 Example from the [Nextcloud](/en/services/nextcloud/) template:
 
 ```yaml
 services:
   nextcloud:
-    image: nextcloud:31-apache
+    image: nextcloud:35-apache
     environment:
       - MYSQL_HOST=db          # "db" is resolved by Docker's internal DNS
   db:
-    image: mariadb:11
+    image: mariadb:lts
 ```
 
-Nextcloud connects to the host`db`, and Docker resolves the name to the current IP address of the database container. The database does not expose a port; it is accessible only within the stack.
+Nextcloud connects to the host `db`, and Docker resolves the name to the database container's current IP. The database publishes no port. It's only reachable within the stack.
 
 <Callout title="The bridge network is an exception">
-Containers that you start`docker run` without Compose end up in the default network`bridge`. Name resolution doesn't work there. That's one more reason to start everything with Compose.
+Containers you start without Compose using `docker run` end up in the default `bridge` network. Name resolution doesn't work there. One more reason to start everything with Compose.
 </Callout>
 
-## The Shared Proxy Network
+## The shared proxy network
 
-A reverse proxy like Traefik must be able to reach all the services it forwards to the outside world. However, those services are located in separate stack networks. The solution is an additional network that you set up manually once:
+A reverse proxy like Traefik has to reach all services it passes on to the outside. But the services live in separate stack networks. The solution is an additional network that you create once by hand:
 
 ```bash
 docker network create __NETWORK__
 ```
 
-Every stack that is supposed to be accessible via the proxy joins this network. Since Compose isn't supposed to create it itself, you mark it as`external`:
+Every stack that should be reachable through the proxy joins this network. Because Compose shouldn't create it itself, you mark it as `external`:
 
 ```yaml
 services:
@@ -68,13 +64,13 @@ networks:
     external: true
 ```
 
-This way, only the web app resides in the proxy network. The database remains in the stack network and is invisible to Traefik and other stacks. If you `networks`specify a service, you must include `default`it if it is to continue communicating with the other containers in the stack. If a service is missing from the proxy network, the proxy usually responds with “Bad Gateway”; see [Bad Gateway and 404 from the proxy](/en/wiki/bad-gateway/).
+That way only the web app sits in the proxy network. The database stays in the stack network and is invisible to Traefik and other stacks. If you specify `networks` for a service, you have to list `default` too if it should keep talking to the stack's other containers. If a service is missing from the proxy network, the proxy usually answers with "Bad Gateway"; see [Bad Gateway and 404 from the proxy](/en/wiki/bad-gateway/).
 
-The templates under "[Services](/en/services/)" automatically add the proxy network if you've selected a reverse proxy in "My Setup." The [article "Reverse Proxy Explained](/en/wiki/reverse-proxy-explained/)" describes how a reverse proxy generally works.
+The templates under [Services](/en/services/) add the proxy network automatically if you chose a reverse proxy in "My setup". [Reverse proxy explained](/en/wiki/reverse-proxy-explained/) covers how a reverse proxy works in general.
 
-## To publish ports or not?
+## Publish ports or not?
 
-Use  to make`ports` a container port accessible on the server:
+With `ports`, you make a container port reachable on the server:
 
 ```yaml
 ports:
@@ -82,34 +78,34 @@ ports:
   - "127.0.0.1:8081:80"    # only reachable from the server itself
 ```
 
-If no address is specified, the port listens on all of the server's network interfaces. It is then accessible from your home network, and in the case of a VPS, even from anywhere on the Internet. Each server port can only be assigned once. If Docker reports at startup that the port is already in use, see ["Port in Use](/en/wiki/port-in-use/)."
+Without an address, the port listens on all of the server's network interfaces. It's then reachable from your home network, and on a VPS even from the whole internet. Each server port can only be used once. If Docker reports on startup that it's already taken, [Port already in use](/en/wiki/port-in-use/) helps.
 
-The rule of thumb for this home lab:
+The rule of thumb for this homelab:
 
-- **With a reverse proxy:** Only the proxy exposes ports, specifically 80 and 443. All other services remain on the network `__NETWORK__`and have no `ports`entry.
-- **Without a reverse proxy:** The service exposes its web port, and you can access it via  `http://__SERVER_IP__:8080`on your home network.
-- **Just for you on the server:** Listen on `127.0.0.1`. Then you'll only be able to access it via an SSH tunnel.
-- You publish **other protocols**, such as SSH for Forgejo (`"2222:22"`), because the HTTP proxy does not forward them.
+- **With a reverse proxy:** only the proxy publishes ports, namely 80 and 443. All other services sit in the `__NETWORK__` network and have no `ports` entry.
+- **Without a reverse proxy:** the service publishes its web port, and you reach it at `http://__SERVER_IP__:8080` on your home network.
+- **Only for you on the server:** bind to `127.0.0.1`. Then you only get there through an SSH tunnel.
+- **Other protocols** like SSH for Forgejo (`"2222:22"`) get published, because the HTTP proxy doesn't forward them.
 
 <Callout type="warning" title="Docker bypasses UFW">
-Docker adds published ports directly to the kernel's firewall rules (iptables) at a point that takes precedence over UFW's rules. A port published by Docker is`ports` therefore accessible even if UFW does not allow it. So don’t rely on UFW to protect container ports. Only expose what really needs to go out, and bind everything else to  `127.0.0.1`or omit the `ports`entry entirely. For more background, see the [Docker documentation on packet filters](https://docs.docker.com/engine/network/packet-filtering-firewalls/).
+Docker enters published ports directly into the kernel's firewall rules (iptables), at a point that takes effect before UFW's rules. So a port from `ports` is reachable even if UFW doesn't allow it. Don't rely on UFW to protect container ports. Only publish what really has to be reachable from outside, and bind everything else to `127.0.0.1` or leave out the `ports` entry entirely. The background is in the [Docker docs on packet filtering](https://docs.docker.com/engine/network/packet-filtering-firewalls/).
 </Callout>
 
 ## The host network
 
-With , a container does`network_mode: host` not use its own networks and instead uses the server's network interfaces directly. Every port on which the program listens is immediately open on the server. A `ports`-entry is then ignored, and there is no Docker DNS based on container names.
+With `network_mode: host`, a container does without networks of its own and uses the server's network interfaces directly. Every port the program listens on is immediately open on the server. A `ports` entry is then ignored, and there's no Docker DNS by container name either.
 
-You rarely need this. Typical examples include programs designed to automatically discover devices on a home network, such as [Home Assistant](/en/setup/home-assistant/) or a media server with DLNA. Their discovery process uses broadcasts that do not pass through a bridge network. For everything else, the bridge network is the better choice because it keeps the services separate from one another.
+That's rarely needed. Typical cases are programs that should find devices on the home network automatically, like [Home Assistant](/en/setup/home-assistant/) or a media server with DLNA. Their discovery works with broadcasts, which don't get through a bridge network. For everything else, the bridge network is the better choice, because it keeps services apart.
 
-## Useful Commands
+## Useful commands
 
 ```bash
 docker network ls                    # list all networks
 docker network inspect __NETWORK__   # show which containers are attached
 ```
 
-## Read more
+## Further reading
 
-- [Docker Documentation on Networking](https://docs.docker.com/engine/network/)
-- [Networks in Compose](https://docs.docker.com/compose/how-tos/networking/)
-- [Minimize Your Attack Surface](/en/wiki/attack-surface/): Why Fewer Open Ports Are Better
+- [Docker docs on networking](https://docs.docker.com/engine/network/)
+- [Networking in Compose](https://docs.docker.com/compose/how-tos/networking/)
+- [Keeping the attack surface small](/en/wiki/attack-surface/): why fewer open ports are better

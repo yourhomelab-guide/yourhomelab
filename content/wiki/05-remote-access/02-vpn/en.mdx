@@ -1,79 +1,75 @@
 ---
-title: VPN
-description: A VPN connects your cell phone or laptop to your home network securely while you're on the go. You can access all your services as if you were at home—and your server remains invisible to the rest of the Internet.
+title: "VPN"
+description: "A VPN connects your phone or laptop on the go to your home network, encrypted. You reach all services as if you were at home, and your server stays invisible to the rest of the internet."
 level: 2
-related:
-  - port-forwarding
-  - tunnels
-  - access-methods-compared
-  - cgnat-ds-lite
+related: [port-forwarding, tunnels, access-methods-compared, cgnat-ds-lite]
 practice: vpn-wireguard
 ---
 
 <OneWay />
 
-## Why Use a VPN
+## Why a VPN
 
-Many of the services in your home lab are just for your own use: Portainer, the Proxmox web interface, the router interface, and SSH. These services have no place on the open Internet. Still, you want to be able to access them while you're on the go.
+Many services in a homelab are only for you: Portainer, the Proxmox web interface, the router interface, SSH. These services have no business on the open internet. Still, you want to reach them on the go.
 
-That's exactly what a **VPN** (*Virtual Private Network*) is for. Your device establishes an encrypted connection to your home network. After that, it behaves as if it were connected to your Wi-Fi. You access services using their internal addresses, such as `192.168.1.10`.
+That's exactly what a **VPN** (*virtual private network*) is for. Your device opens an encrypted connection to your home network. After that, it behaves as if it were on your Wi-Fi. You open services at their internal addresses, such as `__SERVER_IP__`.
 
-The key advantage: **Only someone with the right key can get in.** An attacker won't even see a login page to try. With WireGuard, the server doesn't even respond to unauthorized packets.
+The decisive advantage: **only someone with a matching key gets in.** An attacker sees no login page to try things on. With WireGuard, the server doesn't even answer unknown packets.
 
-## The Three Common Approaches
+## The three common ways
 
 <Cards>
-  <Card title="Run WireGuard Yourself">
-    A lightweight, modern VPN protocol. Runs on your server; you manage the keys yourself. Requires port forwarding for a UDP port.
+  <Card title="Run WireGuard yourself">
+    A lean, modern VPN protocol. Runs on your server; you manage the keys yourself. Needs port forwarding for a UDP port.
   </Card>
   <Card title="Tailscale or Headscale">
-    It is based on WireGuard but handles key management and connection establishment. It works without port forwarding, even behind CGNAT.
+    Built on WireGuard, but takes care of keys and connection setup. Works without port forwarding, even behind CGNAT.
   </Card>
-  <Card title="VPN on the Router">
-    Many routers come with a built-in VPN server, such as the FRITZ!Box with WireGuard. Setup is just a click away, with no need for additional software on the server.
+  <Card title="VPN in the router">
+    Many routers come with a VPN server, such as the FRITZ!Box with WireGuard. Set up with a few clicks, without extra software on the server.
   </Card>
 </Cards>
 
-### WireGuard itself
+### WireGuard yourself
 
-[WireGuard](https://www.wireguard.com/) is a VPN protocol built into the Linux kernel. The configuration is simple: Each device has a key pair, and the server knows the public keys of all authorized devices.
+[WireGuard](https://www.wireguard.com/) is a VPN protocol built into the Linux kernel. The configuration is short: every device has a key pair, and the server knows the public keys of all allowed devices.
 
-To allow external devices to connect to your server, you need to open **a UDP port** on your router (51820 is standard). This requires a public IPv4 address or a functioning IPv6 connection. Unlike with a web interface, this open port is not a security risk: WireGuard ignores all packets without a valid key.
+For devices to reach your server from outside, you forward **one UDP port** on the router (51820 is common). That requires a public IPv4 address or working IPv6. Unlike a web interface, this open port is uncritical: WireGuard ignores all packets without a valid key.
 
-If you'd rather click than edit configuration files, [wg-easy](https://github.com/wg-easy/wg-easy) is a web interface that runs as a container and generates QR codes for the mobile app. The "[VPN with WireGuard"](/en/setup/vpn-wireguard/) guide walks you through the setup.
+If you'd rather click than write configuration files, [wg-easy](https://github.com/wg-easy/wg-easy) offers a web interface that runs as a container and generates QR codes for the phone app. The guide [VPN with WireGuard](/en/setup/vpn-wireguard/) walks you through the setup.
 
 ### Tailscale and Headscale
 
-[Tailscale](https://tailscale.com/) also uses WireGuard, but it handles everything for you. You install the client on each device and log in. Tailscale distributes the keys and finds a route between the devices on its own, using its own relay servers if necessary. That’s why you don’t need **to forward any ports**, and it works even behind CGNAT or DS-Lite.
+[Tailscale](https://tailscale.com/) also uses WireGuard, but takes the work off your hands. You install the client on every device and log in. Tailscale distributes the keys and finds a way between the devices by itself, through its own relay servers if needed. That's why you need **no port forwarding**, and it also works behind CGNAT or DS-Lite.
 
-The catch: Coordination is handled by Tailscale's servers, and you'll need an account there. Your actual data is transmitted in encrypted form between your devices. There's a free plan available for personal use.
+The catch: coordination runs through Tailscale's servers, and you need an account there. Your actual data travels encrypted between your devices. There's a free plan for personal use.
 
-If you want to handle coordination yourself, use [Headscale](https://github.com/juanfont/headscale). It’s a free replica of the Tailscale coordination server that the official Tailscale clients work with. However, Headscale must be accessible from the Internet, so it typically runs on a small VPS.
+If you want to keep coordination in your own hands, use [Headscale](https://github.com/juanfont/headscale). It's a free re-implementation of the Tailscale coordination server that the official Tailscale clients work with. But Headscale itself has to be reachable from the internet, so it typically runs on a small VPS.
 
-### VPN on the Router
+### VPN in the router
 
-If your router has a built-in VPN server, that's often the fastest way. The FRITZ!Box supports WireGuard in the latest versions of FRITZ!OS, while other routers offer WireGuard or OpenVPN. You set up a connection on the router and scan a QR code with your cell phone.
+If your router comes with a VPN server, that's often the quickest way. Current FRITZ!OS versions on the FRITZ!Box support WireGuard; other routers offer WireGuard or OpenVPN. You create a connection in the router and scan a QR code with your phone.
 
-Drawback: You're limited to the router's feature set and updates. And here, too, you need a publicly accessible address.
+Downside: you're tied to the router's features and updates. And here too, you need a publicly reachable address.
 
-## Everything through the tunnel, or just the home network?
+## Everything through the tunnel, or only the home network?
 
-With any VPN, you decide which traffic goes through the connection:
+With every VPN, you decide which traffic goes through the connection:
 
-- **Home Network Only** (*Split Tunneling*): Only requests to your home network addresses go through the VPN; everything else goes directly to the Internet. This is faster and is sufficient for accessing your services.
-- **Everything** (*Full Tunnel*): All of your traffic goes through your home connection. This is handy when using other people's Wi-Fi networks, but it's slower because your home upload speed becomes the bottleneck.
+- **Only the home network** (*split tunneling*): only requests to your home network addresses go through the VPN; the rest goes directly to the internet. That's faster and enough to reach your services.
+- **Everything** (*full tunnel*): all your traffic runs through your connection at home. Handy on untrusted Wi-Fi, but slower, because your upload at home becomes the bottleneck.
 
-With WireGuard, you can control this in`AllowedIPs` the client configuration:  `192.168.1.0/24`for the home network only,  `0.0.0.0/0`for everything.
+With WireGuard, you control this with `AllowedIPs` in the client configuration: `192.168.1.0/24` for only the home network, `0.0.0.0/0` for everything.
 
-<Callout title="No substitute for public services">
-A VPN is suitable for services that only you and your family use. If you want to share something with people who shouldn't install a VPN—such as a Nextcloud link or a photo gallery—you'll need public access via [port forwarding](/en/wiki/port-forwarding/) or [a tunnel](/en/wiki/tunnels/).
+<Callout title="No replacement for public services">
+A VPN suits services that only you and your family use. If you want to share something with people who shouldn't have to install a VPN, like a Nextcloud link or a photo gallery, you need a public entrance through [port forwarding](/en/wiki/port-forwarding/) or a [tunnel](/en/wiki/tunnels/).
 </Callout>
 
-## Which path is right for you?
+## Which way fits?
 
-- **Public IPv4 addresses and a passion for technology:** WireGuard itself, possibly with wg-easy.
-- **CGNAT or DS-Lite, or if you just want it:** Tailscale.
+- **Public IPv4 and you enjoy tinkering:** WireGuard yourself, possibly with wg-easy.
+- **CGNAT or DS-Lite, or you want it simple:** Tailscale.
 - **Like Tailscale, but without a third-party provider:** Headscale on a VPS.
-- **Your router can do it, and you don't want to install anything:** VPN on the router.
+- **Your router can do it and you don't want to install anything:** VPN in the router.
 
-You can find a comparison of all access methods under "[Access Methods Compared](/en/wiki/access-methods-compared/)."
+You'll find a comparison of all access methods under [Access methods compared](/en/wiki/access-methods-compared/).

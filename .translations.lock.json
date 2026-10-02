@@ -336,7 +336,7 @@
     "by": "deepl"
   },
   "content/wiki/02-systems/07-setup-script/de.mdx": {
-    "hash": "821daab4efca7783",
+    "hash": "00b6f65862a21b3c",
     "by": "claude"
   },
   "content/wiki/03-containers/01-what-is-docker/de.mdx": {
@@ -344,20 +344,20 @@
     "by": "deepl"
   },
   "content/wiki/03-containers/02-docker-compose/de.mdx": {
-    "hash": "bae8613765ffb7c4",
-    "by": "deepl"
+    "hash": "dba72a709ad43513",
+    "by": "claude"
   },
   "content/wiki/03-containers/03-images-tags/de.mdx": {
-    "hash": "5ad0643fc891764f",
-    "by": "deepl"
+    "hash": "68521ee1e6f7fa24",
+    "by": "claude"
   },
   "content/wiki/03-containers/04-volumes-bind-mounts/de.mdx": {
     "hash": "e60f199f45589477",
     "by": "deepl"
   },
   "content/wiki/03-containers/05-docker-networks/de.mdx": {
-    "hash": "7ccbbddbcb41edbb",
-    "by": "deepl"
+    "hash": "687691d3e1d26a8b",
+    "by": "claude"
   },
   "content/wiki/04-networking/01-ip-ports-nat/de.mdx": {
     "hash": "9a790e93a0c74fc4",
@@ -372,24 +372,24 @@
     "by": "deepl"
   },
   "content/wiki/04-networking/04-tls-certificates/de.mdx": {
-    "hash": "91d0530af05316c0",
-    "by": "deepl"
+    "hash": "19c52126b979c07e",
+    "by": "claude"
   },
   "content/wiki/04-networking/05-cgnat-ds-lite/de.mdx": {
     "hash": "7b1b9c6a1f665500",
     "by": "deepl"
   },
   "content/wiki/05-remote-access/01-port-forwarding/de.mdx": {
-    "hash": "f991b8fb7bcfeb67",
-    "by": "deepl"
+    "hash": "ec85c66f9f88e4af",
+    "by": "claude"
   },
   "content/wiki/05-remote-access/02-vpn/de.mdx": {
-    "hash": "66476e64150cfbfb",
-    "by": "deepl"
+    "hash": "f2dbdb1b33a6bfee",
+    "by": "claude"
   },
   "content/wiki/05-remote-access/03-tunnels/de.mdx": {
-    "hash": "a4cec0e00a750102",
-    "by": "deepl"
+    "hash": "48d1b871abcc150b",
+    "by": "claude"
   },
   "content/wiki/05-remote-access/04-access-methods-compared/de.mdx": {
     "hash": "328ed95c57e95573",
@@ -404,8 +404,8 @@
     "by": "deepl"
   },
   "content/wiki/06-security/03-managing-secrets/de.mdx": {
-    "hash": "3450957a5a1c932c",
-    "by": "deepl"
+    "hash": "911f02f0f0da0be1",
+    "by": "claude"
   },
   "content/wiki/06-security/04-attack-surface/de.mdx": {
     "hash": "e0a6fb8c8dc27662",
@@ -420,8 +420,8 @@
     "by": "deepl"
   },
   "content/wiki/07-operations/03-updates/de.mdx": {
-    "hash": "2b870d8b271d5cdd",
-    "by": "deepl"
+    "hash": "1b1fb3a3be09fb87",
+    "by": "claude"
   },
   "content/wiki/07-operations/04-logs/de.mdx": {
     "hash": "5537edc7e92b5ef3",
@@ -440,8 +440,8 @@
     "by": "deepl"
   },
   "content/wiki/08-conventions/04-documentation/de.mdx": {
-    "hash": "7b141cf512b58ee6",
-    "by": "deepl"
+    "hash": "cabc127f571e706d",
+    "by": "claude"
   },
   "content/wiki/09-troubleshooting/01-first-steps/de.mdx": {
     "hash": "7ff6f432e83e4169",
@@ -456,20 +456,20 @@
     "by": "deepl"
   },
   "content/wiki/09-troubleshooting/04-certificate/de.mdx": {
-    "hash": "4a09cdc94ee5de55",
-    "by": "deepl"
+    "hash": "6267e62215c91a0d",
+    "by": "claude"
   },
   "content/wiki/09-troubleshooting/05-restart-loop/de.mdx": {
-    "hash": "a79a8f32cdd63722",
-    "by": "deepl"
+    "hash": "07160012b7b55a91",
+    "by": "claude"
   },
   "content/wiki/09-troubleshooting/06-bad-gateway/de.mdx": {
     "hash": "60567dc6de07d80c",
     "by": "deepl"
   },
   "content/wiki/09-troubleshooting/07-database-version/de.mdx": {
-    "hash": "65492bc1c4f475ee",
-    "by": "deepl"
+    "hash": "429bf2f91ca7db7c",
+    "by": "claude"
   },
   "content/wiki/09-troubleshooting/08-disk-full/de.mdx": {
     "hash": "d3635755d50637c2",

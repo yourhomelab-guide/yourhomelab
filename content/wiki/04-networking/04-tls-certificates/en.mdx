@@ -1,83 +1,79 @@
 ---
-title: TLS & Certificates
-description: HTTPS encrypts the connection to your services and verifies that you are actually communicating with your server. To do this, each domain name requires a valid certificate, which your reverse proxy obtains for free and automatically from Let's Encrypt.
+title: "TLS & certificates"
+description: "HTTPS encrypts the connection to your services and proves that you're really talking to your server. For that, every name needs a valid certificate, which your reverse proxy gets from Let's Encrypt for free and automatically."
 level: 2
-related:
-  - reverse-proxy-explained
-  - dns-domains
-  - cgnat-ds-lite
-  - attack-surface
+related: [reverse-proxy-explained, dns-domains, cgnat-ds-lite, attack-surface]
 practice: reverse-proxy-traefik
 ---
 
-## Why Use HTTPS at Home, Too?
+## Why HTTPS at home too
 
-Without HTTPS, passwords, cookies, and content travel across the network in plain text. Anyone who can intercept them can see them: on public Wi-Fi, at the provider’s end, and sometimes even on your own network. In addition, many services and apps now require HTTPS, such as password managers like Vaultwarden or passkey logins.
+Without HTTPS, passwords, cookies and content travel through the network in plain text. Anyone who can listen in sees them: on public Wi-Fi, at the provider, sometimes even on your own network. On top of that, many services and apps now require HTTPS, such as password managers like Vaultwarden or sign-in with passkeys.
 
-**TLS** (Transport Layer Security) is the protocol behind HTTPS. It serves two purposes:
+**TLS** (Transport Layer Security) is the technology behind HTTPS. It does two jobs:
 
-- **Encryption**: No one in the middle can read or change anything.
-- **Authenticity**: The certificate verifies that the server actually belongs`vault.__DOMAIN__` to  and is not an attacker.
+- **Encryption**: nobody in between can read or change anything.
+- **Authenticity**: the certificate proves that the server really belongs to `vault.__DOMAIN__` and isn't an attacker.
 
-## What a Certificate Is
+## What a certificate is
 
-A certificate is a digital ID for one or more names. It is issued by a **certificate** **authority** (CA). Browsers and operating systems come with a list of CAs they trust. If your certificate is signed by one of these CAs, the browser displays the padlock icon without a warning.
+A certificate is a digital ID card for one or more names. It's issued by a **certificate authority** (CA). Browsers and operating systems ship a list of CAs they trust. If your certificate is signed by one of these CAs, the browser shows the lock without a warning.
 
-You issue a **self-signed certificate** to yourself. It can encrypt data just as well, but no browser trusts it. You’ll see a warning that you’ll have to click away or disable individually on each device every time. For a home lab with its own domain, there’s no longer any reason for this.
+A **self-signed certificate** is one you issue yourself. It encrypts just as well, but no browser trusts it. You get a warning that you have to click away every time or turn off on each device individually. For a homelab with its own domain, there's no reason for that anymore.
 
 ## Let's Encrypt and ACME
 
-[Let's Encrypt](https://letsencrypt.org/) is a nonprofit certificate authority (CA) that issues certificates for free. The entire process is fully automated via the **ACME** protocol. Traefik, Caddy, and Nginx Proxy Manager support ACME out of the box. All you have to do is enter your email address; the proxy takes care of the rest.
+[Let's Encrypt](https://letsencrypt.org/) is a non-profit CA that issues certificates for free. It all runs fully automatically through the **ACME** protocol. Traefik, Caddy and Nginx Proxy Manager speak ACME out of the box. At most, you enter an email address for your account; the proxy does the rest. Since 2025, Let's Encrypt no longer sends reminder emails before expiry, so automatic renewal has to work.
 
-Before Let's Encrypt issues a certificate, you must prove that you own the domain name. This is called **a** **challenge**. There are three types.
+Before Let's Encrypt issues a certificate, you have to prove that you own the name. That's called a **challenge**. There are three kinds.
 
-## The Three Challenges
+## The three challenges
 
-| Challenge | How Testing Is Conducted | Requirement | Wildcard |
+| Challenge | How it's checked | Requirement | Wildcard |
 | --- | --- | --- | --- |
-| **HTTP-01** | Let's Encrypt retrieves a file via port 80 | Port 80 is accessible from the outside | No |
-| **TLS-ALPN-01** | Let's Encrypt establishes a special TLS connection on port 443 | Port 443 is accessible from the outside | No |
-| **DNS-01** | Let's Encrypt verifies a TXT record in`_acme-challenge` your DNS | API Access to Your DNS Provider | Yes |
+| **HTTP-01** | Let's Encrypt fetches a file over port 80 | Port 80 reachable from outside | No |
+| **TLS-ALPN-01** | Let's Encrypt opens a special TLS connection on port 443 | Port 443 reachable from outside | No |
+| **DNS-01** | Let's Encrypt checks a TXT record `_acme-challenge` in your DNS | API access to your DNS provider | Yes |
 
-**HTTP-01** is the classic option and works almost anywhere where port 80 is open.
+**HTTP-01** is the classic and works almost everywhere port 80 is open.
 
-**TLS-ALPN-01** works with just port 443. This site uses it in the Traefik template (`tlschallenge=true`in the resolver`le`) because port 443 is already open anyway.
+**TLS-ALPN-01** gets by with port 443 alone. This site uses it in the Traefik template (`tlschallenge=true` on the `le` resolver), because 443 is open anyway.
 
-**DNS-01** doesn't require an open port at all. The proxy briefly creates a TXT record via your DNS provider's API; Let's Encrypt verifies it, and then it's deleted again. This has two major advantages:
+**DNS-01** needs no open port at all. The proxy briefly creates a TXT record through your DNS provider's API, Let's Encrypt checks it, and then it's deleted again. That has two big advantages:
 
-- You'll receive **wildcard certificates** such as `*.__DOMAIN__`. A single certificate then covers all subdomains.
-- It also works for services that are **only** accessible **on your home network or via VPN**. The server doesn't need to be accessible to Let's Encrypt—only your DNS provider.
+- You get **wildcard certificates** like `*.__DOMAIN__`. One certificate then covers all subdomains.
+- It also works for services that are **only** reachable **on your home network or through a VPN**. The server doesn't have to be reachable for Let's Encrypt, only your DNS provider.
 
-The catch: You need a DNS provider with an API, and you’ll need to provide an API token to the proxy. Grant this token only the permissions it needs—specifically, the ability to edit DNS records for that one zone. You can find a list of supported providers in your proxy’s documentation, such as for [Traefik](https://doc.traefik.io/traefik/https/acme/#providers) or the [Caddy DNS modules](https://caddyserver.com/docs/modules/).
+The price: you need a DNS provider with an API and store an API token with the proxy. Only give this token the rights it needs, that is editing DNS records of this one zone. Which providers are supported is in your proxy's docs, for example [Traefik](https://doc.traefik.io/traefik/https/acme/#providers) or the [Caddy DNS modules](https://caddyserver.com/docs/modules/).
 
-<Callout title="Which challenge is right for me?">
-If your server is accessible from the outside on port 443, TLS-ALPN-01 is sufficient, as shown in the template. If you don't have a public IPv4 address, only want to access it internally or via VPN, or want a wildcard certificate, use DNS-01.
+<Callout title="Which challenge for me?">
+If your server is reachable from outside on port 443, TLS-ALPN-01 as in the template is enough. If you have no public IPv4, only want to access things internally or through a VPN, or want a wildcard certificate, use DNS-01.
 </Callout>
 
-## Term and Renewal
+## Lifetime and renewal
 
-Let's Encrypt certificates have been valid for 90 days so far. Let's Encrypt has announced that it will gradually reduce the validity period to 45 days over the next few years. The short validity period is intentional: a stolen certificate can only be used for a short time, and automation will become mandatory.
+Let's Encrypt certificates are currently valid for 90 days. The lifetime is going down step by step: to 64 days from February 2027 and to 45 days from February 2028 ([announcement](https://letsencrypt.org/2025/12/02/from-90-to-45)). This applies to all public certificate authorities, not just Let's Encrypt. The short lifetime is intentional: a stolen certificate is only usable for a short time, and automation becomes a must.
 
-For you, this means: No need to renew anything manually. Your proxy checks regularly and renews the certificates well before they expire. The only important thing is that it stores its certificates permanently. In Traefik, the file for this is located at`acme.json` `__DATA(traefik)__/letsencrypt/`. If it’s lost, Traefik will retrieve new certificates when it starts up. This works as long as you don’t request renewals too often: Let’s Encrypt has [rate limits](https://letsencrypt.org/docs/rate-limits/) that can kick in if there are too many restarts with an empty cache. If the browser displays a warning instead of a valid certificate, [the “certificate missing”](/en/wiki/certificate/) message can help you identify the cause.
+For you, this means: don't renew anything by hand. Your proxy checks regularly and renews in good time before expiry. All that matters is that it stores its certificates permanently. With Traefik, that's the `acme.json` file under `__DATA(traefik)__/letsencrypt/`. If it gets lost, Traefik fetches new certificates on startup. That works as long as you don't request too often: Let's Encrypt has [rate limits](https://letsencrypt.org/docs/rate-limits/), which can kick in after many restarts with empty storage. If the browser shows a warning instead of a valid certificate, [Certificate missing](/en/wiki/certificate/) helps you find the cause.
 
-<Callout title="For Testing: Staging">
-If you're experimenting a lot, start by using Let's Encrypt's staging environment. Its certificates aren't trusted, but the rate limits are much more generous. You can find instructions on how to enable them in your proxy's documentation.
+<Callout title="For testing: staging">
+If you're trying out a lot, use Let's Encrypt's staging environment first. Its certificates aren't trusted, but the rate limits are much more generous. Your proxy's docs explain how to turn it on.
 </Callout>
 
-## Certificate Transparency: Your subdomains are public
+## Certificate Transparency: your subdomains are public
 
-Every publicly trusted certificate is recorded in **Certificate Transparency logs**. These are public, searchable directories of all issued certificates. Their purpose is to prevent a CA from secretly issuing fraudulent certificates.
+Every publicly trusted certificate ends up in **Certificate Transparency logs**. These are public, searchable directories of all issued certificates. They're meant to prevent a CA from secretly issuing false certificates.
 
-The downside: Anyone can look up which names you're using there. If you obtain a certificate for `nextcloud.__DOMAIN__`, the world will know shortly afterward that this subdomain exists. Automated scanners analyze these logs and often start testing new names just a few minutes later.
+The flip side: anyone can look up which names you use there. If you get a certificate for `nextcloud.__DOMAIN__`, the world knows shortly afterwards that this subdomain exists. Automated scanners evaluate these logs and often try new names just minutes later.
 
-The conclusion is:
+What follows from this:
 
-- An unknown subdomain name does **not** provide **protection**. Use secure services that require a login, updates, and, if necessary, an additional authentication step such as Tinyauth or Pocket ID (see [“Minimizing the Attack Surface”](/en/wiki/attack-surface/)).
-- With a **wildcard certificate** via DNS-01, only the certificate itself appears `*.__DOMAIN__`in the log, not every single name.
+- An unknown subdomain name is **no protection**. Secure services with a login, updates and, where needed, a login in front like Tinyauth or Pocket ID (see [Keeping the attack surface small](/en/wiki/attack-surface/)).
+- With a **wildcard certificate** via DNS-01, only `*.__DOMAIN__` shows up in the log, not every single name.
 
-## In a nutshell
+## In short
 
-- HTTPS encrypts data and verifies the server's authenticity. To do this, each domain name requires a certificate.
-- Let's Encrypt issues it for free, and your reverse proxy automatically retrieves and renews it.
-- HTTP-01 requires port 80, TLS-ALPN-01 requires port 443, and DNS-01 only needs a DNS provider with an API and supports wildcards.
-- All certificates are publicly viewable, including your subdomains.
+- HTTPS encrypts and proves the server's authenticity. For that, every name needs a certificate.
+- Let's Encrypt issues it for free; your reverse proxy fetches and renews it automatically.
+- HTTP-01 needs port 80, TLS-ALPN-01 port 443, DNS-01 only a DNS provider with an API, and it can do wildcards.
+- All certificates are publicly visible, and so are your subdomains.
