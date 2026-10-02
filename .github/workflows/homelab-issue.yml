@@ -61,7 +61,7 @@ jobs:
 
       - name: Comment on the issue
         if: always() && (steps.parse.outcome == 'failure' || steps.pr.outputs.pull-request-number != '')
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           PARSE_ERROR: ${{ steps.parse.outputs.error }}
           PR_NUMBER: ${{ steps.pr.outputs.pull-request-number }}

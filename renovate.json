@@ -31,6 +31,17 @@
       "description": "Immich pins its own Postgres build; follow Immich's release notes instead",
       "matchPackageNames": ["ghcr.io/immich-app/postgres"],
       "enabled": false
+    },
+    {
+      "description": "Forgejo stays on the LTS line; move to the next LTS by hand (other majors get only three months of support)",
+      "matchPackageNames": ["codeberg.org/forgejo/forgejo"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "The 'v3' tag is an old development build from 2024, not a release; real versions are tagged without 'v'",
+      "matchPackageNames": ["jc21/nginx-proxy-manager"],
+      "allowedVersions": "!/^v/"
     }
   ]
 }
