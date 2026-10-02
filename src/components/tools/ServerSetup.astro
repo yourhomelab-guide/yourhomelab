@@ -1,0 +1,381 @@
+---
+/**
+ * Server setup script: a short form that builds one bash script for a fresh Debian/Ubuntu server.
+ * The script logic lives in src/lib/tools/server-setup.ts, the service files come from the same templates as
+ * the service pages (getVariants), so both always match.
+ */
+import { site } from '../../config/site';
+import { getServices, getVariants } from '../../lib/content';
+import { readServiceFile } from '../../lib/compose';
+import { t, type Lang } from '../../lib/i18n';
+import { url } from '../../lib/routes';
+import { SERVICE_ORDER } from '../../lib/tools/server-setup';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const all = await getServices(lang);
+const services = all.filter((s) => (SERVICE_ORDER as readonly string[]).includes(s.id));
+
+const pool: string[] = [];
+const poolIdx = new Map<string, number>();
+const ref = (s: string) => {
+  if (!poolIdx.has(s)) poolIdx.set(s, pool.push(s) - 1);
+  return poolIdx.get(s)!;
+};
+const data = services.map((s) => ({
+  id: s.id,
+  name: s.name,
+  isProxy: s.category === 'proxy',
+  page: site.url + url.service(lang, s.id),
+  files: s.files.map((f) => ({ name: f, content: ref(readServiceFile(s.id, f) ?? '') })),
+  v: Object.fromEntries(
+    Object.entries(getVariants(s)).map(([k, v]) => [k, [ref(v.compose), ref(v.env), v.proxy === null ? -1 : ref(v.proxy), v.proxyKind, v.net ? 1 : 0, v.mkdir.includes('__DATA_ROOT__') ? 1 : 0, ref(v.url)]]),
+  ),
+}));
+const k = (key: string) => t(lang, `tools.server-setup.${key}`);
+const sb = (key: string) => t(lang, `tools.stack-builder.${key}`);
+const articleSlug = lang === 'de' ? 'setup-skript' : 'setup-script';
+const texts = {
+  errors: Object.fromEntries(['errUser', 'errKey', 'errPort', 'errCidr', 'errDocker', 'errHttps', 'errTinyauth', 'errDomain'].map((e) => [e, k(e)])),
+  proxyNames: { traefik: t(lang, 'proxy.traefik'), caddy: t(lang, 'proxy.caddy'), npm: t(lang, 'proxy.npm'), none: t(lang, 'proxy.none') },
+  proxyLabel: k('proxyLabel'),
+  proxyNone: k('proxyNone'),
+  protectNpm: k('protectNpm'),
+  hashing: k('hashing'),
+  ready: k('ready'),
+  zip: {
+    readmeTitle: sb('readme.title'),
+    readmeIntro: sb('readme.intro'),
+    readmeSteps: sb('readme.steps'),
+    readmeStep1: sb('readme.step1'),
+    readmeStep2: sb('readme.step2'),
+    readmeStep3: sb('readme.step3'),
+    readmeStep4: sb('readme.step4'),
+    readmeServices: sb('readme.services'),
+    readmeService: sb('readme.service'),
+    readmeMore: sb('readme.more'),
+    proxyCaddy: sb('proxyFile.caddy'),
+    proxyNpm: sb('proxyFile.npm'),
+  },
+};
+const payload = {
+  lang,
+  pool,
+  services: data,
+  texts,
+  toolUrl: site.url + url.tool(lang, 'server-setup'),
+  articleUrl: site.url + url.wiki(lang, articleSlug),
+};
+const check = (name: string, checked = true) => ({ name, checked });
+const groupA = [check('hardenSsh'), check('fullUpgrade'), check('firewall'), check('autoUpdates'), check('autoReboot', false)];
+const groupB = [check('docker'), check('proxy'), check('dockhand'), check('pocketId', false), check('tinyauth', false)];
+---
+
+<div class="ss" data-server-setup>
+  <script type="application/json" data-ss-data set:html={JSON.stringify(payload)} />
+
+  <aside class="card intro">
+    <p>{k('intro')}</p>
+    <p><a href={url.wiki(lang, articleSlug)}>{k('articleLink')}</a></p>
+  </aside>
+
+  <form class="card form" novalidate data-ss-form autocomplete="off">
+    <fieldset>
+      <legend>{k('secAccess')}</legend>
+      <div class="grid2">
+        <label>
+          {k('user')}
+          <input name="user" autocapitalize="off" spellcheck="false" />
+          <span class="hint">{k('userHint')}</span>
+        </label>
+        <label>
+          {k('sshPort')}
+          <input name="sshPort" type="number" min="22" max="65535" value="22" inputmode="numeric" />
+          <span class="hint">{k('sshPortHint')}</span>
+        </label>
+      </div>
+      <label>
+        {k('sshKey')}
+        <textarea name="sshKey" rows="3" spellcheck="false" placeholder="ssh-ed25519 AAAA… laptop"></textarea>
+        <span class="hint">{k('sshKeyHint')}</span>
+      </label>
+      <label>
+        {k('sshFrom')}
+        <input name="sshFrom" placeholder="192.168.1.0/24" spellcheck="false" />
+        <span class="hint">{k('sshFromHint')}</span>
+      </label>
+      <div class="checks">
+        {
+          groupA.map((c) => (
+            <label class="check">
+              <input type="checkbox" name={c.name} checked={c.checked} />
+              <span>
+                <b>{k(c.name)}</b>
+                <small>{k(`${c.name}Hint`)}</small>
+              </span>
+            </label>
+          ))
+        }
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>{k('secServices')}</legend>
+      <div class="checks">
+        {
+          groupB.map((c) => (
+            <label class="check" data-check={c.name}>
+              <input type="checkbox" name={c.name} checked={c.checked} />
+              <span>
+                <b data-label={c.name}>{k(c.name)}</b>
+                <small data-hint={c.name}>{k(`${c.name}Hint`)}</small>
+              </span>
+            </label>
+          ))
+        }
+      </div>
+      <div class="sub" data-when="tinyauth" hidden>
+        <div class="grid2">
+          <label>
+            {k('taUser')}
+            <input name="taUser" value="admin" autocapitalize="off" spellcheck="false" />
+          </label>
+          <label>
+            {k('taPass')}
+            <input name="taPass" type="text" spellcheck="false" />
+            <span class="hint">{k('taPassHint')}</span>
+          </label>
+        </div>
+        <div class="row">
+          <button type="button" class="btn btn-outline btn-sm" data-gen>{k('generate')}</button>
+          <span class="hint" data-hash-state></span>
+        </div>
+        <label class="check" data-check="protect">
+          <input type="checkbox" name="protect" checked />
+          <span>
+            <b>{k('protect')}</b>
+            <small data-hint="protect">{k('protectHint')}</small>
+          </span>
+        </label>
+      </div>
+    </fieldset>
+  </form>
+
+  <section class="card block" aria-live="polite">
+    <div class="block-head">
+      <h2>{k('outTitle')}</h2>
+      <button type="button" class="btn btn-primary btn-sm" data-download disabled>{k('download')}</button>
+    </div>
+    <ul class="errors" data-errors hidden></ul>
+    <div data-out-ok hidden>
+      <p class="small">{k('runIntro')}</p>
+      <div class="code"><pre data-run></pre><button type="button" class="copy-btn" data-copy>{t(lang, 'code.copy')}</button></div>
+      <p class="small">{k('runNote')}</p>
+      <details class="preview">
+        <summary>{k('preview')}</summary>
+        <div class="file-body"><pre data-script></pre></div>
+      </details>
+    </div>
+  </section>
+</div>
+
+<script>
+  import { getSetup } from '../../client/store';
+  import { download } from '../../client/stack';
+  import { renderCode } from '../../lib/highlight';
+  import { hash, randomPassword } from '../../lib/tools/password-hash';
+  import { problems, proxyService, serverScript, type ServerSetupInput } from '../../lib/tools/server-setup';
+  import type { StackService, StackTexts } from '../../lib/tools/stack';
+
+  type Raw = [number, number, number, 'caddy' | 'npm' | null, number, number, number];
+  interface Data {
+    lang: 'de' | 'en';
+    pool: string[];
+    services: { id: string; name: string; isProxy: boolean; page: string; files: { name: string; content: number }[]; v: Record<string, Raw> }[];
+    texts: { errors: Record<string, string>; proxyNames: Record<string, string>; proxyLabel: string; proxyNone: string; protectNpm: string; hashing: string; ready: string; zip: StackTexts };
+    toolUrl: string;
+    articleUrl: string;
+  }
+
+  const root = document.querySelector<HTMLElement>('[data-server-setup]');
+  if (root) init(root);
+
+  function init(root: HTMLElement) {
+    const D: Data = JSON.parse(root.querySelector('[data-ss-data]')!.textContent!);
+    const T = D.texts;
+    const form = root.querySelector<HTMLFormElement>('[data-ss-form]')!;
+    const $ = <E extends Element = HTMLElement>(sel: string) => root.querySelector<E>(sel)!;
+    const field = <E extends HTMLInputElement | HTMLTextAreaElement = HTMLInputElement>(n: string) => form.elements.namedItem(n) as E;
+    const fmt = (s: string, v: Record<string, string>) => s.replace(/\{(\w+)\}/g, (_, key) => v[key] ?? '');
+    let tinyauthLine = '';
+    let hashFor = '';
+    let script = '';
+
+    // Defaults from "Mein Setup"
+    const s0 = getSetup();
+    field('user').value = s0.user;
+    const lan = s0.serverIp.match(/^(\d+\.\d+\.\d+)\.\d+$/);
+    if (lan && !s0.serverIp.startsWith('172.')) field('sshFrom').placeholder = `${lan[1]}.0/24`;
+    field('taPass').value = randomPassword(20);
+
+    async function updateHash() {
+      const u = field('taUser').value.trim();
+      const p = field('taPass').value;
+      const key = `${u}\n${p}`;
+      if (!field('tinyauth').checked || !u || !p || key === hashFor) return;
+      hashFor = key;
+      $('[data-hash-state]').textContent = T.hashing;
+      const h = await hash(p, 10);
+      if (hashFor !== key) return;
+      tinyauthLine = `${u}:${h}`;
+      $('[data-hash-state]').textContent = T.ready;
+      render();
+    }
+
+    function input(): ServerSetupInput {
+      const b = (n: string) => field(n).checked;
+      return {
+        user: field('user').value.trim(),
+        sshKey: field<HTMLTextAreaElement>('sshKey').value,
+        sshPort: Number(field('sshPort').value),
+        hardenSsh: b('hardenSsh'),
+        sshFrom: field('sshFrom').value.trim(),
+        fullUpgrade: b('fullUpgrade'),
+        firewall: b('firewall'),
+        autoUpdates: b('autoUpdates'),
+        autoReboot: b('autoReboot'),
+        docker: b('docker'),
+        proxy: b('proxy'),
+        dockhand: b('dockhand'),
+        pocketId: b('pocketId'),
+        tinyauth: b('tinyauth'),
+        protect: b('protect'),
+        tinyauthUser: tinyauthLine,
+      };
+    }
+
+    function services(): StackService[] {
+      const s = getSetup();
+      const key = `${s.proxy}.${s.urlMode}.${s.dataMode}`;
+      const P = D.pool;
+      return D.services.map((x) => {
+        const [compose, env, proxy, proxyKind, net, central, url] = x.v[key];
+        return {
+          id: x.id,
+          name: x.name,
+          isProxy: x.isProxy,
+          compose: P[compose],
+          env: P[env],
+          proxy: proxy === -1 ? null : P[proxy],
+          proxyKind,
+          net: !!net,
+          centralData: !!central,
+          url: P[url],
+          page: x.page,
+          files: x.files.map((f) => ({ name: f.name, content: P[f.content] })),
+        };
+      });
+    }
+
+    function render() {
+      const s = getSetup();
+      const i = input();
+      // Labels that depend on "Mein Setup"
+      const proxyName = T.proxyNames[s.proxy] ?? s.proxy;
+      $('[data-label="proxy"]').textContent = s.proxy === 'none' ? T.proxyNone : fmt(T.proxyLabel, { name: proxyName });
+      field('proxy').disabled = s.proxy === 'none';
+      field('pocketId').disabled = field('tinyauth').disabled = s.proxy === 'none';
+      $('[data-when="tinyauth"]').hidden = !i.tinyauth || s.proxy === 'none';
+      const npm = s.proxy === 'npm';
+      field('protect').disabled = npm;
+      $('[data-hint="protect"]').textContent = npm ? T.protectNpm : $('[data-hint="protect"]').dataset.orig ?? $('[data-hint="protect"]').textContent!;
+
+      const errs = problems({ ...i, proxy: i.proxy && s.proxy !== 'none', pocketId: i.pocketId && s.proxy !== 'none', tinyauth: i.tinyauth && s.proxy !== 'none' }, s);
+      // The hash is computed asynchronously; don't flag it as an error while it is being made
+      const shown = errs.filter((e) => !(e === 'errTinyauth' && field('taPass').value && !tinyauthLine));
+      const ul = $('[data-errors]');
+      ul.hidden = shown.length === 0;
+      ul.replaceChildren(...shown.map((e) => Object.assign(document.createElement('li'), { textContent: T.errors[e] })));
+      const ok = errs.length === 0;
+      $<HTMLButtonElement>('[data-download]').disabled = !ok;
+      $('[data-out-ok]').hidden = !ok;
+      if (!ok) return;
+
+      const names = Object.fromEntries(D.services.map((x) => [x.id, x.name]));
+      const date = new Date().toISOString().slice(0, 10);
+      script = serverScript(
+        { ...i, proxy: i.proxy && s.proxy !== 'none' },
+        s,
+        services().filter((x) => !x.isProxy || x.id === proxyService[s.proxy]),
+        { toolUrl: D.toolUrl, articleUrl: D.articleUrl, date, texts: T.zip, names },
+      );
+      const login = `${i.user}@${s.serverIp}`;
+      $('[data-run]').innerHTML = renderCode([`scp setup-server.sh ${login}:`, `ssh ${login}`, 'sudo bash setup-server.sh'].join('\n'), { values: {} });
+      $('[data-script]').innerHTML = renderCode(script, { values: {}, numbers: true });
+    }
+
+    const protectHint = $('[data-hint="protect"]');
+    protectHint.dataset.orig = protectHint.textContent ?? '';
+    form.addEventListener('input', (e) => {
+      const n = (e.target as HTMLInputElement).name;
+      if (n === 'taUser' || n === 'taPass' || n === 'tinyauth') {
+        tinyauthLine = '';
+        hashFor = '';
+        void updateHash();
+      }
+      render();
+    });
+    $('[data-gen]').addEventListener('click', () => {
+      field('taPass').value = randomPassword(20);
+      tinyauthLine = '';
+      hashFor = '';
+      void updateHash();
+      render();
+    });
+    $('[data-download]').addEventListener('click', () => download('setup-server.sh', script, 'text/x-shellscript'));
+    document.addEventListener('yhl:setup', render);
+    render();
+  }
+</script>
+
+<style>
+  .ss { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .intro { border-radius: 20px; padding: 18px 22px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 1.55; color: var(--text-2); }
+  .intro p { margin: 0; }
+  .form { border-radius: 20px; padding: 22px 24px; display: flex; flex-direction: column; gap: 22px; }
+  fieldset { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  legend { padding: 0; margin-bottom: 12px; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+  label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text-4); min-width: 0; }
+  input:not([type='checkbox']), textarea {
+    border: 1.5px solid var(--line-2); border-radius: 12px; padding: 0 14px; font-family: var(--mono); font-size: 13.5px;
+    color: var(--accent-600); background: #f7fafc; min-width: 0; width: 100%;
+  }
+  input:not([type='checkbox']) { height: 42px; }
+  textarea { padding: 10px 14px; resize: vertical; line-height: 1.5; }
+  input:focus, textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--ring, rgba(0, 150, 200, 0.2)); }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .hint { font-size: 12.5px; font-weight: 400; color: var(--muted); }
+  .row { display: flex; gap: 8px 10px; align-items: center; flex-wrap: wrap; }
+  .sub { display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: 14px; background: var(--bg); }
+  .sub[hidden] { display: none; }
+  .checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  .check { flex-direction: row; align-items: flex-start; gap: 10px; border: 1.5px solid var(--line-2); border-radius: 14px; padding: 12px 14px; cursor: pointer; background: #fff; }
+  .check:has(input:checked) { border-color: var(--accent); background: var(--accent-50); }
+  .check:has(input:disabled) { opacity: 0.55; cursor: not-allowed; }
+  .check:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .check input { width: 18px; height: 18px; margin: 1px 0 0; flex: none; accent-color: var(--accent); }
+  .check span { display: flex; flex-direction: column; gap: 3px; }
+  .check b { font-size: 14px; color: var(--text); }
+  .check small { font-size: 12.5px; font-weight: 400; color: var(--muted); line-height: 1.4; }
+  .block { border-radius: 20px; padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .block [hidden] { display: none; }
+  .block-head { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .block h2 { font-size: 17px; font-weight: 700; }
+  .small { font-size: 14px; line-height: 1.55; color: var(--text-2); margin: 0; }
+  .errors { margin: 0; padding: 12px 16px 12px 32px; background: var(--warn-bg); color: var(--warn-fg); border-radius: 14px; font-size: 14px; line-height: 1.5; display: flex; flex-direction: column; gap: 4px; }
+  .preview summary { cursor: pointer; font-weight: 600; font-size: 14px; padding: 6px 0; }
+  .preview .file-body { max-height: 560px; overflow: auto; background: var(--code-bg); border-radius: 14px; }
+  [data-out-ok] { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+</style>

@@ -5,6 +5,8 @@ services:
     restart: unless-stopped
     environment:
       - TZ=${TZ}
+      # Uncomment only if IPv6 is turned off on the host (nginx then fails to start)
+      # - DISABLE_IPV6=true
     ports:
       - "80:80"
       - "443:443"

@@ -1,0 +1,258 @@
+---
+slug: setup-skript
+title: "Das Server-Setup-Skript erklärt"
+description: "Was das Setup-Skript aus den Werkzeugen auf deinem Server macht, Schritt für Schritt: Benutzer, SSH, Docker, Firewall, Updates, Reverse Proxy, Login-Schutz. Und warum jeder Schritt so aussieht, wie er aussieht."
+level: 2
+related: [bare-metal-linux, ssh-basics, attack-surface, reverse-proxy-explained]
+practice: installing-the-os
+---
+
+<OneWay />
+
+## Wofür das Skript da ist
+
+Die ersten Stunden mit einem neuen Server sehen fast immer gleich aus: Benutzer anlegen, SSH-Schlüssel hinterlegen,
+SSH absichern, Firewall an, automatische Updates, Docker installieren, Ordner anlegen, Reverse Proxy starten. Die
+Anleitungen unter [Einrichten](/de/einrichten/) gehen das Schritt für Schritt durch, mit Erklärung zu jedem Befehl.
+
+Der [Server-Setup-Assistent](/de/werkzeuge/server-setup-skript/) baut dir aus genau diesen Schritten **ein einziges
+Bash-Skript**. Du wählst aus, was du brauchst, das Werkzeug übernimmt Domain, Proxy und Pfade aus *Mein Setup*. Auf
+dem Server führst du das Skript einmal aus, und nach ein paar Minuten steht die Grundlage.
+
+Das Skript ersetzt nicht das Verständnis. Es macht nichts, was nicht auch in den Anleitungen steht. Dieser Artikel
+erklärt jeden Abschnitt, damit du weißt, was auf deinem Server passiert, und es später selbst reparieren kannst.
+
+<Callout type="warning" title="Nur für frische Server">
+Das Skript ist für eine frische Installation von **Debian 12/13 oder Ubuntu 22.04/24.04** gedacht. Auf einem Server,
+der schon läuft, kann es funktionieren, aber du solltest dann vorher genau lesen, was es ändert. Fremde Skripte
+führst du nie ungelesen mit root-Rechten aus, auch dieses nicht. Die Vorschau im Werkzeug zeigt dir den kompletten
+Inhalt.
+</Callout>
+
+## Vorher: was du brauchst
+
+- **Ein frisch installiertes Debian oder Ubuntu**, auf das du per SSH kommst, als root oder als Benutzer mit `sudo`.
+  Wie das geht, steht in [Betriebssystem installieren](/de/einrichten/betriebssystem-installieren/).
+- **Einen SSH-Schlüssel** auf deinem eigenen Rechner. Den öffentlichen Teil (die Zeile, die mit `ssh-ed25519`
+  beginnt) fügst du im Werkzeug ein. Wie du ihn erzeugst, zeigt [SSH-Schlüssel einrichten](/de/einrichten/ssh-schluessel/).
+- **Mein Setup ausgefüllt**: Domain, Reverse Proxy, Server-IP und Ordnerpfade. Das Skript übernimmt diese Werte.
+- **DNS-Einträge**, falls du einen Reverse Proxy mitinstallierst: Die Namen (am einfachsten ein Wildcard-Eintrag
+  `*.deine-domain.de`) müssen auf den Server zeigen, sonst gibt es keine Zertifikate. Siehe
+  [Domain & DNS](/de/einrichten/domain-dns/).
+
+## Ausführen
+
+Das Werkzeug zeigt dir die drei Befehle direkt unter dem Download:
+
+```bash
+scp setup-server.sh root@192.168.1.10:
+ssh root@192.168.1.10
+sudo bash setup-server.sh
+```
+
+`scp` kopiert die Datei auf den Server, `ssh` meldet dich an, und `sudo bash` führt das Skript mit root-Rechten aus.
+Statt `root` steht dort der Benutzer, mit dem du dich bisher anmeldest (bei Ubuntu-Images oft `ubuntu`, bei einem
+Raspberry Pi der Benutzer aus dem Imager).
+
+Alles, was das Skript ausgibt, landet zusätzlich in `/var/log/homelab-setup.log`. Wenn etwas schiefgeht, steht dort,
+an welcher Stelle.
+
+## Die Abschnitte im Detail
+
+Das Skript ist in Abschnitte gegliedert. Jeder beginnt mit einer Zeile wie `==> Installing Docker`, damit du in der
+Ausgabe siehst, wo es gerade steht. Kommentare im Skript sind englisch, weil Befehle und Fehlermeldungen es auch sind.
+
+### 1. Einstellungen und Prüfungen
+
+Ganz oben stehen deine Angaben als Variablen: Benutzername, SSH-Schlüssel, SSH-Port und die Ordner. Willst du etwas
+ändern, ist das die einzige Stelle.
+
+Die Zeile `set -euo pipefail` sorgt dafür, dass das Skript bei einem Fehler sofort anhält, statt mit halbem Zustand
+weiterzumachen. Danach prüft es zwei Dinge: Läuft es als root? Ist das System Debian oder Ubuntu? Wenn nicht, bricht
+es ab, bevor es irgendetwas verändert.
+
+### 2. Pakete
+
+```bash
+apt-get update
+apt-get -y full-upgrade
+apt-get install -y ca-certificates curl openssl sudo openssh-server ufw unattended-upgrades
+```
+
+Zuerst holt das Skript die aktuellen Paketlisten und spielt (wenn ausgewählt) alle verfügbaren Updates ein. Ein
+frisch installiertes Image ist oft Wochen alt. Danach installiert es die wenigen Werkzeuge, die die folgenden
+Schritte brauchen.
+
+### 3. Benutzer
+
+Das Skript legt deinen Benutzer an, falls es ihn noch nicht gibt, und nimmt ihn in die Gruppe `sudo` auf. Sitzt du
+an einem Terminal, fragt es dich nach einem Passwort. Das brauchst du später nur für `sudo`, nicht für die Anmeldung.
+Ohne Terminal (etwa in einer Automatisierung) überspringt es das und erinnert dich daran, `sudo passwd <benutzer>`
+nachzuholen.
+
+Warum ein eigener Benutzer statt root? Das erklärt [Benutzer & sudo](/de/einrichten/benutzer-sudo/): Wer als root
+arbeitet, hat keine Bremse, und root ist der erste Name, den Bots ausprobieren.
+
+### 4. SSH-Schlüssel
+
+Dein öffentlicher Schlüssel kommt in `~/.ssh/authorized_keys` des neuen Benutzers. Das Skript setzt dabei die Rechte,
+die SSH verlangt: Der Ordner `.ssh` darf nur dir gehören (`700`), die Datei nur von dir lesbar sein (`600`). Sind die
+Rechte zu offen, ignoriert SSH die Datei stillschweigend, und der Schlüssel-Login klappt nicht.
+
+Steht der Schlüssel schon drin, fügt das Skript ihn kein zweites Mal hinzu.
+
+### 5. Docker
+
+Docker kommt aus dem **offiziellen Repository von Docker**, genau wie in der
+[offiziellen Anleitung](https://docs.docker.com/engine/install/) und in [Docker installieren](/de/einrichten/docker-installieren/).
+Die Pakete aus Debian und Ubuntu selbst (`docker.io`) sind oft deutlich älter und haben kein `docker compose` in der
+aktuellen Version.
+
+Das Skript entfernt zuerst Pakete, die sich mit den offiziellen beißen würden (auf einem frischen Server gibt es
+keine), hinterlegt den Signaturschlüssel von Docker und trägt die Paketquelle ein. Danach installiert es Docker
+Engine und das Compose-Plugin und startet den Dienst.
+
+Zum Schluss kommt dein Benutzer in die Gruppe `docker`, damit du `docker` ohne `sudo` aufrufen kannst.
+
+<Callout type="warning" title="Die Gruppe docker ist so mächtig wie root">
+Wer `docker` aufrufen darf, kann einen Container starten, der das ganze Dateisystem des Servers einbindet, und hat
+damit root-Rechte. Das ist auf einem Homelab-Server, den nur du nutzt, ein üblicher Kompromiss. Nimm aber niemanden
+in diese Gruppe auf, dem du nicht auch root geben würdest.
+</Callout>
+
+### 6. Automatische Updates
+
+Das Paket `unattended-upgrades` spielt Sicherheitsupdates jede Nacht automatisch ein. Das Skript schaltet es mit zwei
+Zeilen in `/etc/apt/apt.conf.d/20auto-upgrades` ein. Hast du den automatischen Neustart gewählt, startet der Server
+um 04:00 Uhr neu, wenn ein Update das verlangt (etwa ein neuer Kernel). Ohne Neustart läuft der alte Kernel weiter,
+bis du selbst neu startest.
+
+Mehr dazu, auch warum das für Container-Images nicht gilt, in [Automatische Updates](/de/einrichten/automatische-updates/).
+
+### 7. Firewall
+
+UFW blockt danach alle eingehenden Verbindungen außer SSH und, wenn ein Reverse Proxy dabei ist, HTTP und HTTPS
+(TCP 80 und 443, dazu UDP 443 für HTTP/3). Hast du ein Netz für SSH angegeben (etwa `192.168.1.0/24`), ist SSH nur
+aus diesem Netz erreichbar.
+
+Änderst du den SSH-Port, bleibt Port 22 vorerst offen. Erst wenn SSH am Ende nachweislich auf dem neuen Port
+lauscht, schließt das Skript Port 22. So kannst du dich nie zwischen zwei Ports aussperren.
+
+<Callout title="Docker-Ports und die Firewall">
+Ports, die ein Container veröffentlicht, gehen an UFW vorbei (warum, steht in [Firewall mit UFW](/de/einrichten/firewall-ufw/)).
+Das Skript veröffentlicht deshalb nur 80 und 443 für den Proxy. Weboberflächen, die nur für dich sind (der Admin-Port
+81 von Nginx Proxy Manager, Dockhand ohne Proxy), bindet es an eine Adresse: im Heimnetz an die LAN-IP des Servers,
+auf einem Server mit öffentlicher IP an `127.0.0.1`. Die erreichst du dann per SSH-Tunnel, die Zusammenfassung am
+Ende nennt dir den Befehl.
+</Callout>
+
+### 8. Ordner
+
+Das Skript legt den Stack-Ordner aus *Mein Setup* an (zum Beispiel `/srv/homelab`), gibt ihn deinem Benutzer und
+setzt die Rechte auf `750`: Du darfst alles, andere Benutzer auf dem Server sehen nichts. Wie die Ordner aufgebaut
+sind, erklärt [Verzeichnisstruktur](/de/nachschlagen/verzeichnisstruktur/).
+
+### 9. Docker-Netzwerk und Stacks
+
+Mit Reverse Proxy legt das Skript zuerst das gemeinsame Docker-Netzwerk an (zum Beispiel `proxy`). Darüber spricht
+der Proxy mit den Diensten, ohne dass die ihre Ports veröffentlichen müssen. Siehe
+[Docker-Netzwerke](/de/nachschlagen/docker-netzwerke/).
+
+Danach folgt für jeden Dienst ein eigener Ordner mit `compose.yaml` und `.env`. Die Dateien sind dieselben wie auf
+den Dienstseiten und im Stack-Builder, nur fertig ausgefüllt. Drei Details sind wichtig:
+
+- **Secrets entstehen erst auf dem Server.** In der heruntergeladenen Datei stehen statt Passwörtern und Schlüsseln
+  Platzhalter wie `@@SECRET_64@@`. Das Skript ersetzt sie auf dem Server durch Zufallswerte aus `openssl rand`. Die
+  Datei auf deinem Rechner enthält also nie ein Geheimnis.
+- **Vorhandene Dateien bleiben unangetastet.** Gibt es eine Datei schon, schreibt das Skript `kept` und lässt sie, wie
+  sie ist. Du kannst es also ein zweites Mal laufen lassen, ohne deine Änderungen oder Secrets zu verlieren.
+- **`.env`-Dateien bekommen die Rechte `600`**, sind also nur für deinen Benutzer lesbar. Mehr dazu in
+  [Secrets verwalten](/de/nachschlagen/secrets-verwalten/).
+
+Dann startet `docker compose up -d` jeden Stack. Scheitert ein Start, etwa weil Docker Hub gerade keine Downloads
+erlaubt, hält das Skript nicht an. Es merkt sich den Stack und listet ihn am Ende auf. Du startest ihn später im
+jeweiligen Ordner einfach mit `docker compose up -d`.
+
+### 10. Login-Schutz
+
+Was das Skript vor die Verwaltungsoberflächen setzt, hängt von deiner Auswahl ab:
+
+- **Mit Tinyauth und „Schützen“**: Dockhand und das Traefik-Dashboard bekommen die Tinyauth-Middleware (bei Caddy ein
+  `forward_auth`-Block). Wer die Seite aufruft, landet erst auf der Login-Seite. Die Zugangsdaten legst du im Werkzeug
+  fest. Im Skript steht nur der bcrypt-Hash des Passworts, nicht das Passwort selbst.
+- **Ohne Tinyauth**: Dockhand und das Dashboard antworten nur auf Anfragen aus dem Heimnetz (`10.0.0.0/8` und
+  `192.168.0.0/16`). Auf einem VPS gibt es kein Heimnetz, dort brauchst du Tinyauth oder ein [VPN](/de/nachschlagen/vpn/).
+- **Mit Nginx Proxy Manager** werden Proxy-Hosts in der Weboberfläche angelegt, nicht in Dateien. Das Skript gibt dir
+  am Ende die Werte für jeden Eintrag aus. Den Schutz richtest du dort über eine Access List oder Tinyauth ein.
+
+Wie Tinyauth und Pocket ID zusammenspielen, erklären [Single Sign-on](/de/nachschlagen/single-sign-on/) und die
+Anleitungen zu [Pocket ID](/de/einrichten/pocket-id/) und [Tinyauth](/de/einrichten/tinyauth/).
+
+### 11. SSH härten (zum Schluss)
+
+Dieser Schritt kommt mit Absicht als letzter. Deine aktuelle SSH-Sitzung bleibt bestehen, auch wenn der SSH-Dienst
+neu startet. Geht etwas schief, kannst du es darüber reparieren.
+
+Das Skript schreibt seine Einstellungen in eine eigene Datei, `/etc/ssh/sshd_config.d/10-homelab.conf`:
+
+```
+Port 2222
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+PermitRootLogin no
+MaxAuthTries 3
+X11Forwarding no
+```
+
+Damit gilt: nur noch Anmeldung mit Schlüssel, kein direkter root-Login, höchstens drei Versuche pro Verbindung. Die
+Datei heißt `10-…`, weil SSH die Dateien in diesem Ordner alphabetisch liest und **der erste Wert gewinnt**. So
+schlagen deine Einstellungen zum Beispiel ein `50-cloud-init.conf` des Hosters, das Passwörter wieder erlauben würde.
+Warum jede Zeile wichtig ist, steht in [SSH härten](/de/einrichten/ssh-haerten/).
+
+Bevor SSH neu startet, kommen drei Sicherungen:
+
+1. **`sshd -t`** prüft die Konfiguration. Ist sie fehlerhaft, löscht das Skript seine Datei wieder und bricht ab.
+2. **Neuere Ubuntu-Versionen** starten SSH über `ssh.socket`. Dabei bestimmt systemd, auf welchem Port gelauscht
+   wird. Damit ein neuer Port sicher greift, stellt das Skript auf den klassischen `ssh.service` um.
+3. **Nach dem Neustart** prüft `ss -tln`, ob SSH wirklich auf dem neuen Port lauscht. Wenn nicht, nimmt das Skript
+   die Änderung zurück und startet SSH wieder mit den alten Einstellungen.
+
+Erst danach schließt es Port 22 in der Firewall.
+
+<Callout type="warning" title="Neue Anmeldung testen, bevor du die Sitzung schließt">
+Öffne nach dem Skript ein **zweites** Terminal und melde dich mit dem Befehl an, den die Zusammenfassung zeigt
+(zum Beispiel `ssh -p 2222 alex@192.168.1.10`). Erst wenn das klappt, schließt du die alte Sitzung. Läuft dein Server
+bei einem Hoster mit eigener Firewall im Webinterface, musst du den neuen Port dort ebenfalls freigeben.
+</Callout>
+
+### 12. Zusammenfassung
+
+Am Ende zeigt das Skript, was noch zu tun ist:
+
+- **Den neuen Login testen** (siehe oben).
+- **Einmal ab- und wieder anmelden**, damit die Gruppe `docker` für deinen Benutzer gilt.
+- **Die Adressen deiner Dienste.**
+- **Sofort erledigen, bevor es jemand anderes tut**: In Pocket ID legst du unter `/setup` dein Admin-Konto mit Passkey
+  an. In Nginx Proxy Manager erstellst du beim ersten Aufruf von Port 81 dein Admin-Konto. In Dockhand legst du unter
+  *Settings → Authentication* einen Benutzer an und schaltest die Anmeldung ein, denn Dockhand startet ohne Login.
+- **Ob ein Neustart nötig ist**, weil Updates einen neuen Kernel gebracht haben.
+
+## Noch einmal ausführen
+
+Das Skript ist so gebaut, dass ein zweiter Lauf nichts kaputtmacht. Der Benutzer existiert schon, der Schlüssel
+steht schon drin, vorhandene Compose- und `.env`-Dateien bleiben, wie sie sind, und laufende Container startet
+`docker compose up -d` nur neu, wenn sich etwas geändert hat. Das ist praktisch, wenn ein Schritt beim ersten Mal
+gescheitert ist (zum Beispiel ein Download).
+
+Willst du eine Datei neu erzeugen lassen, löschst oder verschiebst du sie vorher.
+
+## Was das Skript nicht macht
+
+- **DNS und Router**: Einträge bei deinem Domain-Anbieter und Portfreigaben im Router machst du selbst.
+- **Backups**: Die richtest du danach ein, siehe [Backups mit borgmatic](/de/einrichten/backups-borgmatic/).
+- **Weitere Dienste**: Alles über die Grundlage hinaus baust du mit dem [Stack-Builder](/de/werkzeuge/stack-builder/)
+  oder den Dienstseiten.
+- **Feste IP**: Damit der Server immer unter derselben Adresse erreichbar ist, siehe
+  [Feste IP & Hostname](/de/einrichten/feste-ip-hostname/).
+

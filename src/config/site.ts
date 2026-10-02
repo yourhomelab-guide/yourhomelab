@@ -59,6 +59,7 @@ export type HomelabFacet = keyof typeof homelabFacets;
  */
 export const tools = [
   { id: 'assistant', slug: { de: 'einstiegs-assistent', en: 'getting-started' }, group: 'start' },
+  { id: 'server-setup', slug: { de: 'server-setup-skript', en: 'server-setup-script' }, group: 'start' },
   { id: 'stack-builder', slug: { de: 'stack-builder', en: 'stack-builder' }, group: 'build' },
   { id: 'compose-explainer', slug: { de: 'compose-erklaerer', en: 'compose-explainer' }, group: 'build' },
   { id: 'proxy-config', slug: { de: 'proxy-konfiguration', en: 'proxy-config' }, group: 'build' },

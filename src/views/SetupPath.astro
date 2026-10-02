@@ -18,8 +18,8 @@ const pad = (n: number) => String(n).padStart(2, '0');
 /** Tools that help in each stage, keyed by the stage folder name (English slug) */
 const stageTools: Record<string, ToolId[]> = {
   preparation: ['assistant', 'power-calculator'],
-  securing: ['security-check'],
-  docker: ['stack-builder', 'compose-explainer'],
+  securing: ['server-setup', 'security-check'],
+  docker: ['server-setup', 'stack-builder', 'compose-explainer'],
   access: ['proxy-config'],
   'login-protection': ['password-hash', 'security-check'],
   operations: ['borgmatic', 'docs-export'],
@@ -46,6 +46,8 @@ const stageTools: Record<string, ToolId[]> = {
       </div>
       <p class="helper">
         {t(lang, 'setup.helper')} <a href={url.tool(lang, 'assistant')}>{t(lang, 'tools.assistant.title')} →</a>
+        <span class="sep">·</span>
+        {t(lang, 'setup.quickStart')} <a href={url.tool(lang, 'server-setup')}>{t(lang, 'tools.server-setup.title')} →</a>
         <span class="sep">·</span>
         <a href={url.section(lang, 'tools')}>{t(lang, 'setup.allTools')}</a>
       </p>

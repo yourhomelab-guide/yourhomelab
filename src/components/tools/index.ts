@@ -8,10 +8,12 @@ import PasswordHash from './PasswordHash.astro';
 import PowerCalculator from './PowerCalculator.astro';
 import ProxyConfig from './ProxyConfig.astro';
 import SecurityCheck from './SecurityCheck.astro';
+import ServerSetup from './ServerSetup.astro';
 import StackBuilder from './StackBuilder.astro';
 
 export const toolComponents = {
   assistant: Assistant,
+  'server-setup': ServerSetup,
   'stack-builder': StackBuilder,
   'compose-explainer': ComposeExplainer,
   'proxy-config': ProxyConfig,

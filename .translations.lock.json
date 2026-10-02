@@ -1491,6 +1491,10 @@
     "hash": "3bc71e937546beac",
     "by": "claude"
   },
+  "src/i18n/de.json#setup.quickStart": {
+    "hash": "6502023ea7b6968c",
+    "by": "claude"
+  },
   "src/i18n/de.json#setup.requires": {
     "hash": "d23659e7b43ccbe8",
     "by": "claude"
@@ -4881,6 +4885,238 @@
   },
   "src/i18n/de.json#tools.security-check.weight.3": {
     "hash": "61b6f3365997880e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.articleLink": {
+    "hash": "b156e36443cc04d1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.autoReboot": {
+    "hash": "797b92625d42c6d1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.autoRebootHint": {
+    "hash": "de9d22d9280504c5",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.autoUpdates": {
+    "hash": "4b6fb227f7391934",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.autoUpdatesHint": {
+    "hash": "acd51a9d74040e17",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.desc": {
+    "hash": "7706106936296994",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.docker": {
+    "hash": "4032a7d0b3e3a2ba",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.dockerHint": {
+    "hash": "bc6226ca584bec04",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.dockhand": {
+    "hash": "7d7f2d52554e97f1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.dockhandHint": {
+    "hash": "224d275aede42aa0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.download": {
+    "hash": "92db45587e570eb1",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.errCidr": {
+    "hash": "39a825609dd239cd",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.errDocker": {
+    "hash": "cb16fdeeeaeea287",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.errDomain": {
+    "hash": "37810fcbbdff33b9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.errHttps": {
+    "hash": "124ed10a874fe87b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.errKey": {
+    "hash": "578f2610dff44df6",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.errPort": {
+    "hash": "0351d73d1d76d1d0",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.errTinyauth": {
+    "hash": "268f78a831addb20",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.errUser": {
+    "hash": "e8ef27db3f7bd024",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.firewall": {
+    "hash": "7f9b763c9f323f75",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.firewallHint": {
+    "hash": "e527b42c0fff39b4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.fullUpgrade": {
+    "hash": "aaa8351f904a50d4",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.fullUpgradeHint": {
+    "hash": "8135db6d1af1d2a5",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.generate": {
+    "hash": "88bba54d70a525b3",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.hardenSsh": {
+    "hash": "8b1b434abb266d87",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.hardenSshHint": {
+    "hash": "93470d7c1f779176",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.hashing": {
+    "hash": "3fb319f6766bd79f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.intro": {
+    "hash": "122f9317d63638bb",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.outTitle": {
+    "hash": "9225fe244cb09a62",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.pocketId": {
+    "hash": "bafa494c82b50c67",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.pocketIdHint": {
+    "hash": "74449420a74c6db2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.preview": {
+    "hash": "a2bd5c08b45e8f98",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.protect": {
+    "hash": "19713d797b4f6bb2",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.protectHint": {
+    "hash": "97f4ab16575aa062",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.protectNpm": {
+    "hash": "8ff3e43ef9312caf",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.proxy": {
+    "hash": "8f5358d2e288b0ad",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.proxyHint": {
+    "hash": "dc6512713eae6017",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.proxyLabel": {
+    "hash": "e665020d1fa6a135",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.proxyNone": {
+    "hash": "04a716cf15809b66",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.ready": {
+    "hash": "bc214c29faf81773",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.runIntro": {
+    "hash": "2b4ca07465626f12",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.runNote": {
+    "hash": "e2f89af577e1d8e9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.secAccess": {
+    "hash": "852cf805301bf1aa",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.secServices": {
+    "hash": "b782200847c25fd9",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.sshFrom": {
+    "hash": "4611b604da870d35",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.sshFromHint": {
+    "hash": "f5a327dabd9b1e1b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.sshKey": {
+    "hash": "52e9936ab6ea8581",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.sshKeyHint": {
+    "hash": "4985303400b85b9b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.sshPort": {
+    "hash": "5cdd0d617b4d736c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.sshPortHint": {
+    "hash": "88be4a08c451226e",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.taPass": {
+    "hash": "854e51ad6e1b4265",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.taPassHint": {
+    "hash": "b0816099195ec84c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.taUser": {
+    "hash": "338080fa0c7a234b",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.tinyauth": {
+    "hash": "03c6fc256bb2a765",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.tinyauthHint": {
+    "hash": "02f475e949a0960f",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.title": {
+    "hash": "f9a6e05ac946875c",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.user": {
+    "hash": "a506e8813ee94dbc",
+    "by": "claude"
+  },
+  "src/i18n/de.json#tools.server-setup.userHint": {
+    "hash": "ef2520fe1029519d",
     "by": "claude"
   },
   "src/i18n/de.json#tools.stack-builder.add": {
