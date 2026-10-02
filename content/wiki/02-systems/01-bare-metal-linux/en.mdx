@@ -1,96 +1,95 @@
 ---
-title: Bare-Metal Linux
-description: "The simplest setup for a home lab: a standard Linux system running directly on the hardware, with Docker installed on top of it. The guides on this page follow this approach."
+title: "Bare-metal Linux"
+description: "The simplest foundation for a homelab: a normal Linux directly on the hardware, with Docker on top. This is the path the guides on this site take."
 level: 1
-related:
-  - proxmox-ve
-  - truenas-unraid
-  - vms-or-containers
-  - hardware-overview
+related: [proxmox-ve, truenas-unraid, vms-or-containers, hardware-overview]
 practice: installing-the-os
 ---
 
 <OneWay />
 
-## What does “bare metal” mean?
+## What does "bare metal" mean?
 
-"Bare Metal" literally means "bare metal." What this means is that the operating system runs **directly on the hardware**, without
-a virtualization layer in between. So you install a regular version of Linux on your mini-PC or your old
-Notebook, just like on a desktop computer, but without a graphical user interface.
+"Bare metal" means the operating system runs **directly on the hardware**, without a virtualization layer in
+between. So you install a perfectly normal Linux on your mini PC or old laptop, just like on a desktop computer, only
+without a graphical interface.
 
-You then install Docker on this Linux system. Each service will then run in its own container. The
-So Docker handles the separation between services, not a hypervisor.
+On this Linux, you then install Docker. Each service runs in its own container. So Docker takes care of separating
+the services, not a hypervisor.
 
 ## Why this path?
 
-Bare-Metal Linux offers many advantages for those just getting started:
+For getting started, bare-metal Linux has many advantages:
 
-- **Few moving parts.** One system, one package manager, one place for logs. If something isn't working, you look in
-  exactly one location.
-- **Full performance.** No layer that diverts RAM or CPU resources. That's what matters on low-end hardware with 8 or 16 GB of RAM.
-- **Huge knowledge base.** Almost every tutorial online is based on Debian or Ubuntu. You can find error messages
-  quickly using a search engine.
-- **Easily transferable.** What you learn here (SSH, users, firewall, Docker) is something you'll also need later on a VPS or
-  in a VM running on Proxmox.
+- **Few moving parts.** One system, one package manager, one place for logs. If something doesn't work, you look in
+  exactly one place.
+- **Full performance.** No layer that takes a cut of RAM or CPU. That counts on small hardware with 8 or 16 GB of RAM.
+- **A huge knowledge base.** Almost every guide on the web assumes Debian or Ubuntu. You'll quickly find error
+  messages with a search engine.
+- **Easy to transfer.** What you learn here (SSH, users, firewall, Docker), you'll also need later on a VPS or in a
+  VM under Proxmox.
 
-Docker already includes the most important feature of a VM: services are isolated from one another and can be run individually
-Start, stop, and refresh. That's more than enough for most home labs.
+Docker already brings the most important property of a VM: services are separated from each other and can be
+started, stopped and updated individually. For most homelabs, that's entirely enough.
 
 ## Which distribution?
 
-A distribution is a ready-to-use package consisting of the Linux kernel, programs, and a package manager. For a server, the following are recommended:
-two:
+A distribution is a ready-made bundle of Linux kernel, programs and package management. Two are a good fit for a
+server:
 
 | | Debian | Ubuntu Server |
 | --- | --- | --- |
-| **Character** | Slim, conservative, very sturdy | Slightly newer packages, more pre-installed |
-| **Support** | About three years per version, plus long-term support (LTS) provided by volunteers | LTS versions receive five years of standard updates |
-| **New Versions** | About every two years | LTS every two years (April, even-numbered years) |
-| **Manufacturer** | Community Project | Canonical (company) |
+| **Character** | Lean, conservative, very stable | Somewhat newer packages, more preinstalled |
+| **Support** | About three years per release, plus long-term support (LTS) by volunteers | LTS releases get five years of standard updates |
+| **New releases** | About every two years | LTS every two years (April, even year) |
+| **Maker** | Community project | Canonical (a company) |
 
-Both are good choices, and all the commands on this page work on both. With Ubuntu, always use a
-**LTS** (Long-Term Support) **version**, not an interim release. If you can't decide: Debian.
+Both are a good choice, and all commands on this site work on both. With Ubuntu, always take an **LTS release**
+(long-term support), not an interim release. If you can't decide: Debian.
+
+Where the two differ, for example with networking or the SSH service, the guides show both ways. Set your system
+under "My setup", and you'll only see the commands that fit your server.
 
 <Callout title="Server without a desktop">
-Do not install a graphical user interface. You will manage the server via [SSH](/en/wiki/ssh-basics/) from
-from your computer. This saves RAM, and there's less software that needs updates.
+Don't install a graphical interface. You manage the server via [SSH](/en/wiki/ssh-basics/) from your
+computer. That saves RAM, and there's less software that needs updates.
 </Callout>
 
 ## What does the setup look like?
 
-If you follow the instructions under "[Setup](/en/setup/installing-the-os/)," your server will
-It ends up looking something like this:
+If you follow the guides under [Setup](/en/setup/installing-the-os/), your server will end up looking
+roughly like this:
 
-- Debian or Ubuntu Server, Login via SSH Key Only
-- Firewall (UFW) and Automatic Security Updates
-- Docker with the Compose Plugin
-- One folder for everything, by default  (`/srv/homelab``__ROOT__`), with one subfolder per service
-- A reverse proxy like Traefik, which makes the services accessible under your domain
+- Debian or Ubuntu Server, login only with an SSH key
+- Firewall (UFW) and automatic security updates
+- Docker with the Compose plugin
+- One folder for everything, `/srv/homelab` (`__ROOT__`) by default, with a subfolder per service
+- A reverse proxy like Traefik that makes the services reachable under your domain
 
-Having one folder for everything has one big advantage: Your backup only needs to back`__ROOT__` up that one folder. Learn more at
+One folder for everything has a big advantage: your backup only has to cover `__ROOT__`. More under
 [Directory structure](/en/wiki/directory-structure/).
 
-## Borders
+## Limits
 
-Bare Metal isn't always the best choice:
+Bare metal isn't the best choice in every situation:
 
-- **No system snapshots.** Before a major upgrade, you can't back up the entire server with a single click
-  Back up and restore. A good [backup](/en/wiki/backup-strategies/) protects your data, which
-  In an emergency, you'll need to reinstall the operating system. But with Docker and a clean folder, it's a quick fix.
-- **One system for everything.** Do you want to try something that doesn't run in Docker, such as a different
-  Operating system or Home Assistant OS—you'll need a VM. In that case, it's worth checking out
-  [Proxmox VE](/en/wiki/proxmox-ve/).
-- **Many hard drives.** If your server is primarily a data storage device with multiple drives, they’ll take up
-  [TrueNAS or Unraid](/en/wiki/truenas-unraid/) take a lot of the work off your hands.
+- **No system snapshots.** Before a big upgrade, you can't back up and roll back the whole server with one click.
+  A good [backup](/en/wiki/backup-strategies/) protects your data; in an emergency, you reinstall the
+  operating system. With Docker and a tidy folder, though, that's done quickly.
+- **One system for everything.** If you want to try something that doesn't run in Docker, for example another
+  operating system or Home Assistant OS, you need a VM. Then [Proxmox VE](/en/wiki/proxmox-ve/) is worth a
+  look.
+- **Many disks.** If your server is mainly data storage with several disks,
+  [TrueNAS or Unraid](/en/wiki/truenas-unraid/) take a lot of work off your hands.
 
-You can switch later. Since all services are stored as files`compose.yaml` in the same folder, you can drag them
-Migrate to a new system with minimal effort, such as to a VM running on Proxmox. Here's a step-by-step guide on how to do it:
-[Migration to new hardware](/en/setup/moving-hardware/).
+You can switch later. Because all services exist as a `compose.yaml` with their data in the same folder, you move
+them to a new system with little effort, for example into a VM under Proxmox. How that works step by step is shown in
+[Moving to new hardware](/en/setup/moving-hardware/).
 
-"Which Infrastructure Fits Which Goal" provides [an overview](/en/wiki/operating-models/) comparing [operating models](/en/wiki/operating-models/).
+Which foundation suits which goal is compared in [Operating models at a glance](/en/wiki/operating-models/).
 
-## Read more
+## Further reading
 
-- [Debian: Installation Guide](https://www.debian.org/releases/stable/installmanual)
-- [Ubuntu Server: Documentation](https://documentation.ubuntu.com/server/)
+- [Debian: installation guide](https://www.debian.org/releases/stable/installmanual)
+- [Ubuntu Server: documentation](https://documentation.ubuntu.com/server/)
 - [VMs or containers?](/en/wiki/vms-or-containers/)

@@ -1,89 +1,87 @@
 ---
-title: "Multiple devices: Assign roles"
-description: "A Raspberry Pi, an old mini-PC, and maybe even a small VPS: Here, you'll learn which device handles which task, how to connect them, and what you need to keep in mind."
+title: "Multiple devices: assigning roles"
+description: "A Raspberry Pi, an old mini PC and maybe a small VPS too: here you learn which device takes on which task, how to connect them and what to watch out for."
 level: 2
-related:
-  - cloud-hybrid-local
-  - operating-models
-  - backup-strategies
-  - vpn
+related: [cloud-hybrid-local, operating-models, backup-strategies, vpn]
 practice: vpn-wireguard
 ---
 
 <OneWay />
 
-## Many people start out with more than one device
+## Many people start with more than one device
 
-There's still a Raspberry Pi sitting in the drawer, and I'll add a discarded Dell OptiPlex or Lenovo ThinkCentre to it,
-And later on, you might rent a small VPS. That's perfectly normal. The only important thing is that each device has a
-You'll be given a clear assignment. Otherwise, after a few months, you won't know what's going on anymore.
+A Raspberry Pi is still lying in a drawer, a retired Dell OptiPlex or Lenovo ThinkCentre joins it, and later you may
+rent a small VPS. That's completely normal. What matters is that each device gets a clear task. Otherwise, after a
+few months, you won't know what runs where anymore.
 
-The basic rule: **One device is your main server; the others take on precisely defined supporting roles.** Start with
-connect to the main server and work through all the guides there. I'll add another device if there's a
-there is a specific reason for it.
+The basic rule: **one device is your main server, the others take on clearly defined side roles.** Start with the
+main server and work through the guides there once, completely. Another device comes in when there's a concrete
+reason for it.
 
-## Each device remains independent
+## Each device stays independent
 
-You're not building a cluster. Each device is its own server with its own Linux, its own Docker, and its own
-Compose Stacks. This has two advantages: If one device fails, the others keep running. And you can configure each device
-Set it up using the same guides you're already familiar with.
+You're not building a cluster. Each device is a server of its own with its own Linux, its own Docker and its own
+Compose stacks. That has two advantages: if one device fails, the others keep running. And you can set up every
+device with the same guides you already know.
 
-That's why you go over the basics on every device:
+So on each device, you repeat the basics:
 
-- [SSH Keys](/en/setup/ssh-keys/), [Users, & sudo,](/en/setup/users-sudo/) and [Securing SSH](/en/setup/hardening-ssh/)
-- [Firewall with UFW](/en/setup/firewall-ufw/) and [Automatic Updates](/en/setup/automatic-updates/)
-- [Install Docker](/en/setup/installing-docker/) and set up [the](/en/setup/creating-the-directory-structure/) same [directory structure](/en/setup/creating-the-directory-structure/) under `__ROOT__`
+- [SSH keys](/en/setup/ssh-keys/), [Users & sudo](/en/setup/users-sudo/) and [Hardening SSH](/en/setup/hardening-ssh/)
+- [Firewall with UFW](/en/setup/firewall-ufw/) and [automatic updates](/en/setup/automatic-updates/)
+- [Installing Docker](/en/setup/installing-docker/) and the same [directory structure](/en/setup/creating-the-directory-structure/) under `__ROOT__`
 
-Using the same file paths across all devices saves a lot of hassle later on, especially when it comes to backups and migrating services.
+The same paths on all devices save a lot of thinking later, especially for backups and when moving services.
 
-Clustering multiple servers (Docker Swarm, Kubernetes) is rarely worth the effort in a home lab. Why?
-can be found in "[Overview of Operating Models](/en/wiki/operating-models/)."
+Joining several servers into a cluster (Docker Swarm, Kubernetes) rarely pays off in a homelab. Why is explained in
+[Operating models at a glance](/en/wiki/operating-models/).
 
 ## Which device does what?
 
-| Device | Role | Typical Services |
+| Device | Role | Typical services |
 | --- | --- | --- |
-| **Mini PC** (OptiPlex, ThinkCentre, NUC) | Main server: x86 CPU, SSD, sufficient RAM | Vaultwarden, Immich, Paperless-ngx, Jellyfin, Databases, Reverse Proxy |
-| **Raspberry Pi** | Small services that should continue to run even when the main server is down | AdGuard Home, Uptime Kuma, Home Assistant |
-| **VPS** | Public Entrance and Off-Site Location | VPN access to the home network, remote monitoring, destination for offsite backups |
+| **Mini PC** (OptiPlex, ThinkCentre, NUC) | Main server: x86 CPU, SSD, enough RAM | Vaultwarden, Immich, Paperless-ngx, Jellyfin, databases, reverse proxy |
+| **Raspberry Pi** | Small services that should keep running when the main server is off | AdGuard Home, Uptime Kuma, Home Assistant |
+| **VPS** | Public entry point and off-site location | Entry via VPN to the home network, monitoring from outside, target for off-site backups |
 
-Three questions can help with any ministry:
+Three questions help with every service:
 
-1. **Does it require a lot of storage or processing power?** If so, it belongs on the main server. Photos, documents, and
-   Media are located where the large plates are.
-2. **Should it keep working if the main server goes down?** DNS and monitoring should be handled by a different device.
-   If AdGuard Home is running on the main server and it restarts, the entire home network suddenly loses Internet access.
-   And a monitoring program running on the server being monitored cannot report its own failure.
-3. **Does it need to be accessible from the Internet?** If so, a VPS can serve as the entry point, and the data will still remain
-   At home. Read more in "[Cloud, Hybrid, or On-Premises?](/en/wiki/cloud-hybrid-local/)"
+1. **Does it need lots of storage or computing power?** Then it belongs on the main server. Photos, documents and
+   media live where the big disks are.
+2. **Should it work when the main server fails?** DNS and monitoring belong on another device. If AdGuard Home runs
+   on the main server and that restarts, suddenly the whole home network has no internet. And monitoring that runs
+   on the server it watches can't report that server going down.
+3. **Does it have to be reachable from the internet?** Then a VPS can be the entry point, while the data still stays
+   at home. More in [Cloud, hybrid or local?](/en/wiki/cloud-hybrid-local/).
 
 <Callout title="Start small">
-You don't have to set up all three devices at the same time. One main server with backups is worth more than three half-baked ones.
-Set up devices. Using the Pi as a DNS server is usually the most sensible next step.
+You don't have to set up all three devices at once. One main server with backups is worth more than three
+half-configured devices. The Pi as a DNS server is usually the most sensible second step.
 </Callout>
 
-## What's Different About the Raspberry Pi
+## What's different on a Raspberry Pi
 
-- **ARM instead of x86:** Most well-known images are available for both architectures, but not all of them. On Docker Hub
-  Check under "OS/ARCH" to see if it's `linux/arm64`included.
-- **SSD Instead of an SD Card:** SD cards tend to fail when used continuously. An SSD connected via USB or an NVMe adapter lasts
-  significantly longer.
-- **Low RAM:** 4 to 8 GB is enough for a few small services, but not for Immich or Nextcloud.
+- **ARM instead of x86:** most well-known images exist for both architectures, but not all. On Docker Hub, "OS/ARCH"
+  shows whether `linux/arm64` is included.
+- **SSD instead of SD card:** SD cards tend to break in continuous operation. An SSD via USB or an NVMe HAT lasts
+  much longer.
+- **Little RAM:** 4 to 8 GB is enough for a few small services, not for Immich or Nextcloud.
+- **Operating system:** Raspberry Pi OS Lite is based on Debian. Choose Debian for it under "My setup". Ubuntu Server
+  is available for the Pi as well.
 
-## What Makes a VPS Different
+## What's different on a VPS
 
-A VPS has a public IP address and is scanned by bots from the very first minute. The guides on
-[Hardening SSH](/en/setup/hardening-ssh/) and setting up [a](/en/setup/firewall-ufw/) [firewall](/en/setup/firewall-ufw/) are mandatory here, not
-In short: Only run what really needs to be public there, and don't store any sensitive data with the provider that you
-you wouldn't also back it up in encrypted form.
+A VPS has a public IP and gets probed by bots from the first minute. The guides on
+[hardening SSH](/en/setup/hardening-ssh/) and the [firewall](/en/setup/firewall-ufw/) are mandatory here, not
+optional. Only run what really has to be public there, and don't store sensitive data with the provider that you
+wouldn't also back up encrypted.
 
-## Connect the devices
+## Connecting the devices
 
-On the home network, all devices are assigned a [static IP address](/en/setup/static-ip-hostname/). If you add a VPS, connect
-You can connect it to your home network via [VPN](/en/wiki/vpn/), using something like WireGuard or Tailscale. Then everyone can communicate
-Devices can connect to each other via private IP addresses without you having to open ports at home.
+On the home network, all devices get a [static IP](/en/setup/static-ip-hostname/). If a VPS joins, connect it to
+the home network via [VPN](/en/wiki/vpn/), for example with WireGuard or Tailscale. Then all devices talk to
+each other over private addresses, without you having to open ports at home.
 
-To avoid having to juggle IP addresses, give each device on your laptop a name in `~/.ssh/config`:
+So you don't have to juggle IPs, give each device a name in `~/.ssh/config` on your laptop:
 
 ```text
 Host homelab
@@ -99,46 +97,45 @@ Host vps
     User __USER__
 ```
 
-After that, either  or`ssh pi`  will do`ssh vps`. For more on this, see [SSH Basics](/en/wiki/ssh-basics/). Also, keep in mind
-In your [documentation](/en/wiki/documentation/), specify which device has which IP address and which stacks are running on them
-run.
+After that, `ssh pi` or `ssh vps` is enough. More in [SSH basics](/en/wiki/ssh-basics/). Also record in
+your [documentation](/en/wiki/documentation/) which device has which IP and which stacks run on it.
 
-## Reverse Proxy Across Devices
+## Reverse proxy across devices
 
-This is where the biggest pitfall lies. Traefik reads its labels only from containers on **the same** Docker host.
-A service on the Pi won't automatically appear in Traefik on the main server. You have two options:
+This is the biggest pitfall. Traefik only reads its labels from containers on the **same** Docker host. So a service
+on the Pi doesn't show up in Traefik on the main server by itself. You have two options:
 
-- **Each device gets its own reverse proxy.** This is easiest if services on each device use
-  run on its own domain. Each proxy retrieves its own certificates.
-- **A central proxy also forwards traffic to other devices.** The service on the Pi publishes its port in the
-  Home network, and the proxy on the main server is given a static entry with an IP address and port. In the
-  [Nginx Proxy Manager](/en/setup/reverse-proxy-npm/) is a standard proxy host, whereas in Traefik it is an entry in
+- **Each device gets a reverse proxy of its own.** That's simplest when services with their own domain run on every
+  device. Each proxy gets its own certificates.
+- **One central proxy also forwards to other devices.** The service on the Pi publishes its port on the home network,
+  and the proxy on the main server gets a fixed entry with IP and port. In
+  [Nginx Proxy Manager](/en/setup/reverse-proxy-npm/), that's a normal proxy host; with Traefik, it's an entry in
   a configuration file instead of labels.
 
-To start with, the first option is easier to understand. Very small services like AdGuard Home or Uptime Kuma on the
-You often don't even need to go through a domain. On a home network, the IP address and port are enough.
+To start with, the first option is clearer. Very small services like AdGuard Home or Uptime Kuma on the Pi often
+don't need a domain at all. On the home network, the IP with the port is enough.
 
-## Cross-Checked Backups and Monitoring
+## Backups and monitoring crosswise
 
-Having multiple devices is a boon for your [backup strategy](/en/wiki/backup-strategies/): The Pi backs up to
-the main server; the main server backs up to an external destination or the VPS. The important thing is that a backup never
-is located on the same device as the data. The guide explains how to do this with Borgmatic
+Several devices are a gift for your [backup strategy](/en/wiki/backup-strategies/): the Pi backs up to the
+main server, and the main server backs up to an external target or the VPS. The only important thing is that a backup
+never sits on the same device as the data. How that works with borgmatic is shown in the guide
 [Backups with borgmatic](/en/setup/backups-borgmatic/).
 
-To monitor the devices, install a [Beszel](/en/setup/monitoring-beszel/) agent on each one.
-[Uptime Kuma](/en/setup/uptime-kuma/) works best when run on a different device than the services it monitors,
-for example, on the Pi or the VPS.
+For monitoring, install a [Beszel](/en/setup/monitoring-beszel/) agent on every device.
+[Uptime Kuma](/en/setup/uptime-kuma/) is best run on a different device than the services it checks, for example
+on the Pi or the VPS.
 
-## "My Setup" with Multiple Devices
+## "My setup" with several devices
 
-"My Setup" always refers to a single device. If you're setting up a different device, enter its IP address first and, if necessary,
-Add the "Stack" folder. Then all the commands will fit in the Guides. The domain and email address remain the same.
+"My setup" always describes one device. When you set up another device, first enter its IP, its operating system
+and, if needed, the stack folder. Then all commands in the guides fit. Domain and email stay the same.
 
-## Checklist for a New Device
+## Checklist for a new device
 
-1. Install the operating system, assign a static IP address, go to “My Setup,” and enter`~/.ssh/config` the information
-2. SSH keys, users, SSH hardening, firewall, automatic updates
-3. Install Docker and set up the directory structure
-4. Define your role and note it in your documentation
-5. Launch the Beszel Agent and add the device to Uptime Kuma
-6. Set up backups on another device
+1. Install the operating system, assign a static IP, enter it in "My setup" and `~/.ssh/config`
+2. SSH key, user, hardening SSH, firewall, automatic updates
+3. Install Docker and create the directory structure
+4. Decide on the role and note it in your documentation
+5. Start the Beszel agent and add the device to Uptime Kuma
+6. Set up backups, to another device
