@@ -36,8 +36,8 @@
     "by": "claude"
   },
   "content/guides/01-preparation/03-static-ip-hostname/de.mdx": {
-    "hash": "c1962da6147eca46",
-    "by": "deepl"
+    "hash": "b8ff53dd05b96e0c",
+    "by": "claude"
   },
   "content/guides/01-preparation/de.md": {
     "hash": "f4fca49cb2d22cac",
@@ -52,8 +52,8 @@
     "by": "claude"
   },
   "content/guides/02-securing/03-hardening-ssh/de.mdx": {
-    "hash": "affe8376beea439c",
-    "by": "deepl"
+    "hash": "d9f1744dc614e0ff",
+    "by": "claude"
   },
   "content/guides/02-securing/04-firewall-ufw/de.mdx": {
     "hash": "1dd7046fb2ee0c78",
@@ -148,8 +148,8 @@
     "by": "deepl"
   },
   "content/guides/06-operations/06-emergency-plan/de.mdx": {
-    "hash": "2491615da3b994f1",
-    "by": "deepl"
+    "hash": "b1121e386ca9826f",
+    "by": "claude"
   },
   "content/guides/06-operations/07-moving-hardware/de.mdx": {
     "hash": "162d49a3b6eff4d2",
@@ -364,8 +364,8 @@
     "by": "deepl"
   },
   "content/wiki/04-networking/02-dns-domains/de.mdx": {
-    "hash": "8d5e2dbe31dde164",
-    "by": "deepl"
+    "hash": "e535fbc003dc34b2",
+    "by": "claude"
   },
   "content/wiki/04-networking/03-reverse-proxy-explained/de.mdx": {
     "hash": "7048087bbf1b2c46",

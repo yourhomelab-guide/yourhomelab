@@ -1,24 +1,21 @@
 ---
-title: Fixed IP & Hostname
-description: Your server has a static IP address on your home network and a descriptive name. This ensures that SSH connections, port forwarding, and DNS entries always point to the correct device.
+title: "Static IP & hostname"
+description: "Your server has a fixed address on your home network and a meaningful name. SSH connections, port forwarding and DNS records then always point to the right device."
 level: 1
 minutes: 15
-requires:
-  - Linux Server
-  - SSH Access
-  - Access to the Router Interface
+requires: [Linux server, SSH access, Access to the router interface]
 ---
 
-Your router automatically assigns addresses on your home network via **DHCP** (Dynamic Host Configuration Protocol). This is convenient, but the address may change after a reboot or a long period of inactivity. This is problematic for a server: port forwarding, DNS entries, and your SSH connection will suddenly point to nowhere. That’s why the server is assigned a static IP address. You can find the basics on this under [IP, Ports & NAT](/en/wiki/ip-ports-nat/).
+Your router hands out addresses on your home network automatically via **DHCP** (Dynamic Host Configuration Protocol). That's convenient, but the address can change after a restart or a longer break. For a server, that's bad: port forwarding, DNS records and your SSH connection suddenly point nowhere. That's why the server gets a fixed address. You'll find the basics under [IP, ports & NAT](/en/wiki/ip-ports-nat/).
 
-There are two ways to do this. The recommended method is to set up a **DHCP reservation** on the router: The server continues to request an IP address via DHCP but always receives the same address. Everything remains in one place, and the router knows which addresses have been assigned. The alternative is to configure a static IP address directly on the server.
+There are two ways. The recommended one is a **DHCP reservation** in the router: the server keeps asking via DHCP but always gets the same address. Everything stays in one place, and the router knows which addresses are taken. The alternative is a static configuration directly on the server.
 
 <OneWay />
 
 <Steps>
 
-<Step title="Record the current network data">
-Connect to the server via SSH and check the network card, IP address, and MAC address. The MAC address is the network card's unique identifier; the router uses it to recognize your device.
+<Step title="Note the current network details">
+Connect to the server over SSH and look at the network card, address and MAC address. The MAC address is the network card's built-in identifier; the router recognizes your device by it.
 
 ```bash
 ip -br address
@@ -26,42 +23,46 @@ ip -br link
 ip route
 ```
 
-Make a note of this:
+Note down:
 
-- the name of the network adapter, for example, `enp1s0`
-- the current address, e.g., `192.168.1.50/24`
-- the MAC address, for example, `aa:bb:cc:dd:ee:ff`
-- The gateway from that line`default via 192.168.1.1`—that's your router.
+- the network card's name, e.g. `enp1s0`
+- the current address, e.g. `192.168.1.50/24`
+- the MAC address, e.g. `aa:bb:cc:dd:ee:ff`
+- the gateway from the line `default via 192.168.1.1`; that's your router
 </Step>
 
-<Step title="Recommended: Reserve an IP address on the router">
-Open your router's web interface in your browser. The address is usually printed on the bottom of the device. Look for your server (hostname or MAC address) in the list of network devices and enable static assignment.
+<Step title="Recommended: reserve the address in the router">
+Open your router's interface in the browser. The address is usually printed on the bottom of the device. Look for your server (host name or MAC address) in the list of network devices and turn on the fixed assignment.
 
-On a FRITZ!Box, you'll find this under **Home Network → Network**. There, edit the server and enable "Always assign the same IPv4 address to this network device." On other routers, this feature may be called, for example, “DHCP Reservation,” “Static Lease,” or “Address Reservation.”
+On a FRITZ!Box, you'll find this under **Home Network → Network**. Edit the server there and turn on "Always assign this network device the same IPv4 address". On other routers, the feature is called "DHCP reservation", "static lease" or "address reservation", for example.
 
-You can keep the address the server currently has, or choose your own, such as `192.168.1.10`. Enter it as the server IP under “My Setup,” and it will then be used in all subsequent commands. Then restart the server to ensure it gets the reserved address:
+You can keep the address the server has right now or choose your own, such as `192.168.1.10`. Enter it as the server IP under "My setup"; then it appears in all further commands. Then restart the server so it's sure to get the reserved address:
 
 ```bash
 sudo reboot
 ```
 
-Once you've changed the address, connect using the new address. You're now done and can proceed directly to the "**Check Hostname"** step.
+If you changed the address, connect to the new address afterwards. That's it, and you can continue directly with the step **Check and set the hostname**.
 </Step>
 
-<Step title="Alternative: Static IP on Debian (ifupdown)">
-This is only necessary if you can't or don't want to set up a reservation on your router. In that case, choose an address **outside** your router's DHCP range; otherwise, the router might assign that address to another device as well. You can find the range in your router's DHCP settings.
+<Step title="Alternative: static IP on the server">
+Only needed if you can't or don't want to set up a reservation in the router. Then choose an address **outside** your router's DHCP range, otherwise the router might also hand it out to another device. You'll find the range in the router's DHCP settings.
 
-<Callout type="warning" title="It's best to work directly on the server">
-A typo in the network configuration can cause the SSH connection to be disconnected. It's best to perform this step with a monitor and keyboard connected to the server.
+<Callout type="warning" title="Ideally, work directly at the server">
+A typo in the network configuration can cut the SSH connection. Ideally, do this step with a monitor and keyboard at the server.
 </Callout>
 
-Debian manages the network on servers using `ifupdown`. Open the configuration:
+How this works depends on the system. You'll see the way for the operating system from "My setup".
+
+<Os is="debian">
+
+On servers, Debian manages the network with `ifupdown`. Open the configuration:
 
 ```bash
 sudo nano /etc/network/interfaces
 ```
 
-Replace the section for your network interface (the line containing  `inet dhcp`and, if necessary, `allow-hotplug`) with a static configuration. Adjust the network interface, address, and gateway to match your values:
+Replace your network card's block (the line with `inet dhcp` and possibly `allow-hotplug`) with a static configuration. Adjust the network card, address and gateway to your values:
 
 ```text
 auto enp1s0
@@ -70,32 +71,32 @@ iface enp1s0 inet static
     gateway 192.168.1.1
 ```
 
-Enter`/etc/resolv.conf` the DNS server here; in most cases, this is also your router:
+Enter the DNS server in `/etc/resolv.conf`; usually that's your router as well:
 
 ```text
 nameserver 192.168.1.1
 ```
 
-Then restart the server (`sudo reboot`) and connect using the new address.
-</Step>
+Then restart the server (`sudo reboot`) and connect to the new address.
 
-<Step title="Alternative: Static IP on Ubuntu (netplan)">
-Ubuntu Server configures the network using **netplan**. The same rule applies here: Choose an address outside the DHCP range.
+</Os>
 
-The installation created the configuration using cloud-init. To prevent cloud-init from overwriting your changes, disable its network management:
+<Os is="ubuntu">
+
+Ubuntu Server configures the network with **netplan**. The installation created the configuration through cloud-init. So that cloud-init doesn't overwrite your changes again, turn off its network management:
 
 ```bash
 echo 'network: {config: disabled}' | sudo tee /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
 ```
 
-Check which file is located`/etc/netplan/` in  and open it:
+Check which file is in `/etc/netplan/` and open it:
 
 ```bash
 ls /etc/netplan/
 sudo nano /etc/netplan/50-cloud-init.yaml
 ```
 
-Replace the content with a static configuration. Be sure to use spaces for indentation; YAML is strict about this:
+Replace the content with a static configuration. Watch the indentation with spaces; YAML is strict about it:
 
 ```yaml
 network:
@@ -112,17 +113,25 @@ network:
         addresses: [192.168.1.1]
 ```
 
-Test the configuration with `netplan try`. If you don't confirm`Enter` the new setting within two minutes using , netplan will revert to the old one. Here's how to avoid locking yourself out:
+Only root may read the file, otherwise netplan warns:
+
+```bash
+sudo chmod 600 /etc/netplan/50-cloud-init.yaml
+```
+
+Test the configuration with `netplan try`. If you don't confirm the new setting with `Enter` within two minutes, netplan restores the old one. That way you can't lock yourself out:
 
 ```bash
 sudo netplan try
 ```
 
-Once the connection is established, confirm by pressing  and`Enter` then connect using the new address.
+When the connection works, confirm with `Enter` and then connect to the new address.
+
+</Os>
 </Step>
 
-<Step title="Check and Set the Hostname">
-The hostname is the name of the server on the network and in your command prompt. It should be short, in lowercase, and without spaces, e.g., `homelab`. You already assigned it during installation. Here's how to check it:
+<Step title="Check and set the hostname">
+The hostname is the server's name on the network and in your prompt. Short, lowercase, without spaces, e.g. `homelab`. You already set it during installation. To check it:
 
 ```bash
 hostnamectl
@@ -134,24 +143,24 @@ If you want to change it:
 sudo hostnamectl set-hostname homelab
 ```
 
-Be sure to enter`/etc/hosts` the new name as well; otherwise, it will display a`sudo` warning that it cannot resolve the name:
+Also enter the new name in `/etc/hosts`, otherwise `sudo` warns that it can't resolve the name:
 
 ```bash
 sudo nano /etc/hosts
 ```
 
-The line containing  must`127.0.1.1` include the new name:
+The line with `127.0.1.1` must contain the new name:
 
 ```text
 127.0.0.1       localhost
 127.0.1.1       homelab
 ```
 
-Log out and then log back in, and the command prompt will also display the new name.
+Log out and back in once; then the prompt shows the new name too.
 </Step>
 
-<Step title="Test Connection">
-Finally, check to make sure the address, gateway, and name resolution are correct:
+<Step title="Test the connection">
+Finally, check that address, gateway and name resolution are right:
 
 ```bash
 ip -br address
@@ -159,11 +168,11 @@ ip route
 ping -c 3 debian.org
 ```
 
-You should see the static IP address, a `default`route through your router, and a response to the ping.
+You should see the fixed address, a `default` route through your router and replies to the ping.
 
-Many routers resolve device names on the home network. This allows you to access the server by name, for example, or`ssh __USER__@homelab` on a FRITZ!Box`ssh __USER__@homelab.fritz.box`. If that doesn't work, simply use the IP address.
+Many routers resolve device names on the home network. Then you can also reach the server by name, e.g. `ssh __USER__@homelab`, or `ssh __USER__@homelab.fritz.box` on a FRITZ!Box. If that doesn't work, simply use the IP address.
 
-Next, secure your access: [Set up SSH keys](/en/setup/ssh-keys/).
+Next, you secure access: [Setting up SSH keys](/en/setup/ssh-keys/).
 </Step>
 
 </Steps>
