@@ -1,5 +1,6 @@
 services:
   dockhand:
+    # latest = newest stable release; there are no major-version tags. To pin, use e.g. v1.0.50.
     image: fnsys/dockhand:latest
     container_name: dockhand
     restart: unless-stopped

@@ -67,11 +67,20 @@ Jetzt hängst du die Middleware an den Router eines Dienstes. Router heißen auf
       - traefik.http.routers.uptime-kuma.middlewares=tinyauth
 ```
 
-Ein gutes erstes Ziel ist das Traefik-Dashboard. Sein Router heißt `dashboard`. Füge in `__ROOT__/traefik/compose.yaml` bei den Labels hinzu:
+Ein gutes erstes Ziel ist das Traefik-Dashboard. Sein Router heißt `dashboard`. In `__ROOT__/traefik/compose.yaml` steht schon eine Middleware, die nur das Heimnetz durchlässt. Ersetze diese beiden Zeilen:
+
+```yaml
+      - traefik.http.middlewares.dashboard-lan.ipallowlist.sourcerange=10.0.0.0/8,192.168.0.0/16
+      - traefik.http.routers.dashboard.middlewares=dashboard-lan
+```
+
+durch:
 
 ```yaml
       - traefik.http.routers.dashboard.middlewares=tinyauth
 ```
+
+Ein Router hat nur eine `middlewares`-Zeile. Willst du mehrere Middlewares, trennst du sie dort mit Komma, z. B. `dashboard-lan,tinyauth` für „nur Heimnetz **und** Login“. Dasselbe gilt für Dienste wie Dockhand und Homepage, die die Vorlagen von Haus aus aufs Heimnetz beschränken.
 
 Danach den jeweiligen Stack neu starten, damit Traefik die Labels liest:
 

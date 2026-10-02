@@ -193,7 +193,7 @@ function iconUrl(id: string, icon?: string) {
 }
 
 const variantCache = new Map<string, Record<VariantKey, Variant>>();
-export function getVariants(s: Pick<Service, 'id' | 'name' | 'main' | 'port' | 'hostPort' | 'subdomain' | 'subdomainOnly' | 'reverseProxy' | 'files' | 'traefikLabels'>) {
+export function getVariants(s: Pick<Service, 'id' | 'name' | 'main' | 'port' | 'hostPort' | 'subdomain' | 'subdomainOnly' | 'reverseProxy' | 'lanOnly' | 'files' | 'traefikLabels'>) {
   if (!variantCache.has(s.id)) variantCache.set(s.id, buildVariants(s));
   return variantCache.get(s.id)!;
 }

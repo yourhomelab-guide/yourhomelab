@@ -4,6 +4,8 @@ category: management
 level: 1
 port: 3000
 subdomain: dockhand
+# No login of its own (or Docker access): only the home network gets through the proxy
+lanOnly: true
 links:
   repo: Finsys/dockhand
   website: https://dockhand.pro

@@ -8,6 +8,8 @@ services:
     ports:
       # DNS for your home network. Port 53 must be free on the host:
       # on Ubuntu, turn off the systemd-resolved stub listener first.
+      # On a server with a public IP, bind to the LAN or VPN address instead
+      # (e.g. "10.8.0.1:53:53/udp"): Docker bypasses UFW, and an open resolver gets abused.
       - "53:53/tcp"
       - "53:53/udp"
     volumes:

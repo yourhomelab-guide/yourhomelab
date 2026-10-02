@@ -97,8 +97,8 @@ Nimm ein langes, zufälliges Passwort und speichere es in deinem Passwortmanager
 <Step title="Zugriff absichern">
 Das eigene Login der Oberfläche ist die erste Hürde. Weil dahinter Root-Zugriff steckt, lohnt sich eine zweite:
 
-- **Nur intern:** Lass die Subdomain nur im Heimnetz oder über [VPN](/de/einrichten/vpn-wireguard/) auflösen. Von außen ist die Oberfläche dann gar nicht sichtbar.
-- **Login davor:** Hänge eine Middleware wie [Tinyauth](/de/einrichten/tinyauth/) vor den Router. Dann muss sich jeder zuerst dort anmelden.
+- **Nur intern:** Für Dockhand ist das schon voreingestellt. Mit Traefik oder Caddy lässt die Vorlage nur Adressen aus dem Heimnetz durch, alle anderen bekommen `403 Forbidden`. Mit Nginx Proxy Manager legst du dafür eine Access List an. Zusätzlich kannst du die Subdomain nur im Heimnetz oder über [VPN](/de/einrichten/vpn-wireguard/) auflösen lassen.
+- **Login davor:** Hänge eine Middleware wie [Tinyauth](/de/einrichten/tinyauth/) vor den Router. Dann muss sich jeder zuerst dort anmelden, und du erreichst die Oberfläche auch von unterwegs. Wie du die Heimnetz-Regel dafür austauschst, zeigt die Tinyauth-Anleitung.
 
 Eine öffentlich erreichbare Portainer- oder Dockhand-Oberfläche ohne zusätzlichen Schutz ist ein lohnendes Ziel für Angreifer.
 </Step>

@@ -6,7 +6,7 @@
  * Secrets are NOT generated here. The service files carry markers (`@@SECRET_64@@`) that the script replaces with
  * `openssl rand` on the server, so the downloaded file never contains a password.
  */
-import type { Setup } from '../../config/site';
+import { LAN_RANGES, type Setup } from '../../config/site';
 import { buildStack, fill, type StackService, type StackTexts } from './stack';
 
 export interface ServerSetupInput {
@@ -38,9 +38,7 @@ export interface ServerSetupInput {
 export const SERVICE_ORDER = ['traefik', 'caddy', 'nginx-proxy-manager', 'tinyauth', 'pocket-id', 'dockhand'] as const;
 export const proxyService: Record<string, string> = { traefik: 'traefik', caddy: 'caddy', npm: 'nginx-proxy-manager' };
 
-/** Networks that count as "home network" for LAN-only rules. 172.16.0.0/12 is left out on purpose: Docker's own
- * networks live there, and connections that Docker forwards (e.g. IPv6) can appear to come from them. */
-export const LAN_RANGES = ['10.0.0.0/8', '192.168.0.0/16'];
+export { LAN_RANGES };
 
 /** Private (RFC 1918) or carrier-grade NAT address: the server sits in a home network, not directly on the internet */
 export const isPrivateIp = (ip: string) => /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.)/.test(ip);
@@ -78,45 +76,25 @@ const q = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
 /** Marker the script replaces with `openssl rand` output of `n` characters */
 const marker = (n?: number) => `@@SECRET_${n ?? 64}@@`;
 
-/** Inserts `add` (one or more lines) right after the first line that contains `after` */
-function insertAfter(text: string, after: string, add: string) {
-  const lines = text.split('\n');
-  const idx = lines.findIndex((l) => l.includes(after));
-  if (idx < 0) return text;
-  lines.splice(idx + 1, 0, add);
-  return lines.join('\n');
-}
-
 /**
- * Login protection for Dockhand and the Traefik dashboard: Tinyauth if wanted, otherwise LAN only.
- * Works for Traefik (labels), Caddy (Caddyfile blocks) and "no proxy" (port bound to the LAN IP).
+ * Login protection for Dockhand and the Traefik dashboard. The templates already let only the home network in
+ * (lanOnly); with Tinyauth chosen, that rule is swapped for the Tinyauth middleware / forward_auth.
+ * "No proxy": Dockhand's port is bound to the admin address (LAN IP or localhost).
  */
 function protectFiles(files: { path: string; content: string }[], i: ServerSetupInput, s: Setup) {
   const useTinyauth = i.tinyauth && i.protect;
-  const lan = LAN_RANGES.join(',');
   for (const f of files) {
-    if (s.proxy === 'traefik' && f.path.endsWith('/dockhand/compose.yaml')) {
-      const mw = useTinyauth ? 'tinyauth' : 'dockhand-lan';
-      const add = [
-        ...(useTinyauth ? [] : [`      - traefik.http.middlewares.dockhand-lan.ipallowlist.sourcerange=${lan}`]),
-        `      - traefik.http.routers.dockhand.middlewares=${mw}`,
-      ].join('\n');
-      f.content = insertAfter(f.content, 'traefik.http.services.dockhand.loadbalancer.server.port', add);
+    if (useTinyauth && s.proxy === 'traefik' && /\/(dockhand|traefik)\/compose\.yaml$/.test(f.path)) {
+      const name = f.path.includes('/traefik/') ? 'dashboard' : 'dockhand';
+      f.content = f.content
+        .split('\n')
+        .filter((l) => !l.includes(`middlewares.${name}-lan.ipallowlist`) && !l.includes('# Home network only. With Tinyauth'))
+        .join('\n')
+        .replace(`routers.${name}.middlewares=${name}-lan`, `routers.${name}.middlewares=tinyauth`);
     }
-    if (s.proxy === 'traefik' && f.path.endsWith('/traefik/compose.yaml')) {
-      const mw = useTinyauth ? 'tinyauth' : 'dashboard-lan';
-      const add = [
-        ...(useTinyauth ? [] : [`      - traefik.http.middlewares.dashboard-lan.ipallowlist.sourcerange=${lan}`]),
-        `      - traefik.http.routers.dashboard.middlewares=${mw}`,
-      ].join('\n');
-      f.content = insertAfter(f.content, 'traefik.http.routers.dashboard.service=api@internal', add);
-    }
-    if (s.proxy === 'caddy' && f.path.endsWith('/caddy/Caddyfile') && i.dockhand) {
-      const host = `dockhand.${s.domain} {`;
-      const guard = useTinyauth
-        ? ['  forward_auth tinyauth:3000 {', '    uri /api/auth/caddy', '  }']
-        : [`  @outside not remote_ip ${LAN_RANGES.join(' ')}`, '  respond @outside 403'];
-      f.content = insertAfter(f.content, host, guard.join('\n'));
+    if (useTinyauth && s.proxy === 'caddy' && f.path.endsWith('/caddy/Caddyfile') && i.dockhand) {
+      const block = new RegExp(`(dockhand\\.${s.domain.replace(/\./g, '\\.')} \\{\\n)  @outside not remote_ip [^\\n]*\\n  respond @outside 403\\n`);
+      f.content = f.content.replace(block, `$1  forward_auth tinyauth:3000 {\n    uri /api/auth/caddy\n  }\n`);
     }
     if (s.proxy === 'none' && f.path.endsWith('/dockhand/compose.yaml')) {
       f.content = f.content.replace(/- "(\d+):3000"/, `- "${ADMIN_MARK}:$1:3000"`);

@@ -63,8 +63,8 @@ TUNNEL_TOKEN=hier-den-token-einfuegen
 ```yaml
 services:
   cloudflared:
-    # Pin a specific version tag once it runs, see hub.docker.com/r/cloudflare/cloudflared
-    image: cloudflare/cloudflared:latest
+    # Version tags are dates (year.month.patch), see hub.docker.com/r/cloudflare/cloudflared
+    image: cloudflare/cloudflared:2026.9.3
     container_name: cloudflared
     restart: unless-stopped
     command: tunnel --no-autoupdate run

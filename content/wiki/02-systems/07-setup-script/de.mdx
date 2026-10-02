@@ -196,7 +196,7 @@ neu startet. Geht etwas schief, kannst du es darüber reparieren.
 Das Skript schreibt seine Einstellungen in eine eigene Datei, `/etc/ssh/sshd_config.d/10-homelab.conf`:
 
 ```
-Port 2222
+Port 2200
 PasswordAuthentication no
 KbdInteractiveAuthentication no
 PubkeyAuthentication yes
@@ -222,7 +222,7 @@ Erst danach schließt es Port 22 in der Firewall.
 
 <Callout type="warning" title="Neue Anmeldung testen, bevor du die Sitzung schließt">
 Öffne nach dem Skript ein **zweites** Terminal und melde dich mit dem Befehl an, den die Zusammenfassung zeigt
-(zum Beispiel `ssh -p 2222 alex@192.168.1.10`). Erst wenn das klappt, schließt du die alte Sitzung. Läuft dein Server
+(zum Beispiel `ssh -p 2200 alex@192.168.1.10`). Erst wenn das klappt, schließt du die alte Sitzung. Läuft dein Server
 bei einem Hoster mit eigener Firewall im Webinterface, musst du den neuen Port dort ebenfalls freigeben.
 </Callout>
 

@@ -83,6 +83,7 @@ creates `content/services/jellyfin/` from the template. Then:
 | `hostPort` | | Port on the server when no reverse proxy is used (default: `port`) |
 | `subdomain` | yes | e.g. `media` → `media.example.com` or `example.com/media` |
 | `subdomainOnly` | | `true` if the service can't run under a path |
+| `lanOnly` | | `true` if the web UI has no login of its own or controls Docker: the proxy then only lets the home network in (Traefik ipallowlist, Caddy `remote_ip`, NPM access list hint) |
 | `main` | | Name of the web container in `compose.yaml` if it differs from the folder name |
 | `reverseProxy` | | `true` only for reverse proxies themselves (Traefik, Caddy …): the template is shown unchanged |
 | `files` | | Additional files in the folder shown as tabs, e.g. `[Caddyfile]` |

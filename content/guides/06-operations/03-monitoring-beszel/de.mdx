@@ -76,7 +76,8 @@ cd __ROOT__/beszel-agent
 ```yaml
 services:
   beszel-agent:
-    image: henrygd/beszel-agent:latest
+    # Same version as the hub
+    image: henrygd/beszel-agent:0.20
     container_name: beszel-agent
     restart: unless-stopped
     network_mode: host

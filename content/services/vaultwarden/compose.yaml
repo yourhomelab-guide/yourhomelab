@@ -1,5 +1,7 @@
 services:
   vaultwarden:
+    # latest = newest stable release (as in the official docs). For a password manager,
+    # security fixes should arrive quickly. To pin, use a full version like 1.37.3.
     image: vaultwarden/server:latest
     container_name: vaultwarden
     restart: unless-stopped

@@ -92,6 +92,9 @@ const services = defineCollection({
     reverseProxy: z.boolean().default(false),
     /** Additional files in the service folder shown as tabs, e.g. `Caddyfile` */
     files: z.array(z.string()).default([]),
+    /** The web UI has no login of its own (or controls Docker): the proxy only lets the home network in
+     * (Traefik ipallowlist, Caddy remote_ip, a hint for an NPM access list) */
+    lanOnly: z.boolean().default(false),
     /** Extra Traefik labels added when Traefik is the chosen proxy, e.g. middlewares */
     traefikLabels: z.array(z.string()).default([]),
     /** Logo id from https://selfh.st/icons (defaults to folder name). A `logo.svg` in the folder wins. */

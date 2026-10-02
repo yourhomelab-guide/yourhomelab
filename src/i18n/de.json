@@ -925,7 +925,7 @@
   "tools.server-setup.user": "Benutzer auf dem Server",
   "tools.server-setup.userHint": "Wird angelegt, falls es ihn noch nicht gibt, und darf sudo und Docker.",
   "tools.server-setup.sshPort": "SSH-Port",
-  "tools.server-setup.sshPortHint": "22 oder ein Port ab 1024, z. B. 2222. Ein anderer Port macht die Logs ruhiger, sicherer macht ihn erst der Schlüssel.",
+  "tools.server-setup.sshPortHint": "22 oder ein Port ab 1024, z. B. 2200 (2222 nutzt Forgejo für Git). Ein anderer Port macht die Logs ruhiger, sicherer macht ihn erst der Schlüssel.",
   "tools.server-setup.sshKey": "Dein öffentlicher SSH-Schlüssel",
   "tools.server-setup.sshKeyHint": "Inhalt von ~/.ssh/id_ed25519.pub auf deinem Rechner, eine Zeile. Nie den privaten Schlüssel einfügen.",
   "tools.server-setup.sshFrom": "SSH nur aus diesem Netz erlauben (optional)",

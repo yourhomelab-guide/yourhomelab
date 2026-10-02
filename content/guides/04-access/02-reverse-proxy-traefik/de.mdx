@@ -80,8 +80,8 @@ Nach ein paar Sekunden ist `https://whoami.__DOMAIN__` mit gültigem Zertifikat 
 
 Antwortet die Subdomain mit „Bad Gateway“, erreicht Traefik den Container nicht. Die üblichen Ursachen stehen unter [Bad Gateway](/de/nachschlagen/bad-gateway/).
 
-<Callout type="warning" title="Das Dashboard ist öffentlich">
-Die Vorlage veröffentlicht das Traefik-Dashboard unter `traefik.__DOMAIN__`. Es zeigt nur Informationen und lässt keine Änderungen zu, verrät aber deine Dienste und Routen. Schütze es, sobald du [Tinyauth](/de/einrichten/tinyauth/) eingerichtet hast, mit dem Label `traefik.http.routers.dashboard.middlewares=tinyauth`. Brauchst du das Dashboard nicht, löschst du die fünf `labels`-Zeilen und die Option `--api.dashboard=true`.
+<Callout title="Das Dashboard nur aus dem Heimnetz">
+Die Vorlage veröffentlicht das Traefik-Dashboard unter `traefik.__DOMAIN__`. Es zeigt nur Informationen und lässt keine Änderungen zu, verrät aber deine Dienste und Routen. Deshalb hängt davor die Middleware `dashboard-lan`: Sie lässt nur Adressen aus dem Heimnetz durch (`10.0.0.0/8` und `192.168.0.0/16`), alle anderen bekommen `403 Forbidden`. Sobald du [Tinyauth](/de/einrichten/tinyauth/) eingerichtet hast, kannst du es stattdessen mit einem Login schützen und auch von unterwegs nutzen. Brauchst du das Dashboard nicht, löschst du die `labels`-Zeilen und die Option `--api.dashboard=true`.
 </Callout>
 
 <Callout title="Eigene Dienste anbinden">

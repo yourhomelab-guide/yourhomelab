@@ -1,6 +1,7 @@
 services:
   beszel:
-    image: henrygd/beszel:latest
+    # Hub and agents should run the same version: update both together
+    image: henrygd/beszel:0.20
     container_name: beszel
     restart: unless-stopped
     environment:

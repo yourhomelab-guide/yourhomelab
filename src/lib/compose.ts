@@ -10,7 +10,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import YAML, { isMap, isSeq, isScalar, Scalar, YAMLMap, YAMLSeq } from 'yaml';
-import { proxies, type Proxy } from '../config/site';
+import { LAN_RANGES, proxies, type Proxy } from '../config/site';
 
 export interface ServiceMeta {
   id: string;
@@ -21,6 +21,7 @@ export interface ServiceMeta {
   subdomain: string;
   subdomainOnly: boolean;
   reverseProxy: boolean;
+  lanOnly: boolean;
   files: string[];
   traefikLabels: string[];
 }
@@ -127,6 +128,9 @@ function buildVariant(
             `${r}.entrypoints=websecure`,
             `${r}.tls.certresolver=le`,
             `traefik.http.services.${meta.id}.loadbalancer.server.port=${meta.port}`,
+            ...(meta.lanOnly
+              ? [`traefik.http.middlewares.${meta.id}-lan.ipallowlist.sourcerange=${LAN_RANGES.join(',')}`, `${r}.middlewares=${meta.id}-lan`]
+              : []),
             ...meta.traefikLabels,
           ],
         ]);
@@ -160,9 +164,12 @@ function buildVariant(
   const target = `${isScalar(main.get('container_name', true)) ? main.get('container_name') : mainName}:${meta.port}`;
   if (!meta.reverseProxy && proxy === 'caddy') {
     proxyKind = 'caddy';
+    // Home network only: everyone else gets 403. Inside handle_path for path URLs, because Caddy runs
+    // handle_path before respond and would skip the guard otherwise.
+    const guard = meta.lanOnly ? [`  @outside not remote_ip ${LAN_RANGES.join(' ')}`, '  respond @outside 403'] : [];
     proxySnippet = urlPath
-      ? [`${host} {`, `  handle_path ${urlPath}* {`, `    reverse_proxy ${target}`, '  }', '}'].join('\n')
-      : [`${host} {`, `  reverse_proxy ${target}`, '}'].join('\n');
+      ? [`${host} {`, `  handle_path ${urlPath}* {`, ...guard.map((l) => `  ${l}`), `    reverse_proxy ${target}`, '  }', '}'].join('\n')
+      : [`${host} {`, ...guard, `  reverse_proxy ${target}`, '}'].join('\n');
   } else if (!meta.reverseProxy && proxy === 'npm') {
     proxyKind = 'npm';
     proxySnippet = [
@@ -171,6 +178,7 @@ function buildVariant(
       `Forward Host   ${target.split(':')[0]}`,
       `Forward Port   ${meta.port}`,
       "SSL            Let's Encrypt, Force SSL",
+      ...(meta.lanOnly ? [`Access List    home network only (allow ${LAN_RANGES.join(', ')})`] : []),
     ].join('\n');
   }
 

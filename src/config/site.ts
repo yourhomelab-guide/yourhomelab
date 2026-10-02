@@ -74,6 +74,10 @@ export const toolGroups = ['start', 'plan', 'build', 'operate'] as const;
 
 /** Reverse proxies a visitor can pick in "Mein Setup". */
 export const proxies = ['traefik', 'caddy', 'npm', 'none'] as const;
+
+/** Networks that count as "home network" for LAN-only rules. 172.16.0.0/12 is left out on purpose: Docker's own
+ * networks live there, and connections that Docker forwards (e.g. IPv6) can appear to come from them. */
+export const LAN_RANGES = ['10.0.0.0/8', '192.168.0.0/16'];
 export type Proxy = (typeof proxies)[number];
 
 /** Default values for "Mein Setup". Keys are also the placeholder names (upper-cased) used in templates. */

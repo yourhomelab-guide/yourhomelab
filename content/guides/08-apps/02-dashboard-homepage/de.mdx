@@ -183,7 +183,7 @@ Nutzt du Traefik, hat der Dienst schon einen `labels`-Block. Die Homepage-Labels
 <Step title="Zugang absichern">
 Zum Schluss sorgst du dafür, dass nicht jeder dein Dashboard sieht. Drei Wege, vom einfachsten zum komfortabelsten:
 
-- **Nur im Heimnetz**: Du legst keinen öffentlichen DNS-Eintrag an oder erreichst Homepage nur über [VPN](/de/einrichten/vpn-wireguard/).
+- **Nur im Heimnetz**: Das ist voreingestellt. Mit Traefik oder Caddy lässt die Vorlage nur Adressen aus dem Heimnetz durch, mit Nginx Proxy Manager legst du dafür eine Access List an. Von unterwegs erreichst du Homepage dann über [VPN](/de/einrichten/vpn-wireguard/).
 - **Login davor**: Mit Traefik schaltest du [Tinyauth](/de/einrichten/tinyauth/) oder [Pocket ID](/de/einrichten/pocket-id/) als Middleware vor Homepage. Ein Login schützt dann alle Dienste gleich.
 - **Eingebautes Passwort**: Seit Version 2 hat Homepage eine einfache Anmeldung per Passwort oder OIDC. Die Variablen dafür stehen in der [Installationsanleitung](https://gethomepage.dev/installation/#security-authentication).
 

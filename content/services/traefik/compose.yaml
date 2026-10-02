@@ -32,6 +32,9 @@ services:
       - traefik.http.routers.dashboard.entrypoints=websecure
       - traefik.http.routers.dashboard.tls.certresolver=le
       - traefik.http.routers.dashboard.service=api@internal
+      # Home network only. With Tinyauth: set middlewares=tinyauth and drop the allowlist line.
+      - traefik.http.middlewares.dashboard-lan.ipallowlist.sourcerange=10.0.0.0/8,192.168.0.0/16
+      - traefik.http.routers.dashboard.middlewares=dashboard-lan
 
 networks:
   __NETWORK__:
