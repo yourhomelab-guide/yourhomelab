@@ -1,28 +1,25 @@
 ---
-title: SSH Basics
-description: With SSH, you can securely control your server over the network without needing a screen or keyboard on the device. Here, you'll learn how the client and server work together, why keys are better than passwords, and how you can save yourself some typing with a small configuration file.
+title: "SSH basics"
+description: "With SSH, you control your server securely over the network, without a screen or keyboard on the device. Here you learn how client and server work together, why keys are better than passwords and how a small configuration file saves you typing."
 level: 1
-related:
-  - attack-surface
-  - managing-secrets
-  - ip-ports-nat
+related: [attack-surface, managing-secrets, ip-ports-nat]
 practice: ssh-keys
 ---
 
-## What SSH Does
+## What SSH does
 
-SSH (Secure Shell) establishes an encrypted connection to another computer. You type commands on your laptop,
-They are executed on the server. Everything that passes through the connection is encrypted: passwords, commands, and output.
+SSH (Secure Shell) opens an encrypted connection to another computer. You type commands on your laptop, and they run
+on the server. Everything that goes over the line is encrypted: passwords, commands, output.
 
-For a home lab, SSH is the standard way to work. The server sits on a shelf somewhere, and you manage it from your desk.
+In a homelab, SSH is the normal way to work. The server sits somewhere on a shelf, and you manage it from your desk.
 
-## Client and Server
+## Client and server
 
-Every connection involves two parties:
+Every connection has two sides:
 
-- The **server** is a service (`sshd`) that runs on the Homelab computer and listens on port 22 by default.
-  On Debian and Ubuntu Server, you can install it using the package`openssh-server`, usually right during installation.
-- The **client** is the program on`ssh` your laptop. It comes pre-installed on Linux, macOS, and Windows 10/11.
+- The **server** is a service (`sshd`) that runs on the homelab computer and listens on port 22 by default. On Debian
+  and Ubuntu Server, you install it with the `openssh-server` package, usually right during installation.
+- The **client** is the `ssh` program on your laptop. Linux, macOS and Windows 10/11 already come with it.
 
 A connection looks like this:
 
@@ -30,54 +27,53 @@ A connection looks like this:
 ssh __USER__@__SERVER_IP__
 ```
 
-The username on the server comes`@` before the , followed by the address. Type  to end`exit` the session.
+Before the `@` is the user name on the server, after it the address. You end the session with `exit`.
 
-## Key Pairs Instead of Passwords
+## Key pairs instead of passwords
 
-A password can be guessed or intercepted. As soon as SSH is accessible from the Internet, bots try to break in around the clock
-common combinations. Keys solve this problem.
+A password can be guessed or intercepted. As soon as SSH is reachable from the internet, bots try common combinations
+around the clock. Keys solve this problem.
 
 A **key pair** consists of two files:
 
-| File | Where it is located | Who is allowed to see them |
+| File | Where it lives | Who may see it |
 | --- | --- | --- |
-| Private key, e.g., `~/.ssh/id_ed25519` | only on your laptop | no one but you |
-| Public key, e.g., `~/.ssh/id_ed25519.pub` | on any server you want | every |
+| Private key, e.g. `~/.ssh/id_ed25519` | only on your laptop | nobody but you |
+| Public key, e.g. `~/.ssh/id_ed25519.pub` | on every server you want to log in to | anyone |
 
-The public key is stored in the file on the server`~/.ssh/authorized_keys`. When a user logs in, the server
-a problem that can only be solved with the corresponding private key. The private key itself never leaves your
-I never bring my laptop with me.
+On the server, the public key goes into the file `~/.ssh/authorized_keys`. At login, the server sets a challenge that
+can only be solved with the matching private key. The private key itself never leaves your laptop.
 
-Here's how you create a new pair:
+You create a new pair like this:
 
 ```bash
 ssh-keygen -t ed25519 -C "laptop"
 ```
 
-`ed25519` is a modern, short, and secure type of key. The comment below will help`-C` you later when creating keys
-to tell them apart. Set a **passphrase**: Then the private key will be useless even if someone gets hold of the file
-copied. So you don't have to keep typing in the passphrase, it remembers it`ssh-agent` for the session.
+`ed25519` is a modern, short and secure key type. The comment after `-C` helps you tell keys apart later. Set a
+**passphrase**: then the private key is useless even if someone copies the file. So you don't have to type the
+passphrase all the time, `ssh-agent` remembers it for the session.
 
-You can transfer the public key using:
+You transfer the public key with:
 
 ```bash
 ssh-copy-id __USER__@__SERVER_IP__
 ```
 
-The guides show you how to do this step by step and how to disable password login afterward
-[Set up SSH keys](/en/setup/ssh-keys/) and [harden SSH](/en/setup/hardening-ssh/).
+How that works step by step and how to turn off password login afterwards is shown in the guides
+[Setting up SSH keys](/en/setup/ssh-keys/) and [Hardening SSH](/en/setup/hardening-ssh/).
 
 <Callout type="warning" title="Never share your private key">
-  Do not copy your private key to servers, in chats, or in Git repositories. If you need access from a second
-  Device: Generate a separate key pair there. This way, you can specifically lock out a lost device.
+  Don't copy the private key to servers, into chats or into Git repos. If you need access from a second device, create
+  a separate key pair there. That way you can lock out a lost device specifically.
 </Callout>
 
-## known_hosts and Fingerprint
+## known_hosts and fingerprint
 
-There are keys on the other side, too. Every SSH server has its own **host key**. This is how it proves to you that
-that you're actually communicating with your server and not with a device that has inserted itself between you and it.
+There are keys on the other side too. Every SSH server has its own **host key**. With it, the server proves that
+you're really talking to your server and not to a device that has slipped in between.
 
-The first time you connect, you'll see a message like this:
+The first time you connect, you see a message like this:
 
 ```text
 The authenticity of host '__SERVER_IP__ (__SERVER_IP__)' can't be established.
@@ -85,19 +81,19 @@ ED25519 key fingerprint is SHA256:...
 Are you sure you want to continue connecting (yes/no/[fingerprint])?
 ```
 
-The **fingerprint** is a short checksum of the host key. If you want to be thorough, compare it with the value,
-which the server displays itself (either directly on the device or in your VPS provider's console):
+The **fingerprint** is a short checksum of the host key. If you want to be thorough, compare it with the value the
+server itself shows (directly on the device or in your VPS provider's console):
 
 ```bash
 ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
 ```
 
-If you confirm with `yes`, the client saves the host key in `~/.ssh/known_hosts`. From then on, it checks it every time
-Check to see if the key is still the same.
+If you confirm with `yes`, the client saves the host key in `~/.ssh/known_hosts`. From then on, it checks with every
+connection whether the key is still the same.
 
-If the host key changes, SSH terminates with a major warning (`REMOTE HOST IDENTIFICATION HAS CHANGED`). The
-This happens quite innocently if you've reinstalled the server or assigned an IP address to another device. Just
-Then delete the old entry:
+If the host key changes, SSH aborts with a big warning (`REMOTE HOST IDENTIFICATION HAS CHANGED`). That happens quite
+harmlessly when you've reinstalled the server or an IP has been assigned to another device. Only then do you remove
+the old entry:
 
 ```bash
 ssh-keygen -R __SERVER_IP__
@@ -107,8 +103,8 @@ If you haven't changed anything, take the warning seriously and don't just conne
 
 ## The ~/.ssh/config file
 
-Over time, you find yourself typing the same usernames, IP addresses, and key paths over and over again. The file  `~/.ssh/config`at
-Here's a summary for your laptop:
+Over time, you type the same user names, IPs and key paths again and again. The file `~/.ssh/config` on your laptop
+bundles them:
 
 ```text
 Host homelab
@@ -122,23 +118,23 @@ Host vps
     Port 22
 ```
 
-After that, `ssh homelab`. The shortcut also works for  and`scp` , as`rsync` well as in editors like VS Code with
-Remote SSH. The man page describes all options`man ssh_config`.
+After that, `ssh homelab` is enough. The shortcut also works for `scp` and `rsync` and in editors like VS Code with
+Remote-SSH. The `man ssh_config` man page describes all options.
 
-## File Permissions
+## File permissions
 
-SSH is strict about file permissions. If the folder or the private key is readable by others, the client will deny the
-Key. Here's how to set the correct permissions:
+SSH is strict about file permissions. If the folder or the private key is readable by others, the client refuses the
+key. You set the right permissions like this:
 
 ```bash
 chmod 700 ~/.ssh
 chmod 600 ~/.ssh/id_ed25519 ~/.ssh/config
 ```
 
-On the server, the same applies to  `~/.ssh`and `~/.ssh/authorized_keys`.
+On the server, the same applies to `~/.ssh` and `~/.ssh/authorized_keys`.
 
-## Read more
+## Further reading
 
-- [OpenSSH Manual](https://www.openssh.com/manual.html)
-- [Minimize the Attack Surface](/en/wiki/attack-surface/): Why SSH Should Not Be Exposed to the Internet If Possible
-- [Security Check](/en/werkzeuge/sicherheits-check/): Uses a checklist to verify that SSH and the rest of your setup are well secured
+- [OpenSSH manual](https://www.openssh.com/manual.html)
+- [Keeping the attack surface small](/en/wiki/attack-surface/): why SSH should preferably not be open to the internet
+- [Security check](/en/tools/security-check/): uses a checklist to see whether SSH and the rest of your setup are well protected

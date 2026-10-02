@@ -1,142 +1,137 @@
 ---
-title: Keep the attack surface small
-description: Every open port and every accessible interface is a potential gateway into your home lab. Here, you’ll learn which gateways you can close, why Docker bypasses your firewall, and what habits can make your setup significantly more secure with minimal effort.
+title: "Keeping the attack surface small"
+description: "Every open port and every reachable interface is a possible door into your homelab. Here you learn which doors you can close, why Docker bypasses your firewall and which habits make your setup much more secure with little effort."
 level: 2
-related:
-  - port-forwarding
-  - vpn
-  - single-sign-on
-  - updates
+related: [port-forwarding, vpn, single-sign-on, updates]
 practice: firewall-ufw
 ---
 
-## What "attack surface" means
+## What attack surface means
 
-The **attack surface** is everything that an external attacker can target: open ports, login pages,
-Programs with security vulnerabilities. The smaller the program, the less likely something is to go wrong.
+The **attack surface** is everything an attacker can reach from outside: open ports, login pages, programs with
+security holes. The smaller it is, the less can go wrong.
 
-You don't have to be a security expert to understand this. Most attacks on home labs are automated. Bots scan the
-Check the Internet for open ports, known vulnerabilities, and default passwords. If you avoid these easy targets, you're already
-very well protected.
+You don't have to be a security expert for this. Most attacks on homelabs are automated. Bots scan the internet for
+open ports, known vulnerabilities and default passwords. If you avoid these easy targets, you're already very well
+protected.
 
-## Open only the necessary ports
+## Only open the ports you need
 
-Every port that is accessible from the Internet must be secured. The simplest protection: don't open the port in the first place
-Open.
+Every port reachable from the internet has to be secured. The simplest protection: don't open the port in the first
+place.
 
-- **In the router:** With a reverse proxy, you only need to open ports 80 and 443. All services run through these
-  both ports. For more information, see "[Port Forwarding](/en/wiki/port-forwarding/)."
-- **Without open ports:** With a [VPN](/en/wiki/vpn/) or a [tunnel,](/en/wiki/tunnels/) you have to
-  Don't share anything at all. For services that only you use, this is often the best choice.
-- **SSH:** Don't open port 22 on your router unless you have to. When you're away from home, you can access the server via VPN.
+- **In the router:** with a reverse proxy, you only need to forward ports 80 and 443. All services run through these
+  two ports. More in [Port forwarding](/en/wiki/port-forwarding/).
+- **Without open ports:** with a [VPN](/en/wiki/vpn/) or a [tunnel](/en/wiki/tunnels/), you don't have
+  to open anything. For services only you use, that's often the best choice.
+- **SSH:** don't forward port 22 in the router unless you have to. On the go, you reach the server through the VPN.
 
-To see which ports are listening on your server, use the following command:
+You see which ports are listening on your server with:
 
 ```bash
 sudo ss -tlnp
 ```
 
-Anything marked`[::]` with  `0.0.0.0`or  is accessible on all network interfaces.  means`127.0.0.1`:
-only from the server itself.
+Anything listed with `0.0.0.0` or `[::]` is reachable on all network interfaces. `127.0.0.1` means only from the
+server itself.
 
 ## Docker bypasses UFW
 
-That's one of the most common surprises. You set up [UFW](/en/setup/firewall-ufw/), allow only SSH, port 80, and
-443, and yet a container is still accessible on port 8080.
+This is one of the most common surprises. You set up [UFW](/en/setup/firewall-ufw/), allow only SSH, 80 and 443,
+and still a container is reachable on port 8080.
 
-The reason: When a container exposes a port (`ports:`in the `compose.yaml`), Docker writes its own
-Firewall rules. These take effect before UFW's rules are even checked. UFW does not display the port; it is
-but open.
+The reason: when a container publishes a port (`ports:` in the `compose.yaml`), Docker writes its own firewall rules.
+They apply before UFW's rules are even checked. UFW doesn't show the port, but it's open.
 
-The solution is to avoid publishing ports in the first place:
+The solution is not to publish ports in the first place:
 
-- **Services behind the reverse proxy** do not need a `ports:`. The proxy reaches them through the shared network
-  `__NETWORK__`. Only the proxy itself exposes ports 80 and 443.
-- **If a port only requires local access,** bind it to`127.0.0.1`:
+- **Services behind the reverse proxy** don't need `ports:`. The proxy reaches them through the shared network
+  `__NETWORK__`. Only the proxy itself publishes 80 and 443.
+- **If a port only needs local access,** bind it to `127.0.0.1`:
 
 ```yaml
     ports:
       - "127.0.0.1:8080:8080"
 ```
 
-In that case, you can only access the service from the server itself, for example, through an SSH tunnel. For more information, see the
-[Docker documentation on package filters](https://docs.docker.com/engine/network/packet-filtering-firewalls/).
+Then you can only reach the service from the server itself, for example through an SSH tunnel. Background is in the
+[Docker documentation on packet filtering](https://docs.docker.com/engine/network/packet-filtering-firewalls/).
 
-<Callout type="warning" title="A router is not the same as a firewall">
-  If your home server is behind a router without port forwarding, published ports are only accessible on your home network
-  accessible. With a VPS, on the other hand, the server is connected directly to the Internet. There, every published port is immediately
-  Open worldwide.
+<Callout type="warning" title="A router isn't the same as a firewall">
+  If your server sits at home behind a router without port forwarding, published ports are only reachable on your home
+  network. A VPS, on the other hand, is connected directly to the internet. There, every published port is open to the
+  whole world immediately.
 </Callout>
 
-## Do not make admin interfaces public
+## Don't make admin interfaces public
 
-The Traefik dashboard, [Portainer](/en/services/portainer/), the interface of
-[Nginx Proxy Manager](/en/services/nginx-proxy-manager/) and your router's settings are powerful tools. If you
-Once it gets in, it often takes control of the entire server.
+The Traefik dashboard, [Dockhand](/en/services/dockhand/) or [Portainer](/en/services/portainer/), the interface of
+[Nginx Proxy Manager](/en/services/nginx-proxy-manager/) or your router's admin page are powerful. Whoever gets in there
+often controls the whole server.
 
-- Make such resources accessible only on your home network or via VPN.
-- If you need to publish it through the reverse proxy, set up a login screen first, for example using
+- Only make such interfaces reachable on your home network or through the VPN.
+- If you have to publish them through the reverse proxy, put a login in front, for example with
   [Tinyauth](/en/setup/tinyauth/) or [Pocket ID](/en/setup/pocket-id/). See also
-  [Single Sign-On](/en/wiki/single-sign-on/).
-- Change the default passwords immediately after installation.
+  [Single sign-on](/en/wiki/single-sign-on/).
+- Change default passwords right after installation.
 
-## Protecting the Docker Socket
+## Protecting the Docker socket
 
-Some containers have the Docker socket `/var/run/docker.sock`mounted, such as Traefik, Portainer, or
-Monitoring tools. They control Docker via the socket.
+Some containers get the Docker socket `/var/run/docker.sock` mounted, for example Traefik, Dockhand, Portainer or
+monitoring tools. Through the socket, they control Docker.
 
-Important to know: **Access to the socket is essentially the same as root access to the server.** Anyone who can use it can start
-Any container with any permissions. The suffix when`:ro` mounting has little effect on this. It only prevents,
-that the file itself is modified, not the commands sent through the socket.
+Important to know: **access to the socket is as good as root access to the server.** Whoever can use it starts any
+container with any privileges. The `:ro` suffix when mounting changes little about that. It only prevents the file
+itself from being changed, not the commands that go through the socket.
 
-Therefore:
+So:
 
-- Only assign the socket to containers that really need it, and only from trusted sources.
-- **Socket proxies** are available to enhance security. They sit between the container and the socket and allow only certain
-  Process requests, such as read-only access, for example.
-- The same applies to the group on`docker` the server: Anyone who is a member of it effectively has root privileges.
+- Only give the socket to containers that really need it, and only from trustworthy sources.
+- For more security, there are **socket proxies**. They sit between the container and the socket and only let certain
+  requests through, for example read-only access.
+- The same applies to the `docker` group on the server: whoever is in it effectively has root privileges.
 
-## Install Updates
+## Installing updates
 
-Many attacks exploit vulnerabilities for which updates have long been available. Therefore, make sure to keep two levels up to date:
+Many attacks exploit holes that were patched long ago. So keep two levels up to date:
 
 - **The operating system:** with [automatic updates](/en/setup/automatic-updates/) for security patches.
-- **The containers:** Update images regularly; see [Updates](/en/wiki/updates/).
+- **The containers:** update images regularly, most conveniently with Dockhand's update schedules, see
+  [Updates](/en/wiki/updates/).
 
-Services that are accessible via the Internet take priority.
+Services reachable from the internet take priority.
 
-## Protect Logins
+## Protecting logins
 
-Public login pages attract password-guessing bots. Here's how to prevent that:
+Public login pages attract password guessers. These help:
 
-- **Strong, unique passwords** and, where possible, passkeys or two-factor authentication.
-- **Use a key instead of a password for SSH**; see [SSH Basics](/en/wiki/ssh-basics/).
-- **CrowdSec:** reads the logs of your reverse proxy and other services, detects suspicious behavior such as many
-  failed login attempts and blocks the IP address. In addition, all users share their findings, so that known attackers
-  are often blocked in advance. With Traefik, CrowdSec can be integrated as middleware; see
-  [CrowdSec](/en/setup/crowdsec/).
+- **Strong, unique passwords** and, where possible, passkeys or a second factor.
+- **Keys instead of passwords for SSH**, see [SSH basics](/en/wiki/ssh-basics/).
+- **CrowdSec:** reads the logs of your reverse proxy and other services, detects suspicious behavior like many failed
+  logins and blocks the IP. In addition, all users share their findings, so known attackers are often blocked in
+  advance. With Traefik, CrowdSec can be added as a middleware, see [CrowdSec](/en/setup/crowdsec/).
 
-## Least Privilege: as few privileges as possible
+## Least privilege: as few rights as possible
 
-The **principle of least **privilege means that every user, every service, and every container is granted
-only the permissions he actually needs. If he is compromised, the damage will be limited.
+The **principle of least privilege** means every user, every service and every container only gets the rights it
+really needs. If it's compromised, the damage stays limited.
 
-In a home lab, for example, this means:
+In a homelab, that means for example:
 
-- You are working as a regular user`sudo`, not as root. See [Users & sudo](/en/setup/users-sudo/).
-- Whenever possible, containers should not run as root. Many images support this via`user:` the  or`compose.yaml`
-  Variables such as  and`PUID` `PGID`.
-- Containers share only the networks they need. A database does not have to be connected to the proxy network.
-- Mount only as much as necessary, and use `:ro``read-only` if the container only needs read access.
+- You work as a normal user with `sudo`, not as root. See [Users & sudo](/en/setup/users-sudo/).
+- Containers don't run as root where possible. Many images support `user:` in the `compose.yaml` or variables like
+  `PUID` and `PGID` for this.
+- Containers only share the networks they need. A database doesn't have to be on the proxy network.
+- Bind mounts only as far as needed, and with `:ro` if the container only has to read.
 
-## Quick Checklist
+## Short checklist
 
-- Only ports 80 and 443 are open on the router, or none at all due to a VPN or tunnel.
-- No unnecessary  `ports:`in the `compose.yaml`files.
-- Admin interfaces should be accessible only internally or after logging in.
+- Only 80 and 443 forwarded in the router, or nothing at all thanks to a VPN or tunnel.
+- No unnecessary `ports:` in the `compose.yaml` files.
+- Admin interfaces only internal or behind a login.
 - SSH with a key only.
-- Operating system and images are up to date.
-- Use the Docker socket only where it's needed.
+- Operating system and images up to date.
+- Docker socket only where it's needed.
 
-The [Security](/en/werkzeuge/sicherheits-check/) [Check](/en/werkzeuge/sicherheits-check/) provides a more detailed checklist that you can work through step by step. At the end
-You'll see where you're doing well and what's still missing.
+The [security check](/en/tools/security-check/) offers a more detailed checklist to click through. At the end,
+you see where you're well set up and what's still missing.

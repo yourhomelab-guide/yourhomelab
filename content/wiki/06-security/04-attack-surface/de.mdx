@@ -67,7 +67,7 @@ Dann erreichst du den Dienst nur vom Server selbst, etwa über einen SSH-Tunnel.
 
 ## Admin-Oberflächen nicht öffentlich machen
 
-Das Traefik-Dashboard, [Portainer](/de/dienste/portainer/), die Oberfläche von
+Das Traefik-Dashboard, [Dockhand](/de/dienste/dockhand/) oder [Portainer](/de/dienste/portainer/), die Oberfläche von
 [Nginx Proxy Manager](/de/dienste/nginx-proxy-manager/) oder die Verwaltung deines Routers sind mächtig. Wer dort
 reinkommt, kontrolliert oft den ganzen Server.
 
@@ -79,7 +79,7 @@ reinkommt, kontrolliert oft den ganzen Server.
 
 ## Den Docker-Socket schützen
 
-Manche Container bekommen den Docker-Socket `/var/run/docker.sock` eingebunden, etwa Traefik, Portainer oder
+Manche Container bekommen den Docker-Socket `/var/run/docker.sock` eingebunden, etwa Traefik, Dockhand, Portainer oder
 Monitoring-Werkzeuge. Über den Socket steuern sie Docker.
 
 Wichtig zu wissen: **Zugriff auf den Socket ist so gut wie root-Zugriff auf den Server.** Wer ihn nutzen kann, startet
@@ -98,7 +98,8 @@ Deshalb gilt:
 Viele Angriffe nutzen Lücken, für die es längst Updates gibt. Halte deshalb zwei Ebenen aktuell:
 
 - **Das Betriebssystem:** mit [automatischen Updates](/de/einrichten/automatische-updates/) für Sicherheitspatches.
-- **Die Container:** Images regelmäßig aktualisieren, siehe [Updates](/de/nachschlagen/updates/).
+- **Die Container:** Images regelmäßig aktualisieren, am bequemsten mit den Update-Plänen in Dockhand, siehe
+  [Updates](/de/nachschlagen/updates/).
 
 Dienste, die aus dem Internet erreichbar sind, haben dabei Vorrang.
 

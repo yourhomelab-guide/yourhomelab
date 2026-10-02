@@ -397,19 +397,19 @@
   },
   "content/wiki/06-security/01-ssh-basics/de.mdx": {
     "hash": "46c999d11feee208",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/wiki/06-security/02-single-sign-on/de.mdx": {
     "hash": "0c5e1441924b44d5",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/wiki/06-security/03-managing-secrets/de.mdx": {
     "hash": "911f02f0f0da0be1",
     "by": "claude"
   },
   "content/wiki/06-security/04-attack-surface/de.mdx": {
-    "hash": "e0a6fb8c8dc27662",
-    "by": "deepl"
+    "hash": "657eb8d85d8eabe6",
+    "by": "claude"
   },
   "content/wiki/07-operations/01-backup-strategies/de.mdx": {
     "hash": "7cfe07e612533810",
