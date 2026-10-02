@@ -1,23 +1,21 @@
 ---
-title: First Stack with Compose
-description: Eventually, your first container—defined in a `compose.yaml` file—will be running, and you'll be able to access it in your browser using your server's IP address. Along the way, you'll learn the five Compose commands you'll use over and over again in your day-to-day work.
+title: "First stack with Compose"
+description: "In the end, your first container runs, described in a compose.yaml, and you reach it in the browser at your server's IP. Along the way, you learn the five Compose commands you'll need again and again."
 level: 1
 minutes: 20
-requires:
-  - Docker with the Compose Plugin
-  - Directory structure created
+requires: [Docker with the Compose plugin, Directory structure in place]
 ---
 
-A **stack** is a folder with a file`compose.yaml`. It specifies which containers should run, with which image, on which ports, and with which data. Instead of typing long `docker run`commands, you describe the desired state in a file, and [Docker Compose](/en/wiki/docker-compose/) `docker compose`sets it up. Read more about this in the [Docker Compose](/en/wiki/docker-compose/) article.
+A **stack** is a folder with a `compose.yaml`. It defines which containers should run, with which image, which ports and which data. Instead of typing long `docker run` commands, you describe the desired state in a file, and `docker compose` makes it happen. More in the article [Docker Compose](/en/wiki/docker-compose/).
 
-For your first service, use **"whoami"** from the Traefik developers. It's a tiny web server that simply displays which requests it receives. It doesn't store anything and requires no configuration. This allows you to focus entirely on Compose. You’ll also use the same container later to test the reverse proxy.
+As your first service, you use **whoami** from the Traefik developers. It's a tiny web server that only shows which request it receives. It stores nothing and needs no setup. That way you can focus entirely on Compose. You'll use the same container later to test the reverse proxy.
 
-There is no reverse proxy set up here yet. Therefore, you can access the container directly using the server's IP address and a port.
+There's no reverse proxy yet at this point. So you reach the container directly at the server's IP address and a port.
 
 <Steps>
 
-<Step title="Create a Stack Folder">
-Each service gets its own folder under `__ROOT__`. Run all `docker compose`-commands in this folder.
+<Step title="Create the stack folder">
+Every service gets its own folder under `__ROOT__`. You run all `docker compose` commands in this folder.
 
 ```bash
 mkdir -p __ROOT__/whoami
@@ -25,14 +23,14 @@ cd __ROOT__/whoami
 ```
 </Step>
 
-<Step title="Write a compose.yaml file">
+<Step title="Write compose.yaml">
 Open a new file in the editor:
 
 ```bash
 nano compose.yaml
 ```
 
-Paste this content, save with  and`Strg+O` , and`Enter` exit nano with `Strg+X`:
+Paste this content, save with `Ctrl+O` and `Enter`, and exit nano with `Ctrl+X`:
 
 ```yaml
 services:
@@ -44,101 +42,101 @@ services:
       - "8080:80"
 ```
 
-What these lines mean:
+What the lines mean:
 
-- `services:` lists the containers in the stack. There is only one here: `whoami`.
-- `image:` specifies which image Docker retrieves from Docker Hub. For a test container,  is fine`latest`. For production services, it's better to use a specific version; see [Images & Tags](/en/wiki/images-tags/).
-- `container_name:` Gives the container a fixed, easily readable name.
-- `restart: unless-stopped` Automatically restarts the container after a server crash or reboot, unless you've stopped it yourself. If a container keeps restarting, use "[Container" to](/en/wiki/restart-loop/) help [break the restart loop](/en/wiki/restart-loop/).
-- `ports:` Connects the server's`8080` port to the container's`80` port. The server is always listed on the left, and the container on the right. If the port on the server is already in use, the container will not start; see "[Port in Use](/en/wiki/port-in-use/)."
+- `services:` lists the stack's containers. There's only one here, `whoami`.
+- `image:` says which image Docker fetches from Docker Hub. For a test container, `latest` is fine. For real services, a fixed version is better; see [Images & tags](/en/wiki/images-tags/).
+- `container_name:` gives the container a fixed, readable name.
+- `restart: unless-stopped` automatically starts the container again after a crash or a server restart, unless you stopped it yourself. If a container keeps restarting, [Container in a restart loop](/en/wiki/restart-loop/) helps.
+- `ports:` connects port `8080` on the server with port `80` in the container. The server is always on the left, the container on the right. If the port on the server is already taken, the container doesn't start; see [Port already in use](/en/wiki/port-in-use/).
 
-Pay attention to the indentation. YAML uses spaces, not tabs, and the indentation determines the structure.
+Watch the indentation. YAML uses spaces, not tabs, and the indentation determines the structure.
 
-If you come across one later in`compose.yaml` a project's documentation, the [Compose explainer](/en/werkzeuge/compose-erklaerer/) will walk you through each line and highlight common issues.
+If you later find a `compose.yaml` in a project's docs, the [Compose explainer](/en/tools/compose-explainer/) explains every line and flags typical problems.
 </Step>
 
-<Step title="Start Stack">
-`up` Creates and runs everything listed`compose.yaml` in the  file.  `-d`(detached) runs the container in the background, so you get your terminal back.
+<Step title="Start the stack">
+`up` creates and starts everything in the `compose.yaml`. `-d` (detached) runs the container in the background, so you get your terminal back.
 
 ```bash
 docker compose up -d
 ```
 
-The first time, Docker downloads the image. After that, Compose reports that the container has started`whoami`.
+The first time, Docker downloads the image. Then Compose reports that the `whoami` container has started.
 </Step>
 
-<Step title="Check Status">
-`ps` Displays the containers in this stack, their status, and the published ports.
+<Step title="Check the status">
+`ps` shows the stack's containers, their state and the published ports.
 
 ```bash
 docker compose ps
 ```
 
-The column  should`STATUS`  `Up`say, for  something`PORTS` like `0.0.0.0:8080->80/tcp`.
+The `STATUS` column should say `Up`, and `PORTS` something like `0.0.0.0:8080->80/tcp`.
 </Step>
 
 <Step title="Test in the browser">
-Open it on your computer on the same network`http://__SERVER_IP__:8080`.
+On your computer on the same network, open `http://__SERVER_IP__:8080`.
 
-You'll see a short text page with `Hostname`,  and`IP` the headers from your request. This is the response from the container.
+You'll see a short text page with `Hostname`, `IP` and your request's headers. That's the answer from the container.
 
-You can also do it directly on the server:
+It works directly on the server too:
 
 ```bash
 curl http://localhost:8080
 ```
 
-<Callout type="warning" title="Bypassing UFW for Docker Ports">
-Ports starting with  `ports:`are accessible, even if you haven't opened them in [UFW](/en/setup/firewall-ufw/). Docker applies its own firewall rules, which take precedence over UFW's. At home behind a router, this is usually only visible on your home network. On a rented server, however, the port is immediately accessible **from the Internet**. In that case, it’s better to use `"127.0.0.1:8080:80"`. Then the port only listens locally, and you can test it with `curl`. Later on, the reverse proxy will take over anyway, and the services won’t need their own ports at all.
+<Callout type="warning" title="Docker ports bypass UFW">
+Ports from `ports:` are reachable even if you haven't allowed them in [UFW](/en/setup/firewall-ufw/). Docker adds its own firewall rules, which take effect before UFW's. At home behind the router, that's usually only visible on your home network. On a rented server, though, the port is immediately reachable **from the internet**. There, better write `"127.0.0.1:8080:80"`. Then the port only listens locally and you test with `curl`. Later the reverse proxy takes over anyway, and the services no longer need ports of their own.
 </Callout>
 </Step>
 
-<Step title="View logs">
-Everything a container outputs ends up in its logs. That's the first place to check if something isn't working.
+<Step title="Look at the logs">
+Everything a container prints ends up in its logs. That's the first place to look when something doesn't work.
 
 ```bash
 docker compose logs
 docker compose logs -f
 ```
 
-Click (`-f`follow) to see new lines appear in real time. Reload the page in your browser and watch. Click to stop`Strg+C`. The container will continue to run.
+With `-f` (follow), new lines appear live. Reload the page in the browser and watch. Stop with `Ctrl+C`. The container keeps running.
 
-["Troubleshooting: First Steps"](/en/wiki/first-steps/) explains how to determine the cause of an error based on an error message in the log.
+[Troubleshooting: first steps](/en/wiki/first-steps/) shows how to get from an error message in the log to the cause.
 </Step>
 
-<Step title="Refresh">
-Here's how to update a stack to the latest version of the image.  It loads`pull` new images  and `up -d`replaces only those containers whose images have changed.
+<Step title="Update">
+This is how you bring a stack up to the image's latest state. `pull` downloads new images, and `up -d` only replaces the containers whose image has changed.
 
 ```bash
 docker compose pull
 docker compose up -d
 ```
 
-You use`up -d` the same one after you've changed`compose.yaml` it. Compose detects the change and recreates the container.
+You use the same `up -d` when you've changed the `compose.yaml`. Compose detects the change and recreates the container.
 </Step>
 
-<Step title="Stop and Remove">
-`down` Stops the stack's containers and removes them along with the network that Compose created for the stack.
+<Step title="Stop and remove">
+`down` stops the stack's containers and removes them, along with the network Compose created for the stack.
 
 ```bash
 docker compose down
 ```
 
-Your files in the "Stack" folder will remain untouched—including everything under it`data/`. Running the command again `docker compose up -d`will restore the stack. Leave the folder `whoami`as is; you'll need it in the next guide.
+Your files in the stack folder stay untouched, including everything under `data/`. Another `docker compose up -d` restores the stack. Keep the `whoami` folder; you'll need it in the next guide.
 </Step>
 
 </Steps>
 
-## An Overview of the Commands
+## The commands at a glance
 
 | Command | Effect |
 | --- | --- |
-| `docker compose up -d` | Create a stack or bring`compose.yaml` it up to date |
-| `docker compose ps` | Display the stack's containers and their status |
-| `docker compose logs -f` | Track Logs Live |
-| `docker compose pull` | Download New Images |
-| `docker compose down` | Stop and remove containers; data remains |
+| `docker compose up -d` | Create the stack or bring it to the state of the `compose.yaml` |
+| `docker compose ps` | Show the stack's containers and their state |
+| `docker compose logs -f` | Follow the logs live |
+| `docker compose pull` | Download new images |
+| `docker compose down` | Stop and remove containers; data stays |
 
-All commands refer to the  `compose.yaml`in the current folder. If you see `no configuration file provided`, you're in the wrong folder.
+All commands refer to the `compose.yaml` in the current folder. If you get `no configuration file provided`, you're in the wrong folder.
 
-Next up is [.env & Secrets](/en/setup/env-secrets/). There, you'll learn how settings and passwords are retrieved`compose.yaml` from it.
+Next up is [.env & secrets](/en/setup/env-secrets/). There you'll learn how to get settings and passwords out of the `compose.yaml`.

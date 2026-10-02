@@ -29,7 +29,7 @@
   },
   "content/guides/01-preparation/01-choosing-hardware/de.mdx": {
     "hash": "adc8bcd3b7eaab26",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/guides/01-preparation/02-installing-the-os/de.mdx": {
     "hash": "f03d9caba3666b03",
@@ -45,7 +45,7 @@
   },
   "content/guides/02-securing/01-ssh-keys/de.mdx": {
     "hash": "432be3b28926cdca",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/guides/02-securing/02-users-sudo/de.mdx": {
     "hash": "48a376205cc273c9",
@@ -73,15 +73,15 @@
   },
   "content/guides/03-docker/02-creating-the-directory-structure/de.mdx": {
     "hash": "49e6764bc2980e96",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/guides/03-docker/03-first-stack/de.mdx": {
     "hash": "cd6dcd049f05595e",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/guides/03-docker/04-env-secrets/de.mdx": {
     "hash": "baceb0ef24d4a7a9",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/guides/03-docker/de.md": {
     "hash": "328d333ed6be4196",
@@ -101,7 +101,7 @@
   },
   "content/guides/04-access/04-vpn-wireguard/de.mdx": {
     "hash": "fd3a653eff482167",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/guides/04-access/05-cloudflare-tunnel/de.mdx": {
     "hash": "1ce58d8eb0fac0c0",
@@ -121,7 +121,7 @@
   },
   "content/guides/05-login-protection/03-crowdsec/de.mdx": {
     "hash": "3a0da32a708b2106",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/guides/05-login-protection/de.md": {
     "hash": "7b553860a38eba07",
@@ -129,7 +129,7 @@
   },
   "content/guides/06-operations/01-backups-borgmatic/de.mdx": {
     "hash": "d8e33d9968edcb6e",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/guides/06-operations/02-testing-restores/de.mdx": {
     "hash": "79f5df52fdb19bd8",
@@ -197,7 +197,7 @@
   },
   "content/guides/08-apps/de.md": {
     "hash": "c8ee3d39c38bdbbd",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/pages/imprint/de.md": {
     "hash": "3310cb8c023acf47",
@@ -232,8 +232,8 @@
     "by": "claude"
   },
   "content/services/homepage/de.md": {
-    "hash": "7937f11a15091894",
-    "by": "deepl"
+    "hash": "2662f9792046e643",
+    "by": "claude"
   },
   "content/services/immich/de.md": {
     "hash": "fdb8cec7c8a42078",
@@ -253,11 +253,11 @@
   },
   "content/services/ntfy/de.md": {
     "hash": "e5d32ef243feea47",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/services/paperless-ngx/de.md": {
     "hash": "808f4b8c4ef2cb0c",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/services/pocket-id/de.md": {
     "hash": "9aa21dd48c380997",

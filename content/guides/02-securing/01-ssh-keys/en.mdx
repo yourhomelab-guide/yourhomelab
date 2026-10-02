@@ -1,27 +1,25 @@
 ---
-title: Set Up an SSH Key
-description: In the end, you'll log in to the server using an ed25519 key instead of a password, and a short command like `ssh homelab` is all it takes to connect.
+title: "Setting up SSH keys"
+description: "In the end, you log in to the server with an ed25519 key instead of a password, and a short command like ssh homelab is enough to connect."
 level: 1
 minutes: 15
-requires:
-  - Linux Server
-  - SSH Access with a Password
+requires: [Linux server, SSH access with password]
 ---
 
-A password can be guessed, intercepted, or cracked through trial and error. An SSH key cannot: It consists of two parts. The **private key** stays on your computer and never leaves it. The **public key** is uploaded to the server. When you log in, your computer proves that it has the corresponding private key without actually transmitting it.
+A password can be guessed, intercepted or cracked by trial and error. An SSH key can't: it consists of two parts. The **private key** stays on your computer and never leaves it. The **public key** goes onto the server. When you log in, your computer proves that it has the matching private key, without transmitting it.
 
-This guide sets up the key. After [configuring "](/en/setup/hardening-ssh/)[Users & sudo](/en/setup/users-sudo/)," you can then completely disable password-based login in [SSH](/en/setup/hardening-ssh/). For more information, see "[SSH](/en/wiki/ssh-basics/) [Basics](/en/wiki/ssh-basics/)."
+This guide sets up the key. After [Users & sudo](/en/setup/users-sudo/), you then turn off password login entirely in [Hardening SSH](/en/setup/hardening-ssh/). The background is in [SSH basics](/en/wiki/ssh-basics/).
 
-The commands use the server IP and`__SERVER_IP__` your username from`__USER__` "My Setup." If the values are incorrect, enter your own there.
+The commands use the server IP `__SERVER_IP__` and your user `__USER__` from "My setup". If the values aren't right, enter your own there.
 
-<Callout title="Multiple devices?">
-Repeat the guides on security and Docker on each device. Before each run, enter the device's IP address in "My Setup" so that all commands work correctly. The section "[Multiple Devices: Assigning Roles](/en/wiki/multiple-devices/)" explains which device handles which task.
+<Callout title="Several devices?">
+You repeat the security and Docker guides on every device. Before each pass, enter the device's IP in "My setup"; then all commands fit. [Multiple devices: splitting the roles](/en/wiki/multiple-devices/) explains which device takes on which job.
 </Callout>
 
 <Steps>
 
-<Step title="Check to see if you already have a key">
-Maybe you've already generated a key, for example for GitHub. You can continue to use that one. Look in the folder  `.ssh`in your home directory.
+<Step title="Check whether you already have a key">
+Maybe you've created a key before, for GitHub for example. You can keep using it. Look in the `.ssh` folder in your home directory.
 
 On macOS and Linux:
 
@@ -35,61 +33,61 @@ On Windows in PowerShell:
 ls $env:USERPROFILE\.ssh
 ```
 
-If both  and`id_ed25519`  are listed there`id_ed25519.pub`, skip the next step. If only  is listed`id_rsa`, it's an older RSA key. It works, but a new ed25519 key is shorter and more modern.
+If you see `id_ed25519` and `id_ed25519.pub` there, skip the next step. If there's only `id_rsa`, that's an older RSA key. It works, but a new ed25519 key is shorter and more modern.
 </Step>
 
-<Step title="Generate a key pair">
-Windows 10 and 11, macOS, and virtually every Linux distribution come with OpenSSH preinstalled. The command is the same everywhere. On Windows, type it into PowerShell; otherwise, type it into the Terminal.
+<Step title="Create a key pair">
+Windows 10 and 11, macOS and practically every Linux distribution already include OpenSSH. The command is the same everywhere. On Windows, type it into PowerShell; otherwise into the terminal.
 
 ```bash
 ssh-keygen -t ed25519 -C "laptop-__USER__"
 ```
 
-- `-t ed25519` Select the key type. ed25519 is the current standard: secure, fast, and short.
-- `-C` It's just a comment. It will help you identify later which device a key came from.
+- `-t ed25519` chooses the key type. ed25519 is the current standard: secure, fast and short.
+- `-C` is just a comment. It helps you recognize later which device a key comes from.
 
-Press Enter to confirm the suggested storage location. You will then be prompted for`ssh-keygen` a **passphrase**. Choose one. It encrypts the private key on your hard drive. If your laptop is stolen, no one will be able to use the key without the passphrase.
+Confirm the suggested location with Enter. Then `ssh-keygen` asks for a **passphrase**. Use one. It encrypts the private key on your disk. If your laptop gets stolen, nobody can use the key without the passphrase.
 
 You now have two files:
 
-- `id_ed25519` This is the private key. Never share it, and never copy it to a server.
-- `id_ed25519.pub` This is the public key. You can store it anywhere.
+- `id_ed25519` is the private key. Never share it, never copy it to a server.
+- `id_ed25519.pub` is the public key. You may put it anywhere.
 </Step>
 
 <Step title="Copy the public key to the server">
-On the server, the public key is stored in your`~/.ssh/authorized_keys` user's file. Each line in that file represents a key that is authorized to log in.
+On the server, the public key goes into your user's `~/.ssh/authorized_keys` file. Every line there is a key that may log in.
 
-On **macOS and Linux**, this is what does it`ssh-copy-id`. It asks for your password on the server one last time:
+On **macOS and Linux**, `ssh-copy-id` does this. It asks for your password on the server one last time:
 
 ```bash
 ssh-copy-id -i ~/.ssh/id_ed25519.pub __USER__@__SERVER_IP__
 ```
 
-It doesn't`ssh-copy-id` exist on **Windows**. This one-liner in PowerShell does the same thing: It sends the key to the server via SSH, creates the folder there, and appends the key to `authorized_keys`it.
+On **Windows**, there's no `ssh-copy-id`. This one-liner in PowerShell does the same: it sends the key to the server over SSH, creates the folder there and appends the key to `authorized_keys`.
 
 ```powershell
 type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh __USER__@__SERVER_IP__ "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 ```
 
-The permissions  and`700`  `600`are important. If anyone other than you can write to the files, the SSH server will ignore them for security reasons.
+The permissions `700` and `600` matter. If anyone other than you can write the files, the SSH server ignores them for security reasons.
 
-<Callout title="Is there only a root user on the server?">
-On some rented servers, the only user available at first is root. In that case, copy the key to the root user first, and then create your own user as described in the "[Users & sudo"](/en/setup/users-sudo/) guide.
+<Callout title="Only root on the server?">
+On some rented servers, there's only the root user at first. Then copy the key to root for now and create your own user in the guide [Users & sudo](/en/setup/users-sudo/).
 </Callout>
 </Step>
 
-<Step title="Testing Login with a Key">
-Sign up:
+<Step title="Test logging in with the key">
+Log in again:
 
 ```bash
 ssh __USER__@__SERVER_IP__
 ```
 
-If you've set a passphrase, SSH will now ask for **your key's passphrase**, not the server's password. If SSH asks for `__USER__@__SERVER_IP__'s password`, it didn't work. Common causes: the key is associated with the wrong user, or the permissions on the server are incorrect. Use  to see`ssh -v __USER__@__SERVER_IP__` which keys SSH offers and what the server responds with.
+If you set a passphrase, SSH now asks for **your key's passphrase**, not the server's password. If SSH asks for `__USER__@__SERVER_IP__'s password`, it didn't work. Common causes: the key is stored for the wrong user, or the permissions on the server aren't right. With `ssh -v __USER__@__SERVER_IP__`, you see which keys SSH offers and what the server answers.
 </Step>
 
-<Step title="Create an alias in ~/.ssh/config">
-Instead of typing in the username and IP address every time, `~/.ssh/config`create an entry in  on your computer. On Windows, the file is located at  `C:\Users\<dein Name>\.ssh\config`(without the file extension). If it doesn't exist yet, create it.
+<Step title="Create a short name in ~/.ssh/config">
+Instead of typing user and IP every time, create an entry in `~/.ssh/config` on your computer. On Windows, the file is at `C:\Users\<your name>\.ssh\config` (without a file extension). If it doesn't exist yet, create it.
 
 ```text
 Host homelab
@@ -99,21 +97,21 @@ Host homelab
     AddKeysToAgent yes
 ```
 
-From now on, just:
+From now on, this is enough:
 
 ```bash
 ssh homelab
 ```
 
-The short name also works with  `scp`and  `rsync`as well as in editors such as VS Code (Remote SSH).
+The short name also works with `scp` and `rsync`, and in editors like VS Code (Remote SSH).
 </Step>
 
-<Step title="Don't have to enter the passphrase every time">
-So you don't have to type the passphrase every time you connect, the **SSH agent** remembers the unlocked key until you log out.  The key `AddKeysToAgent yes`from the previous step is automatically passed to the agent the first time you connect.
+<Step title="Don't enter the passphrase every time">
+So you don't have to type the passphrase for every connection, the **SSH agent** remembers the unlocked key until you log out. `AddKeysToAgent yes` from the previous step hands the key to the agent automatically on the first connection.
 
-- **Linux:** Most desktops start the agent automatically.
-- **macOS:** The agent is always running. If you want macOS to permanently store the passphrase in the keychain, add the line to the entry`UseKeychain yes`. This option is available only on macOS.
-- **Windows:** The service is turned off by default. Enable it once in PowerShell, which you should open **as an administrator**:
+- **Linux:** most desktops start the agent automatically.
+- **macOS:** the agent always runs. If macOS should remember the passphrase permanently in the keychain, add the line `UseKeychain yes` to the entry. This option only exists on macOS.
+- **Windows:** the service is off by default. Turn it on once in a PowerShell window you open **as administrator**:
 
 ```powershell
 Get-Service ssh-agent | Set-Service -StartupType Automatic
@@ -124,8 +122,8 @@ ssh-add $env:USERPROFILE\.ssh\id_ed25519
 
 </Steps>
 
-## Multiple devices
+## Several devices
 
-Use a separate key for each device instead of copying a private key around. Each device gets its own line in `authorized_keys`. If a laptop is lost, just delete its line, and all other devices will still be able to log in. The comment with  is useful`-C` for this.
+Use a separate key per device instead of copying one private key around. Each gets its own line in `authorized_keys`. If a laptop gets lost, you only delete its line, and all other devices still get in. That's what the `-C` comment is useful for.
 
-Also, make sure to secure your private key or store at least one backup key on a different device. Once password-based login is disabled, the key is your only way to access the server, aside from the screen and keyboard directly on the device or your host’s web console.
+Also back up the private key, or add at least a second key from another device. Once password login is off, the key is your only way onto the server, apart from a screen and keyboard directly at the device or your hosting provider's web console.

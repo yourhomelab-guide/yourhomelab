@@ -4,5 +4,5 @@ notes:
   - "Die Konfiguration steht in YAML-Dateien unter data/config. Änderungen erscheinen nach einem Neuladen der Seite."
   - "HOMEPAGE_ALLOWED_HOSTS muss genau die Adresse enthalten, unter der du Homepage öffnest, sonst bleiben die Widgets leer."
   - "Homepage liest Docker nur über einen Socket-Proxy ohne Schreibrechte. Binde den Docker-Socket nie direkt ein: Wer ihn hat, hat Root-Rechte auf dem Server."
-  - "Widgets zeigen Daten aus deinen Diensten. Stell Homepage nicht ungeschützt ins Internet, sondern hinter einen Login oder ins VPN."
+  - "Widgets zeigen Daten aus deinen Diensten. Mit Traefik oder Caddy lässt die Vorlage deshalb nur das Heimnetz durch. Für den Zugriff von unterwegs nimm ein VPN oder einen Login wie Tinyauth."
 ---
