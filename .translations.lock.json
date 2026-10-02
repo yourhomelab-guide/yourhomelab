@@ -133,19 +133,19 @@
   },
   "content/guides/06-operations/02-testing-restores/de.mdx": {
     "hash": "79f5df52fdb19bd8",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/guides/06-operations/03-monitoring-beszel/de.mdx": {
     "hash": "5a927fcf084bfa7c",
     "by": "claude"
   },
   "content/guides/06-operations/04-uptime-kuma/de.mdx": {
-    "hash": "493227a6f764adf6",
-    "by": "deepl"
+    "hash": "38f76fe9f49e984a",
+    "by": "claude"
   },
   "content/guides/06-operations/05-notifications/de.mdx": {
     "hash": "fb4ea0ed80740973",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/guides/06-operations/06-emergency-plan/de.mdx": {
     "hash": "b1121e386ca9826f",
@@ -153,7 +153,7 @@
   },
   "content/guides/06-operations/07-moving-hardware/de.mdx": {
     "hash": "162d49a3b6eff4d2",
-    "by": "deepl"
+    "by": "claude"
   },
   "content/guides/06-operations/de.md": {
     "hash": "31d2421ee386f465",
@@ -184,8 +184,8 @@
     "by": "claude"
   },
   "content/guides/08-apps/03-jellyfin/de.mdx": {
-    "hash": "467215b4444ec040",
-    "by": "deepl"
+    "hash": "e728270a06e74135",
+    "by": "claude"
   },
   "content/guides/08-apps/04-paperless-ngx/de.mdx": {
     "hash": "be0d68a3946b24ad",

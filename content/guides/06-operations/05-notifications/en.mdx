@@ -1,38 +1,34 @@
 ---
-title: Notifications with ntfy
-description: "Your Homelab will notify you automatically if something goes wrong: a failed backup, a service outage, or a full hard drive. To do this, you run your own ntfy server with access protection and integrate Uptime Kuma, Beszel, and borgmatic."
+title: "Notifications with ntfy"
+description: "Your homelab reports by itself when something goes wrong: a failed backup, a service that's down, a full disk. For this, you run your own ntfy server with access control and connect Uptime Kuma, Beszel and borgmatic to it."
 level: 2
 minutes: 30
-requires:
-  - Docker Compose
-  - Reverse Proxy
-  - Smartphone
-services:
-  - ntfy
+requires: [Docker Compose, Reverse proxy, Smartphone]
+services: [ntfy]
 ---
 
-A home lab shouldn't keep you busy every day. But you want to know right away if something's wrong. The nightly backup failed. Vaultwarden isn't responding. The hard drive is 90 percent full. Without a notification, you won't notice these issues until you actually need the service. When it comes to backups, that’s the worst possible time.
+A homelab shouldn't keep you busy every day. But you want to know right away when something's wrong. The nightly backup failed. Vaultwarden stopped answering. The disk is 90 percent full. Without notifications, you only notice such things when you need the service. For backups, that's the worst possible moment.
 
-The tools from the previous guides already detect such issues: [Uptime Kuma](/en/setup/uptime-kuma/) checks availability, [Beszel](/en/setup/monitoring-beszel/) monitors server metrics, and [borgmatic](/en/setup/backups-borgmatic/) confirms whether the backup was successful. What’s missing is a single channel through which they can reach you. For more background information, see [the](/en/wiki/monitoring/) [Monitoring](/en/wiki/monitoring/) section.
+The tools from the previous guides already detect such problems: [Uptime Kuma](/en/setup/uptime-kuma/) checks reachability, [Beszel](/en/setup/monitoring-beszel/) the server values, [borgmatic](/en/setup/backups-borgmatic/) knows whether the backup worked. What's missing is a shared channel through which they reach you. The background is under [Monitoring](/en/wiki/monitoring/).
 
-## How ntfy Works
+## How ntfy works
 
-[ntfy](https://ntfy.sh) (pronounced “notify”) sends push notifications to your cell phone and browser. The concept is simple:
+[ntfy](https://ntfy.sh) (pronounced "notify") sends push messages to your phone and your browser. The principle is simple:
 
-- Messages are posted in a **topic**, a kind of channel with a name you can choose yourself, for example `homelab`.
-- To send a request, simply send a basic HTTP request to `https://ntfy.__DOMAIN__/homelab`. You can do this using  from`curl` any script.
-- The ntfy app on your phone **subscribes to** the topic and displays each new message as a notification.
+- Messages land in a **topic**, a kind of channel with a name you choose freely, for example `homelab`.
+- To send, you make a simple HTTP request to `https://ntfy.__DOMAIN__/homelab`. That works with `curl` from any script.
+- The ntfy app on your phone **subscribes** to the topic and shows every new message as a notification.
 
-You can`ntfy.sh` use the public server without an account. However, anyone who knows the topic name can read the messages there. With your own server, you decide who can read and post messages.
+You can use the public server `ntfy.sh` without an account. But there, anyone who knows the topic name can read along. With your own server, you decide who may read and send.
 
-<Callout type="warning" title="Who reports the server outage?">
-If ntfy runs on the same server as your services, it will go down along with them. The “Server not responding” message will then never be received. In this specific case, you need a solution that doesn’t depend on your server: the external check from the [Uptime Kuma Guide](/en/setup/uptime-kuma/) with email notification, or a second Uptime Kuma instance that sends`ntfy.sh` notifications via [method]. All other notifications work fine through your own server.
+<Callout type="warning" title="Who reports the server going down?">
+If ntfy runs on the same server as your services, it goes down with it. The message "server not responding" then never arrives. For this one case, you need a way that doesn't depend on your server: the external check from the [Uptime Kuma guide](/en/setup/uptime-kuma/) with email notification, or a second Uptime Kuma instance that reports through `ntfy.sh`. All other messages go fine through your own server.
 </Callout>
 
 <Steps>
 
-<Step title="Launch ntfy">
-Create the folder and place  and`compose.yaml`  inside it`.env`:
+<Step title="Start ntfy">
+Create the folder and, in it, `compose.yaml` and `.env`:
 
 ```bash
 mkdir -p __ROOT__/ntfy
@@ -41,28 +37,28 @@ cd __ROOT__/ntfy
 
 <ServiceFiles id="ntfy" />
 
-The most important settings are defined as environment variables in the `compose.yaml`:
+The most important settings are environment variables in the `compose.yaml`:
 
-- `NTFY_AUTH_DEFAULT_ACCESS=deny-all` Makes the server private. Without an account, no one can read or post.
-- `NTFY_AUTH_FILE` and  `NTFY_CACHE_FILE`store the user database and message store as SQLite files in `__DATA(ntfy)__`. This ensures that accounts and unread messages survive a restart.
-- `NTFY_BEHIND_PROXY=true` ntfy says it runs behind a reverse proxy. Otherwise, all visitors would be counted as one and slowed down together.
-- `NTFY_UPSTREAM_BASE_URL` requires the iPhone app for instant messaging. Your server only sends a message ID to the app`ntfy.sh`—not the content. If no one is using an iPhone, you can delete that line.
+- `NTFY_AUTH_DEFAULT_ACCESS=deny-all` makes the server private. Without an account, nobody may read or send.
+- `NTFY_AUTH_FILE` and `NTFY_CACHE_FILE` put the user database and the message store as SQLite files into `__DATA(ntfy)__`. That way accounts and messages not yet picked up survive a restart.
+- `NTFY_BEHIND_PROXY=true` tells ntfy that it runs behind a reverse proxy. Otherwise all visitors would count as one and be rate limited together.
+- `NTFY_UPSTREAM_BASE_URL` is needed by the iPhone app for instant messages. Your server only sends a message ID to `ntfy.sh` for this, not the content. If nobody uses an iPhone, you can delete the line.
 
-The [ntfy documentation](https://docs.ntfy.sh/config/) explains all the options.
+The [ntfy docs](https://docs.ntfy.sh/config/) explain all options.
 
 ```bash
 docker compose up -d
 docker compose logs -f ntfy
 ```
 
-Open `https://ntfy.__DOMAIN__`. You'll see the ntfy web interface, but you can't subscribe to anything yet because you don't have an account.
+Open `https://ntfy.__DOMAIN__`. You see ntfy's web interface, but can't subscribe to anything yet, because there's no account.
 </Step>
 
-<Step title="Create Users and Permissions">
-You manage users with the command included in the container`ntfy`. You create two accounts:
+<Step title="Create users and permissions">
+You manage users with the `ntfy` command inside the container. You create two accounts:
 
-- An **admin account** for you. Admins can read and post in all topics. Use this to log in to the app.
-- An account **`server`**that your services use to send messages. It may only post`homelab` to the topic; it may not read it.
+- an **admin account** for you. Admins may read and write all topics. You log in to the app with it.
+- an account **`server`**, which your services send with. It may only write to the `homelab` topic, not read.
 
 ```bash
 cd __ROOT__/ntfy
@@ -71,29 +67,29 @@ docker compose exec ntfy ntfy user add server
 docker compose exec ntfy ntfy access server homelab write-only
 ```
 
-When ntfy asks`user add` for a password, use long, random passwords from your password manager. The last line is an entry in the **access** control **list** (ACL): User`server`, Topic`homelab`, write-only.
+Replace `DEINNAME` with your user name. With `user add`, ntfy asks for a password. Use long, random passwords from your password manager. The last line is an entry in the **access control list** (ACL): user `server`, topic `homelab`, write only.
 
-To avoid`server` having to enter your password everywhere, create an **access token**. It's a long string that starts`tk_` with  and replaces your username and password:
+So you don't have to enter the `server` password everywhere, create an **access token**. It's a long string starting with `tk_` that replaces user name and password:
 
 ```bash
 docker compose exec ntfy ntfy token add --label=homelab server
 ```
 
-Save the token in your password manager. It has the same permissions as the account`server`—that is, write-only access`homelab`. You can use  to view`docker compose exec ntfy ntfy access` all accounts and permissions at any time.
+Save the token in your password manager. It has the same rights as the `server` account, so only writing to `homelab`. With `docker compose exec ntfy ntfy access`, you can see all accounts and permissions at any time.
 </Step>
 
-<Step title="App for Your Phone">
-Install the ntfy app from the Play Store, F-Droid, or the App Store. You can find links to all versions at [ntfy.sh](https://ntfy.sh).
+<Step title="App on the phone">
+Install the ntfy app from the Play Store, F-Droid or the App Store. You'll find links to all versions on [ntfy.sh](https://ntfy.sh).
 
-1. Open the Settings in the app and add your admin account under "Users": Server`https://ntfy.__DOMAIN__`, along with your username and password.
-2. Tap “+” and `homelab`enter  as the topic. Select “Use a different server” and enter  `https://ntfy.__DOMAIN__`.
-3. On Android, you can enable **instant delivery** when you subscribe. The app will then maintain a connection to your server. Without this option, messages from your own servers will arrive with a delay.
+1. In the app, open the settings and add your admin account under "Users": server `https://ntfy.__DOMAIN__`, plus user name and password.
+2. Tap "+" and enter `homelab` as the topic. Choose "Use another server" and enter `https://ntfy.__DOMAIN__`.
+3. On Android, turn on **instant delivery** when subscribing. The app then keeps a connection to your server open. Without this option, messages from your own servers only arrive with a delay.
 
-You can do the same thing in your browser`https://ntfy.__DOMAIN__`: log in, subscribe to the topic, and enable browser notifications.
+In the browser, it works the same at `https://ntfy.__DOMAIN__`: log in, subscribe to the topic, allow browser notifications.
 </Step>
 
-<Step title="Testing with curl">
-Send a message from the server now. Enter your token:
+<Step title="Test with curl">
+Now send a message from the server. Fill in your token:
 
 ```bash
 curl \
@@ -104,53 +100,53 @@ curl \
   https://ntfy.__DOMAIN__/homelab
 ```
 
-After a second or two, the cell phone should ring. Using  `-H "Priority: high"`makes a message stand out more;  `Tags`adds symbols. The ["Send" documentation](https://docs.ntfy.sh/publish/) shows all the options.
+After a second or two, your phone should ring. With `-H "Priority: high"`, a message becomes more noticeable, and `Tags` adds icons. The [docs on publishing](https://docs.ntfy.sh/publish/) show all options.
 
-Also check the opposite case: Without a token, the call must fail.
+Also check the other direction: without a token, the request must fail.
 
 ```bash
 curl -d "Das darf nicht ankommen" https://ntfy.__DOMAIN__/homelab
 ```
 
-Instead of a confirmation, you'll get an error message, and nothing will show up on your phone. That's how it's supposed to be.
+Instead of a confirmation, you get an error message, and nothing arrives on the phone. That's how it should be.
 
-Using the same call, each script can report that it is finished or that it has encountered a problem. To do this, the token reads the script from a file that only root is allowed to read, not from the script itself.
+Any script of your own can report with the same request that it's done or has a problem. The script reads the token from a file only root may read, not from the script itself.
 </Step>
 
 <Step title="Connect Uptime Kuma">
-In Uptime Kuma, open "Settings → Notifications → Set Up Notification" and select the type "**ntfy**":
+In Uptime Kuma, open "Settings → Notifications → Setup Notification" and choose the type **ntfy**:
 
 | Field | Value |
 | --- | --- |
 | Server URL | `https://ntfy.__DOMAIN__` |
 | Topic | `homelab` |
-| Priority | 4 or 5, so that any failures are noticeable |
-| Authentication | Access Token, your `tk_…`token |
+| Priority | 4 or 5, so outages stand out |
+| Authentication | Access token, your `tk_…` token |
 
-Check the boxes for “Enabled by default” and “Apply to all existing monitors,” then click “Test.” From now on, Uptime Kuma will report every outage and every recovery.
+Check "Default enabled" and "Apply on all existing monitors" and click "Test". From now on, Uptime Kuma reports every outage and every recovery.
 </Step>
 
 <Step title="Connect Beszel">
-Beszel sends notifications via [Shoutrrr URLs](https://beszel.dev/guide/notifications/ntfy). Open "Settings → Notifications" and enter the following under "Webhook / Push notifications":
+Beszel sends notifications through [Shoutrrr](https://beszel.dev/guide/notifications/ntfy) URLs. Open "Settings → Notifications" and enter under "Webhook / Push notifications":
 
 ```text
 ntfy://:tk_DEIN_TOKEN@ntfy.__DOMAIN__/homelab
 ```
 
-The colon before the token is part of it: It goes where the username and password would normally go. Use “Test URL” to check the connection. If it doesn’t work, the Beszel documentation lists an alternative format.
+The colon before the token belongs there: it stands where user name and password would otherwise go. With "Test URL", you check the connection. If it doesn't work, the Beszel docs name an alternative format.
 
-You can then configure which alerts Beszel sends for each system using the bell icon—for example, “Status” for a failed agent and “Disk” when disk usage reaches 85 percent. For details, see the [“Monitoring with Beszel”](/en/setup/monitoring-beszel/) guide.
+Then you decide per system with the bell icon which warnings Beszel sends, for example "Status" for an agent that's down and "Disk" from 85 percent usage. Details are in the guide [Monitoring with Beszel](/en/setup/monitoring-beszel/).
 </Step>
 
-<Step title="Connect Borgmatic">
-borgmatic has its own hook for ntfy. First, store the token in a file that only root can read, just like your backup passphrase:
+<Step title="Connect borgmatic">
+borgmatic has a hook of its own for ntfy. First put the token into a file only root may read, just like your backup's passphrase:
 
 ```bash
 printf '%s' 'tk_DEIN_TOKEN' | sudo tee /etc/borgmatic/ntfy-token > /dev/null
 sudo chmod 600 /etc/borgmatic/ntfy-token
 ```
 
-Then add  (`/etc/borgmatic/config.yaml``sudo nano /etc/borgmatic/config.yaml`):
+Then add this to `/etc/borgmatic/config.yaml` (`sudo nano /etc/borgmatic/config.yaml`):
 
 ```yaml
 ntfy:
@@ -166,25 +162,25 @@ ntfy:
         - fail
 ```
 
-Without  , borgmatic also only reports`states` errors. The line makes this clear. If you want a message even when the operation is successful, add a `finish`-block with  `priority: low`and  `- finish`under `states`. Over time, though, daily success messages can get annoying, and you'll eventually stop noticing them.
+Feel free to write title and message in your own language. Without `states`, borgmatic also only reports errors; the line makes that visible. If you also want a message on success, add a `finish` block with `priority: low` and `- finish` under `states`. In the long run, though, daily success messages get annoying and you'll start to overlook them.
 
-ntfy does not report whether the backup actually ran. That’s what the push monitor in Uptime Kuma—as described in the [backup guide](/en/setup/backups-borgmatic/)—is for. Together, they cover both scenarios: borgmatic immediately reports errors via ntfy, and Uptime Kuma reports a missed backup—also via ntfy.
+ntfy doesn't report whether the backup ran at all. That's what the push monitor in Uptime Kuma from the [backup guide](/en/setup/backups-borgmatic/) is for. Together, both cases are covered: borgmatic reports errors right away through ntfy, and Uptime Kuma reports a missing backup, again through ntfy.
 
 ```bash
 sudo borgmatic config validate
 ```
 
-To test it, temporarily set  `- start`to  `states`and add a `start`-block with a `title`. Then start a run with `sudo systemctl start borgmatic.service`. If the message arrives, remove both. All options are listed in the [configuration reference](https://torsion.org/borgmatic/reference/configuration/) under `ntfy`.
+To test, temporarily set `- start` under `states` and add a `start` block with a `title`. Then start a run with `sudo systemctl start borgmatic.service`. If the message arrives, remove both again. All options are in the [configuration reference](https://torsion.org/borgmatic/reference/configuration/) under `ntfy`.
 </Step>
 
 </Steps>
 
-## Alternative: Email
+## Alternative: email
 
-Push notifications are fast and catch your attention. However, some people prefer email, perhaps because they check their inbox anyway. Both Uptime Kuma and Beszel can send emails. To do this, you'll need to enter the **SMTP details** for an email account: server, port, username, and password.
+Push messages are fast and stand out. But some people prefer email, for example because they check their inbox anyway. Uptime Kuma and Beszel can both send mail. For that, you enter a mail account's **SMTP details**: server, port, user, password.
 
-- Don't use your main account for this. Many providers allow you to set up a separate **app password** that's used only for sending messages and can be revoked individually.
-- Alternatively, you can use an **SMTP relay service** that delivers emails on behalf of your server. Many offer a free quota that's sufficient for a home lab.
-- It's not worth it to run your own mail server for this purpose. Emails from private servers often end up in the spam folder or are rejected.
+- Don't use your main account for this. Many providers allow a separate **app password** that's only for sending and can be revoked individually.
+- Alternatively, use an **SMTP relay service** that delivers mail on behalf of your server. Many have a free quota that's enough for a homelab.
+- Running a mail server of your own isn't worth it for this. Mail from private servers often lands in spam or gets rejected.
 
-A good compromise: daily status updates via ntfy, and an external check that detects when the entire server goes down, sent via email.
+A good compromise: everyday messages through ntfy, and the external check that detects the whole server going down by email.
